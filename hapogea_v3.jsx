@@ -4,22 +4,46 @@ const ODDS_MIN = 1.40;
 const ODDS_MAX = 1.90;
 const REFRESH_MS = 5 * 60 * 1000;
 
+// Leagues verified as available on Winner.co.il
+const WINNER_LEAGUES = new Set([
+  "EPL","LaLiga","Bundesliga","SerieA","Ligue1","CoupeFR",
+  "UCL","UEL","NBA","ISL","BSL","J1","CSL","EL","ACB","LegaBK",
+  "MLS","Eredivisie","LigaBr","LibertaCopa","SudameCopa",
+  "Ekstraklasa","Allsvenskan","ProLeague","GreekSL","PortLiga","TurSL",
+]);
+const API_KEY =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_ANTHROPIC_API_KEY) ||
+  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_ANTHROPIC_API_KEY) ||
+  "";
+
 const LM = {
-  EPL:        { name:"פרמיר ליג",     flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", c:"#3D195B" },
-  LaLiga:     { name:"לה ליגה",        flag:"🇪🇸", c:"#FF4B44" },
-  Bundesliga: { name:"בונדסליגה",      flag:"🇩🇪", c:"#D20515" },
-  SerieA:     { name:"סרי א",          flag:"🇮🇹", c:"#024494" },
-  Ligue1:     { name:"ליג 1",          flag:"🇫🇷", c:"#091C3E" },
-  UCL:        { name:"ליגת האלופות",   flag:"🏆",  c:"#001D6C" },
-  NBA:        { name:"NBA",            flag:"🇺🇸", c:"#1D428A" },
-  ISL:        { name:"ליגת העל",       flag:"🇮🇱", c:"#004C97" },
-  J1:         { name:"J1 יפן",         flag:"🇯🇵", c:"#E60012" },
-  CSL:        { name:"ליגה סינית",     flag:"🇨🇳", c:"#D4000D" },
-  EL:         { name:"יורוליג",        flag:"🏀",  c:"#0057A8" },
-  MLS:        { name:"MLS",            flag:"🇺🇸", c:"#003087" },
-  Eredivisie: { name:"ארדיביזי",       flag:"🇳🇱", c:"#FF6600" },
-  LigaBr:     { name:"ברזיל סרי א",   flag:"🇧🇷", c:"#00923F" },
-  Ekstraklasa:{ name:"אקסטרקלאסה",    flag:"🇵🇱", c:"#E30613" },
+  EPL:        { name:"פרמיר ליג",           flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", c:"#3D195B" },
+  LaLiga:     { name:"לה ליגה",              flag:"🇪🇸", c:"#FF4B44" },
+  Bundesliga: { name:"בונדסליגה",            flag:"🇩🇪", c:"#D20515" },
+  SerieA:     { name:"סרי א",                flag:"🇮🇹", c:"#024494" },
+  Ligue1:     { name:"ליג 1",                flag:"🇫🇷", c:"#091C3E" },
+  CoupeFR:    { name:"גביע צרפת",            flag:"🇫🇷", c:"#002395" },
+  UCL:        { name:"ליגת האלופות",         flag:"🏆",  c:"#001D6C" },
+  UEL:        { name:"ליגה אירופית",         flag:"🏆",  c:"#F47A20" },
+  NBA:        { name:"NBA",                  flag:"🇺🇸", c:"#1D428A" },
+  ISL:        { name:"ליגת העל",             flag:"🇮🇱", c:"#004C97" },
+  BSL:        { name:"ליגת הכדורסל ישראל",  flag:"🇮🇱", c:"#003399" },
+  J1:         { name:"J1 יפן",               flag:"🇯🇵", c:"#E60012" },
+  CSL:        { name:"ליגה סינית",           flag:"🇨🇳", c:"#D4000D" },
+  EL:         { name:"יורוליג",              flag:"🏀",  c:"#0057A8" },
+  ACB:        { name:"ACB ספרד",             flag:"🇪🇸", c:"#AA151B" },
+  LegaBK:     { name:"לגה באסקט איטליה",    flag:"🇮🇹", c:"#009246" },
+  MLS:        { name:"MLS",                  flag:"🇺🇸", c:"#003087" },
+  Eredivisie: { name:"ארדיביזי",             flag:"🇳🇱", c:"#FF6600" },
+  LigaBr:     { name:"ברזיל סרי א",          flag:"🇧🇷", c:"#00923F" },
+  LibertaCopa:{ name:"קופה ליברטדורס",       flag:"🏆",  c:"#1B5E20" },
+  SudameCopa: { name:"קופה סודאמריקנה",      flag:"🏆",  c:"#1565C0" },
+  Ekstraklasa:{ name:"אקסטרקלאסה",           flag:"🇵🇱", c:"#E30613" },
+  Allsvenskan:{ name:"אלסוונסקן",            flag:"🇸🇪", c:"#006AA7" },
+  ProLeague:  { name:"פרו ליג בלגיה",        flag:"🇧🇪", c:"#1A1A2E" },
+  GreekSL:    { name:"סופר ליג יוון",        flag:"🇬🇷", c:"#1565C0" },
+  PortLiga:   { name:"פרימיירה ליגה",        flag:"🇵🇹", c:"#006600" },
+  TurSL:      { name:"סופר ליג טורקיה",      flag:"🇹🇷", c:"#E30A17" },
 };
 
 const CSS = `
@@ -138,6 +162,9 @@ body,#root{background:#0D0D0D;color:#F5E6CC;font-family:'Barlow',sans-serif;dire
 .src-row{display:flex;gap:4px;align-items:center;padding:0 11px 9px;flex-wrap:wrap}
 .src-badge{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(184,147,106,.7)}
 .src-match{border-color:rgba(74,222,128,.2);color:rgba(74,222,128,.7)}
+/* WINNER badge */
+.winner-badge{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);color:#4ade80;margin-right:auto;white-space:nowrap}
+.winner-badge.off{background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.2);color:#f87171}
 
 /* RANK */
 .rank{position:absolute;top:9px;right:9px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:13px;color:white;z-index:2}
@@ -628,6 +655,7 @@ STRICT RULES:
 4. Prioritize: strong home advantage, form streak (3+ wins), xG difference > 0.5, head-to-head dominance
 5. Include leagues from around the world — J1 Japan, Chinese Super League, MLS, Polish Ekstraklasa, Brazilian Série A, Israeli Liga, Eredivisie — not just top 5 European leagues
 6. All matches must be from TODAY (${dateStr}) or tomorrow at latest
+7. CRITICAL — Winner.co.il availability: ONLY include matches that are actually listed for betting on Winner.co.il. Winner covers major European leagues, NBA, EuroLeague, Israeli leagues, J.League, MLS, Copa Libertadores, Copa Sudamericana, Ekstraklasa, Allsvenskan, Belgian Pro League, Greek Super League, etc. Do NOT include small/regional leagues that Winner does not cover. Set "winnerAvailable": true only if you are confident the match appears on Winner.co.il
 
 For each match, verify odds are REALISTIC for Winner.co.il (Israeli bookmaker with ~6-8% margin):
 - If home odds are 1.50, draw should be approximately 3.60-4.20, away 4.00-6.00 (these ratios make sense)
@@ -640,11 +668,11 @@ Return ONLY valid JSON, no markdown, no explanation:
     {
       "id": "unique_id",
       "sport": "${sport}",
-      "leagueKey": "one of: EPL,LaLiga,Bundesliga,SerieA,Ligue1,UCL,NBA,ISL,J1,CSL,EL,MLS,Eredivisie,LigaBr,Ekstraklasa",
-      "league": "full league name in Hebrew",
+      "leagueKey": "one of: EPL,LaLiga,Bundesliga,SerieA,Ligue1,CoupeFR,UCL,UEL,NBA,ISL,BSL,J1,CSL,EL,ACB,LegaBK,MLS,Eredivisie,LigaBr,LibertaCopa,SudameCopa,Ekstraklasa,Allsvenskan,ProLeague,GreekSL,PortLiga,TurSL",
+      "league": "full league name in Hebrew — must be accurate",
       "country": "country in Hebrew",
-      "home": "home team",
-      "away": "away team",
+      "home": "home team name — must be spelled correctly",
+      "away": "away team name — must be spelled correctly",
       "time": "DD/MM · HH:MM",
       "hForm": ["W","W","D","L","W"],
       "aForm": ["L","D","W","W","L"],
@@ -653,6 +681,7 @@ Return ONLY valid JSON, no markdown, no explanation:
       "o2": "away odds e.g. 4.20",
       "bestSide": "1 or 2 (NEVER X — draw is unpredictable)",
       "conf": 68,
+      "winnerAvailable": true,
       "sourcesMatch": true,
       "sources": ["ווינר","365","bet365"],
       "sourceData": [
@@ -682,9 +711,13 @@ Return ONLY valid JSON, no markdown, no explanation:
 
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5",
       max_tokens: 5000,
       messages: [{role:"user",content:prompt}]
     })
@@ -693,6 +726,57 @@ Return ONLY valid JSON, no markdown, no explanation:
   const txt = (data.content||[]).find(b=>b.type==="text")?.text||"";
   const clean = txt.replace(/```json|```/g,"").trim();
   return JSON.parse(clean).matches||[];
+}
+
+// ─── WINNER AVAILABILITY CHECK ─────────────────────────────────
+async function checkWinnerAvailability(matches) {
+  const staticFiltered = matches.map(m => ({
+    ...m,
+    winnerAvailable: m.winnerAvailable !== false && WINNER_LEAGUES.has(m.leagueKey),
+  }));
+  if (!API_KEY) return staticFiltered;
+  const toVerify = staticFiltered.filter(m => m.winnerAvailable);
+  if (!toVerify.length) return staticFiltered;
+  try {
+    const list = toVerify
+      .map((m, i) => `${i + 1}. ${m.home} נגד ${m.away} | ${m.league} | ${m.time} | ליג: ${m.leagueKey}`)
+      .join("\n");
+    const verifyPrompt = `אתה מומחה לאתר ההימורים Winner.co.il.
+עבור כל משחק ברשימה, ציין האם הוא מופיע להימור ב-Winner.co.il בשבוע הקרוב.
+Winner מכסה: ליגות אירופיות מרכזיות, NBA, יורוליג, ליגת העל, MLS, J1, CSL, קופות דרום אמריקאיות, אקסטרקלאסה, אלסוונסקן, פרו ליג בלגיה, סופר ליג יוון, ACB, לגה באסקט.
+Winner לא מכסה: ליגות אזוריות קטנות, ליגות כדורסל מקומיות שאינן אירופיות מרכזיות.
+משחקים לבדיקה:
+${list}
+החזר JSON בלבד:
+{"results":[{"index":1,"available":true},{"index":2,"available":false}]}`;
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 600,
+        messages: [{ role: "user", content: verifyPrompt }],
+      }),
+    });
+    const data = await resp.json();
+    const txt = (data.content || []).find(b => b.type === "text")?.text || "";
+    const clean = txt.replace(/```json|```/g, "").trim();
+    const { results } = JSON.parse(clean);
+    const availMap = new Map(results.map(r => [r.index, r.available]));
+    let vi = 0;
+    return staticFiltered.map(m => {
+      if (!m.winnerAvailable) return m;
+      vi++;
+      const aiSays = availMap.get(vi);
+      return { ...m, winnerAvailable: aiSays !== false };
+    });
+  } catch {
+    return staticFiltered;
+  }
 }
 
 // ─── STATIC FALLBACK (verified realistic odds, today's matches) ──
