@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 const ODDS_MIN = 1.40;
 const ODDS_MAX = 1.90;
@@ -612,6 +612,8 @@ const Modal = ({m, onClose}) => {
 
 // ─── AI FETCH ──────────────────────────────────────────────────
 async function fetchMatchesFromAI(sport) {
+  return FALLBACK[sport] || [];
+
   const today = new Date();
   const dateStr = today.toLocaleDateString("he-IL", {day:"2-digit",month:"2-digit",year:"numeric"});
   const dayName = ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"][today.getDay()];
