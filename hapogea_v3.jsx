@@ -787,7 +787,7 @@ const LeagueBadge = ({lk}) => {
 };
 
 // ─── MATCH CARD ────────────────────────────────────────────────
-const MatchCard = ({m, rank, onClick, tipStatus}) => {
+const MatchCard = ({m, rank, onClick, tipStatus, onTipAction}) => {
   const lm = LM[m.leagueKey] || {};
   const bestOdds = m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX;
   const hp = hitProb(bestOdds);
@@ -890,6 +890,30 @@ const MatchCard = ({m, rank, onClick, tipStatus}) => {
             {p.tag && <div className={`pr-tag ${p.tag}`}>{p.tag==="val"?"VALUE":"מומלץ"}</div>}
           </div>
         ))}
+      </div>
+
+      {/* STATUS ROW — click to track this tip */}
+      <div style={{display:"flex",gap:6,padding:"0 11px 11px"}} onClick={e=>e.stopPropagation()}>
+        {["won","pending","lost"].map(s => {
+          const st = TIP_STATUS[s];
+          const active = tipStatus === s;
+          return (
+            <button key={s}
+              onClick={() => onTipAction && onTipAction(m, s)}
+              style={{
+                flex:1, padding:"6px 0",
+                fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:700,
+                letterSpacing:.5, textTransform:"uppercase", cursor:"pointer",
+                border:`1px solid ${active ? st.border : "rgba(61,26,10,.5)"}`,
+                borderRadius:7,
+                background: active ? st.bg : "rgba(255,255,255,.03)",
+                color: active ? st.color : "rgba(184,147,106,.5)",
+                transition:"all .15s",
+              }}>
+              {st.icon} {st.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -1668,6 +1692,35 @@ export default function App() {
     }
   };
 
+  // Called when user clicks a status button directly on a match card
+  const handleCardTipAction = useCallback((m, status) => {
+    setTips(prev => {
+      const existing = prev.find(t => t.matchId === m.id);
+      if (existing) {
+        return prev.map(t => t.matchId === m.id ? { ...t, status } : t);
+      }
+      // Not yet tracked — add it with chosen status
+      const topPick = (m.picks||[])[0];
+      const newTip = {
+        id: Date.now().toString() + Math.random().toString(36).slice(2),
+        matchId: m.id,
+        sport: m.sport,
+        leagueKey: m.leagueKey,
+        league: (LM[m.leagueKey]?.name) || m.league || m.leagueKey,
+        home: m.home,
+        away: m.away,
+        market: topPick?.market || "1X2",
+        pick: topPick?.pick || (m.bestSide==="1"?`1 — ${m.home}`:m.bestSide==="2"?`2 — ${m.away}`:"X"),
+        odds: topPick?.odds || (m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX),
+        status,
+        addedAt: Date.now(),
+        source: "Winner.co.il",
+        winnerAvailable: m.winnerAvailable,
+      };
+      return [newTip, ...prev];
+    });
+  }, []);
+
   const addTip = useCallback((tip) => {
     setTips(prev => {
       if (prev.some(t => t.matchId === tip.matchId)) {
@@ -1902,7 +1955,8 @@ export default function App() {
                   <div className="grid">
                     {sorted.map((m,i) => (
                       <MatchCard key={m.id} m={m} rank={i+1} onClick={setSel}
-                        tipStatus={tips.find(t=>t.matchId===m.id)?.status}/>
+                        tipStatus={tips.find(t=>t.matchId===m.id)?.status}
+                        onTipAction={handleCardTipAction}/>
                     ))}
                   </div>
                 )}
