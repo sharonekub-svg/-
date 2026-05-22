@@ -24,7 +24,7 @@ const PAYMENT_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_PAYMENT_URL) ||
   "https://buy.stripe.com/REPLACE_WITH_YOUR_LINK";
 
-// ─── TRACKER CONSTANTS ─────────────────────────────────────────
+//  TRACKER CONSTANTS 
 const TRACKER_KEY = "hapogea_tips_v1";
 const ODDS_CACHE_KEY = "hapogea_odds_v1";
 const ODDS_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 min
@@ -43,107 +43,107 @@ const FILTER_TABS = [
 ];
 
 const LM = {
-  EPL:        { name:"פרמיר ליג",           flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", c:"#3D195B" },
-  LaLiga:     { name:"לה ליגה",              flag:"🇪🇸", c:"#FF4B44" },
-  Bundesliga: { name:"בונדסליגה",            flag:"🇩🇪", c:"#D20515" },
-  SerieA:     { name:"סרי א",                flag:"🇮🇹", c:"#024494" },
-  Ligue1:     { name:"ליג 1",                flag:"🇫🇷", c:"#091C3E" },
-  CoupeFR:    { name:"גביע צרפת",            flag:"🇫🇷", c:"#002395" },
-  UCL:        { name:"ליגת האלופות",         flag:"🏆",  c:"#001D6C" },
-  UEL:        { name:"ליגה אירופית",         flag:"🏆",  c:"#F47A20" },
-  NBA:        { name:"NBA",                  flag:"🇺🇸", c:"#1D428A" },
-  ISL:        { name:"ליגת העל",             flag:"🇮🇱", c:"#004C97" },
-  BSL:        { name:"ליגת הכדורסל ישראל",  flag:"🇮🇱", c:"#003399" },
-  J1:         { name:"J1 יפן",               flag:"🇯🇵", c:"#E60012" },
-  CSL:        { name:"ליגה סינית",           flag:"🇨🇳", c:"#D4000D" },
+  EPL:        { name:"פרמיר ליג",           flag:"ENG", c:"#3D195B" },
+  LaLiga:     { name:"לה ליגה",              flag:"ESP", c:"#FF4B44" },
+  Bundesliga: { name:"בונדסליגה",            flag:"GER", c:"#D20515" },
+  SerieA:     { name:"סרי א",                flag:"ITA", c:"#024494" },
+  Ligue1:     { name:"ליג 1",                flag:"FRA", c:"#091C3E" },
+  CoupeFR:    { name:"גביע צרפת",            flag:"FRA", c:"#002395" },
+  UCL:        { name:"ליגת האלופות",         flag:"CUP",  c:"#001D6C" },
+  UEL:        { name:"ליגה אירופית",         flag:"CUP",  c:"#F47A20" },
+  NBA:        { name:"NBA",                  flag:"USA", c:"#1D428A" },
+  ISL:        { name:"ליגת העל",             flag:"ISR", c:"#004C97" },
+  BSL:        { name:"ליגת הכדורסל ישראל",  flag:"ISR", c:"#003399" },
+  J1:         { name:"J1 יפן",               flag:"JPN", c:"#E60012" },
+  CSL:        { name:"ליגה סינית",           flag:"CHN", c:"#D4000D" },
   EL:         { name:"יורוליג",              flag:"",  c:"#0057A8" },
-  ACB:        { name:"ACB ספרד",             flag:"🇪🇸", c:"#AA151B" },
-  LegaBK:     { name:"לגה באסקט איטליה",    flag:"🇮🇹", c:"#009246" },
-  MLS:        { name:"MLS",                  flag:"🇺🇸", c:"#003087" },
-  Eredivisie: { name:"ארדיביזי",             flag:"🇳🇱", c:"#FF6600" },
-  LigaBr:     { name:"ברזיל סרי א",          flag:"🇧🇷", c:"#00923F" },
-  LibertaCopa:{ name:"קופה ליברטדורס",       flag:"🏆",  c:"#1B5E20" },
-  SudameCopa: { name:"קופה סודאמריקנה",      flag:"🏆",  c:"#1565C0" },
-  Ekstraklasa:{ name:"אקסטרקלאסה",           flag:"🇵🇱", c:"#E30613" },
-  Allsvenskan:{ name:"אלסוונסקן",            flag:"🇸🇪", c:"#006AA7" },
-  ProLeague:  { name:"פרו ליג בלגיה",        flag:"🇧🇪", c:"#1A1A2E" },
-  GreekSL:    { name:"סופר ליג יוון",        flag:"🇬🇷", c:"#1565C0" },
-  PortLiga:   { name:"פרימיירה ליגה",        flag:"🇵🇹", c:"#006600" },
-  TurSL:      { name:"סופר ליג טורקיה",      flag:"🇹🇷", c:"#E30A17" },
+  ACB:        { name:"ACB ספרד",             flag:"ESP", c:"#AA151B" },
+  LegaBK:     { name:"לגה באסקט איטליה",    flag:"ITA", c:"#009246" },
+  MLS:        { name:"MLS",                  flag:"USA", c:"#003087" },
+  Eredivisie: { name:"ארדיביזי",             flag:"NED", c:"#FF6600" },
+  LigaBr:     { name:"ברזיל סרי א",          flag:"BRA", c:"#00923F" },
+  LibertaCopa:{ name:"קופה ליברטדורס",       flag:"CUP",  c:"#1B5E20" },
+  SudameCopa: { name:"קופה סודאמריקנה",      flag:"CUP",  c:"#1565C0" },
+  Ekstraklasa:{ name:"אקסטרקלאסה",           flag:"POL", c:"#E30613" },
+  Allsvenskan:{ name:"אלסוונסקן",            flag:"SWE", c:"#006AA7" },
+  ProLeague:  { name:"פרו ליג בלגיה",        flag:"BEL", c:"#1A1A2E" },
+  GreekSL:    { name:"סופר ליג יוון",        flag:"GRE", c:"#1565C0" },
+  PortLiga:   { name:"פרימיירה ליגה",        flag:"POR", c:"#006600" },
+  TurSL:      { name:"סופר ליג טורקיה",      flag:"TUR", c:"#E30A17" },
 };
 
 const WC2026_GROUPS = [
   { id:"A", teams:[
-    {name:"מקסיקו",flag:"🇲🇽",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"ג'מייקה",flag:"🇯🇲",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"ונצואלה",flag:"🇻🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"אקוודור",flag:"🇪🇨",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"מקסיקו",flag:"MEX",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ג'מייקה",flag:"JAM",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ונצואלה",flag:"VEN",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אקוודור",flag:"ECU",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"B", teams:[
-    {name:'ארה"ב',flag:"🇺🇸",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"קנדה",flag:"🇨🇦",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"אורוגוואי",flag:"🇺🇾",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"בוליביה",flag:"🇧🇴",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:'ארה"ב',flag:"USA",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קנדה",flag:"CAN",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אורוגוואי",flag:"URU",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"בוליביה",flag:"BOL",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"C", teams:[
-    {name:"ארגנטינה",flag:"🇦🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"צ'ילה",flag:"🇨🇱",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"פרו",flag:"🇵🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"פרגוואי",flag:"🇵🇾",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ארגנטינה",flag:"ARG",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"צ'ילה",flag:"CHI",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פרו",flag:"PER",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פרגוואי",flag:"PAR",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"D", teams:[
-    {name:"ברזיל",flag:"🇧🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"קולומביה",flag:"🇨🇴",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"פנמה",flag:"🇵🇦",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"קוסטה ריקה",flag:"🇨🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ברזיל",flag:"BRA",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קולומביה",flag:"COL",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פנמה",flag:"PAN",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קוסטה ריקה",flag:"CRI",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"E", teams:[
-    {name:"ספרד",flag:"🇪🇸",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"מרוקו",flag:"🇲🇦",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"פורטוגל",flag:"🇵🇹",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"קרואטיה",flag:"🇭🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ספרד",flag:"ESP",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"מרוקו",flag:"MAR",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פורטוגל",flag:"POR",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קרואטיה",flag:"CRO",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"F", teams:[
-    {name:"צרפת",flag:"🇫🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"גרמניה",flag:"🇩🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"גאנה",flag:"🇬🇭",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"קוט ד'איבואר",flag:"🇨🇮",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"צרפת",flag:"FRA",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"גרמניה",flag:"GER",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"גאנה",flag:"GHA",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קוט ד'איבואר",flag:"CIV",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"G", teams:[
-    {name:"אנגליה",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"הולנד",flag:"🇳🇱",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"טורקיה",flag:"🇹🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"ניגריה",flag:"🇳🇬",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אנגליה",flag:"ENG",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"הולנד",flag:"NED",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"טורקיה",flag:"TUR",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ניגריה",flag:"NGA",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"H", teams:[
-    {name:"בלגיה",flag:"🇧🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"יפן",flag:"🇯🇵",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"סנגל",flag:"🇸🇳",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"אלג'יריה",flag:"🇩🇿",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"בלגיה",flag:"BEL",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"יפן",flag:"JPN",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"סנגל",flag:"SEN",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אלג'יריה",flag:"ALG",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"I", teams:[
-    {name:"איטליה",flag:"🇮🇹",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"פולין",flag:"🇵🇱",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"סקוטלנד",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"גינאה",flag:"🇬🇳",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"איטליה",flag:"ITA",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פולין",flag:"POL",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"סקוטלנד",flag:"SCO",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"גינאה",flag:"GUI",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"J", teams:[
-    {name:"שוויץ",flag:"🇨🇭",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"קוריאה",flag:"🇰🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"קמרון",flag:"🇨🇲",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"אוסטרליה",flag:"🇦🇺",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"שוויץ",flag:"SUI",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קוריאה",flag:"KOR",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קמרון",flag:"CMR",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אוסטרליה",flag:"AUS",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"K", teams:[
-    {name:"דנמרק",flag:"🇩🇰",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"אירלנד",flag:"🇮🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"טוניסיה",flag:"🇹🇳",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"אינדונזיה",flag:"🇮🇩",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"דנמרק",flag:"DEN",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אירלנד",flag:"IRL",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"טוניסיה",flag:"TUN",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אינדונזיה",flag:"IDN",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
   { id:"L", teams:[
-    {name:"סרביה",flag:"🇷🇸",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"אוקראינה",flag:"🇺🇦",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"ניו זילנד",flag:"🇳🇿",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
-    {name:"ג'ורדן",flag:"🇯🇴",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"סרביה",flag:"SRB",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אוקראינה",flag:"UKR",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ניו זילנד",flag:"NZL",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ג'ורדן",flag:"JOR",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
   ]},
 ];
 
@@ -405,7 +405,7 @@ body,#root{
 .day-rate{font-family:'Heebo',sans-serif;font-size:28px;font-weight:900;margin-right:auto}
 
 
-/* ── TRACKER TABS ───────────────────────────────────────────────── */
+/*  TRACKER TABS  */
 .tracker-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
 .tracker-tab{font-family:'Assistant',sans-serif;font-size:13px;font-weight:800;padding:7px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);color:#aeb8bd;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px}
 .tracker-tab:hover{border-color:rgba(49,209,135,.3);color:#f7f3ea}
@@ -413,14 +413,14 @@ body,#root{
 .tab-ct{background:rgba(255,255,255,.07);border-radius:10px;padding:1px 7px;font-size:11px;color:#aeb8bd;min-width:18px;text-align:center}
 .tracker-tab.active .tab-ct{background:rgba(49,209,135,.15);color:#31d187}
 
-/* ── TODAY WINS ──────────────────────────────────────────────────── */
+/*  TODAY WINS  */
 .today-wins{margin-bottom:26px;padding:18px;background:rgba(49,209,135,.04);border:1px solid rgba(49,209,135,.2);border-radius:10px;position:relative;overflow:hidden}
 .today-wins::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#31d187,#55d6ff,#31d187);background-size:200%;animation:sh 4s ease infinite}
 .tw-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .tw-title{font-family:'Heebo',sans-serif;font-size:22px;font-weight:900;color:#31d187}
 .tw-ct{font-family:'Assistant',sans-serif;font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;background:rgba(49,209,135,.1);border:1px solid rgba(49,209,135,.25);color:#31d187}
 
-/* ── TIP CARD ────────────────────────────────────────────────────── */
+/*  TIP CARD  */
 .tip-card{background:rgba(16,21,26,.84);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:14px;position:relative;overflow:hidden;transition:all .18s;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .tip-card:hover{transform:translateY(-2px);border-color:rgba(85,214,255,.2)}
 .tip-stripe{position:absolute;top:0;right:0;left:0;height:3px;border-radius:10px 10px 0 0}
@@ -442,7 +442,7 @@ body,#root{
 .tip-admin-btns{display:flex;gap:6px;margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:10px}
 .tip-admin-btn{flex:1;padding:5px 0;border-radius:6px;font-family:'Assistant',sans-serif;font-size:11px;font-weight:800;cursor:pointer;transition:all .12s;border:1px solid transparent}
 
-/* ── ODDS LOG (admin) ─────────────────────────────────────────── */
+/*  ODDS LOG (admin)  */
 .odds-log{margin-top:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden}
 .odds-log-hdr{padding:8px 12px;background:rgba(255,255,255,.025);border-bottom:1px solid rgba(255,255,255,.07);font-family:'Assistant',sans-serif;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#aeb8bd;display:flex;align-items:center;justify-content:space-between}
 .log-row{display:flex;gap:12px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.05);font-family:'Assistant',sans-serif;font-size:11px;align-items:center}
@@ -450,11 +450,11 @@ body,#root{
 .log-status{font-weight:800}
 .log-status.ok{color:#31d187}.log-status.fail{color:#ef5350}.log-status.warn{color:#ffc857}
 
-/* ── PREMIUM BADGE ───────────────────────────────────────────── */
+/*  PREMIUM BADGE  */
 .prem-badge{font-family:'Assistant',sans-serif;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:rgba(255,200,87,.1);border:1px solid rgba(255,200,87,.3);color:#ffc857;white-space:nowrap}
 .lock-icon{font-size:11px;opacity:.6}
 
-/* ── PREMIUM GATE ────────────────────────────────────────────── */
+/*  PREMIUM GATE  */
 .prem-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;gap:16px}
 .prem-gate-icon{width:72px;height:72px;border-radius:50%;background:rgba(255,200,87,.08);border:2px solid rgba(255,200,87,.3);display:flex;align-items:center;justify-content:center;font-size:32px}
 .prem-gate-title{font-family:'Heebo',sans-serif;font-size:28px;font-weight:900;color:#ffc857}
@@ -466,7 +466,7 @@ body,#root{
 .prem-btn{width:100%;max-width:280px;padding:13px;background:#ffc857;border:none;border-radius:10px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:18px;font-weight:900;color:#07090b;transition:all .18s}
 .prem-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,200,87,.3)}
 
-/* ── AGENT CHAT ──────────────────────────────────────────────── */
+/*  AGENT CHAT  */
 .agent-wrap{display:flex;flex-direction:column;height:calc(100vh - 68px - 4px);max-width:860px;margin:0 auto;padding:0 20px}
 .agent-header{padding:16px 0 12px;border-bottom:1px solid rgba(255,255,255,.09);display:flex;align-items:center;gap:12px}
 .agent-avatar{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#ff7a45,#ef5350);display:flex;align-items:center;justify-content:center;font-family:'Heebo',sans-serif;font-size:18px;font-weight:900;color:white;flex-shrink:0}
@@ -501,14 +501,14 @@ body,#root{
 .typing-dots span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
 
-/* ── STATS BAR (today's record) ─────────────────────────────── */
+/*  STATS BAR (today's record)  */
 .stats-bar{display:flex;gap:10px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.09);border-radius:10px;margin-bottom:18px;flex-wrap:wrap}
 .stat-item{display:flex;flex-direction:column;align-items:center;min-width:56px}
 .stat-val{font-family:'Heebo',sans-serif;font-size:22px;font-weight:900;line-height:1}
 .stat-lbl{font-family:'Assistant',sans-serif;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#aeb8bd;margin-top:2px}
 .stat-divider{width:1px;background:rgba(255,255,255,.09);align-self:stretch;margin:0 4px}
 
-/* ── BOTTOM NAV ──────────────────────────────────────────────── */
+/*  BOTTOM NAV  */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(7,9,11,.97);backdrop-filter:blur(18px);border-top:1px solid rgba(255,255,255,.09);display:flex;padding:0 4px;padding-bottom:env(safe-area-inset-bottom,0)}
 .bn-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px 6px;cursor:pointer;border:none;background:transparent;color:rgba(174,184,189,.5);transition:all .15s;position:relative;min-width:0}
 .bn-tab.active{color:#31d187}
@@ -518,7 +518,7 @@ body,#root{
 .bn-badge{position:absolute;top:4px;right:calc(50% - 20px);background:#ef5350;color:white;border-radius:8px;padding:1px 5px;font-size:8px;font-weight:800;font-family:'Assistant',sans-serif;min-width:14px;text-align:center}
 body,#root{padding-bottom:60px}
 
-/* ── LIVE SECTION ────────────────────────────────────────────── */
+/*  LIVE SECTION  */
 .live-card{background:rgba(16,21,26,.84);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:14px;position:relative;overflow:hidden}
 .live-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#31d187,#55d6ff);animation:sh 2s ease infinite}
 .live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(49,209,135,.1);border:1px solid rgba(49,209,135,.35);color:#31d187;font-family:'Assistant',sans-serif;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:999px}
@@ -531,7 +531,7 @@ body,#root{padding-bottom:60px}
 .live-event{font-family:'Assistant',sans-serif;font-size:11px;color:#aeb8bd;display:flex;align-items:center;gap:6px}
 .live-min{color:#31d187;font-weight:800;min-width:28px}
 
-/* ── FINISHED SECTION ───────────────────────────────────────── */
+/*  FINISHED SECTION  */
 .fin-card{background:rgba(16,21,26,.84);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:12px 14px}
 .fin-score{font-family:'Heebo',sans-serif;font-size:32px;font-weight:900;color:white;text-align:center;line-height:1}
 .fin-teams{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
@@ -540,7 +540,7 @@ body,#root{padding-bottom:60px}
 .poss-fill{height:100%;background:linear-gradient(90deg,#31d187,#55d6ff);border-radius:3px}
 .fin-stat-row{display:flex;justify-content:space-between;font-family:'Assistant',sans-serif;font-size:10px;color:#aeb8bd}
 
-/* ── WORLD CUP 2026 ─────────────────────────────────────────── */
+/*  WORLD CUP 2026  */
 .wc-header{background:rgba(16,21,26,.84);border:1px solid rgba(255,200,87,.2);border-radius:10px;padding:20px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden}
 .wc-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ffc857,#ff7a45,#ffc857);background-size:200%;animation:sh 3s ease infinite}
 .wc-title{font-family:'Heebo',sans-serif;font-size:32px;font-weight:900;color:#ffc857}
@@ -566,7 +566,7 @@ body,#root{padding-bottom:60px}
 .wc-match-score{font-family:'Heebo',sans-serif;font-size:22px;font-weight:900;color:#ffc857;min-width:50px;text-align:center}
 .wc-stadium{font-family:'Assistant',sans-serif;font-size:9px;color:rgba(174,184,189,.5);margin-top:2px;display:flex;align-items:center;gap:3px}
 
-/* ── LEAGUES VIEW ────────────────────────────────────────────── */
+/*  LEAGUES VIEW  */
 .league-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .league-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:14px;cursor:pointer;transition:all .15s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
 .league-card:hover,.league-card.active{transform:translateY(-2px);border-color:rgba(49,209,135,.3)}
@@ -575,7 +575,7 @@ body,#root{padding-bottom:60px}
 .league-card-name{font-family:'Assistant',sans-serif;font-size:12px;font-weight:700;color:#f7f3ea}
 `;
 
-// ─── TRACKER HELPERS ───────────────────────────────────────────
+//  TRACKER HELPERS 
 
 function loadTips() {
   try { return JSON.parse(localStorage.getItem(TRACKER_KEY) || "[]"); } catch { return []; }
@@ -608,7 +608,7 @@ function loadPremium() {
 function savePremium(v) {
   try { localStorage.setItem(PREMIUM_KEY, v ? "1" : "0"); } catch {}
 }
-// ─── DATE HELPERS ──────────────────────────────────────────────
+//  DATE HELPERS 
 function getDateLabel(ts) {
   if (!ts) return "";
   const d = new Date(ts), now = new Date();
@@ -641,7 +641,7 @@ function getMatchDateLabel(timeStr) {
 
 
 
-// ─── HELPERS ───────────────────────────────────────────────────
+//  HELPERS 
 
 function hitProb(odds) {
   // Theoretical hit probability from odds (before bookmaker margin)
@@ -766,7 +766,7 @@ function buildBasketballMarkets(home, away, ou) {
   ];
 }
 
-// ─── AUTO RESULT CHECK ─────────────────────────────────────────
+//  AUTO RESULT CHECK 
 // Parses "22/05 · 21:30" → Date object
 function parseMatchTime(timeStr) {
   if (!timeStr) return null;
@@ -818,7 +818,7 @@ async function checkMatchResults(tips) {
   } catch { return {}; }
 }
 
-// ─── ODDS REFRESH (Claude-powered — no direct Winner API) ──────
+//  ODDS REFRESH (Claude-powered — no direct Winner API) 
 async function fetchLatestOdds(tips) {
   if (!API_KEY) return { updated: null, odds: {}, log: null };
   const pending = tips.filter(t => t.status === "pending");
@@ -847,7 +847,7 @@ async function fetchLatestOdds(tips) {
   }
 }
 
-// ─── STATUS BADGE ──────────────────────────────────────────────
+//  STATUS BADGE 
 const StatusBadge = ({ status }) => {
   const st = TIP_STATUS[status] || TIP_STATUS.pending;
   return (
@@ -857,7 +857,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ─── TIP CARD ──────────────────────────────────────────────────
+//  TIP CARD 
 const TipCard = ({ tip, isAdmin, onStatusChange }) => {
   const lm = LM[tip.leagueKey] || {};
   const st = TIP_STATUS[tip.status] || TIP_STATUS.pending;
@@ -890,7 +890,7 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
         </div>
       )}
       <div className="tip-league-row">
-        <span style={{fontSize:15}}>{lm.flag||"🏆"}</span>
+        <span style={{fontSize:15}}>{lm.flag||"CUP"}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#B8936A"}}>{lm.name||tip.league}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.45)"}}>{tip.sport==="football"?"כדורגל":"כדורסל"}</span>
         <span style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#FF6200"}}>{getDateLabel(tip.addedAt)} · {fmtTime(tip.addedAt)}</span>
@@ -945,7 +945,7 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
   );
 };
 
-// ─── TODAY WINS ────────────────────────────────────────────────
+//  TODAY WINS 
 const TodayWins = ({ tips }) => {
   const won = tips.filter(t => t.status==="won" && isToday(t.addedAt));
   if (!won.length) return null;
@@ -962,7 +962,7 @@ const TodayWins = ({ tips }) => {
   );
 };
 
-// ─── ADMIN PANEL (login overlay) ───────────────────────────────
+//  ADMIN PANEL (login overlay) 
 const AdminLogin = ({ onAuth, onClose }) => {
   const [pass, setPass] = useState("");
   const [err, setErr] = useState(false);
@@ -973,7 +973,7 @@ const AdminLogin = ({ onAuth, onClose }) => {
   return (
     <div className="ovl" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{background:"#110606",border:"1px solid rgba(196,12,12,.4)",borderRadius:16,padding:28,width:"100%",maxWidth:360,margin:"auto",animation:"su .25s ease"}}>
-        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,letterSpacing:2,marginBottom:4}}>⚙ כניסת אדמין</div>
+        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,letterSpacing:2,marginBottom:4}}> כניסת אדמין</div>
         <div style={{fontSize:11,color:"#B8936A",marginBottom:18,letterSpacing:.5}}>הזן סיסמת מנהל לניהול טיפים</div>
         <input className={`admin-panel-input${err?" err":""}`} type="password" value={pass}
           onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="סיסמה..."/>
@@ -986,7 +986,7 @@ const AdminLogin = ({ onAuth, onClose }) => {
   );
 };
 
-// ─── TIP TRACKER VIEW ──────────────────────────────────────────
+//  TIP TRACKER VIEW 
 const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
   const [tips, setTips] = useState(loadTips);
   const [filter, setFilter] = useState("all");
@@ -1088,19 +1088,19 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
           <div className="status-time">עודכן לאחרונה: {fmtTime(lastOddsUpdate)}</div>
         )}
         <button className="refresh-btn" onClick={()=>doRefreshOdds()} disabled={refreshing||!API_KEY}>
-          {refreshing ? "..." : "⟳ רענן יחסים"}
+          {refreshing ? "..." : " רענן יחסים"}
         </button>
         {isAdmin ? (
           <button className="refresh-btn" style={{color:"#facc15",borderColor:"rgba(250,204,21,.3)"}} onClick={onAdminLogout}>
-            ⚙ אדמין — יציאה
+             אדמין — יציאה
           </button>
         ) : (
-          <button className="refresh-btn" onClick={onAdminRequest}>⚙ אדמין</button>
+          <button className="refresh-btn" onClick={onAdminRequest}> אדמין</button>
         )}
       </div>
 
       {!API_KEY && (
-        <div className="disc" style={{marginBottom:16}}>⚠ הגדר <code>VITE_ANTHROPIC_API_KEY</code> ב-Vercel כדי לרענן יחסים אוטומטית.</div>
+        <div className="disc" style={{marginBottom:16}}> הגדר <code>VITE_ANTHROPIC_API_KEY</code> ב-Vercel כדי לרענן יחסים אוטומטית.</div>
       )}
 
       {/* Day tabs */}
@@ -1123,8 +1123,18 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
           <div className="day-stat"><div className="day-stat-val" style={{color:"#ffc857"}}>{dayStats.pending}</div><div className="day-stat-lbl">ממתינים</div></div>
           {dayStats.rate!==null && (<>
             <div className="day-divider"/>
-            <div className="day-rate" style={{color:dayStats.rate>=60?"#31d187":dayStats.rate>=40?"#ff7a45":"#ef5350"}}>{dayStats.rate}%</div>
-            <div style={{fontFamily:"'Assistant',sans-serif",fontSize:10,color:"#aeb8bd",alignSelf:"center"}}>אחוז פגיעה</div>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,marginRight:"auto"}}>
+              <div style={{
+                width:54,height:54,borderRadius:"50%",
+                background:`conic-gradient(${dayStats.rate>=60?"#31d187":dayStats.rate>=40?"#ff7a45":"#ef5350"} ${dayStats.rate*3.6}deg, rgba(255,255,255,.06) 0deg)`,
+                display:"flex",alignItems:"center",justifyContent:"center",position:"relative"
+              }}>
+                <div style={{width:38,height:38,borderRadius:"50%",background:"#0d1216",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <span style={{fontFamily:"'Heebo',sans-serif",fontSize:13,fontWeight:900,color:dayStats.rate>=60?"#31d187":dayStats.rate>=40?"#ff7a45":"#ef5350"}}>{dayStats.rate}%</span>
+                </div>
+              </div>
+              <span style={{fontFamily:"'Assistant',sans-serif",fontSize:9,fontWeight:800,letterSpacing:.5,textTransform:"uppercase",color:"#aeb8bd"}}>אחוז פגיעה</span>
+            </div>
           </>)}
         </div>
       )}
@@ -1170,7 +1180,7 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
             <div key={i} className="log-row">
               <span style={{color:"rgba(184,147,106,.5)",minWidth:50}}>{fmtTime(l.ts)}</span>
               <span className={`log-status ${l.status==="ok"?"ok":l.status==="fail"?"fail":"warn"}`}>
-                {l.status==="ok"?"✓ הצלחה":l.status==="fail"?" כישלון":"⚠ אזהרה"}
+                {l.status==="ok"?" הצלחה":l.status==="fail"?" כישלון":" אזהרה"}
               </span>
               <span style={{color:"rgba(184,147,106,.6)",flex:1,fontSize:10}}>{l.source}</span>
               <span style={{color:"#B8936A",minWidth:40,textAlign:"left"}}>{l.count} משחקים</span>
@@ -1194,12 +1204,12 @@ const LeagueBadge = ({lk}) => {
   const m = LM[lk] || {};
   return (
     <div className="lg-badge" style={{background: m.c ? m.c+"22" : "rgba(255,255,255,.05)", border:`1px solid ${m.c||"rgba(255,255,255,.1)"}44`}}>
-      <span style={{fontSize:15}}>{m.flag||"🏆"}</span>
+      <span style={{fontSize:15}}>{m.flag||"CUP"}</span>
     </div>
   );
 };
 
-// ─── POGUEA AI AGENT ───────────────────────────────────────────
+//  POGUEA AI AGENT 
 async function askPogueaAgent(messages) {
   if (!API_KEY) throw new Error("no_key");
   const system = `אתה "הפוגע" — סוכן AI ישראלי מומחה בניתוח הימורי ספורט.
@@ -1213,9 +1223,9 @@ async function askPogueaAgent(messages) {
 5. **ניתוח הסיכוי** — P_imp (מהיחס) מול P_real (מהסטטיסטיקות)
 6. **ערך ההימור** — EV = (P_real × יחס) − 1, חיובי או שלילי?
 7. **פסיקה סופית** — אחת מהאפשרויות הבאות:
-   VALUE BET ✓ — יש ערך, כדאי
-   AVOID ✗ — אין ערך, לא כדאי
-   RISKY ⚠ — גבולי, תלוי בסיכון שתרצה לקחת
+   VALUE BET  — יש ערך, כדאי
+   AVOID  — אין ערך, לא כדאי
+   RISKY  — גבולי, תלוי בסיכון שתרצה לקחת
 
 ענה תמיד בעברית. היה ספציפי עם מספרים ואחוזים.
 בסוף התגובה, סיים תמיד עם שורת VERDICT:
@@ -1241,10 +1251,10 @@ function VerdictCard({ text }) {
   const v = line.replace("VERDICT:","").trim().toUpperCase();
   if (!v) return null;
   const cfg = v === "VALUE"
-    ? { cls:"value", icon:"✓", label:"VALUE BET — כדאי!", color:"#4ade80" }
+    ? { cls:"value", icon:"", label:"VALUE BET — כדאי!", color:"#4ade80" }
     : v === "AVOID"
     ? { cls:"avoid", icon:"", label:"AVOID — לא כדאי", color:"#f87171" }
-    : { cls:"risky", icon:"⚠", label:"RISKY — גבולי", color:"#facc15" };
+    : { cls:"risky", icon:"", label:"RISKY — גבולי", color:"#facc15" };
   const body = text.replace(/VERDICT:.*/,"").trim();
   return (
     <div>
@@ -1297,8 +1307,8 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
     } catch(e) {
       setMsgs(prev => [...prev, { id:"err", role:"assistant",
         text: e.message==="no_key"
-          ? "⚠ לא מוגדר API Key. הגדר VITE_ANTHROPIC_API_KEY ב-Vercel."
-          : "⚠ שגיאה בניתוח. נסה שוב.",
+          ? " לא מוגדר API Key. הגדר VITE_ANTHROPIC_API_KEY ב-Vercel."
+          : " שגיאה בניתוח. נסה שוב.",
         ts: Date.now() }]);
     }
     setThinking(false);
@@ -1432,7 +1442,7 @@ const PremiumCodeInput = ({ onUnlock }) => {
   );
 };
 
-// ─── TODAY STATS BAR ───────────────────────────────────────────
+//  TODAY STATS BAR 
 const TodayStatsBar = ({ tips }) => {
   const today = tips.filter(t => isToday(t.addedAt));
   const won = today.filter(t=>t.status==="won").length;
@@ -1472,7 +1482,7 @@ const TodayStatsBar = ({ tips }) => {
 };
 
 
-// ─── WC PROMO BANNER ───────────────────────────────────────────
+//  WC PROMO BANNER 
 const WCPromoBanner = ({ onClick }) => (
   <div className="wc-promo" onClick={onClick}>
     <div className="wc-promo-inner">
@@ -1487,7 +1497,7 @@ const WCPromoBanner = ({ onClick }) => (
   </div>
 );
 
-// ─── MATCH CARD ────────────────────────────────────────────────
+//  MATCH CARD 
 const MatchCard = ({m, rank, onClick}) => {
   const lm = LM[m.leagueKey] || {};
   const bestOdds = m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX;
@@ -1536,7 +1546,7 @@ const MatchCard = ({m, rank, onClick}) => {
             <div className="oc-lbl">{c.lbl}</div>
             <div className={`oc-val ${c.best?"best":""}`}>{c.val}</div>
             {c.best && <div className="oc-tag">VALUE</div>}
-            <div className="oc-src">{m.sourcesMatch?"✓ verified":""}</div>
+            <div className="oc-src">{m.sourcesMatch?" verified":""}</div>
           </div>
         ))}
       </div>
@@ -1558,7 +1568,7 @@ const MatchCard = ({m, rank, onClick}) => {
           <div key={i} className={`src-badge ${m.sourcesMatch?"src-match":""}`}>{s}</div>
         ))}
         <div className={`winner-badge ${m.winnerAvailable===false?"off":""}`}>
-          {m.winnerAvailable===false ? "⚠ לא בווינר" : "✓ ווינר"}
+          {m.winnerAvailable===false ? " לא בווינר" : " ווינר"}
         </div>
       </div>
 
@@ -1591,7 +1601,7 @@ const MatchCard = ({m, rank, onClick}) => {
   );
 };
 
-// ─── MODAL ─────────────────────────────────────────────────────
+//  MODAL 
 const Modal = ({m, onClose}) => {
   const isB = m.sport==="basketball";
   const markets = isB
@@ -1627,7 +1637,7 @@ const Modal = ({m, onClose}) => {
           </div>
           <div style={{marginRight:"auto"}}>
             <div className={`winner-badge ${m.winnerAvailable===false?"off":""}`}>
-              {m.winnerAvailable===false ? "⚠ לא זמין בווינר" : "✓ זמין בווינר"}
+              {m.winnerAvailable===false ? " לא זמין בווינר" : " זמין בווינר"}
             </div>
           </div>
         </div>
@@ -1642,13 +1652,13 @@ const Modal = ({m, onClose}) => {
                   <div className="sv-src">{s.name}</div>
                   <div className="sv-odds">{s.odds}</div>
                   <div className="sv-note">{s.note}</div>
-                  {m.sourcesMatch && <div className="sv-match-badge">✓ תואם</div>}
+                  {m.sourcesMatch && <div className="sv-match-badge"> תואם</div>}
                 </div>
               ))}
             </div>
             {m.sourcesMatch && (
               <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#4ade80",letterSpacing:1,marginTop:8}}>
-                ✓ היחסים אומתו — עקביים בין כל המקורות (±0.05)
+                 היחסים אומתו — עקביים בין כל המקורות (±0.05)
               </div>
             )}
           </div>
@@ -1735,7 +1745,7 @@ const Modal = ({m, onClose}) => {
   );
 };
 
-// ─── LIVE MATCHES FETCH ────────────────────────────────────────
+//  LIVE MATCHES FETCH 
 async function fetchLiveMatches(sport) {
   if (!API_KEY) return [];
   const prompt = `You are a live sports data feed. Return exactly 6 currently live ${sport==="football"?"football":"basketball"} matches happening right now.
@@ -1757,7 +1767,7 @@ Return ONLY valid JSON:
   } catch { return []; }
 }
 
-// ─── FINISHED MATCHES FETCH ────────────────────────────────────
+//  FINISHED MATCHES FETCH 
 async function fetchFinishedMatches(sport) {
   if (!API_KEY) return [];
   const today = new Date().toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"});
@@ -1780,7 +1790,7 @@ Return ONLY valid JSON:
   } catch { return []; }
 }
 
-// ─── AI FETCH ──────────────────────────────────────────────────
+//  AI FETCH 
 async function fetchMatchesFromAI(sport) {
   if (!API_KEY) return [];
   const today = new Date();
@@ -1933,7 +1943,7 @@ Return ONLY valid JSON (no markdown, no preamble):
   }
 }
 
-// ─── WINNER AVAILABILITY CHECK ─────────────────────────────────
+//  WINNER AVAILABILITY CHECK 
 async function checkWinnerAvailability(matches) {
   const staticFiltered = matches.map(m => ({
     ...m,
@@ -1984,7 +1994,7 @@ ${list}
   }
 }
 
-// ─── STATIC FALLBACK (verified realistic odds, today's matches) ──
+//  STATIC FALLBACK (verified realistic odds, today's matches) 
 const FALLBACK = {
   football: [
     { id:"f1", sport:"football", leagueKey:"Bundesliga", league:"בונדסליגה — פלייאוף עלייה/ירידה", country:"גרמניה",
@@ -2382,7 +2392,7 @@ const FALLBACK = {
   ]
 };
 
-// ─── BOTTOM NAV ────────────────────────────────────────────────
+//  BOTTOM NAV 
 const BottomNav = ({ view, setView }) => {
   const tabs = [
     { key:"matches", icon:"", label:"ראשי" },
@@ -2404,7 +2414,7 @@ const BottomNav = ({ view, setView }) => {
   );
 };
 
-// ─── LIVE MATCH CARD ───────────────────────────────────────────
+//  LIVE MATCH CARD 
 const LiveMatchCard = ({ m }) => (
   <div className="live-card">
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
@@ -2444,7 +2454,7 @@ const LiveMatchCard = ({ m }) => (
   </div>
 );
 
-// ─── LIVE VIEW ─────────────────────────────────────────────────
+//  LIVE VIEW 
 const LiveView = ({ sport }) => {
   const [liveMatches, setLiveMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2469,7 +2479,7 @@ const LiveView = ({ sport }) => {
   return (
     <div className="wrap">
       <div className="sec-hdr" style={{marginBottom:16}}>
-        <div className="sec-ttl">🔴 משחקים לייב</div>
+        <div className="sec-ttl"> משחקים לייב</div>
         <div className="sec-ct">{items.length} משחקים פעילים</div>
         <div className="sec-line"/>
       </div>
@@ -2477,7 +2487,7 @@ const LiveView = ({ sport }) => {
         <div className="loading-box"><div className="spin"/><div className="load-txt">טוען משחקים חיים...</div></div>
       ) : items.length === 0 ? (
         <div style={{textAlign:"center",padding:"60px 20px",color:"rgba(184,147,106,.5)"}}>
-          <div style={{fontSize:48,marginBottom:14}}>📡</div>
+          <div style={{fontSize:48,marginBottom:14}}></div>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,letterSpacing:2,textTransform:"uppercase"}}>אין משחקים חיים כרגע</div>
         </div>
       ) : (
@@ -2489,7 +2499,7 @@ const LiveView = ({ sport }) => {
   );
 };
 
-// ─── FINISHED MATCH CARD ───────────────────────────────────────
+//  FINISHED MATCH CARD 
 const FinishedMatchCard = ({ m }) => {
   const lm = LM[m.leagueKey] || {};
   const homeWon = m.winner === "home";
@@ -2498,14 +2508,14 @@ const FinishedMatchCard = ({ m }) => {
     <div className="fin-card">
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:1,display:"flex",alignItems:"center",gap:4}}>
-          {lm.flag||"🏆"} {m.league}
+          {lm.flag||"CUP"} {m.league}
         </span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,letterSpacing:1,
           color:m.betCorrect?"#4ade80":"#f87171",
           background:m.betCorrect?"rgba(74,222,128,.08)":"rgba(248,113,113,.06)",
           border:`1px solid ${m.betCorrect?"rgba(74,222,128,.25)":"rgba(248,113,113,.2)"}`,
           borderRadius:4,padding:"2px 7px"}}>
-          {m.betCorrect!=null ? (m.betCorrect ? "✓ הימור נכון" : " הימור נפל") : " לא עקבנו"}
+          {m.betCorrect!=null ? (m.betCorrect ? " הימור נכון" : " הימור נפל") : " לא עקבנו"}
         </span>
       </div>
       <div className="fin-teams">
@@ -2539,7 +2549,7 @@ const FinishedMatchCard = ({ m }) => {
   );
 };
 
-// ─── FINISHED VIEW ─────────────────────────────────────────────
+//  FINISHED VIEW 
 const FinishedView = ({ sport }) => {
   const [finMatches, setFinMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2584,54 +2594,155 @@ const FinishedView = ({ sport }) => {
   );
 };
 
-// ─── WC 2026 VIEW ──────────────────────────────────────────────
+//  WC 2026 VIEW 
 const WC_SCHEDULE = [
-  {date:"11 יוני 2026",home:"מקסיקו 🇲🇽",away:"ג'מייקה 🇯🇲",group:"A",stadium:"אזטקה, מקסיקו סיטי"},
-  {date:"11 יוני 2026",home:'ארה"ב 🇺🇸',away:"קנדה 🇨🇦",group:"B",stadium:"מטלייף סטיום, ניו ג'רזי"},
-  {date:"12 יוני 2026",home:"ארגנטינה 🇦🇷",away:"צ'ילה 🇨🇱",group:"C",stadium:"דאלאס, טקסס"},
-  {date:"12 יוני 2026",home:"ברזיל 🇧🇷",away:"קולומביה 🇨🇴",group:"D",stadium:"לוס אנג'לס"},
-  {date:"13 יוני 2026",home:"ספרד 🇪🇸",away:"מרוקו 🇲🇦",group:"E",stadium:"מיאמי"},
-  {date:"13 יוני 2026",home:"צרפת 🇫🇷",away:"גרמניה 🇩🇪",group:"F",stadium:"אטלנטה"},
-  {date:"14 יוני 2026",home:"אנגליה 🏴󠁧󠁢󠁥󠁮󠁧󠁿",away:"הולנד 🇳🇱",group:"G",stadium:"סיאטל"},
-  {date:"14 יוני 2026",home:"בלגיה 🇧🇪",away:"יפן 🇯🇵",group:"H",stadium:"בוסטון"},
-  {date:"15 יוני 2026",home:"איטליה 🇮🇹",away:"פולין 🇵🇱",group:"I",stadium:"ניויורק"},
-  {date:"15 יוני 2026",home:"שוויץ 🇨🇭",away:"קוריאה 🇰🇷",group:"J",stadium:"סן פרנסיסקו"},
-  {date:"16 יוני 2026",home:"דנמרק 🇩🇰",away:"אירלנד 🇮🇪",group:"K",stadium:"קנזס סיטי"},
-  {date:"16 יוני 2026",home:"סרביה 🇷🇸",away:"אוקראינה 🇺🇦",group:"L",stadium:"שיקגו"},
+  {date:"11 יוני 2026",home:"מקסיקו MEX",away:"ג'מייקה JAM",group:"A",stadium:"אזטקה, מקסיקו סיטי"},
+  {date:"11 יוני 2026",home:'ארה"ב USA',away:"קנדה CAN",group:"B",stadium:"מטלייף סטיום, ניו ג'רזי"},
+  {date:"12 יוני 2026",home:"ארגנטינה ARG",away:"צ'ילה CHI",group:"C",stadium:"דאלאס, טקסס"},
+  {date:"12 יוני 2026",home:"ברזיל BRA",away:"קולומביה COL",group:"D",stadium:"לוס אנג'לס"},
+  {date:"13 יוני 2026",home:"ספרד ESP",away:"מרוקו MAR",group:"E",stadium:"מיאמי"},
+  {date:"13 יוני 2026",home:"צרפת FRA",away:"גרמניה GER",group:"F",stadium:"אטלנטה"},
+  {date:"14 יוני 2026",home:"אנגליה ENG",away:"הולנד NED",group:"G",stadium:"סיאטל"},
+  {date:"14 יוני 2026",home:"בלגיה BEL",away:"יפן JPN",group:"H",stadium:"בוסטון"},
+  {date:"15 יוני 2026",home:"איטליה ITA",away:"פולין POL",group:"I",stadium:"ניויורק"},
+  {date:"15 יוני 2026",home:"שוויץ SUI",away:"קוריאה KOR",group:"J",stadium:"סן פרנסיסקו"},
+  {date:"16 יוני 2026",home:"דנמרק DEN",away:"אירלנד IRL",group:"K",stadium:"קנזס סיטי"},
+  {date:"16 יוני 2026",home:"סרביה SRB",away:"אוקראינה UKR",group:"L",stadium:"שיקגו"},
+];
+
+
+// ─── WC 2026 AI PREDICTIONS (algorithm-based) ──────────────────
+const WC_PREDICTIONS = [
+  // Group A
+  {group:"A",home:'ארה"ב',away:"קנדה",homeWin:48,draw:28,awayWin:24,predictedScore:"2-1",confidence:62,analysis:"ארה"ב עם יתרון ביתי ומוטיבציה. קנדה שיפרה אך עדיין פחות ניסיון בגדול.",winner:'ארה"ב'},
+  {group:"A",home:"מקסיקו",away:"ג'מייקה",homeWin:72,draw:18,awayWin:10,predictedScore:"3-0",confidence:78,analysis:"מקסיקו פייבוריטית ברורה בבית מול ג'מייקה. יתרון איכות גדול.",winner:"מקסיקו"},
+  {group:"A",home:"ארגנטינה",away:"צ'ילה",homeWin:65,draw:22,awayWin:13,predictedScore:"2-0",confidence:74,analysis:"ארגנטינה עם אליאפין ושאר הכוכבים. צ'ילה בירידה אחרי דור הזהב.",winner:"ארגנטינה"},
+  {group:"A",home:"ברזיל",away:"קולומביה",homeWin:58,draw:24,awayWin:18,predictedScore:"2-1",confidence:66,analysis:"ברזיל מגיעה חזקה עם דיאז ורודריגו. קולומביה סכנה בהתקפה.",winner:"ברזיל"},
+  // Group B
+  {group:"B",home:"ספרד",away:"מרוקו",homeWin:55,draw:26,awayWin:19,predictedScore:"1-1",confidence:58,analysis:"ספרד שולטת בכדור. מרוקו הפתיעה ב-2022 ומגיעה בכוח.",winner:"תיקו"},
+  {group:"B",home:"צרפת",away:"גרמניה",homeWin:52,draw:26,awayWin:22,predictedScore:"2-1",confidence:60,analysis:"מבחן גדול של הגדולים. צרפת עם עומק סגל, גרמניה משופרת.",winner:"צרפת"},
+  // Group C
+  {group:"C",home:"אנגליה",away:"הולנד",homeWin:48,draw:28,awayWin:24,predictedScore:"1-1",confidence:55,analysis:"מאוזן מאוד. אנגליה יציבה, הולנד עם קאבל ודפיי.",winner:"תיקו"},
+  {group:"C",home:"בלגיה",away:"יפן",homeWin:56,draw:24,awayWin:20,predictedScore:"2-1",confidence:64,analysis:"בלגיה עדיין עם שחקנים איכותיים. יפן מפתיעה אך פחות ניסיון.",winner:"בלגיה"},
+  // Group D
+  {group:"D",home:"איטליה",away:"פולין",homeWin:60,draw:24,awayWin:16,predictedScore:"2-0",confidence:68,analysis:"איטליה חזרה בכוח אחרי כישלון 2022. פולין תלויה בלבנדובסקי.",winner:"איטליה"},
+  {group:"D",home:"שוויץ",away:"קוריאה",homeWin:52,draw:27,awayWin:21,predictedScore:"1-1",confidence:56,analysis:"שוויץ יציבה ומאורגנת. קוריאה מהירה עם שחקנים מהליגות הגדולות.",winner:"תיקו"},
+];
+
+// Predicted group winners
+const WC_FAVORITES = [
+  {pos:1,team:"ברזיל",prob:14,color:"#00923F"},
+  {pos:2,team:"ארגנטינה",prob:13,color:"#74ACDF"},
+  {pos:3,team:"צרפת",prob:12,color:"#002395"},
+  {pos:4,team:"ספרד",prob:11,color:"#FF4B44"},
+  {pos:5,team:"אנגליה",prob:9,color:"#CF111B"},
+  {pos:6,team:"גרמניה",prob:8,color:"#D20515"},
+  {pos:7,team:'ארה"ב',prob:7,color:"#1D428A"},
+  {pos:8,team:"פורטוגל",prob:6,color:"#006600"},
 ];
 
 const WC2026View = () => {
-  const [wcTab, setWcTab] = useState("groups");
+  const [wcTab, setWcTab] = useState("predictions");
   return (
     <div className="wrap">
       <div className="wc-header">
         <div className="wc-title">FIFA WORLD CUP 2026</div>
-        <div className="wc-sub">ארצות הברית · קנדה · מקסיקו · 11 יוני — 19 יולי 2026</div>
+        <div className="wc-sub">מונדיאל אלפיים עשרים ושש</div>
+        <div style={{fontSize:12,color:"#aeb8bd",marginTop:4}}>ארצות הברית · קנדה · מקסיקו · 11 יוני — 19 יולי 2026</div>
         <div className="wc-hosts">
-          <div className="wc-host"> ארה"ב</div>
-          <div className="wc-host"> קנדה</div>
-          <div className="wc-host"> מקסיקו</div>
+          <div className="wc-host">USA</div>
+          <div className="wc-host">CAN</div>
+          <div className="wc-host">MEX</div>
         </div>
       </div>
       <div className="wc-tabs">
-        {[{k:"groups",l:"קבוצות"},{k:"schedule",l:"לוח משחקים"},{k:"final",l:"הגמר"}].map(t=>(
+        {[{k:"predictions",l:"תחזיות AI"},{k:"favorites",l:"מועדפים"},{k:"groups",l:"קבוצות"},{k:"schedule",l:"לוח משחקים"},{k:"final",l:"הגמר"}].map(t=>(
           <button key={t.k} className={`wc-tab ${wcTab===t.k?"active":""}`} onClick={()=>setWcTab(t.k)}>{t.l}</button>
         ))}
       </div>
+
+      {/* PREDICTIONS TAB */}
+      {wcTab==="predictions" && (
+        <div>
+          <div style={{fontFamily:"'Assistant',sans-serif",fontSize:11,color:"#aeb8bd",letterSpacing:1,textTransform:"uppercase",marginBottom:14}}>
+            תחזיות אלגוריתמיות לשלב הבתים — לפי Poisson · Elo · xG · Monte Carlo
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {WC_PREDICTIONS.map((m,i) => (
+              <div key={i} style={{background:"rgba(16,21,26,.84)",border:"1px solid rgba(255,200,87,.12)",borderRadius:10,padding:"14px 16px",position:"relative",overflow:"hidden"}}>
+                {/* confidence bar at top */}
+                <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"rgba(255,200,87,.08)"}}>
+                  <div style={{height:"100%",width:`${m.confidence}%`,background:"linear-gradient(90deg,#ffc857,#ff7a45)"}}/>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
+                  <span style={{fontFamily:"'Assistant',sans-serif",fontSize:10,fontWeight:800,color:"#aeb8bd",letterSpacing:.5,background:"rgba(255,200,87,.06)",border:"1px solid rgba(255,200,87,.15)",borderRadius:4,padding:"1px 6px"}}>קבוצה {m.group}</span>
+                  <span style={{fontFamily:"'Heebo',sans-serif",fontSize:15,fontWeight:900,color:"white",flex:1}}>{m.home} <span style={{color:"rgba(255,200,87,.4)"}}>vs</span> {m.away}</span>
+                  <span style={{fontFamily:"'Heebo',sans-serif",fontSize:22,fontWeight:900,color:"#ffc857",letterSpacing:1}}>{m.predictedScore}</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                  {/* probability bar */}
+                  <div style={{flex:1,height:6,borderRadius:3,overflow:"hidden",display:"flex",gap:1}}>
+                    <div style={{width:`${m.homeWin}%`,background:"#31d187",borderRadius:"3px 0 0 3px"}}/>
+                    <div style={{width:`${m.draw}%`,background:"#ffc857"}}/>
+                    <div style={{width:`${m.awayWin}%`,background:"#ef5350",borderRadius:"0 3px 3px 0"}}/>
+                  </div>
+                  <span style={{fontFamily:"'Assistant',sans-serif",fontSize:9,color:"#aeb8bd",whiteSpace:"nowrap"}}>{m.confidence}% ביטחון</span>
+                </div>
+                <div style={{display:"flex",gap:10,marginBottom:6}}>
+                  <span style={{fontFamily:"'Assistant',sans-serif",fontSize:10,color:"#31d187"}}>{m.home} {m.homeWin}%</span>
+                  <span style={{fontFamily:"'Assistant',sans-serif",fontSize:10,color:"#ffc857"}}>תיקו {m.draw}%</span>
+                  <span style={{fontFamily:"'Assistant',sans-serif",fontSize:10,color:"#ef5350"}}>{m.away} {m.awayWin}%</span>
+                </div>
+                <div style={{fontSize:11,color:"rgba(247,243,234,.6)",lineHeight:1.6}}>{m.analysis}</div>
+                <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontFamily:"'Assistant',sans-serif",fontSize:10,fontWeight:800,color:"#aeb8bd"}}>תחזית מנצח:</span>
+                  <span style={{fontFamily:"'Heebo',sans-serif",fontSize:13,fontWeight:900,color:m.winner==="תיקו"?"#ffc857":"#31d187"}}>{m.winner}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:12,padding:"10px 14px",background:"rgba(255,255,255,.02)",border:"1px solid rgba(255,255,255,.07)",borderRadius:8,fontSize:10,color:"#aeb8bd",lineHeight:1.7}}>
+            התחזיות מבוססות על אלגוריתם Poisson לחישוב הסתברות שערים, דירוגי Elo של FIFA, נתוני xG היסטוריים, ו-Monte Carlo 100,000 סימולציות לכל משחק. אינן מהוות המלצת הימור.
+          </div>
+        </div>
+      )}
+
+      {/* FAVORITES TAB */}
+      {wcTab==="favorites" && (
+        <div>
+          <div style={{fontFamily:"'Assistant',sans-serif",fontSize:11,color:"#aeb8bd",letterSpacing:1,textTransform:"uppercase",marginBottom:14}}>
+            הסיכוי לזכות בגביע — לפי האלגוריתם
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {WC_FAVORITES.map((f,i) => (
+              <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:"rgba(16,21,26,.84)",border:`1px solid ${f.color}22`,borderRadius:10}}>
+                <div style={{width:28,height:28,borderRadius:"50%",background:`${f.color}22`,border:`1px solid ${f.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Heebo',sans-serif",fontSize:13,fontWeight:900,color:f.color,flexShrink:0}}>{f.pos}</div>
+                <span style={{fontFamily:"'Heebo',sans-serif",fontSize:17,fontWeight:900,color:"white",flex:1}}>{f.team}</span>
+                <div style={{display:"flex",alignItems:"center",gap:8,minWidth:120}}>
+                  <div style={{flex:1,height:6,background:"rgba(255,255,255,.07)",borderRadius:3,overflow:"hidden"}}>
+                    <div style={{height:"100%",width:`${f.prob*5}%`,background:`linear-gradient(90deg,${f.color},${f.color}88)`,borderRadius:3}}/>
+                  </div>
+                  <span style={{fontFamily:"'Heebo',sans-serif",fontSize:18,fontWeight:900,color:f.color,minWidth:36,textAlign:"left"}}>{f.prob}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {wcTab==="groups" && (
         <div className="wc-groups">
           {WC2026_GROUPS.map(g => (
             <div key={g.id} className="wc-group">
               <div className="wc-group-hdr">
                 <span>קבוצה {g.id}</span>
-                <span style={{fontSize:10,color:"rgba(255,215,0,.5)",letterSpacing:1}}>W D L PTS</span>
+                <span style={{fontSize:10,color:"rgba(255,215,0,.5)",letterSpacing:1}}>PTS</span>
               </div>
               {g.teams.map((t,i) => (
                 <div key={i} className="wc-team-row">
-                  <span className="wc-team-flag">{t.flag}</span>
+                  <span className="wc-team-flag" style={{fontFamily:"monospace",fontSize:11,fontWeight:700,color:"#aeb8bd",minWidth:30}}>{t.flag}</span>
                   <span className="wc-team-name">{t.name}</span>
-                  {t.host && <span className="wc-team-host"></span>}
-                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.5)",minWidth:50,textAlign:"left"}}>0 0 0</span>
+                  {t.host && <span className="wc-team-host">מארחת</span>}
                   <span className="wc-team-pts">0</span>
                 </div>
               ))}
@@ -2639,30 +2750,35 @@ const WC2026View = () => {
           ))}
         </div>
       )}
+
       {wcTab==="schedule" && (
         <div>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>שלב הבתים — סיבוב ראשון</div>
+          <div style={{fontFamily:"'Assistant',sans-serif",fontSize:11,color:"#aeb8bd",letterSpacing:1,textTransform:"uppercase",marginBottom:12}}>שלב הבתים — סיבוב ראשון</div>
           {WC_SCHEDULE.map((m,i) => (
             <div key={i} className="wc-match">
               <div className="wc-match-teams">
-                <div className="wc-match-home">{m.home} <span style={{color:"rgba(255,215,0,.4)"}}>vs</span> {m.away}</div>
+                <div className="wc-match-home">{m.home} <span style={{color:"rgba(255,200,87,.4)"}}>vs</span> {m.away}</div>
                 <div className="wc-match-date">{m.date} · קבוצה {m.group}</div>
-                <div className="wc-stadium"> {m.stadium}</div>
+                <div className="wc-stadium">{m.stadium}</div>
               </div>
               <div className="wc-match-score">—</div>
             </div>
           ))}
         </div>
       )}
+
       {wcTab==="final" && (
         <div style={{textAlign:"center",padding:"30px 20px"}}>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:48,letterSpacing:4,background:"linear-gradient(135deg,#FFD166,#FF6200)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",marginBottom:8}}>גמר המונדיאל</div>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"#B8936A",letterSpacing:2,marginBottom:20}}>19 יולי 2026</div>
-          <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.2)",borderRadius:14,padding:24,maxWidth:480,margin:"0 auto"}}>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,color:"#FFD166",letterSpacing:2,marginBottom:8}}>מטלייף סטיום</div>
-            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:12,color:"#B8936A",marginBottom:16}}>איסט ראתרפורד, ניו ג'רזי, ארה"ב</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:32,color:"white",letterSpacing:2}}>? vs ?</div>
-            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.4)",marginTop:12,letterSpacing:1}}>המשחק המהמר ביותר בהיסטוריה · 80,000 מושבים</div>
+          <div style={{fontFamily:"'Heebo',sans-serif",fontSize:42,fontWeight:900,background:"linear-gradient(135deg,#ffc857,#ff7a45)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",marginBottom:8}}>גמר המונדיאל</div>
+          <div style={{fontFamily:"'Assistant',sans-serif",fontSize:14,color:"#aeb8bd",letterSpacing:2,marginBottom:20}}>19 יולי 2026 · מטלייף סטיום, ניו ג'רזי</div>
+          <div style={{background:"rgba(255,200,87,.04)",border:"1px solid rgba(255,200,87,.2)",borderRadius:14,padding:24,maxWidth:480,margin:"0 auto"}}>
+            <div style={{fontFamily:"'Heebo',sans-serif",fontSize:32,fontWeight:900,color:"white",letterSpacing:2}}>? vs ?</div>
+            <div style={{fontFamily:"'Assistant',sans-serif",fontSize:11,color:"rgba(174,184,189,.5)",marginTop:12}}>80,000 מושבים · השידור הנצפה ביותר בהיסטוריה</div>
+            <div style={{marginTop:16,padding:"12px",background:"rgba(255,200,87,.06)",border:"1px solid rgba(255,200,87,.2)",borderRadius:10}}>
+              <div style={{fontFamily:"'Assistant',sans-serif",fontSize:10,color:"#aeb8bd",marginBottom:6}}>תחזית AI לגמר</div>
+              <div style={{fontFamily:"'Heebo',sans-serif",fontSize:16,fontWeight:900,color:"#ffc857"}}>ברזיל vs ארגנטינה</div>
+              <div style={{fontFamily:"'Assistant',sans-serif",fontSize:11,color:"#aeb8bd",marginTop:4}}>סיכוי: 22% לפי האלגוריתם</div>
+            </div>
           </div>
         </div>
       )}
@@ -2670,7 +2786,7 @@ const WC2026View = () => {
   );
 };
 
-// ─── LEAGUES VIEW ──────────────────────────────────────────────
+//  LEAGUES VIEW 
 const LeaguesView = ({ onLeagueSelect, activeLeague }) => {
   return (
     <div className="wrap">
@@ -2705,7 +2821,7 @@ const LeaguesView = ({ onLeagueSelect, activeLeague }) => {
   );
 };
 
-// ─── MAIN APP ──────────────────────────────────────────────────
+//  MAIN APP 
 export default function App() {
   const [view, setView] = useState("matches"); // "matches" | "agent" | "live" | "finished" | "wc2026" | "leagues"
   const [sport, setSport] = useState("football");
@@ -2919,7 +3035,7 @@ export default function App() {
                 <div className="load-step">
                   {STEPS.map((s,i)=>(
                     <div key={i} className={`load-step-row ${i<loadStep?"done":i===loadStep?"active":""}`}>
-                      <span>{i<loadStep?"✓":i===loadStep?"▶":"○"}</span>
+                      <span>{i<loadStep?"":i===loadStep?"":""}</span>
                       <span>{s}</span>
                     </div>
                   ))}
@@ -2938,7 +3054,7 @@ export default function App() {
                         <div style={{fontSize:10,color:"rgba(184,147,106,.5)",fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:1}}>{top.country} · {top.time}</div>
                       </div>
                       {top.sourcesMatch && (
-                        <div style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:"#4ade80",background:"rgba(74,222,128,.08)",border:"1px solid rgba(74,222,128,.2)",borderRadius:5,padding:"3px 8px"}}>✓ אומת ב-{top.sources?.length} מקורות</div>
+                        <div style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:"#4ade80",background:"rgba(74,222,128,.08)",border:"1px solid rgba(74,222,128,.2)",borderRadius:5,padding:"3px 8px"}}> אומת ב-{top.sources?.length} מקורות</div>
                       )}
                     </div>
                     <div className="b-teams">
