@@ -17,6 +17,9 @@ const API_KEY =
   "";
 const ADMIN_PASS =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_ADMIN_PASS) || "hapogea2025";
+const PREMIUM_CODE =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_PREMIUM_CODE) || "POGEA2025";
+const PREMIUM_KEY = "hapogea_premium_v1";
 
 // ─── TRACKER CONSTANTS ─────────────────────────────────────────
 const TRACKER_KEY = "hapogea_tips_v1";
@@ -336,6 +339,64 @@ body,#root{background:#0D0D0D;color:#F5E6CC;font-family:'Barlow',sans-serif;dire
 .log-row:last-child{border-bottom:none}
 .log-status{font-weight:700;letter-spacing:.5px}
 .log-status.ok{color:#4ade80}.log-status.fail{color:#f87171}.log-status.warn{color:#facc15}
+
+/* ── PREMIUM BADGE ───────────────────────────────────────────── */
+.prem-badge{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,166,0,.1));border:1px solid rgba(255,215,0,.35);color:#FFD166;white-space:nowrap}
+.lock-icon{font-size:11px;opacity:.6}
+
+/* ── PREMIUM GATE ────────────────────────────────────────────── */
+.prem-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;gap:16px}
+.prem-gate-icon{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,166,0,.08));border:2px solid rgba(255,215,0,.3);display:flex;align-items:center;justify-content:center;font-size:32px}
+.prem-gate-title{font-family:'Bebas Neue',cursive;font-size:30px;letter-spacing:2px;background:linear-gradient(135deg,#FFD166,#FF6200);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.prem-gate-sub{font-size:13px;color:#B8936A;max-width:320px;line-height:1.7}
+.prem-input{width:100%;max-width:280px;background:rgba(255,255,255,.05);border:1px solid rgba(255,215,0,.25);border-radius:8px;padding:11px 14px;color:#F5E6CC;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:3px;text-align:center;outline:none;text-transform:uppercase}
+.prem-input:focus{border-color:rgba(255,215,0,.6)}
+.prem-input.err{border-color:#f87171;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.prem-btn{width:100%;max-width:280px;padding:13px;background:linear-gradient(135deg,#FFD166,#FF6200);border:none;border-radius:10px;cursor:pointer;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:3px;color:#0D0D0D;transition:all .18s}
+.prem-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,166,0,.3)}
+
+/* ── AGENT CHAT ──────────────────────────────────────────────── */
+.agent-wrap{display:flex;flex-direction:column;height:calc(100vh - 58px - 4px);max-width:860px;margin:0 auto;padding:0 20px}
+.agent-header{padding:16px 0 12px;border-bottom:1px solid rgba(61,26,10,.4);display:flex;align-items:center;gap:12px}
+.agent-avatar{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#C40C0C,#FF6200);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:18px;color:white;flex-shrink:0}
+.agent-name{font-family:'Bebas Neue',cursive;font-size:22px;color:white;letter-spacing:1px}
+.agent-tagline{font-size:11px;color:#B8936A;letter-spacing:.5px}
+.agent-status{display:flex;align-items:center;gap:5px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;color:#4ade80;margin-right:auto}
+.agent-messages{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:14px}
+.agent-messages::-webkit-scrollbar{width:3px}
+.msg{display:flex;gap:10px;align-items:flex-start;animation:su .2s ease}
+.msg.user{flex-direction:row-reverse}
+.msg-avatar{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.msg-bubble{max-width:78%;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.7}
+.msg.user .msg-bubble{background:linear-gradient(135deg,rgba(196,12,12,.18),rgba(255,98,0,.1));border:1px solid rgba(196,12,12,.3);color:#F5E6CC;border-radius:12px 2px 12px 12px}
+.msg.ai .msg-bubble{background:rgba(255,255,255,.04);border:1px solid rgba(61,26,10,.5);color:#F5E6CC;border-radius:2px 12px 12px 12px}
+.msg-time{font-size:9px;color:rgba(184,147,106,.4);margin-top:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px}
+.verdict-card{margin-top:10px;padding:12px 14px;border-radius:10px;display:flex;align-items:center;gap:10px}
+.verdict-card.value{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3)}
+.verdict-card.avoid{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.25)}
+.verdict-card.risky{background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.2)}
+.verdict-icon{font-size:22px;flex-shrink:0}
+.verdict-lbl{font-family:'Bebas Neue',cursive;font-size:17px;letter-spacing:1px}
+.verdict-sub{font-size:11px;line-height:1.5;margin-top:2px;opacity:.8}
+.agent-input-row{display:flex;gap:8px;padding:12px 0 16px;border-top:1px solid rgba(61,26,10,.4)}
+.agent-input{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(61,26,10,.5);border-radius:10px;padding:11px 14px;color:#F5E6CC;font-family:'Barlow',sans-serif;font-size:13px;outline:none;direction:rtl;resize:none;line-height:1.5}
+.agent-input:focus{border-color:rgba(196,12,12,.4)}
+.agent-send{width:46px;height:46px;background:linear-gradient(135deg,#C40C0C,#FF6200);border:none;border-radius:10px;cursor:pointer;color:white;font-size:18px;flex-shrink:0;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.agent-send:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(196,12,12,.35)}
+.agent-send:disabled{opacity:.4;cursor:default;transform:none}
+.typing-dots{display:flex;gap:4px;padding:4px 0}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:#B8936A;animation:blink 1.2s ease infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/* ── STATS BAR (today's record) ─────────────────────────────── */
+.stats-bar{display:flex;gap:10px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(61,26,10,.4);border-radius:10px;margin-bottom:18px;flex-wrap:wrap}
+.stat-item{display:flex;flex-direction:column;align-items:center;min-width:56px}
+.stat-val{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:.5px;line-height:1}
+.stat-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#B8936A;margin-top:2px}
+.stat-divider{width:1px;background:rgba(61,26,10,.5);align-self:stretch;margin:0 4px}
 `;
 
 // ─── TRACKER HELPERS ───────────────────────────────────────────
@@ -364,6 +425,12 @@ function isToday(ts) {
   if (!ts) return false;
   const d = new Date(ts), n = new Date();
   return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
+}
+function loadPremium() {
+  try { return localStorage.getItem(PREMIUM_KEY) === "1"; } catch { return false; }
+}
+function savePremium(v) {
+  try { localStorage.setItem(PREMIUM_KEY, v ? "1" : "0"); } catch {}
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────
@@ -853,6 +920,268 @@ const LeagueBadge = ({lk}) => {
   return (
     <div className="lg-badge" style={{background: m.c ? m.c+"22" : "rgba(255,255,255,.05)", border:`1px solid ${m.c||"rgba(255,255,255,.1)"}44`}}>
       <span style={{fontSize:15}}>{m.flag||"🏆"}</span>
+    </div>
+  );
+};
+
+// ─── POGUEA AI AGENT ───────────────────────────────────────────
+async function askPogueaAgent(messages) {
+  if (!API_KEY) throw new Error("no_key");
+  const system = `אתה "הפוגע" — סוכן AI ישראלי מומחה בניתוח הימורי ספורט.
+המשתמש שואל אותך על הימור ספציפי שהוא שוקל לבצע ב-Winner.co.il.
+
+לכל בקשה, נתח בסדר הבא:
+1. **צורת הקבוצות** — 5-10 משחקים אחרונים, ביתי/חוץ בנפרד
+2. **מצב הכוחות** — פציעות, השעיות, עייפות, לוח משחקים
+3. **היסטוריה ישירה (H2H)** — 5 עימותים אחרונים, מי ניצח, כמה שערים
+4. **יתרון ביתי/חוץ** — סטטיסטיקות בבית מול חוץ
+5. **ניתוח הסיכוי** — P_imp (מהיחס) מול P_real (מהסטטיסטיקות)
+6. **ערך ההימור** — EV = (P_real × יחס) − 1, חיובי או שלילי?
+7. **פסיקה סופית** — אחת מהאפשרויות הבאות:
+   VALUE BET ✓ — יש ערך, כדאי
+   AVOID ✗ — אין ערך, לא כדאי
+   RISKY ⚠ — גבולי, תלוי בסיכון שתרצה לקחת
+
+ענה תמיד בעברית. היה ספציפי עם מספרים ואחוזים.
+בסוף התגובה, סיים תמיד עם שורת VERDICT:
+VERDICT:VALUE או VERDICT:AVOID או VERDICT:RISKY`;
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-5",
+      max_tokens: 2000,
+      system,
+      messages: messages.map(m => ({ role: m.role, content: m.text })),
+    })
+  });
+  const d = await resp.json();
+  if (d.error) throw new Error(d.error.message);
+  return (d.content||[]).find(b=>b.type==="text")?.text || "";
+}
+
+function VerdictCard({ text }) {
+  const line = text.split("\n").find(l => l.startsWith("VERDICT:")) || "";
+  const v = line.replace("VERDICT:","").trim().toUpperCase();
+  if (!v) return null;
+  const cfg = v === "VALUE"
+    ? { cls:"value", icon:"✓", label:"VALUE BET — כדאי!", color:"#4ade80" }
+    : v === "AVOID"
+    ? { cls:"avoid", icon:"✕", label:"AVOID — לא כדאי", color:"#f87171" }
+    : { cls:"risky", icon:"⚠", label:"RISKY — גבולי", color:"#facc15" };
+  const body = text.replace(/VERDICT:.*/,"").trim();
+  return (
+    <div>
+      <div style={{fontSize:13,lineHeight:1.75,color:"#F5E6CC",whiteSpace:"pre-wrap"}}>{body}</div>
+      <div className={`verdict-card ${cfg.cls}`} style={{marginTop:12}}>
+        <div className="verdict-icon">{cfg.icon}</div>
+        <div>
+          <div className="verdict-lbl" style={{color:cfg.color}}>{cfg.label}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const AGENT_SUGGESTIONS = [
+  "מאנצ'סטר סיטי לנצח את ארסנל, יחס 1.65",
+  "מעל 2.5 שערים בברצלונה נגד ריאל מדריד",
+  "לייקרס לנצח את וורריורס -4.5, יחס 1.88",
+  "שתי קבוצות כובשות ב-ליברפול נגד צ'לסי",
+];
+
+const PogueaAgent = ({ isPremium, onUnlock }) => {
+  const [msgs, setMsgs] = useState([{
+    id:"0", role:"assistant",
+    text:"שלום! אני הפוגע 🎯\nשלח לי כל הימור שאתה שוקל ב-Winner ואנתח אותו לעומק — פציעות, צורה, H2H, ערך יחס ועוד. אני אגיד לך ישר: כדאי או לא.",
+    ts: Date.now(),
+  }]);
+  const [input, setInput] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior:"smooth" });
+  }, [msgs, thinking]);
+
+  const send = async () => {
+    const q = input.trim();
+    if (!q || thinking) return;
+    setInput("");
+    const userMsg = { id: Date.now().toString(), role:"user", text: q, ts: Date.now() };
+    const history = [...msgs, userMsg];
+    setMsgs(history);
+    setThinking(true);
+    try {
+      const reply = await askPogueaAgent(
+        history.filter(m=>m.role!=="system").map(m=>({role:m.role,text:m.text}))
+      );
+      setMsgs(prev => [...prev, { id: Date.now().toString(), role:"assistant", text: reply, ts: Date.now() }]);
+    } catch(e) {
+      setMsgs(prev => [...prev, { id:"err", role:"assistant",
+        text: e.message==="no_key"
+          ? "⚠ לא מוגדר API Key. הגדר VITE_ANTHROPIC_API_KEY ב-Vercel."
+          : "⚠ שגיאה בניתוח. נסה שוב.",
+        ts: Date.now() }]);
+    }
+    setThinking(false);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  if (!isPremium) {
+    return (
+      <div className="wrap">
+        <div className="prem-gate">
+          <div className="prem-gate-icon">🔒</div>
+          <div className="prem-gate-title">הפוגע AI — פרימיום</div>
+          <div className="prem-gate-sub">
+            נתח כל הימור שתרצה עם AI מתקדם — פציעות, צורה, H2H, ערך יחסים וסיכוי אמיתי.
+            <br/><br/>
+            הזן קוד פרימיום כדי לפתוח גישה:
+          </div>
+          <PremiumCodeInput onUnlock={onUnlock}/>
+          <div style={{fontSize:10,color:"rgba(184,147,106,.4)",marginTop:8}}>קוד ניתן לרכישה דרך הערוץ הרשמי</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="agent-wrap">
+      <div className="agent-header">
+        <div className="agent-avatar">AI</div>
+        <div>
+          <div className="agent-name">הפוגע AI</div>
+          <div className="agent-tagline">ניתוח הימורים מתקדם · Winner.co.il</div>
+        </div>
+        <div className="agent-status">
+          <div className="status-dot live" style={{width:6,height:6}}/>
+          פעיל
+        </div>
+        <div className="prem-badge">👑 פרימיום</div>
+      </div>
+
+      <div className="agent-messages">
+        {msgs.map(m => (
+          <div key={m.id} className={`msg ${m.role==="user"?"user":"ai"}`}>
+            <div className="msg-avatar" style={{
+              background: m.role==="user"
+                ? "linear-gradient(135deg,rgba(196,12,12,.25),rgba(255,98,0,.15))"
+                : "linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,98,0,.1))",
+              border: m.role==="user" ? "1px solid rgba(196,12,12,.3)" : "1px solid rgba(255,215,0,.25)",
+            }}>
+              {m.role==="user" ? "👤" : "🎯"}
+            </div>
+            <div>
+              <div className="msg-bubble">
+                {m.role==="assistant" && m.text.includes("VERDICT:")
+                  ? <VerdictCard text={m.text}/>
+                  : <div style={{whiteSpace:"pre-wrap"}}>{m.text}</div>
+                }
+              </div>
+              <div className={`msg-time ${m.role==="user"?"":"" }`} style={{textAlign:m.role==="user"?"right":"left"}}>
+                {fmtTime(m.ts)}
+              </div>
+            </div>
+          </div>
+        ))}
+        {thinking && (
+          <div className="msg ai">
+            <div className="msg-avatar" style={{background:"linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,98,0,.1))",border:"1px solid rgba(255,215,0,.25)"}}>🎯</div>
+            <div className="msg-bubble">
+              <div className="typing-dots"><span/><span/><span/></div>
+              <div style={{fontSize:10,color:"#B8936A",marginTop:4,fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:1}}>מנתח פציעות, צורה, H2H...</div>
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef}/>
+      </div>
+
+      {msgs.length === 1 && (
+        <div style={{display:"flex",flexWrap:"wrap",gap:6,paddingBottom:10}}>
+          {AGENT_SUGGESTIONS.map((s,i) => (
+            <button key={i} onClick={()=>setInput(s)}
+              style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,
+                padding:"5px 11px",borderRadius:20,border:"1px solid rgba(196,12,12,.25)",
+                background:"rgba(196,12,12,.07)",color:"#FF6200",cursor:"pointer",letterSpacing:.5}}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="agent-input-row">
+        <textarea className="agent-input" ref={inputRef} rows={1}
+          placeholder="תאר הימור שאתה שוקל... (קבוצה, יחס, סוג הימור)"
+          value={input}
+          onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); send(); } }}
+          style={{height:"auto",minHeight:44}}
+        />
+        <button className="agent-send" onClick={send} disabled={!input.trim()||thinking}>
+          {thinking ? "⏳" : "↑"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const PremiumCodeInput = ({ onUnlock }) => {
+  const [code, setCode] = useState("");
+  const [err, setErr] = useState(false);
+  const submit = () => {
+    if (code.toUpperCase().trim() === PREMIUM_CODE) { onUnlock(); }
+    else { setErr(true); setTimeout(()=>setErr(false),1500); setCode(""); }
+  };
+  return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,width:"100%"}}>
+      <input className={`prem-input${err?" err":""}`} type="text" value={code}
+        onChange={e=>setCode(e.target.value.toUpperCase())}
+        onKeyDown={e=>e.key==="Enter"&&submit()}
+        placeholder="הכנס קוד פרימיום"/>
+      {err && <div style={{color:"#f87171",fontSize:12,fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:1}}>קוד שגוי — נסה שוב</div>}
+      <button className="prem-btn" onClick={submit}>פתח גישה 🔓</button>
+    </div>
+  );
+};
+
+// ─── TODAY STATS BAR ───────────────────────────────────────────
+const TodayStatsBar = ({ tips }) => {
+  const today = tips.filter(t => isToday(t.addedAt));
+  const won = today.filter(t=>t.status==="won").length;
+  const lost = today.filter(t=>t.status==="lost").length;
+  const pending = today.filter(t=>t.status==="pending").length;
+  const total = won + lost;
+  const rate = total > 0 ? Math.round(won/total*100) : null;
+  if (!today.length) return null;
+  return (
+    <div className="stats-bar">
+      <div className="stat-item">
+        <div className="stat-val" style={{color:"#4ade80"}}>{won}</div>
+        <div className="stat-lbl">נתפסו</div>
+      </div>
+      <div className="stat-divider"/>
+      <div className="stat-item">
+        <div className="stat-val" style={{color:"#f87171"}}>{lost}</div>
+        <div className="stat-lbl">נפלו</div>
+      </div>
+      <div className="stat-divider"/>
+      <div className="stat-item">
+        <div className="stat-val" style={{color:"#facc15"}}>{pending}</div>
+        <div className="stat-lbl">ממתינים</div>
+      </div>
+      {rate !== null && <>
+        <div className="stat-divider"/>
+        <div className="stat-item">
+          <div className="stat-val" style={{color:rate>=60?"#4ade80":rate>=40?"#FF6200":"#f87171"}}>{rate}%</div>
+          <div className="stat-lbl">דיוק היום</div>
+        </div>
+      </>}
+      <div style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.5)",alignSelf:"center"}}>
+        סטטיסטיקות היום · Winner.co.il
+      </div>
     </div>
   );
 };
@@ -1708,7 +2037,7 @@ const FALLBACK = {
 
 // ─── MAIN APP ──────────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState("matches"); // "matches" | "tracker"
+  const [view, setView] = useState("matches"); // "matches" | "tracker" | "agent"
   const [sport, setSport] = useState("football");
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1720,10 +2049,17 @@ export default function App() {
   const [tips, setTips] = useState(loadTips);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [isPremium, setIsPremium] = useState(loadPremium);
   const logoClickCount = useRef(0);
   const logoTimer = useRef(null);
   const timerRef = useRef(null);
   const countdownRef = useRef(null);
+
+  const unlockPremium = useCallback(() => {
+    savePremium(true);
+    setIsPremium(true);
+    setView("agent");
+  }, []);
 
   // Persist tips to localStorage
   useEffect(() => { saveTips(tips); }, [tips]);
@@ -1862,14 +2198,18 @@ export default function App() {
               <button className={`nt ${view==="matches"&&sport==="basketball"?"on":""}`}
                 onClick={()=>{setView("matches");setSport("basketball");setSrch("");}}>🏀 כדורסל</button>
               <button className={`nt ${view==="tracker"?"on":""}`}
-                onClick={()=>setView("tracker")}
-                style={view==="tracker"?{}:{position:"relative"}}>
+                onClick={()=>setView("tracker")} style={{position:"relative"}}>
                 🎯 תופס שלי
                 {tips.filter(t=>t.status==="pending").length > 0 && (
                   <span style={{position:"absolute",top:-4,left:-4,background:"#C40C0C",color:"white",borderRadius:"50%",width:16,height:16,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif"}}>
                     {tips.filter(t=>t.status==="pending").length}
                   </span>
                 )}
+              </button>
+              <button className={`nt ${view==="agent"?"on":""}`}
+                onClick={()=>setView("agent")}
+                style={{background:view==="agent"?"":"linear-gradient(135deg,rgba(255,215,0,.08),rgba(255,98,0,.05))",border:view==="agent"?"":"1px solid rgba(255,215,0,.2)"}}>
+                {isPremium ? "🎯 הפוגע AI" : "🔒 הפוגע AI"}
               </button>
             </nav>
           </div>
@@ -1883,7 +2223,11 @@ export default function App() {
               onAdminLogout={()=>setIsAdmin(false)}
             />
           )}
+          {view==="agent" && (
+            <PogueaAgent isPremium={isPremium} onUnlock={unlockPremium}/>
+          )}
           <div className="wrap" style={{display:view==="matches"?"block":"none"}}>
+            <TodayStatsBar tips={tips}/>
             {/* STATUS BAR */}
             <div className="status-bar">
               <div className={`status-dot ${loading?"loading":lastUpdate?"live":"err"}`}/>
