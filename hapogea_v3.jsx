@@ -20,7 +20,9 @@ const ADMIN_PASS =
 const PREMIUM_CODE =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_PREMIUM_CODE) || "POGEA2025";
 const PREMIUM_KEY = "hapogea_premium_v1";
-const PAYMENT_URL = "https://buy.stripe.com/REPLACE_WITH_YOUR_LINK";
+const PAYMENT_URL =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_PAYMENT_URL) ||
+  "https://buy.stripe.com/REPLACE_WITH_YOUR_LINK";
 
 // ─── TRACKER CONSTANTS ─────────────────────────────────────────
 const TRACKER_KEY = "hapogea_tips_v1";
@@ -28,9 +30,9 @@ const ODDS_CACHE_KEY = "hapogea_odds_v1";
 const ODDS_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 min
 
 const TIP_STATUS = {
-  pending: { label:"ממתין", icon:"⏳", color:"#d7edff", bg:"rgba(85,214,255,.08)", border:"rgba(85,214,255,.36)" },
-  won:     { label:"תפס",   icon:"✔",  color:"#bff8dc", bg:"rgba(49,209,135,.10)", border:"rgba(49,209,135,.40)" },
-  lost:    { label:"נפל",   icon:"✕",  color:"#ffc5c3", bg:"rgba(239,83,80,.08)",  border:"rgba(239,83,80,.36)"  },
+  pending: { label:"ממתין", icon:"", color:"#d7edff", bg:"rgba(85,214,255,.08)", border:"rgba(85,214,255,.36)" },
+  won:     { label:"תפס",   icon:"",  color:"#bff8dc", bg:"rgba(49,209,135,.10)", border:"rgba(49,209,135,.40)" },
+  lost:    { label:"נפל",   icon:"",  color:"#ffc5c3", bg:"rgba(239,83,80,.08)",  border:"rgba(239,83,80,.36)"  },
 };
 
 const FILTER_TABS = [
@@ -54,7 +56,7 @@ const LM = {
   BSL:        { name:"ליגת הכדורסל ישראל",  flag:"🇮🇱", c:"#003399" },
   J1:         { name:"J1 יפן",               flag:"🇯🇵", c:"#E60012" },
   CSL:        { name:"ליגה סינית",           flag:"🇨🇳", c:"#D4000D" },
-  EL:         { name:"יורוליג",              flag:"🏀",  c:"#0057A8" },
+  EL:         { name:"יורוליג",              flag:"",  c:"#0057A8" },
   ACB:        { name:"ACB ספרד",             flag:"🇪🇸", c:"#AA151B" },
   LegaBK:     { name:"לגה באסקט איטליה",    flag:"🇮🇹", c:"#009246" },
   MLS:        { name:"MLS",                  flag:"🇺🇸", c:"#003087" },
@@ -377,6 +379,31 @@ body,#root{
 .footer-disc p{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:10px 14px;font-size:10px;color:#aeb8bd;line-height:1.7}
 .footer{border-top:1px solid rgba(255,255,255,.09);padding:18px 20px;max-width:1400px;margin:0 auto;text-align:center;font-size:10px;color:#aeb8bd;line-height:1.8}
 @media(max-width:720px){.navt{display:none}.grid{grid-template-columns:1fr}.sg4{grid-template-columns:repeat(2,1fr)}}
+/* WC PROMO BANNER */
+.wc-promo{position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(135deg,#1a1200,#2a1a00,#1a0d00);border:1px solid rgba(255,200,87,.3);margin-bottom:18px;cursor:pointer;transition:all .18s}
+.wc-promo:hover{border-color:rgba(255,200,87,.6);transform:translateY(-1px);box-shadow:0 8px 30px rgba(255,200,87,.12)}
+.wc-promo::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ffc857,#ff7a45,#ffc857);background-size:200%;animation:sh 3s ease infinite}
+.wc-promo-inner{display:flex;align-items:center;gap:16px;padding:14px 18px}
+.wc-promo-icon{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,rgba(255,200,87,.15),rgba(255,122,69,.1));border:1px solid rgba(255,200,87,.3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.wc-promo-txt .wc-title-text{font-family:'Heebo',sans-serif;font-size:17px;font-weight:900;background:linear-gradient(135deg,#ffc857,#ff7a45);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.wc-promo-txt .wc-sub-text{font-family:'Assistant',sans-serif;font-size:11px;color:#aeb8bd;margin-top:2px}
+.wc-promo-badge{display:inline-block;background:rgba(255,200,87,.12);border:1px solid rgba(255,200,87,.3);color:#ffc857;font-family:'Assistant',sans-serif;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:20px;margin-top:4px}
+.wc-promo-arrow{margin-right:auto;color:rgba(255,200,87,.5);font-size:18px}
+/* DAY TABS */
+.day-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.day-tab{font-family:'Assistant',sans-serif;font-size:12px;font-weight:800;padding:6px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);color:#aeb8bd;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.day-tab:hover{border-color:rgba(49,209,135,.3);color:#f7f3ea}
+.day-tab.active{background:rgba(49,209,135,.1);border-color:rgba(49,209,135,.4);color:#31d187}
+.day-tab-ct{background:rgba(255,255,255,.07);border-radius:10px;padding:1px 6px;font-size:10px;min-width:16px;text-align:center}
+.day-tab.active .day-tab-ct{background:rgba(49,209,135,.15);color:#31d187}
+/* DAY STATS */
+.day-stats{display:flex;gap:8px;padding:10px 14px;background:rgba(49,209,135,.04);border:1px solid rgba(49,209,135,.15);border-radius:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.day-stat{display:flex;flex-direction:column;align-items:center;min-width:50px}
+.day-stat-val{font-family:'Heebo',sans-serif;font-size:20px;font-weight:900;line-height:1}
+.day-stat-lbl{font-family:'Assistant',sans-serif;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#aeb8bd;margin-top:1px}
+.day-divider{width:1px;background:rgba(255,255,255,.09);align-self:stretch;margin:0 4px}
+.day-rate{font-family:'Heebo',sans-serif;font-size:28px;font-weight:900;margin-right:auto}
+
 
 /* ── TRACKER TABS ───────────────────────────────────────────────── */
 .tracker-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
@@ -581,6 +608,38 @@ function loadPremium() {
 function savePremium(v) {
   try { localStorage.setItem(PREMIUM_KEY, v ? "1" : "0"); } catch {}
 }
+// ─── DATE HELPERS ──────────────────────────────────────────────
+function getDateLabel(ts) {
+  if (!ts) return "";
+  const d = new Date(ts), now = new Date();
+  const y = new Date(now); y.setDate(now.getDate()-1);
+  const tom = new Date(now); tom.setDate(now.getDate()+1);
+  const same = (a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+  if (same(d,now)) return "היום";
+  if (same(d,y)) return "אתמול";
+  if (same(d,tom)) return "מחר";
+  return d.toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit"});
+}
+function isYesterday(ts) {
+  if (!ts) return false;
+  const d=new Date(ts), y=new Date(); y.setDate(y.getDate()-1);
+  return d.getFullYear()===y.getFullYear()&&d.getMonth()===y.getMonth()&&d.getDate()===y.getDate();
+}
+function getMatchDateLabel(timeStr) {
+  if (!timeStr) return "היום";
+  const m=timeStr.match(/(\d{1,2})\/(\d{1,2})/);
+  if (!m) return "היום";
+  const now=new Date();
+  const md=new Date(now.getFullYear(),parseInt(m[2])-1,parseInt(m[1]));
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const diff=Math.round((md-today)/86400000);
+  if(diff===0) return "היום";
+  if(diff===-1) return "אתמול";
+  if(diff===1) return "מחר";
+  return timeStr.split("·")[0]?.trim()||"היום";
+}
+
+
 
 // ─── HELPERS ───────────────────────────────────────────────────
 
@@ -595,13 +654,16 @@ function valueScore(o1, oX, o2, bestSide) {
   const f2 = parseFloat(o2) || 2.00;
   const bestOdds = bestSide === "1" ? f1 : bestSide === "2" ? f2 : fX;
   if (!isFinite(bestOdds) || bestOdds <= 1) return 0;
-  const margin = (1/f1 + 1/fX + 1/f2 - 1) * 100;
-  const impliedProb = (1 / bestOdds) * 100;
-  const adjProb = impliedProb * (1 - Math.min(margin, 30) / 100);
-  // Sweet spot 1.50–1.75; penalise heavily outside range
+  // Remove bookmaker margin for fair probability
+  const totalImpl = 1/f1 + 1/fX + 1/f2;
+  const margin = (totalImpl - 1) * 100;
+  const trueProb = (1/bestOdds) / totalImpl; // fair probability
+  const edge = (trueProb * bestOdds - 1) * 100; // Edge %
+  // Sweet spot 1.50–1.75; penalise outside range
   const oddsScore = Math.max(0, 100 - Math.abs(bestOdds - 1.625) * 85);
   const marginScore = Math.max(0, 100 - margin * 7);
-  return Math.round(oddsScore * 0.5 + marginScore * 0.3 + adjProb * 0.2);
+  const edgeScore = Math.max(0, Math.min(100, (edge + 5) * 7));
+  return Math.round(oddsScore * 0.35 + marginScore * 0.30 + edgeScore * 0.35);
 }
 
 function oddsColor(score) {
@@ -818,7 +880,7 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
             fontFamily:"'Bebas Neue',cursive",fontSize:24,letterSpacing:2,
             color: tip.status==="won" ? "#4ade80" : "#f87171",
           }}>
-            {tip.status==="won" ? "✔ תפס" : "✕ נפל"}
+            {tip.status==="won" ? " תפס" : " נפל"}
           </span>
           {tip.finalScore && (
             <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,color:"#F5E6CC",opacity:.7}}>
@@ -831,7 +893,7 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
         <span style={{fontSize:15}}>{lm.flag||"🏆"}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#B8936A"}}>{lm.name||tip.league}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.45)"}}>{tip.sport==="football"?"כדורגל":"כדורסל"}</span>
-        <span style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#FF6200"}}>{fmtDateShort(tip.addedAt)} · {fmtTime(tip.addedAt)}</span>
+        <span style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#FF6200"}}>{getDateLabel(tip.addedAt)} · {fmtTime(tip.addedAt)</span>
       </div>
       <div className="tip-teams">
         <span className="tip-home">{tip.home}</span>
@@ -890,7 +952,7 @@ const TodayWins = ({ tips }) => {
   return (
     <div className="today-wins">
       <div className="tw-hdr">
-        <div className="tw-title">פגעו היום ב-Winner 🎯</div>
+        <div className="tw-title">פגעו היום ב-Winner </div>
         <div className="tw-ct">{won.length} תפס{won.length===1?"":"ו"} היום</div>
       </div>
       <div className="grid">
@@ -988,13 +1050,29 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
     setTips(prev => prev.map(t => t.id===id ? { ...t, status } : t));
   };
 
+  const [dayFilter, setDayFilter] = useState("all");
+
+  const todayTips = tips.filter(t=>isToday(t.addedAt));
+  const yesterdayTips = tips.filter(t=>isYesterday(t.addedAt));
+  const allDayTips = dayFilter==="today"?todayTips:dayFilter==="yesterday"?yesterdayTips:tips;
+
   const counts = {
-    all: tips.length,
-    pending: tips.filter(t=>t.status==="pending").length,
-    won:     tips.filter(t=>t.status==="won").length,
-    lost:    tips.filter(t=>t.status==="lost").length,
+    all: allDayTips.length,
+    pending: allDayTips.filter(t=>t.status==="pending").length,
+    won:     allDayTips.filter(t=>t.status==="won").length,
+    lost:    allDayTips.filter(t=>t.status==="lost").length,
   };
-  const filtered = filter==="all" ? tips : tips.filter(t=>t.status===filter);
+  const filtered = filter==="all" ? allDayTips : allDayTips.filter(t=>t.status===filter);
+
+  const dayStats = (() => {
+    const arr = dayFilter==="today"?todayTips:dayFilter==="yesterday"?yesterdayTips:tips;
+    const won=arr.filter(t=>t.status==="won").length;
+    const lost=arr.filter(t=>t.status==="lost").length;
+    const pending=arr.filter(t=>t.status==="pending").length;
+    const total=won+lost;
+    const rate=total>0?Math.round(won/total*100):null;
+    return {won,lost,pending,total,rate};
+  })();
 
   return (
     <div className="wrap">
@@ -1023,6 +1101,32 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
 
       {!API_KEY && (
         <div className="disc" style={{marginBottom:16}}>⚠ הגדר <code>VITE_ANTHROPIC_API_KEY</code> ב-Vercel כדי לרענן יחסים אוטומטית.</div>
+      )}
+
+      {/* Day tabs */}
+      <div className="day-tabs">
+        {[{k:"all",l:"הכל"},{k:"today",l:"היום"},{k:"yesterday",l:"אתמול"}].map(d=>(
+          <button key={d.k} className={`day-tab${dayFilter===d.k?" active":""}`} onClick={()=>setDayFilter(d.k)}>
+            {d.l}
+            <span className="day-tab-ct">{d.k==="all"?tips.length:d.k==="today"?todayTips.length:yesterdayTips.length}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Day stats */}
+      {(dayStats.won>0||dayStats.lost>0) && (
+        <div className="day-stats">
+          <div className="day-stat"><div className="day-stat-val" style={{color:"#31d187"}}>{dayStats.won}</div><div className="day-stat-lbl">תפסו</div></div>
+          <div className="day-divider"/>
+          <div className="day-stat"><div className="day-stat-val" style={{color:"#ef5350"}}>{dayStats.lost}</div><div className="day-stat-lbl">נפלו</div></div>
+          <div className="day-divider"/>
+          <div className="day-stat"><div className="day-stat-val" style={{color:"#ffc857"}}>{dayStats.pending}</div><div className="day-stat-lbl">ממתינים</div></div>
+          {dayStats.rate!==null && (<>
+            <div className="day-divider"/>
+            <div className="day-rate" style={{color:dayStats.rate>=60?"#31d187":dayStats.rate>=40?"#ff7a45":"#ef5350"}}>{dayStats.rate}%</div>
+            <div style={{fontFamily:"'Assistant',sans-serif",fontSize:10,color:"#aeb8bd",alignSelf:"center"}}>אחוז פגיעה</div>
+          </>)}
+        </div>
       )}
 
       {/* Filter tabs */}
@@ -1066,7 +1170,7 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
             <div key={i} className="log-row">
               <span style={{color:"rgba(184,147,106,.5)",minWidth:50}}>{fmtTime(l.ts)}</span>
               <span className={`log-status ${l.status==="ok"?"ok":l.status==="fail"?"fail":"warn"}`}>
-                {l.status==="ok"?"✓ הצלחה":l.status==="fail"?"✕ כישלון":"⚠ אזהרה"}
+                {l.status==="ok"?"✓ הצלחה":l.status==="fail"?" כישלון":"⚠ אזהרה"}
               </span>
               <span style={{color:"rgba(184,147,106,.6)",flex:1,fontSize:10}}>{l.source}</span>
               <span style={{color:"#B8936A",minWidth:40,textAlign:"left"}}>{l.count} משחקים</span>
@@ -1139,7 +1243,7 @@ function VerdictCard({ text }) {
   const cfg = v === "VALUE"
     ? { cls:"value", icon:"✓", label:"VALUE BET — כדאי!", color:"#4ade80" }
     : v === "AVOID"
-    ? { cls:"avoid", icon:"✕", label:"AVOID — לא כדאי", color:"#f87171" }
+    ? { cls:"avoid", icon:"", label:"AVOID — לא כדאי", color:"#f87171" }
     : { cls:"risky", icon:"⚠", label:"RISKY — גבולי", color:"#facc15" };
   const body = text.replace(/VERDICT:.*/,"").trim();
   return (
@@ -1165,7 +1269,7 @@ const AGENT_SUGGESTIONS = [
 const PogueaAgent = ({ isPremium, onUnlock }) => {
   const [msgs, setMsgs] = useState([{
     id:"0", role:"assistant",
-    text:"שלום! אני הפוגע 🎯\nשלח לי כל הימור שאתה שוקל ב-Winner ואנתח אותו לעומק — פציעות, צורה, H2H, ערך יחס ועוד. אני אגיד לך ישר: כדאי או לא.",
+    text:"שלום! אני הפוגע \nשלח לי כל הימור שאתה שוקל ב-Winner ואנתח אותו לעומק — פציעות, צורה, H2H, ערך יחס ועוד. אני אגיד לך ישר: כדאי או לא.",
     ts: Date.now(),
   }]);
   const [input, setInput] = useState("");
@@ -1288,7 +1392,7 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
           style={{height:"auto",minHeight:44}}
         />
         <button className="agent-send" onClick={send} disabled={!input.trim()||thinking}>
-          {thinking ? "⏳" : "↑"}
+          {thinking ? "" : "↑"}
         </button>
       </div>
     </div>
@@ -1296,41 +1400,32 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
 };
 
 const PremiumCodeInput = ({ onUnlock }) => {
-  const [codeOpen, setCodeOpen] = React.useState(false);
+  const [showCode, setShowCode] = React.useState(false);
   const [code, setCode] = React.useState("");
   const [err, setErr] = React.useState(false);
   const tryCode = () => {
-    if (code.trim().toUpperCase() === PREMIUM_CODE) {
-      onUnlock();
-    } else {
-      setErr(true);
-      setTimeout(() => setErr(false), 900);
-    }
+    if (code.trim().toUpperCase() === PREMIUM_CODE) { onUnlock(); }
+    else { setErr(true); setTimeout(()=>setErr(false),900); }
   };
   return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
-      <button className="prem-btn" onClick={() => window.open(PAYMENT_URL, "_blank")}>
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
+      <button className="prem-btn" onClick={()=>window.open(PAYMENT_URL,"_blank")}>
         פתח גישה
       </button>
-      {!codeOpen ? (
-        <button onClick={() => setCodeOpen(true)}
-          style={{background:"none",border:"none",color:"rgba(184,147,106,.5)",fontSize:11,cursor:"pointer",fontFamily:"'Assistant',sans-serif",textDecoration:"underline"}}>
+      {!showCode ? (
+        <button onClick={()=>setShowCode(true)}
+          style={{background:"none",border:"none",color:"rgba(174,184,189,.5)",fontSize:11,cursor:"pointer",fontFamily:"'Assistant',sans-serif",textDecoration:"underline"}}>
           כבר רכשת? הזן קוד
         </button>
       ) : (
-        <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          <input
-            className={`prem-input ${err ? "shake" : ""}`}
-            placeholder="קוד גישה..."
-            value={code}
-            onChange={e => setCode(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && tryCode()}
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,width:"100%",maxWidth:280}}>
+          <input className={`prem-input${err?" err":""}`}
+            placeholder="קוד גישה..." value={code}
+            onChange={e=>setCode(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&tryCode()}
             style={{direction:"ltr",textAlign:"center",letterSpacing:3}}
-            autoFocus
-          />
-          <button className="prem-btn" style={{padding:"8px 16px",fontSize:13}} onClick={tryCode}>
-            אישור
-          </button>
+            autoFocus/>
+          <button className="prem-btn" style={{fontSize:15,padding:"10px"}} onClick={tryCode}>אישור</button>
         </div>
       )}
     </div>
@@ -1375,6 +1470,22 @@ const TodayStatsBar = ({ tips }) => {
     </div>
   );
 };
+
+
+// ─── WC PROMO BANNER ───────────────────────────────────────────
+const WCPromoBanner = ({ onClick }) => (
+  <div className="wc-promo" onClick={onClick}>
+    <div className="wc-promo-inner">
+      <div className="wc-promo-icon">&#x26BD;</div>
+      <div className="wc-promo-txt">
+        <div className="wc-title-text">מונדיאל אלפיים עשרים ושש</div>
+        <div className="wc-sub-text">ארה"ב · קנדה · מקסיקו · 11 יוני — 19 יולי 2026</div>
+        <div className="wc-promo-badge">הפוגע AI מנתח את כל המשחקים</div>
+      </div>
+      <div className="wc-promo-arrow">&#8592;</div>
+    </div>
+  </div>
+);
 
 // ─── MATCH CARD ────────────────────────────────────────────────
 const MatchCard = ({m, rank, onClick}) => {
@@ -1492,7 +1603,7 @@ const Modal = ({m, onClose}) => {
     <div className="ovl" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="mdl">
         <div className="mdl-hero">
-          <button className="mdl-x" onClick={onClose}>✕</button>
+          <button className="mdl-x" onClick={onClose}></button>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
             <LeagueBadge lk={m.leagueKey}/>
             <div>
@@ -2394,7 +2505,7 @@ const FinishedMatchCard = ({ m }) => {
           background:m.betCorrect?"rgba(74,222,128,.08)":"rgba(248,113,113,.06)",
           border:`1px solid ${m.betCorrect?"rgba(74,222,128,.25)":"rgba(248,113,113,.2)"}`,
           borderRadius:4,padding:"2px 7px"}}>
-          {m.betCorrect!=null ? (m.betCorrect ? "✓ הימור נכון" : "✕ הימור נפל") : "⏳ לא עקבנו"}
+          {m.betCorrect!=null ? (m.betCorrect ? "✓ הימור נכון" : " הימור נפל") : " לא עקבנו"}
         </span>
       </div>
       <div className="fin-teams">
@@ -2414,7 +2525,7 @@ const FinishedMatchCard = ({ m }) => {
       {m.scorers && m.scorers.length > 0 && (
         <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:4}}>
           {m.scorers.map((s,i)=>(
-            <span key={i} style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#B8936A",background:"rgba(255,255,255,.04)",border:"1px solid rgba(61,26,10,.4)",borderRadius:4,padding:"2px 7px"}}>⚽ {s}</span>
+            <span key={i} style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#B8936A",background:"rgba(255,255,255,.04)",border:"1px solid rgba(61,26,10,.4)",borderRadius:4,padding:"2px 7px"}}> {s}</span>
           ))}
         </div>
       )}
@@ -2453,7 +2564,7 @@ const FinishedView = ({ sport }) => {
   return (
     <div className="wrap">
       <div className="sec-hdr" style={{marginBottom:16}}>
-        <div className="sec-ttl">✅ תקצירי היום</div>
+        <div className="sec-ttl">תקצירי היום</div>
         <div className="sec-ct">{items.length} משחקים הסתיימו</div>
         <div className="sec-line"/>
       </div>
@@ -2461,7 +2572,7 @@ const FinishedView = ({ sport }) => {
         <div className="loading-box"><div className="spin"/><div className="load-txt">טוען תוצאות...</div></div>
       ) : items.length === 0 ? (
         <div style={{textAlign:"center",padding:"60px 20px",color:"rgba(184,147,106,.5)"}}>
-          <div style={{fontSize:48,marginBottom:14}}>📋</div>
+          <div style={{fontSize:48,marginBottom:14}}></div>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,letterSpacing:2,textTransform:"uppercase"}}>אין תוצאות להיום עדיין</div>
         </div>
       ) : (
@@ -2497,9 +2608,9 @@ const WC2026View = () => {
         <div className="wc-title">FIFA WORLD CUP 2026</div>
         <div className="wc-sub">ארצות הברית · קנדה · מקסיקו · 11 יוני — 19 יולי 2026</div>
         <div className="wc-hosts">
-          <div className="wc-host">🏟️ ארה"ב</div>
-          <div className="wc-host">🏟️ קנדה</div>
-          <div className="wc-host">🏟️ מקסיקו</div>
+          <div className="wc-host"> ארה"ב</div>
+          <div className="wc-host"> קנדה</div>
+          <div className="wc-host"> מקסיקו</div>
         </div>
       </div>
       <div className="wc-tabs">
@@ -2519,7 +2630,7 @@ const WC2026View = () => {
                 <div key={i} className="wc-team-row">
                   <span className="wc-team-flag">{t.flag}</span>
                   <span className="wc-team-name">{t.name}</span>
-                  {t.host && <span className="wc-team-host">🏟️</span>}
+                  {t.host && <span className="wc-team-host"></span>}
                   <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.5)",minWidth:50,textAlign:"left"}}>0 0 0</span>
                   <span className="wc-team-pts">0</span>
                 </div>
@@ -2536,7 +2647,7 @@ const WC2026View = () => {
               <div className="wc-match-teams">
                 <div className="wc-match-home">{m.home} <span style={{color:"rgba(255,215,0,.4)"}}>vs</span> {m.away}</div>
                 <div className="wc-match-date">{m.date} · קבוצה {m.group}</div>
-                <div className="wc-stadium">🏟️ {m.stadium}</div>
+                <div className="wc-stadium"> {m.stadium}</div>
               </div>
               <div className="wc-match-score">—</div>
             </div>
@@ -2564,7 +2675,7 @@ const LeaguesView = ({ onLeagueSelect, activeLeague }) => {
   return (
     <div className="wrap">
       <div className="sec-hdr" style={{marginBottom:16}}>
-        <div className="sec-ttl">⚽ ליגות</div>
+        <div className="sec-ttl"> ליגות</div>
         <div className="sec-ct">{Object.keys(LM).length} ליגות</div>
         <div className="sec-line"/>
       </div>
@@ -2771,12 +2882,15 @@ export default function App() {
             />
           )}
           <div className="wrap" style={{display:view==="matches"?"block":"none"}}>
+            {/* WC Promo */}
+            <WCPromoBanner onClick={()=>setView("wc2026")}/>
+
             {leagueFilter && (
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,padding:"7px 12px",background:"rgba(196,12,12,.06)",border:"1px solid rgba(196,12,12,.2)",borderRadius:8}}>
                 <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,color:"#FF6200",letterSpacing:1}}>
                   {LM[leagueFilter]?.flag} {LM[leagueFilter]?.name} — מסנן פעיל
                 </span>
-                <button onClick={()=>setLeagueFilter(null)} style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,letterSpacing:.5,padding:"2px 9px",borderRadius:5,border:"1px solid rgba(196,12,12,.3)",background:"transparent",color:"#FF6200",cursor:"pointer"}}>✕ נקה</button>
+                <button onClick={()=>setLeagueFilter(null)} style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,letterSpacing:.5,padding:"2px 9px",borderRadius:5,border:"1px solid rgba(196,12,12,.3)",background:"transparent",color:"#FF6200",cursor:"pointer"}}> נקה</button>
               </div>
             )}
             {/* STATUS BAR */}
