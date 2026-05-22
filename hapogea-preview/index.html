@@ -176,7 +176,7 @@
     .toolbar {
       margin-top: 18px;
       display: grid;
-      grid-template-columns: 1fr 180px 180px auto;
+      grid-template-columns: 1fr 180px auto;
       gap: 10px;
       align-items: end;
       padding: 16px;
@@ -417,10 +417,9 @@
           <p>מנוע יחסים מבוסס Winner</p>
         </div>
       </div>
-      <nav class="nav" id="dayTabs">
-        <button class="tab" data-day="yesterday">אתמול</button>
-        <button class="tab active" data-day="today">היום</button>
-        <button class="tab" data-day="tomorrow">מחר</button>
+      <nav class="nav" id="sportTabs">
+        <button class="tab active" data-sport-tab="football">כדורגל</button>
+        <button class="tab" data-sport-tab="basketball">כדורסל</button>
       </nav>
     </div>
   </header>
@@ -430,10 +429,10 @@
       <div class="hero-main">
         <div class="hero-content">
           <span class="eyebrow">Plan Mode: אימות מקור, חישוב, הצגה, בדיקה</span>
-          <h2>רק כדורגל וכדורסל, רק משחקים שנמשכים מווינר, ורק יחס 1.40 עד 1.90.</h2>
+          <h2>רק משחקים שאפשר להמר עליהם עכשיו ב-Winner, עם יחס פעיל ולוגו לכל קבוצה וליגה.</h2>
           <p class="hero-copy">
-            הדמו אינו ממציא משחקים. משחקים עתידיים מגיעים מווינר-ליין, תוצאות מגיעות מממשק התוצאות של ווינר,
-            והאלגוריתם מדרג בחירת מנצח לפי הסתברות שוק, אמינות סוג השוק ועומק הנתונים.
+            הדמו מציג רק בחירות מנצח פתוחות להימור. ההסבר מתמקד בלמה הקבוצה צפויה לנצח:
+            פייבוריטיות, בית/חוץ, ופער מול היריבה בתוך שוק Winner.
           </p>
           <div class="stats" id="stats"></div>
         </div>
@@ -445,14 +444,6 @@
       <div class="field">
         <label for="search">חיפוש קבוצה, ליגה או שוק</label>
         <input id="search" type="search" placeholder="לדוגמה: ליגת Winner סל, פולנית, NBA" />
-      </div>
-      <div class="field">
-        <label for="sport">ענף</label>
-        <select id="sport">
-          <option value="all">כדורגל וכדורסל</option>
-          <option value="כדורגל">כדורגל</option>
-          <option value="כדורסל">כדורסל</option>
-        </select>
       </div>
       <div class="field">
         <label for="sort">מיון</label>
@@ -472,15 +463,15 @@
         <div class="plan-list">
           <div class="plan-item">
             <b>1. מקור אמת</b>
-            <p>המשחקים העתידיים נטענים מווינר-ליין ולא ממערך ידני.</p>
+            <p>כל משחק שמוצג נטען מווינר-ליין ויש לו יחס פעיל להימור.</p>
           </div>
           <div class="plan-item">
             <b>2. סינון קשיח</b>
-            <p>רק כדורגל וכדורסל, ורק שוקי מנצח ביחס 1.40 עד 1.90.</p>
+            <p>רק שוקי מנצח ביחס 1.40 עד 1.90, בלי ארכיון ובלי רשומות חסרות יחס.</p>
           </div>
           <div class="plan-item">
-            <b>3. סטטוס משחק</b>
-            <p>תפס, נפל או ממתין מחושב לפי תוצאה רשמית כשיש תוצאה.</p>
+            <b>3. לוגואים</b>
+            <p>לוגו רשמי מוצג כשנמצא; אם לא נמצא, מוצג תג גרפי אחיד כדי שלא יישאר כרטיס בלי לוגו.</p>
           </div>
         </div>
 
@@ -490,8 +481,8 @@
             <p>הסתברות שוק, אמינות שוק ועומק נתונים. אין שימוש בשם משחק או ביחס שלא הגיע מווינר.</p>
           </div>
           <div class="method">
-            <b>אתמול</b>
-            <p>ממשק התוצאות הציבורי מחזיר תוצאות, אך לא מחזיר יחסי ארכיון. לכן יחס לא מומצא.</p>
+            <b>הסבר בחירה</b>
+            <p>הטקסט מסביר למה הבחירה צפויה לנצח: פייבוריטית, בית/חוץ ופער מול היריבה, לא רק למה היחס מתאים.</p>
           </div>
         </div>
       </aside>
@@ -528,8 +519,7 @@
   <script>
     const state = {
       feed: null,
-      day: "today",
-      sport: "all",
+      sportTab: "football",
       sort: "score",
       search: "",
       loading: true,
@@ -544,7 +534,7 @@
     };
 
     function formatOdds(value) {
-      return value ? Number(value).toFixed(2) : "לא זמין";
+      return Number.isFinite(Number(value)) ? Number(value).toFixed(2) : "לא זמין";
     }
 
     function formatPercent(value) {
@@ -569,13 +559,12 @@
     }
 
     function currentRows() {
-      const tab = state.feed?.tabs?.[state.day];
+      const tab = state.feed?.tabs?.[state.sportTab];
       if (!tab) return [];
       const query = state.search.trim().toLowerCase();
       let rows = [...(tab.rows || [])].filter(row => {
-        const sportOk = state.sport === "all" || row.sport === state.sport;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
-        return sportOk && (!query || text.includes(query));
+        return row.odds && row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo && (!query || text.includes(query));
       });
       rows.sort((a, b) => {
         if (state.sort === "odds") return (b.odds || 0) - (a.odds || 0);
@@ -587,13 +576,13 @@
     }
 
     function bestTip() {
-      const rows = allRows().filter(row => row.status === "ממתין" && row.odds);
+      const rows = currentRows().filter(row => row.status === "ממתין" && row.odds);
       return rows.sort((a, b) => (b.score || 0) - (a.score || 0) || (b.odds || 0) - (a.odds || 0))[0];
     }
 
     function renderTabs() {
-      document.querySelectorAll("#dayTabs .tab").forEach(button => {
-        button.classList.toggle("active", button.dataset.day === state.day);
+      document.querySelectorAll("#sportTabs .tab").forEach(button => {
+        button.classList.toggle("active", button.dataset.sportTab === state.sportTab);
       });
     }
 
@@ -604,10 +593,10 @@
       const miss = rows.filter(row => row.status === "נפל").length;
       const leagues = new Set(rows.map(row => row.league)).size;
       document.getElementById("stats").innerHTML = [
-        ["משחקים", rows.length],
+        ["פתוחים", rows.length],
         ["ליגות", leagues],
-        ["ממתין", waiting],
-        ["תפס / נפל", `${hit}/${miss}`]
+        ["עם יחס", rows.filter(row => row.odds).length],
+        ["עם לוגו", rows.filter(row => row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo).length]
       ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
     }
 
@@ -617,7 +606,7 @@
       if (!tip) {
         box.innerHTML = `
           <div class="daily-head"><h3>הטיפ המוביל</h3><span class="pill">אין בחירה פתוחה</span></div>
-          <p class="hero-copy" style="font-size:14px">לא נמצאה כרגע בחירה פתוחה עם יחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
+          <p class="hero-copy" style="font-size:14px">לא נמצאה כרגע בחירה פתוחה בקטגוריה הזו עם יחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
         `;
         return;
       }
@@ -635,7 +624,7 @@
           <div class="odds">${formatOdds(tip.odds)}</div>
         </div>
         <p class="hero-copy" style="font-size:14px">
-          הסתברות מוערכת לפי שוק: ${formatPercent(tip.probability)}. סטטוס: ${tip.status}.
+          למה: ${(tip.explanation || [])[1] || "הבחירה היא פייבוריטית בשוק המנצח של Winner."}
         </p>
       `;
     }
@@ -725,7 +714,7 @@
       const cards = document.getElementById("cards");
       const title = document.getElementById("listTitle");
       const meta = document.getElementById("resultMeta");
-      const tab = state.feed?.tabs?.[state.day];
+      const tab = state.feed?.tabs?.[state.sportTab];
       title.textContent = `${tab?.label || ""} · ${tab?.date || ""}`;
       if (state.error) {
         cards.innerHTML = `<div class="error">${state.error}</div>`;
@@ -734,10 +723,10 @@
       }
       const rows = currentRows();
       const sourceMode = state.feed?.fallback ? "מצב snapshot מאומת" : "מצב חי";
-      meta.textContent = `${rows.length} משחקים מוצגים מתוך ${tab?.rows?.length || 0}. אין משחקים ידניים. ${sourceMode}.`;
+      meta.textContent = `${rows.length} משחקים פתוחים להימור מתוך ${tab?.rows?.length || 0}. לכל משחק יש יחס Winner ולוגו. ${sourceMode}.`;
       cards.innerHTML = rows.length
         ? rows.map(rowCard).join("")
-        : `<div class="empty">לא נמצאו משחקים בסינון הנוכחי. הדמו לא משלים משחקים אם Winner לא החזיר אותם.</div>`;
+        : `<div class="empty">לא נמצאו משחקים פתוחים בקטגוריה הזו. הדמו לא מציג משחק בלי יחס Winner פעיל.</div>`;
     }
 
     function render() {
@@ -764,18 +753,14 @@
       }
     }
 
-    document.querySelectorAll("#dayTabs .tab").forEach(button => {
+    document.querySelectorAll("#sportTabs .tab").forEach(button => {
       button.addEventListener("click", () => {
-        state.day = button.dataset.day;
+        state.sportTab = button.dataset.sportTab;
         render();
       });
     });
     document.getElementById("search").addEventListener("input", event => {
       state.search = event.target.value;
-      renderCards();
-    });
-    document.getElementById("sport").addEventListener("change", event => {
-      state.sport = event.target.value;
       renderCards();
     });
     document.getElementById("sort").addEventListener("change", event => {

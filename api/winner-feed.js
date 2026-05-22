@@ -131,6 +131,14 @@ function initials(value) {
     .toUpperCase();
 }
 
+function fallbackLogo(name, kind) {
+  const label = initials(name) || "?";
+  const hue = kind === "league" ? "#55d6ff" : "#31d187";
+  const bg = kind === "league" ? "#111f2a" : "#102219";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="${bg}"/><circle cx="48" cy="48" r="43" fill="none" stroke="${hue}" stroke-width="5"/><text x="48" y="57" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="800" fill="#f7f3ea">${label}</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 async function supabaseSearch(table, term) {
   const value = cleanText(term);
   if (!value || value.length < 2) return null;
@@ -156,9 +164,9 @@ async function enrichLogos(rows) {
     const mappedLogo = TEAM_LOGOS[key] || "";
     return {
       name: key,
-      logo: row?.logo_url || mappedLogo,
+      logo: row?.logo_url || mappedLogo || fallbackLogo(key, "team"),
       initials: initials(key),
-      logoSource: row?.logo_url ? "win2go teams" : mappedLogo ? "curated teams" : "fallback initials",
+      logoSource: row?.logo_url ? "win2go teams" : mappedLogo ? "curated teams" : "generated team badge",
     };
   }
   async function leagueAsset(name) {
@@ -168,9 +176,9 @@ async function enrichLogos(rows) {
     const mappedLogo = LEAGUE_LOGOS[key] || "";
     return {
       name: key,
-      logo: row?.logo_url || mappedLogo,
+      logo: row?.logo_url || mappedLogo || fallbackLogo(key, "league"),
       initials: initials(key),
-      logoSource: row?.logo_url ? "win2go leagues" : mappedLogo ? "curated leagues" : "fallback initials",
+      logoSource: row?.logo_url ? "win2go leagues" : mappedLogo ? "curated leagues" : "generated league badge",
     };
   }
   return Promise.all(rows.map(async (row) => {
@@ -283,7 +291,7 @@ function scoreOutcome(market, outcome) {
   };
 }
 
-function describeWinnerPick(market, scored) {
+function describeWinnerPick(market, scored, teams) {
   const outcomes = (market.outcomes || [])
     .map((outcome) => ({
       desc: cleanText(outcome.desc),
@@ -292,19 +300,34 @@ function describeWinnerPick(market, scored) {
     .filter((outcome) => outcome.odds)
     .sort((a, b) => a.odds - b.odds);
   const favorite = outcomes[0];
+  const opponent = outcomes.find((outcome) => outcome.desc !== scored.pick && cleanText(outcome.desc).toLowerCase() !== "x");
+  const draw = outcomes.find((outcome) => cleanText(outcome.desc).toLowerCase() === "x");
   const alternatives = outcomes
     .filter((outcome) => outcome.desc !== scored.pick)
     .slice(0, 2)
     .map((outcome) => `${outcome.desc} ${outcome.odds.toFixed(2)}`)
     .join(", ");
   const pickText = cleanText(scored.pick).toLowerCase() === "x" ? "תיקו" : scored.pick;
+  const side =
+    cleanText(scored.pick) === cleanText(teams.home) ? "home" :
+    cleanText(scored.pick) === cleanText(teams.away) ? "away" :
+    cleanText(scored.pick).toLowerCase() === "x" ? "draw" : "team";
+  const venueReason =
+    side === "home" ? `${pickText} משחקת בבית, ולכן הבחירה מקבלת גם יתרון מגרש.` :
+    side === "away" ? `${pickText} מסומנת כפייבוריטית גם בחוץ, וזה בדרך כלל מצביע על פער איכות מול היריבה ולא רק על יתרון ביתיות.` :
+    side === "draw" ? "תיקו נבחר רק אם השוק מתמחר אותו בתוך הטווח ובפער סביר מהקבוצות." :
+    "הבחירה מזוהה ישירות מתוך שוק המנצח של Winner.";
+  const gapReason = opponent?.odds
+    ? `מול ${opponent.desc}, השוק נותן ליריבה יחס ${opponent.odds.toFixed(2)}, כלומר Winner רואה אותה כפחות סבירה לניצחון.`
+    : "";
+  const drawReason = draw?.odds ? `גם התיקו רחוק יותר ביחס ${draw.odds.toFixed(2)}.` : "";
   if (favorite?.desc === scored.pick) {
-    return `Winner מתמחר את ${pickText} כבחירה החזקה בשוק הזה: היחס ${scored.odds.toFixed(2)} הוא הנמוך ביותר, כלומר הסתברות השוק הגבוהה ביותר. ${alternatives ? `החלופות בשוק: ${alternatives}.` : ""}`;
+    return `${pickText} נבחרת לניצחון כי היא הפייבוריטית הברורה בשוק המנצח של Winner. ${venueReason} ${gapReason} ${drawReason} ${alternatives ? `החלופות בשוק: ${alternatives}.` : ""}`.replace(/\s+/g, " ").trim();
   }
-  return `הבחירה ${pickText} נשארת בטווח היחסים המבוקש עם יחס ${scored.odds.toFixed(2)} והסתברות שוק של ${Math.round(scored.implied * 100)} אחוז. ${favorite ? `הפייבוריט לפי Winner הוא ${favorite.desc} ביחס ${favorite.odds.toFixed(2)}.` : ""}`;
+  return `${pickText} נבחרת כי היא עדיין בחירת מנצח פתוחה ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זו בחירה מסוכנת יותר.` : ""}`.replace(/\s+/g, " ").trim();
 }
 
-function buildCurrentPicks(markets, dateKey) {
+function buildCurrentPicks(markets, dateKey, limit = 20) {
   const events = new Map();
   for (const market of markets) {
     const date = winnerDateToIso(market.e_date);
@@ -346,7 +369,7 @@ function buildCurrentPicks(markets, dateKey) {
         allMarkets: eventMarkets,
         explanation: [
           "המשחק מופיע בווינר-ליין ולכן ניתן להמר עליו בזמן משיכת הנתונים.",
-          describeWinnerPick(market, scored),
+          describeWinnerPick(market, scored, teams),
           "הפירוט מבוסס על יחסי Winner בלבד. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור.",
         ],
       };
@@ -355,7 +378,7 @@ function buildCurrentPicks(markets, dateKey) {
       }
     }
   }
-  return [...events.values()].sort((a, b) => b.score - a.score || a.odds - b.odds).slice(0, 10);
+  return [...events.values()].sort((a, b) => b.score - a.score || a.odds - b.odds).slice(0, limit);
 }
 
 function resultStatus(event, pick) {
@@ -461,38 +484,32 @@ async function getResults(startDate, endDate) {
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
   try {
-    const yesterday = israelDate(-1);
     const today = israelDate(0);
     const tomorrow = israelDate(1);
-    const [{ hashes, markets }, resultEvents] = await Promise.all([
-      getWinnerLine(),
-      getResults(yesterday, today),
+    const { hashes, markets } = await getWinnerLine();
+    const openRows = await enrichLogos([
+      ...buildCurrentPicks(markets, today, 30),
+      ...buildCurrentPicks(markets, tomorrow, 30),
     ]);
-    const yesterdayRows = await enrichLogos(buildResultRows(resultEvents, yesterday));
-    const todayCurrent = await enrichLogos(buildCurrentPicks(markets, today));
-    const todayResults = await enrichLogos(buildResultRows(resultEvents, today));
-    const byId = new Map(todayCurrent.map((row) => [row.eventId, row]));
-    for (const result of todayResults) {
-      if (!byId.has(result.eventId)) byId.set(result.eventId, result);
-    }
-    const todayRows = [...byId.values()]
-      .sort((a, b) => b.score - a.score || (b.odds || 0) - (a.odds || 0))
-      .slice(0, 10);
-    const tomorrowRows = await enrichLogos(buildCurrentPicks(markets, tomorrow));
+    const footballRows = openRows
+      .filter((row) => row.sportId === 240 && row.odds && row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo)
+      .slice(0, 20);
+    const basketballRows = openRows
+      .filter((row) => row.sportId === 227 && row.odds && row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo)
+      .slice(0, 20);
     res.status(200).json({
       ok: true,
       generatedAt: new Date().toISOString(),
       serverVersion: hashes.currentVersion,
       oddsRange: { min: ODDS_MIN, max: ODDS_MAX },
       tabs: {
-        yesterday: { label: "אתמול", date: yesterday, rows: yesterdayRows },
-        today: { label: "היום", date: today, rows: todayRows },
-        tomorrow: { label: "מחר", date: tomorrow, rows: tomorrowRows },
+        football: { label: "כדורגל", date: `${today} / ${tomorrow}`, rows: footballRows },
+        basketball: { label: "כדורסל", date: `${today} / ${tomorrow}`, rows: basketballRows },
       },
       notes: [
-        "משחקים עתידיים נמשכים מווינר-ליין בלבד.",
-        "תוצאות נמשכות מממשק התוצאות של ווינר.",
-        "יחסי ארכיון אינם מוחזרים בממשק התוצאות הציבורי ולכן אינם מומצאים.",
+        "מוצגים רק משחקים פתוחים להימור בווינר-ליין.",
+        "כל בחירה חייבת יחס Winner פעיל בטווח 1.40-1.90.",
+        "לכל קבוצה וליגה מוצג לוגו ממקור חיצוני או תג גרפי כאשר אין לוגו רשמי זמין.",
       ],
     });
   } catch (error) {
