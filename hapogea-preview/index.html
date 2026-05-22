@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>הפוגע | Winner Odds Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Heebo:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090b;
+      --panel: #10151a;
+      --panel-soft: #151b20;
+      --line: rgba(255,255,255,.09);
+      --line-strong: rgba(255,255,255,.16);
+      --text: #f7f3ea;
+      --muted: #aeb8bd;
+      --soft: #78848a;
+      --green: #31d187;
+      --red: #ef5350;
+      --gold: #ffc857;
+      --cyan: #55d6ff;
+      --orange: #ff7a45;
+      --shadow: 0 24px 80px rgba(0,0,0,.36);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(85,214,255,.10), transparent 28rem),
+        radial-gradient(circle at 90% 12%, rgba(255,122,69,.10), transparent 25rem),
+        linear-gradient(180deg, #07090b 0%, #0d1216 48%, #07090b 100%);
+      color: var(--text);
+      font-family: Assistant, Heebo, Arial, sans-serif;
+      letter-spacing: 0;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(7,9,11,.88);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner, .shell, .footer {
+      max-width: 1420px;
+      margin: 0 auto;
+      padding-inline: 18px;
+    }
+    .topbar-inner {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 240px; }
+    .mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--orange), var(--red));
+      color: white;
+      font-weight: 900;
+      box-shadow: 0 10px 30px rgba(255,122,69,.22);
+    }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    .brand h1 { margin: 0; font: 900 27px/1 Heebo, Assistant, sans-serif; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .nav { display: flex; gap: 6px; margin-inline-start: auto; overflow-x: auto; padding-bottom: 2px; }
+    .tab {
+      border: 1px solid transparent;
+      color: var(--muted);
+      background: transparent;
+      border-radius: 7px;
+      padding: 9px 13px;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+    .tab.active { color: #06100c; background: var(--green); border-color: rgba(49,209,135,.65); }
+    .tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.06); }
+    .shell { padding-top: 18px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(350px, .75fr);
+      gap: 18px;
+    }
+    .panel, .hero-main, .hero-side, .card {
+      background: rgba(16,21,26,.84);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+    }
+    .hero-main {
+      min-height: 360px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-main:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(49,209,135,.16), transparent 48%),
+        linear-gradient(225deg, rgba(255,122,69,.12), transparent 44%);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; display: grid; gap: 18px; }
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      border: 1px solid rgba(49,209,135,.3);
+      background: rgba(49,209,135,.08);
+      color: #bff8dc;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .hero h2 {
+      max-width: 860px;
+      margin-bottom: 0;
+      font: 900 clamp(34px, 6vw, 72px)/.98 Heebo, Assistant, sans-serif;
+    }
+    .hero-copy { max-width: 780px; color: var(--muted); font-size: 18px; line-height: 1.55; margin-bottom: 0; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .stat { border: 1px solid var(--line); background: rgba(255,255,255,.04); border-radius: 8px; padding: 12px; min-height: 82px; }
+    .stat b { display: block; font-size: 25px; color: #fff; }
+    .stat span { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .hero-side { padding: 18px; display: grid; align-content: start; gap: 14px; }
+    .daily-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .daily-head h3 { margin: 0; font-size: 22px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: rgba(255,200,87,.10);
+      border: 1px solid rgba(255,200,87,.24);
+      color: #ffe3a0;
+      font-weight: 800;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .pickbox {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(49,209,135,.27);
+      background: rgba(49,209,135,.08);
+      border-radius: 8px;
+      padding: 13px;
+    }
+    .micro { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .pickbox strong { display: block; margin-top: 4px; font-size: 18px; }
+    .odds { font: 900 33px/1 Heebo, Assistant, sans-serif; color: var(--green); }
+    .status {
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid var(--line-strong);
+      color: var(--muted);
+    }
+    .status.hit { color: #bff8dc; border-color: rgba(49,209,135,.4); background: rgba(49,209,135,.1); }
+    .status.miss { color: #ffc5c3; border-color: rgba(239,83,80,.36); background: rgba(239,83,80,.08); }
+    .status.wait { color: #d7edff; border-color: rgba(85,214,255,.36); background: rgba(85,214,255,.08); }
+    .toolbar {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 180px 180px auto;
+      gap: 10px;
+      align-items: end;
+      padding: 16px;
+    }
+    .field { display: grid; gap: 6px; }
+    .field label { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 11px 12px;
+      outline: none;
+    }
+    .btn {
+      min-height: 43px;
+      border-radius: 7px;
+      border: 1px solid rgba(49,209,135,.65);
+      background: var(--green);
+      color: #06100c;
+      font-weight: 900;
+      padding: 0 14px;
+      white-space: nowrap;
+    }
+    .content {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+    .panel { padding: 16px; }
+    .panel h3 { margin-bottom: 12px; font-size: 18px; }
+    .plan-list, .method-list { display: grid; gap: 10px; }
+    .plan-item, .method {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px;
+      background: rgba(255,255,255,.025);
+    }
+    .plan-item b, .method b { display: block; margin-bottom: 4px; }
+    .plan-item p, .method p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .section-title { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .section-title h3 { margin: 0; font-size: 22px; }
+    .section-title p { margin: 4px 0 0; color: var(--muted); }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+    .card { overflow: hidden; transition: .18s ease; }
+    .card:hover { border-color: rgba(85,214,255,.34); transform: translateY(-2px); }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+    }
+    .league { font-weight: 900; }
+    .time { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .card-body { padding: 13px; display: grid; gap: 11px; }
+    .teams-line {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      min-height: 96px;
+      direction: ltr;
+    }
+    .team-side {
+      display: grid;
+      justify-items: center;
+      gap: 7px;
+      min-width: 0;
+      direction: rtl;
+    }
+    .logo-wrap {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.05);
+      overflow: hidden;
+      color: var(--text);
+      font-weight: 900;
+    }
+    .logo-wrap.small {
+      width: 24px;
+      height: 24px;
+      font-size: 11px;
+    }
+    .logo-wrap img {
+      max-width: 82%;
+      max-height: 82%;
+      object-fit: contain;
+    }
+    .team-name {
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      text-align: center;
+    }
+    .versus {
+      font-weight: 900;
+      color: var(--soft);
+      letter-spacing: 0;
+    }
+    .market-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(49,209,135,.35);
+      background: rgba(49,209,135,.07);
+      border-radius: 7px;
+      padding: 9px;
+    }
+    .market-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .market-row .price { font-weight: 900; color: var(--gold); }
+    .score-row { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .meter { height: 7px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); }
+    .signals { display: flex; gap: 6px; flex-wrap: wrap; }
+    .signal { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 7px; }
+    .details { border-top: 1px solid var(--line); padding-top: 10px; color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .open-game {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      min-height: 40px;
+      border-radius: 7px;
+      font-weight: 900;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(0,0,0,.82);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      overflow: auto;
+      padding: 18px 12px;
+    }
+    .modal.open { display: flex; }
+    .modal-card {
+      width: min(980px, 100%);
+      background: #10151a;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .modal-head {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+      display: grid;
+      gap: 14px;
+    }
+    .modal-close {
+      justify-self: start;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      border-radius: 7px;
+      min-height: 36px;
+      padding: 0 12px;
+      font-weight: 900;
+    }
+    .modal-body { padding: 18px; display: grid; gap: 14px; }
+    .explain-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .explain-box, .market-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+      padding: 12px;
+    }
+    .explain-box b, .market-box b { display: block; margin-bottom: 6px; }
+    .explain-box p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+    .outcome-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .outcome-row strong { color: var(--gold); }
+    .empty, .error {
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      padding: 34px 18px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255,255,255,.025);
+      grid-column: 1 / -1;
+    }
+    .error { color: #ffc5c3; border-color: rgba(239,83,80,.36); }
+    .footer { padding-top: 18px; padding-bottom: 24px; color: var(--soft); font-size: 12px; line-height: 1.6; }
+    @media (max-width: 1020px) {
+      .hero, .content { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .topbar-inner, .shell, .footer { padding-inline: 12px; }
+      .brand { min-width: 0; }
+      .nav { width: 100%; margin-inline-start: 0; }
+      .hero-main { padding: 20px; min-height: auto; }
+      .stats, .toolbar { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .explain-grid { grid-template-columns: 1fr; }
+      .teams-line { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="mark">1.7</div>
+        <div>
+          <h1>הפוגע</h1>
+          <p>מנוע יחסים מבוסס Winner</p>
+        </div>
+      </div>
+      <nav class="nav" id="dayTabs">
+        <button class="tab" data-day="yesterday">אתמול</button>
+        <button class="tab active" data-day="today">היום</button>
+        <button class="tab" data-day="tomorrow">מחר</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-main">
+        <div class="hero-content">
+          <span class="eyebrow">Plan Mode: אימות מקור, חישוב, הצגה, בדיקה</span>
+          <h2>רק כדורגל וכדורסל, רק משחקים שנמשכים מווינר, ורק יחס 1.40 עד 1.90.</h2>
+          <p class="hero-copy">
+            הדמו אינו ממציא משחקים. משחקים עתידיים מגיעים מווינר-ליין, תוצאות מגיעות מממשק התוצאות של ווינר,
+            והאלגוריתם מדרג בחירת מנצח לפי הסתברות שוק, אמינות סוג השוק ועומק הנתונים.
+          </p>
+          <div class="stats" id="stats"></div>
+        </div>
+      </div>
+      <aside class="hero-side" id="dailyTip"></aside>
+    </section>
+
+    <section class="toolbar panel">
+      <div class="field">
+        <label for="search">חיפוש קבוצה, ליגה או שוק</label>
+        <input id="search" type="search" placeholder="לדוגמה: ליגת Winner סל, פולנית, NBA" />
+      </div>
+      <div class="field">
+        <label for="sport">ענף</label>
+        <select id="sport">
+          <option value="all">כדורגל וכדורסל</option>
+          <option value="כדורגל">כדורגל</option>
+          <option value="כדורסל">כדורסל</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sort">מיון</label>
+        <select id="sort">
+          <option value="score">ציון פגיעה</option>
+          <option value="odds">יחס גבוה</option>
+          <option value="probability">הסתברות</option>
+          <option value="time">שעה</option>
+        </select>
+      </div>
+      <button class="btn" id="refresh">רענון נתוני Winner</button>
+    </section>
+
+    <section class="content">
+      <aside class="panel">
+        <h3>תוכנית עבודה</h3>
+        <div class="plan-list">
+          <div class="plan-item">
+            <b>1. מקור אמת</b>
+            <p>המשחקים העתידיים נטענים מווינר-ליין ולא ממערך ידני.</p>
+          </div>
+          <div class="plan-item">
+            <b>2. סינון קשיח</b>
+            <p>רק כדורגל וכדורסל, ורק שוקי מנצח ביחס 1.40 עד 1.90.</p>
+          </div>
+          <div class="plan-item">
+            <b>3. סטטוס משחק</b>
+            <p>תפס, נפל או ממתין מחושב לפי תוצאה רשמית כשיש תוצאה.</p>
+          </div>
+        </div>
+
+        <div class="method-list" style="margin-top:12px">
+          <div class="method">
+            <b>שיטת ניקוד</b>
+            <p>הסתברות שוק, אמינות שוק ועומק נתונים. אין שימוש בשם משחק או ביחס שלא הגיע מווינר.</p>
+          </div>
+          <div class="method">
+            <b>אתמול</b>
+            <p>ממשק התוצאות הציבורי מחזיר תוצאות, אך לא מחזיר יחסי ארכיון. לכן יחס לא מומצא.</p>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div class="section-title">
+          <div>
+            <h3 id="listTitle">טיפים מחושבים</h3>
+            <p id="resultMeta">טוען נתונים מווינר</p>
+          </div>
+          <span class="pill">מקור: Winner</span>
+        </div>
+        <div class="cards" id="cards">
+          <div class="empty">טוען נתונים חיים מווינר.</div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    הדמו מיועד להצגת מוצר ושיטת דירוג. הוא אינו המלצת הימור ואינו מבטיח תוצאה. כאשר ממשק ציבורי אינו מחזיר נתון, הדמו מציין זאת ואינו משלים נתונים באופן מלאכותי.
+  </footer>
+
+  <div class="modal" id="gameModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <button class="modal-close" id="closeModal">סגירה</button>
+        <div id="modalTitle"></div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      feed: null,
+      day: "today",
+      sport: "all",
+      sort: "score",
+      search: "",
+      loading: true,
+      error: "",
+      selectedId: null
+    };
+
+    const statusClass = {
+      "תפס": "hit",
+      "נפל": "miss",
+      "ממתין": "wait"
+    };
+
+    function formatOdds(value) {
+      return value ? Number(value).toFixed(2) : "לא זמין";
+    }
+
+    function formatPercent(value) {
+      return Number.isFinite(value) ? `${Math.round(value * 100)} אחוז` : "לא זמין";
+    }
+
+    function pickLabel(row) {
+      return row.winnerPick || row.pick || "לא זמין";
+    }
+
+    function logoMarkup(asset, size = "") {
+      if (!asset) return `<div class="logo-wrap ${size}">?</div>`;
+      if (asset.logo) {
+        return `<div class="logo-wrap ${size}"><img src="${asset.logo}" alt="${asset.name || ""}" loading="lazy"></div>`;
+      }
+      return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${asset.initials || "?"}</div>`;
+    }
+
+    function allRows() {
+      if (!state.feed) return [];
+      return Object.values(state.feed.tabs).flatMap(tab => tab.rows || []);
+    }
+
+    function currentRows() {
+      const tab = state.feed?.tabs?.[state.day];
+      if (!tab) return [];
+      const query = state.search.trim().toLowerCase();
+      let rows = [...(tab.rows || [])].filter(row => {
+        const sportOk = state.sport === "all" || row.sport === state.sport;
+        const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
+        return sportOk && (!query || text.includes(query));
+      });
+      rows.sort((a, b) => {
+        if (state.sort === "odds") return (b.odds || 0) - (a.odds || 0);
+        if (state.sort === "probability") return (b.probability || 0) - (a.probability || 0);
+        if (state.sort === "time") return String(a.time).localeCompare(String(b.time));
+        return (b.score || 0) - (a.score || 0);
+      });
+      return rows;
+    }
+
+    function bestTip() {
+      const rows = allRows().filter(row => row.status === "ממתין" && row.odds);
+      return rows.sort((a, b) => (b.score || 0) - (a.score || 0) || (b.odds || 0) - (a.odds || 0))[0];
+    }
+
+    function renderTabs() {
+      document.querySelectorAll("#dayTabs .tab").forEach(button => {
+        button.classList.toggle("active", button.dataset.day === state.day);
+      });
+    }
+
+    function renderStats() {
+      const rows = allRows();
+      const waiting = rows.filter(row => row.status === "ממתין").length;
+      const hit = rows.filter(row => row.status === "תפס").length;
+      const miss = rows.filter(row => row.status === "נפל").length;
+      const leagues = new Set(rows.map(row => row.league)).size;
+      document.getElementById("stats").innerHTML = [
+        ["משחקים", rows.length],
+        ["ליגות", leagues],
+        ["ממתין", waiting],
+        ["תפס / נפל", `${hit}/${miss}`]
+      ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
+    }
+
+    function renderDaily() {
+      const tip = bestTip();
+      const box = document.getElementById("dailyTip");
+      if (!tip) {
+        box.innerHTML = `
+          <div class="daily-head"><h3>הטיפ המוביל</h3><span class="pill">אין בחירה פתוחה</span></div>
+          <p class="hero-copy" style="font-size:14px">לא נמצאה כרגע בחירה פתוחה עם יחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
+        `;
+        return;
+      }
+      box.innerHTML = `
+        <div class="daily-head">
+          <h3>הטיפ המוביל</h3>
+          <span class="pill">ציון ${tip.score}/100</span>
+        </div>
+        <div class="pickbox">
+          <div>
+            <div class="micro">${tip.sport} · ${tip.league} · ${tip.time}</div>
+            <strong>${tip.match}</strong>
+            <div class="micro" style="margin-top:6px">בחירה: ${pickLabel(tip)} · יחס Winner ${formatOdds(tip.odds)}</div>
+          </div>
+          <div class="odds">${formatOdds(tip.odds)}</div>
+        </div>
+        <p class="hero-copy" style="font-size:14px">
+          הסתברות מוערכת לפי שוק: ${formatPercent(tip.probability)}. סטטוס: ${tip.status}.
+        </p>
+      `;
+    }
+
+    function rowCard(row) {
+      const cls = statusClass[row.status] || "wait";
+      return `
+        <article class="card" data-id="${row.id}">
+          <div class="card-head">
+            <div>
+              <div class="league" style="display:flex;align-items:center;gap:7px">${logoMarkup(row.leagueAsset, "small")}<span>${row.league || "ליגה לא זמינה"}</span></div>
+              <div class="micro">${row.sport} · ${row.source}</div>
+            </div>
+            <div class="time">${row.day} · ${row.time}</div>
+          </div>
+          <div class="card-body">
+            <div class="teams-line">
+              <div class="team-side">${logoMarkup(row.homeAsset)}<div class="team-name">${row.home || ""}</div></div>
+              <div class="versus">VS</div>
+              <div class="team-side">${logoMarkup(row.awayAsset)}<div class="team-name">${row.away || ""}</div></div>
+            </div>
+            <div class="market-row">
+              <span class="name">בחירה: ${pickLabel(row)}</span>
+              <span class="price">${formatOdds(row.odds)}</span>
+              <span class="status ${cls}">${row.status}</span>
+            </div>
+            <div class="score-row">
+              <span>ציון</span>
+              <div class="meter"><span style="width:${Math.max(0, Math.min(100, row.score || 0))}%"></span></div>
+              <b>${row.score || 0}</b>
+            </div>
+            <div class="signals">${(row.signals || []).map(signal => `<span class="signal">${signal}</span>`).join("")}</div>
+            <div class="details">
+              יחס Winner: ${formatOdds(row.odds)}. למה: ${(row.explanation || [])[1] || "הבחירה מבוססת על שוק המנצח בווינר."}
+              מזהה משחק בווינר: ${row.eventId}.
+            </div>
+            <button class="open-game" data-open="${row.id}">פירוט משחק</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function findRow(id) {
+      return allRows().find(row => row.id === id);
+    }
+
+    function renderModal(row) {
+      if (!row) return;
+      const modal = document.getElementById("gameModal");
+      document.getElementById("modalTitle").innerHTML = `
+        <div class="teams-line" style="min-height:86px">
+          <div class="team-side">${logoMarkup(row.homeAsset)}<div class="team-name">${row.home || ""}</div></div>
+          <div class="versus">VS</div>
+          <div class="team-side">${logoMarkup(row.awayAsset)}<div class="team-name">${row.away || ""}</div></div>
+        </div>
+        <div class="micro" style="text-align:center">${row.league} · ${row.day} · ${row.time} · מזהה Winner ${row.eventId}</div>
+      `;
+      const explanation = row.explanation || [];
+      document.getElementById("modalBody").innerHTML = `
+        <div class="explain-grid">
+          <div class="explain-box">
+            <b>מי מנצח</b>
+            <p>${pickLabel(row)}. יחס Winner ${formatOdds(row.odds)}. הסתברות שוק ${formatPercent(row.probability)}.</p>
+          </div>
+          <div class="explain-box">
+            <b>למה</b>
+            <p>${explanation[1] || "הבחירה דורגה לפי הסתברות שוק, אמינות סוג השוק ואיכות היחס."}</p>
+          </div>
+          <div class="explain-box">
+            <b>אימות מקור</b>
+            <p>${explanation[2] || "פציעות, מאמנים והרכבים מוצגים רק אם קיימים במקור נתונים מאומת. בדמו זה אין השלמה מלאכותית."}</p>
+          </div>
+        </div>
+      `;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("gameModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      state.selectedId = null;
+    }
+
+    function renderCards() {
+      const cards = document.getElementById("cards");
+      const title = document.getElementById("listTitle");
+      const meta = document.getElementById("resultMeta");
+      const tab = state.feed?.tabs?.[state.day];
+      title.textContent = `${tab?.label || ""} · ${tab?.date || ""}`;
+      if (state.error) {
+        cards.innerHTML = `<div class="error">${state.error}</div>`;
+        meta.textContent = "טעינת הנתונים נכשלה";
+        return;
+      }
+      const rows = currentRows();
+      const sourceMode = state.feed?.fallback ? "מצב snapshot מאומת" : "מצב חי";
+      meta.textContent = `${rows.length} משחקים מוצגים מתוך ${tab?.rows?.length || 0}. אין משחקים ידניים. ${sourceMode}.`;
+      cards.innerHTML = rows.length
+        ? rows.map(rowCard).join("")
+        : `<div class="empty">לא נמצאו משחקים בסינון הנוכחי. הדמו לא משלים משחקים אם Winner לא החזיר אותם.</div>`;
+    }
+
+    function render() {
+      renderTabs();
+      renderStats();
+      renderDaily();
+      renderCards();
+    }
+
+    async function loadFeed() {
+      state.loading = true;
+      state.error = "";
+      document.getElementById("cards").innerHTML = `<div class="empty">טוען נתונים חיים מווינר.</div>`;
+      try {
+        const response = await fetch(`/api/winner-feed?ts=${Date.now()}`);
+        const feed = await response.json();
+        if (!response.ok || !feed.ok) throw new Error(feed.detail || feed.error || "טעינת Winner נכשלה");
+        state.feed = feed;
+      } catch (error) {
+        state.error = `שגיאה: ${error.message}`;
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    document.querySelectorAll("#dayTabs .tab").forEach(button => {
+      button.addEventListener("click", () => {
+        state.day = button.dataset.day;
+        render();
+      });
+    });
+    document.getElementById("search").addEventListener("input", event => {
+      state.search = event.target.value;
+      renderCards();
+    });
+    document.getElementById("sport").addEventListener("change", event => {
+      state.sport = event.target.value;
+      renderCards();
+    });
+    document.getElementById("sort").addEventListener("change", event => {
+      state.sort = event.target.value;
+      renderCards();
+    });
+    document.getElementById("refresh").addEventListener("click", loadFeed);
+    document.getElementById("cards").addEventListener("click", event => {
+      const button = event.target.closest("[data-open]");
+      if (!button) return;
+      state.selectedId = button.dataset.open;
+      renderModal(findRow(state.selectedId));
+    });
+    document.getElementById("closeModal").addEventListener("click", closeModal);
+    document.getElementById("gameModal").addEventListener("click", event => {
+      if (event.target.id === "gameModal") closeModal();
+    });
+
+    loadFeed();
+  </script>
+</body>
+</html>
