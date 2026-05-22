@@ -485,6 +485,58 @@ function buildBasketballMarkets(home, away, ou) {
   ];
 }
 
+// ─── AUTO RESULT CHECK ─────────────────────────────────────────
+// Parses "22/05 · 21:30" → Date object
+function parseMatchTime(timeStr) {
+  if (!timeStr) return null;
+  const m = timeStr.match(/(\d{1,2})\/(\d{1,2})\s*[·\-]\s*(\d{2}):(\d{2})/);
+  if (!m) return null;
+  const [, day, month, hour, min] = m;
+  const d = new Date();
+  d.setMonth(parseInt(month) - 1, parseInt(day));
+  d.setHours(parseInt(hour), parseInt(min), 0, 0);
+  return d;
+}
+
+async function checkMatchResults(tips) {
+  if (!API_KEY) return {};
+  // Only check tips that are still "pending" AND match time + 2h has passed
+  const now = Date.now();
+  const toCheck = tips.filter(t => {
+    if (t.status !== "pending") return false;
+    const mt = parseMatchTime(t.matchTime);
+    return mt && now > mt.getTime() + 2 * 60 * 60 * 1000;
+  });
+  if (!toCheck.length) return {};
+
+  const list = toCheck.map((t, i) =>
+    `${i + 1}. ${t.home} vs ${t.away} | ${t.league} | תאריך: ${t.matchTime} | הימור: ${t.pick} @ ${t.odds}`
+  ).join("\n");
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01" },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001", max_tokens: 800,
+        messages: [{ role: "user", content:
+          `בדוק את התוצאות האמיתיות של המשחקים הבאים שכבר התקיימו.\nלכל משחק, קבע האם ההימור הספציפי נתפס (won) או נפל (lost).\nאם אין לך מידע על התוצאה, החזר pending.\n\nמשחקים:\n${list}\n\nהחזר JSON בלבד:\n{"results":[{"index":1,"status":"won","finalScore":"2-1","note":"קבוצת הבית ניצחה"}]}` }]
+      })
+    });
+    const d = await resp.json();
+    const txt = (d.content||[]).find(b=>b.type==="text")?.text||"";
+    const { results } = JSON.parse(txt.replace(/```json|```/g,"").trim());
+    const map = {};
+    results.forEach(r => {
+      const tip = toCheck[r.index - 1];
+      if (tip && (r.status === "won" || r.status === "lost")) {
+        map[tip.id] = { status: r.status, finalScore: r.finalScore, note: r.note };
+      }
+    });
+    return map;
+  } catch { return {}; }
+}
+
 // ─── ODDS REFRESH (Claude-powered — no direct Winner API) ──────
 async function fetchLatestOdds(tips) {
   if (!API_KEY) return { updated: null, odds: {}, log: null };
@@ -564,6 +616,11 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
       </div>
       <div className="tip-footer">
         <StatusBadge status={tip.status}/>
+        {tip.finalScore && (
+          <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:16,color:"#F5E6CC",letterSpacing:1}}>
+            {tip.finalScore}
+          </span>
+        )}
         <span style={{marginRight:"auto"}}/>
         {tip.oddsUpdatedAt && (
           <span className="tip-time">עודכן: {fmtTime(tip.oddsUpdatedAt)}</span>
@@ -642,6 +699,17 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
 
   const doRefreshOdds = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
+
+    // 1) Check real results for past matches
+    const resultsMap = await checkMatchResults(tips);
+    if (Object.keys(resultsMap).length > 0) {
+      setTips(prev => prev.map(t => resultsMap[t.id]
+        ? { ...t, status: resultsMap[t.id].status, finalScore: resultsMap[t.id].finalScore, resultNote: resultsMap[t.id].note }
+        : t
+      ));
+    }
+
+    // 2) Refresh odds for still-pending tips
     const result = await fetchLatestOdds(tips);
     if (result.updated) {
       setTips(prev => prev.map(t => result.odds[t.id]
@@ -652,21 +720,24 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
       if (result.log) {
         setLogs(prev => {
           const updated = [result.log, ...prev].slice(0, 20);
-          const cache = loadOddsCache();
-          saveOddsCache({ ...cache, updatedAt: result.updated, logs: updated });
+          saveOddsCache({ ...loadOddsCache(), updatedAt: result.updated, logs: updated });
           return updated;
         });
       }
     } else if (result.log) {
       setLogs(prev => {
         const updated = [result.log, ...prev].slice(0, 20);
-        const cache = loadOddsCache();
-        saveOddsCache({ ...cache, logs: updated });
+        saveOddsCache({ ...loadOddsCache(), logs: updated });
         return updated;
       });
     }
     if (!silent) setRefreshing(false);
   }, [tips]);
+
+  // On mount: check results for any past matches immediately
+  useEffect(() => {
+    if (tips.some(t => t.status === "pending")) doRefreshOdds(true);
+  }, []); // eslint-disable-line
 
   // Auto-refresh every 30 min
   useEffect(() => {
@@ -891,30 +962,6 @@ const MatchCard = ({m, rank, onClick, tipStatus, onTipAction}) => {
           </div>
         ))}
       </div>
-
-      {/* STATUS ROW — click to track this tip */}
-      <div style={{display:"flex",gap:6,padding:"0 11px 11px"}} onClick={e=>e.stopPropagation()}>
-        {["won","pending","lost"].map(s => {
-          const st = TIP_STATUS[s];
-          const active = tipStatus === s;
-          return (
-            <button key={s}
-              onClick={() => onTipAction && onTipAction(m, s)}
-              style={{
-                flex:1, padding:"6px 0",
-                fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:700,
-                letterSpacing:.5, textTransform:"uppercase", cursor:"pointer",
-                border:`1px solid ${active ? st.border : "rgba(61,26,10,.5)"}`,
-                borderRadius:7,
-                background: active ? st.bg : "rgba(255,255,255,.03)",
-                color: active ? st.color : "rgba(184,147,106,.5)",
-                transition:"all .15s",
-              }}>
-              {st.icon} {st.label}
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 };
@@ -1067,6 +1114,7 @@ const Modal = ({m, onClose, onAddTip}) => {
               league: (LM[m.leagueKey]?.name) || m.league || m.leagueKey,
               home: m.home,
               away: m.away,
+              matchTime: m.time,
               market: topPick?.market || "1X2",
               pick: topPick?.pick || (m.bestSide==="1"?`1 — ${m.home}`:m.bestSide==="2"?`2 — ${m.away}`:"X"),
               odds: topPick?.odds || (m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX),
@@ -1692,33 +1740,18 @@ export default function App() {
     }
   };
 
-  // Called when user clicks a status button directly on a match card
-  const handleCardTipAction = useCallback((m, status) => {
-    setTips(prev => {
-      const existing = prev.find(t => t.matchId === m.id);
-      if (existing) {
-        return prev.map(t => t.matchId === m.id ? { ...t, status } : t);
-      }
-      // Not yet tracked — add it with chosen status
-      const topPick = (m.picks||[])[0];
-      const newTip = {
-        id: Date.now().toString() + Math.random().toString(36).slice(2),
-        matchId: m.id,
-        sport: m.sport,
-        leagueKey: m.leagueKey,
-        league: (LM[m.leagueKey]?.name) || m.league || m.leagueKey,
-        home: m.home,
-        away: m.away,
-        market: topPick?.market || "1X2",
-        pick: topPick?.pick || (m.bestSide==="1"?`1 — ${m.home}`:m.bestSide==="2"?`2 — ${m.away}`:"X"),
-        odds: topPick?.odds || (m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX),
-        status,
-        addedAt: Date.now(),
-        source: "Winner.co.il",
-        winnerAvailable: m.winnerAvailable,
-      };
-      return [newTip, ...prev];
-    });
+  const buildTipFromMatch = useCallback((m) => {
+    const topPick = (m.picks||[])[0];
+    return {
+      id: Date.now().toString() + Math.random().toString(36).slice(2),
+      matchId: m.id, sport: m.sport, leagueKey: m.leagueKey,
+      league: (LM[m.leagueKey]?.name)||m.league||m.leagueKey,
+      home: m.home, away: m.away, matchTime: m.time,
+      market: topPick?.market||"1X2",
+      pick: topPick?.pick||(m.bestSide==="1"?`1 — ${m.home}`:m.bestSide==="2"?`2 — ${m.away}`:"X"),
+      odds: topPick?.odds||(m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX),
+      status: "pending", addedAt: Date.now(), source:"Winner.co.il", winnerAvailable:m.winnerAvailable,
+    };
   }, []);
 
   const addTip = useCallback((tip) => {
@@ -1955,8 +1988,7 @@ export default function App() {
                   <div className="grid">
                     {sorted.map((m,i) => (
                       <MatchCard key={m.id} m={m} rank={i+1} onClick={setSel}
-                        tipStatus={tips.find(t=>t.matchId===m.id)?.status}
-                        onTipAction={handleCardTipAction}/>
+                        tipStatus={tips.find(t=>t.matchId===m.id)?.status}/>
                     ))}
                   </div>
                 )}
