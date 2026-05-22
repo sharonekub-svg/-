@@ -20,6 +20,7 @@ const ADMIN_PASS =
 const PREMIUM_CODE =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_PREMIUM_CODE) || "POGEA2025";
 const PREMIUM_KEY = "hapogea_premium_v1";
+const PAYMENT_URL = "https://buy.stripe.com/REPLACE_WITH_YOUR_LINK";
 
 // ─── TRACKER CONSTANTS ─────────────────────────────────────────
 const TRACKER_KEY = "hapogea_tips_v1";
@@ -825,7 +826,7 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
       <div className="tip-league-row">
         <span style={{fontSize:15}}>{lm.flag||"🏆"}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#B8936A"}}>{lm.name||tip.league}</span>
-        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.45)"}}>{tip.sport==="football"?"⚽ כדורגל":"🏀 כדורסל"}</span>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.45)"}}>{tip.sport==="football"?"כדורגל":"כדורסל"}</span>
         <span style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#FF6200"}}>{fmtDateShort(tip.addedAt)} · {fmtTime(tip.addedAt)}</span>
       </div>
       <div className="tip-teams">
@@ -1033,7 +1034,6 @@ const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
 
       {tips.length === 0 ? (
         <div style={{textAlign:"center",padding:"60px 20px",color:"rgba(184,147,106,.5)"}}>
-          <div style={{fontSize:48,marginBottom:14}}>🎯</div>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>אין טיפים עדיין</div>
           <div style={{fontSize:12,maxWidth:280,margin:"0 auto",lineHeight:1.7}}>
             לחץ על כרטיס משחק ← "ניתוח מלא" ← "הוסף לתופס שלי" כדי להוסיף טיפ למעקב
@@ -1201,15 +1201,11 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
     return (
       <div className="wrap">
         <div className="prem-gate">
-          <div className="prem-gate-icon">🔒</div>
-          <div className="prem-gate-title">הפוגע AI — פרימיום</div>
+            <div className="prem-gate-title">הפוגע AI — פרימיום</div>
           <div className="prem-gate-sub">
             נתח כל הימור שתרצה עם AI מתקדם — פציעות, צורה, H2H, ערך יחסים וסיכוי אמיתי.
-            <br/><br/>
-            הזן קוד פרימיום כדי לפתוח גישה:
           </div>
           <PremiumCodeInput onUnlock={onUnlock}/>
-          <div style={{fontSize:10,color:"rgba(184,147,106,.4)",marginTop:8}}>קוד ניתן לרכישה דרך הערוץ הרשמי</div>
         </div>
       </div>
     );
@@ -1227,7 +1223,7 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
           <div className="status-dot live" style={{width:6,height:6}}/>
           פעיל
         </div>
-        <div className="prem-badge">👑 פרימיום</div>
+        <div className="prem-badge">פרימיום</div>
       </div>
 
       <div className="agent-messages">
@@ -1239,7 +1235,7 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
                 : "linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,98,0,.1))",
               border: m.role==="user" ? "1px solid rgba(196,12,12,.3)" : "1px solid rgba(255,215,0,.25)",
             }}>
-              {m.role==="user" ? "👤" : "🎯"}
+              {m.role==="user" ? "U" : "AI"}
             </div>
             <div>
               <div className="msg-bubble">
@@ -1256,7 +1252,7 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
         ))}
         {thinking && (
           <div className="msg ai">
-            <div className="msg-avatar" style={{background:"linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,98,0,.1))",border:"1px solid rgba(255,215,0,.25)"}}>🎯</div>
+            <div className="msg-avatar" style={{background:"linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,98,0,.1))",border:"1px solid rgba(255,215,0,.25)"}}>AI</div>
             <div className="msg-bubble">
               <div className="typing-dots"><span/><span/><span/></div>
               <div style={{fontSize:10,color:"#B8936A",marginTop:4,fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:1}}>מנתח פציעות, צורה, H2H...</div>
@@ -1295,24 +1291,11 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
   );
 };
 
-const PremiumCodeInput = ({ onUnlock }) => {
-  const [code, setCode] = useState("");
-  const [err, setErr] = useState(false);
-  const submit = () => {
-    if (code.toUpperCase().trim() === PREMIUM_CODE) { onUnlock(); }
-    else { setErr(true); setTimeout(()=>setErr(false),1500); setCode(""); }
-  };
-  return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,width:"100%"}}>
-      <input className={`prem-input${err?" err":""}`} type="text" value={code}
-        onChange={e=>setCode(e.target.value.toUpperCase())}
-        onKeyDown={e=>e.key==="Enter"&&submit()}
-        placeholder="הכנס קוד פרימיום"/>
-      {err && <div style={{color:"#f87171",fontSize:12,fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:1}}>קוד שגוי — נסה שוב</div>}
-      <button className="prem-btn" onClick={submit}>פתח גישה 🔓</button>
-    </div>
-  );
-};
+const PremiumCodeInput = () => (
+  <button className="prem-btn" onClick={() => window.open(PAYMENT_URL, "_blank")}>
+    פתח גישה
+  </button>
+);
 
 // ─── TODAY STATS BAR ───────────────────────────────────────────
 const TodayStatsBar = ({ tips }) => {
@@ -1354,7 +1337,7 @@ const TodayStatsBar = ({ tips }) => {
 };
 
 // ─── MATCH CARD ────────────────────────────────────────────────
-const MatchCard = ({m, rank, onClick, tipStatus, onTipAction}) => {
+const MatchCard = ({m, rank, onClick}) => {
   const lm = LM[m.leagueKey] || {};
   const bestOdds = m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX;
   const hp = hitProb(bestOdds);
@@ -1425,18 +1408,6 @@ const MatchCard = ({m, rank, onClick, tipStatus, onTipAction}) => {
         <div className={`winner-badge ${m.winnerAvailable===false?"off":""}`}>
           {m.winnerAvailable===false ? "⚠ לא בווינר" : "✓ ווינר"}
         </div>
-        {tipStatus && (
-          <div style={{
-            fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,
-            letterSpacing:.5,textTransform:"uppercase",padding:"2px 9px",borderRadius:5,
-            background: TIP_STATUS[tipStatus].bg,
-            border:`1px solid ${TIP_STATUS[tipStatus].border}`,
-            color: TIP_STATUS[tipStatus].color,
-            whiteSpace:"nowrap",
-          }}>
-            {TIP_STATUS[tipStatus].icon} {TIP_STATUS[tipStatus].label}
-          </div>
-        )}
       </div>
 
       {/* PICKS */}
@@ -1458,12 +1429,17 @@ const MatchCard = ({m, rank, onClick, tipStatus, onTipAction}) => {
           </div>
         ))}
       </div>
+      {m.analysis && (
+        <div className="card-analysis">
+          {m.analysis}
+        </div>
+      )}
     </div>
   );
 };
 
 // ─── MODAL ─────────────────────────────────────────────────────
-const Modal = ({m, onClose, onAddTip}) => {
+const Modal = ({m, onClose}) => {
   const isB = m.sport==="basketball";
   const markets = isB
     ? buildBasketballMarkets(m.home, m.away, m.ou||220)
@@ -1599,27 +1575,6 @@ const Modal = ({m, onClose, onAddTip}) => {
             </div>
           </div>
 
-          <button className="add-btn" onClick={() => {
-            if (!onAddTip) return;
-            const topPick = (m.picks||[])[0];
-            onAddTip({
-              id: Date.now().toString() + Math.random().toString(36).slice(2),
-              matchId: m.id,
-              sport: m.sport,
-              leagueKey: m.leagueKey,
-              league: (LM[m.leagueKey]?.name) || m.league || m.leagueKey,
-              home: m.home,
-              away: m.away,
-              matchTime: m.time,
-              market: topPick?.market || "1X2",
-              pick: topPick?.pick || (m.bestSide==="1"?`1 — ${m.home}`:m.bestSide==="2"?`2 — ${m.away}`:"X"),
-              odds: topPick?.odds || (m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX),
-              status: "pending",
-              addedAt: Date.now(),
-              source: "Winner.co.il",
-              winnerAvailable: m.winnerAvailable,
-            });
-          }}>הוסף לתופס שלי ←</button>
           <div className="disc"><strong style={{color:"#F5E6CC"}}>Disclaimer:</strong> לצורכי מידע ואנליזה בלבד. אינו מבטיח תוצאות. הימור אחראי בלבד.</div>
         </div>
       </div>
@@ -2248,14 +2203,13 @@ const FALLBACK = {
 };
 
 // ─── BOTTOM NAV ────────────────────────────────────────────────
-const BottomNav = ({ view, setView, pendingCount }) => {
+const BottomNav = ({ view, setView }) => {
   const tabs = [
-    { key:"matches", icon:"🏠", label:"ראשי" },
-    { key:"live",    icon:"🔴", label:"לייב" },
-    { key:"finished",icon:"✅", label:"תקצירים" },
-    { key:"tracker", icon:"🎯", label:"תופס",  badge: pendingCount > 0 ? pendingCount : null },
-    { key:"wc2026",  icon:"🏆", label:"מונדיאל" },
-    { key:"leagues", icon:"⚽", label:"ליגות" },
+    { key:"matches", icon:"", label:"ראשי" },
+    { key:"live",    icon:"", label:"לייב" },
+    { key:"finished",icon:"", label:"תקצירים" },
+    { key:"wc2026",  icon:"", label:"מונדיאל" },
+    { key:"leagues", icon:"", label:"ליגות" },
   ];
   return (
     <nav className="bottom-nav">
@@ -2582,7 +2536,6 @@ export default function App() {
   const [srch, setSrch] = useState("");
   const [lastUpdate, setLastUpdate] = useState(null);
   const [nextRefresh, setNextRefresh] = useState(REFRESH_MS);
-  const [tips, setTips] = useState(loadTips);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isPremium, setIsPremium] = useState(loadPremium);
@@ -2598,9 +2551,6 @@ export default function App() {
     setView("agent");
   }, []);
 
-  // Persist tips to localStorage
-  useEffect(() => { saveTips(tips); }, [tips]);
-
   // Secret admin: click logo 5× within 3 seconds
   const handleLogoClick = () => {
     logoClickCount.current += 1;
@@ -2612,31 +2562,6 @@ export default function App() {
       logoTimer.current = setTimeout(() => { logoClickCount.current = 0; }, 3000);
     }
   };
-
-  const buildTipFromMatch = useCallback((m) => {
-    const topPick = (m.picks||[])[0];
-    return {
-      id: Date.now().toString() + Math.random().toString(36).slice(2),
-      matchId: m.id, sport: m.sport, leagueKey: m.leagueKey,
-      league: (LM[m.leagueKey]?.name)||m.league||m.leagueKey,
-      home: m.home, away: m.away, matchTime: m.time,
-      market: topPick?.market||"1X2",
-      pick: topPick?.pick||(m.bestSide==="1"?`1 — ${m.home}`:m.bestSide==="2"?`2 — ${m.away}`:"X"),
-      odds: topPick?.odds||(m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX),
-      status: "pending", addedAt: Date.now(), source:"Winner.co.il", winnerAvailable:m.winnerAvailable,
-    };
-  }, []);
-
-  const addTip = useCallback((tip) => {
-    setTips(prev => {
-      if (prev.some(t => t.matchId === tip.matchId)) {
-        return prev.map(t => t.matchId===tip.matchId ? { ...t, odds:tip.odds, market:tip.market, pick:tip.pick } : t);
-      }
-      return [tip, ...prev];
-    });
-    setSel(null);
-    setView("tracker");
-  }, []);
 
   const STEPS = [
     "מחפש משחקי היום מכל העולם...",
