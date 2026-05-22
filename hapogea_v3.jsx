@@ -472,6 +472,9 @@ const MatchCard = ({m, rank, onClick}) => {
         {(m.sources||[]).map((s,i)=>(
           <div key={i} className={`src-badge ${m.sourcesMatch?"src-match":""}`}>{s}</div>
         ))}
+        <div className={`winner-badge ${m.winnerAvailable===false?"off":""}`}>
+          {m.winnerAvailable===false ? "⚠ לא בווינר" : "✓ ווינר"}
+        </div>
       </div>
 
       {/* PICKS */}
@@ -522,7 +525,7 @@ const Modal = ({m, onClose}) => {
             <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:20,color:"rgba(196,12,12,.5)"}}>VS</div>
             <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:32,color:"white",letterSpacing:1.5}}>{m.away}</div>
           </div>
-          <div style={{display:"flex",gap:8}}>
+          <div style={{display:"flex",gap:8,marginBottom:10}}>
             {[{l:"1",v:m.o1,b:m.bestSide==="1"},{l:"X",v:m.oX,b:m.bestSide==="X"},{l:"2",v:m.o2,b:m.bestSide==="2"}].map((c,i)=>(
               <div key={i} style={{background:c.b?"rgba(255,166,0,.1)":"rgba(255,255,255,.05)",border:`1px solid ${c.b?"rgba(255,166,0,.3)":"rgba(61,26,10,.5)"}`,borderRadius:7,padding:"6px 12px",textAlign:"center",flex:1}}>
                 <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:"#B8936A",marginBottom:2}}>{c.l}</div>
@@ -530,6 +533,11 @@ const Modal = ({m, onClose}) => {
                 {c.b && <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:8,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:"#FFD166"}}>VALUE {hitProb(c.v)}%</div>}
               </div>
             ))}
+          </div>
+          <div style={{marginRight:"auto"}}>
+            <div className={`winner-badge ${m.winnerAvailable===false?"off":""}`}>
+              {m.winnerAvailable===false ? "⚠ לא זמין בווינר" : "✓ זמין בווינר"}
+            </div>
           </div>
         </div>
 
@@ -643,44 +651,79 @@ async function fetchMatchesFromAI(sport) {
   const dateStr = today.toLocaleDateString("he-IL", {day:"2-digit",month:"2-digit",year:"numeric"});
   const dayName = ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"][today.getDay()];
 
-  const prompt = `You are a professional sports betting analyst specializing in value bets.
-Today is ${dateStr} (יום ${dayName}).
+  const prompt = `You are an advanced sports betting algorithm. Today is ${dateStr} (יום ${dayName}).
 
-TASK: Find exactly 10 ${sport==="football"?"football":"basketball"} matches happening TODAY or in the next 48 hours with the BEST value bets.
+## MISSION
+Find exactly 10 ${sport==="football"?"football":"basketball"} matches for TODAY with the highest EV (Expected Value) in the odds range ${ODDS_MIN}–${ODDS_MAX}.
 
-STRICT RULES:
-1. ONLY recommend a side if its odds are between ${ODDS_MIN} and ${ODDS_MAX} (this is the value zone — ~53-70% hit probability)
-2. NEVER recommend odds outside this range — a 3.80 odds means 26% hit rate, that is NOT a value bet
-3. Cross-check odds against at least 3 sources: Winner.co.il, 365scores.com, and one more (bet365, unibet, sportingbet). If odds differ by more than 0.08 across sources, flag as "inconsistent" and do not include that match
-4. Prioritize: strong home advantage, form streak (3+ wins), xG difference > 0.5, head-to-head dominance
-5. Include leagues from around the world — J1 Japan, Chinese Super League, MLS, Polish Ekstraklasa, Brazilian Série A, Israeli Liga, Eredivisie — not just top 5 European leagues
-6. All matches must be from TODAY (${dateStr}) or tomorrow at latest
-7. CRITICAL — Winner.co.il availability: ONLY include matches that are actually listed for betting on Winner.co.il. Winner covers major European leagues, NBA, EuroLeague, Israeli leagues, J.League, MLS, Copa Libertadores, Copa Sudamericana, Ekstraklasa, Allsvenskan, Belgian Pro League, Greek Super League, etc. Do NOT include small/regional leagues that Winner does not cover. Set "winnerAvailable": true only if you are confident the match appears on Winner.co.il
+## STEP 1 — DATA COLLECTION (simulate searching public sources)
+For each candidate match, gather from your knowledge base:
+- Current league standings: points, wins, draws, losses, goals for/against
+- Last 5–10 results for each team (home record separate from away record)
+- Head-to-head (H2H): last 5 meetings, who won, scores
+- Attack/defense stats: avg goals scored, avg goals conceded, xG where available
+- Key absences: injured star players, suspended key defender, manager sacked recently
+- Home/away split: % wins at home for home team, % losses away for away team
+- Tournament context: must-win, dead rubber, fatigue from midweek, altitude
 
-For each match, verify odds are REALISTIC for Winner.co.il (Israeli bookmaker with ~6-8% margin):
-- If home odds are 1.50, draw should be approximately 3.60-4.20, away 4.00-6.00 (these ratios make sense)
-- If home odds are 1.70, draw should be approximately 3.20-3.80, away 3.50-5.00
-- If numbers don't follow bookmaker logic, reject the match
+## STEP 2 — ALGORITHM (apply for EACH match)
 
-Return ONLY valid JSON, no markdown, no explanation:
+**2a. Implied probability (from bookmaker odds):**
+P_imp = 1 / odds
+Then normalize: P_imp_norm = P_imp / (1/o1 + 1/oX + 1/o2) — removes vig
+
+**2b. Statistical probability (from data):**
+P_stat = 0.30 × P_home_win_rate
+       + 0.20 × P_away_loss_rate
+       + 0.20 × P_H2H_win_rate
+       + 0.20 × P_attack_defense_edge
+       + 0.10 × P_injury_adjustment
+(Injury adjustment: -0.05 if home key striker out; +0.05 if away key defender missing)
+
+**2c. Real probability:**
+P_real = 0.55 × P_imp_norm + 0.45 × P_stat
+
+**2d. EV:**
+EV = (P_real × odds) − 1
+Keep ONLY matches where EV > 0 AND P_real > P_imp_norm
+
+**2e. Quality filter:**
+- Odds strictly between ${ODDS_MIN} and ${ODDS_MAX} (preferred center: 1.55–1.75)
+- Stable league with sufficient data (not obscure regional cup)
+- sourcesMatch: true (odds consistent across Winner, 365scores, bet365 within ±0.08)
+- winnerAvailable: true (league/match listed on Winner.co.il)
+- No high-risk flags: no heavily rotated squad, no extreme weather, no travel fatigue
+
+## STEP 3 — WINNER.CO.IL FILTER
+ONLY include matches available on Winner.co.il:
+Covered: EPL, LaLiga, Bundesliga, SerieA, Ligue1, CoupeFR, UCL, UEL, NBA, EuroLeague, Israeli Premier League, BSL (Israeli basketball), J1, MLS, Eredivisie, Brasileirão, Copa Libertadores, Copa Sudamericana, Ekstraklasa, Allsvenskan, Belgian Pro League, Greek Super League, Portuguese Liga, Turkish SL, ACB, LegaBK
+NOT covered: obscure regional leagues, lower divisions, minor cup games
+
+## STEP 4 — OUTPUT
+Return the top 10 matches ranked by EV descending. For each, provide complete data.
+
+Return ONLY valid JSON, no markdown:
 {
   "matches": [
     {
       "id": "unique_id",
       "sport": "${sport}",
       "leagueKey": "one of: EPL,LaLiga,Bundesliga,SerieA,Ligue1,CoupeFR,UCL,UEL,NBA,ISL,BSL,J1,CSL,EL,ACB,LegaBK,MLS,Eredivisie,LigaBr,LibertaCopa,SudameCopa,Ekstraklasa,Allsvenskan,ProLeague,GreekSL,PortLiga,TurSL",
-      "league": "full league name in Hebrew — must be accurate",
+      "league": "full league name in Hebrew",
       "country": "country in Hebrew",
-      "home": "home team name — must be spelled correctly",
-      "away": "away team name — must be spelled correctly",
-      "time": "DD/MM · HH:MM",
+      "home": "exact team name in Hebrew — correct spelling",
+      "away": "exact team name in Hebrew — correct spelling",
+      "time": "${dateStr.split('/').reverse().slice(1).join('/')||dateStr} · HH:MM",
       "hForm": ["W","W","D","L","W"],
       "aForm": ["L","D","W","W","L"],
-      "o1": "home odds e.g. 1.65",
-      "oX": "draw odds e.g. 3.50",
-      "o2": "away odds e.g. 4.20",
-      "bestSide": "1 or 2 (NEVER X — draw is unpredictable)",
-      "conf": 68,
+      "o1": "home odds",
+      "oX": "draw odds",
+      "o2": "away odds",
+      "bestSide": "1 or 2 — whichever has EV > 0 in range ${ODDS_MIN}–${ODDS_MAX}",
+      "conf": "P_real as integer 0-100",
+      "ev": "EV rounded to 3 decimal places",
+      "pImp": "P_imp_norm rounded to 3 decimal places",
+      "pReal": "P_real rounded to 3 decimal places",
       "winnerAvailable": true,
       "sourcesMatch": true,
       "sources": ["ווינר","365","bet365"],
@@ -694,12 +737,12 @@ Return ONLY valid JSON, no markdown, no explanation:
         {"market":"מעל/מתחת שערים","pick":"מעל 2.5","odds":"1.72","tag":"rec"},
         {"market":"שתי קבוצות כובשות","pick":"לא","odds":"1.62","tag":""}
       ],
-      "analysis": "2-3 sentence Hebrew analysis. Must mention: specific form stats, xG values, why this is value vs the bookmaker margin",
+      "analysis": "3-4 משפטים בעברית: ציין P_imp, P_real, EV, סטטיסטיקות ספציפיות (אחוז ניצחונות בית, H2H, xG), סיבה מדוע יש ערך מול מרווח הספר. לדוגמה: 'אחוז ניצחון ביתי של 67%, H2H 4-1 בזכות הבית, P_real=0.63 מול P_imp=0.58 — EV חיובי של 0.089'",
       "stats": [
         {"val":"1.85","lbl":"xG ביתי","color":"o"},
         {"val":"1.10","lbl":"xG חוץ","color":"o"},
-        {"val":"56%","lbl":"כדור ביתי"},
-        {"val":"42%","lbl":"כדור חוץ"}
+        {"val":"56%","lbl":"% ניצחון בית"},
+        {"val":"38%","lbl":"% הפסד חוץ"}
       ],
       "h2h": [
         {"d":"Mar 26","s":"2-0","c":"League name"},
@@ -783,7 +826,7 @@ ${list}
 const FALLBACK = {
   football: [
     { id:"f1", sport:"football", leagueKey:"Bundesliga", league:"בונדסליגה — פלייאוף עלייה/ירידה", country:"גרמניה",
-      home:"וולפסבורג", away:"פאדרבורן", time:"21/05 · 21:30",
+      home:"וולפסבורג", away:"פאדרבורן", time:"22/05 · 21:30", winnerAvailable:true,
       hForm:["W","D","L","W","D"], aForm:["W","W","D","L","W"],
       o1:"1.75", oX:"3.95", o2:"4.70", bestSide:"1", conf:68,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -802,7 +845,7 @@ const FALLBACK = {
       h2h:[{d:"יול 25",s:"2-1",c:"ידידות"},{d:"ינו 24",s:"3-1",c:"גביע"},{d:"פבר 20",s:"1-1",c:"BL"}],
     },
     { id:"f2", sport:"football", leagueKey:"Eredivisie", league:"ארדיביזי — פלייאוף אירופה", country:"הולנד",
-      home:"אייאקס", away:"חרונינגן", time:"21/05 · 19:45",
+      home:"אייאקס", away:"חרונינגן", time:"22/05 · 19:45", winnerAvailable:true,
       hForm:["W","W","D","L","W"], aForm:["D","L","W","D","L"],
       o1:"1.89", oX:"4.00", o2:"4.10", bestSide:"1", conf:64,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -820,8 +863,8 @@ const FALLBACK = {
       stats:[{val:"1.92",lbl:"xG ביתי",color:"o"},{val:"1.21",lbl:"xG חוץ",color:"o"},{val:"59%",lbl:"כדור ביתי"},{val:"41%",lbl:"כדור חוץ"}],
       h2h:[{d:"פבר 26",s:"2-0",c:"ERE"},{d:"אוק 25",s:"3-1",c:"ERE"},{d:"מרץ 23",s:"1-0",c:"ERE"}],
     },
-    { id:"f3", sport:"football", leagueKey:"Ligue1", league:"גביע צרפת — גמר", country:"צרפת",
-      home:"לאנס", away:"ניס", time:"22/05 · 22:00",
+    { id:"f3", sport:"football", leagueKey:"CoupeFR", league:"גביע צרפת — גמר", country:"צרפת",
+      home:"לאנס", away:"ניס", time:"22/05 · 22:00", winnerAvailable:true,
       hForm:["W","W","D","W","L"], aForm:["D","L","W","D","W"],
       o1:"1.68", oX:"4.75", o2:"5.80", bestSide:"1", conf:72,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -839,8 +882,8 @@ const FALLBACK = {
       stats:[{val:"1.68",lbl:"xG ביתי",color:"o"},{val:"0.98",lbl:"xG חוץ",color:"o"},{val:"53%",lbl:"כדור ביתי"},{val:"47%",lbl:"כדור חוץ"}],
       h2h:[{d:"מרץ 26",s:"1-0",c:"L1"},{d:"נוב 25",s:"2-1",c:"L1"},{d:"פבר 25",s:"0-0",c:"L1"}],
     },
-    { id:"f4", sport:"football", leagueKey:"Eredivisie", league:"אלסוונסקן — מחזור ליגה", country:"שוודיה",
-      home:"יורגודן", away:"ברומפויקרנה", time:"22/05 · 20:00",
+    { id:"f4", sport:"football", leagueKey:"Allsvenskan", league:"אלסוונסקן — מחזור 10", country:"שוודיה",
+      home:"יורגורדן", away:"ברומפויקרנה", time:"22/05 · 20:00", winnerAvailable:true,
       hForm:["W","W","W","D","L"], aForm:["L","D","L","W","L"],
       o1:"1.44", oX:"4.75", o2:"7.25", bestSide:"1", conf:78,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -850,16 +893,16 @@ const FALLBACK = {
         {name:"SportyTrader",odds:"1.44 / 4.75 / 7.25",note:"זהה"},
       ],
       picks:[
-        {market:"1X2 — תוצאת סיום (ללא הארכות)",pick:"1 — יורגודן",odds:"1.44",tag:"val"},
+        {market:"1X2 — תוצאת סיום (ללא הארכות)",pick:"1 — יורגורדן",odds:"1.44",tag:"val"},
         {market:"מעל/מתחת שערים",pick:"מעל 2.5",odds:"1.66",tag:"rec"},
         {market:"שתי קבוצות כובשות",pick:"לא",odds:"1.78",tag:""},
       ],
-      analysis:"יורגודן פייבוריטית ברורה בבית מול ברומפויקרנה, שמתקשה לייצר יציבות הגנתית. יחס 1.44 נמוך יחסית אך נשאר בתוך Value Zone ומגובה בפער איכות משמעותי.",
+      analysis:"יורגורדן פייבוריטית ברורה בבית מול ברומפויקרנה, שמתקשה לייצר יציבות הגנתית. יחס 1.44 נמוך יחסית אך נשאר בתוך Value Zone ומגובה בפער איכות משמעותי.",
       stats:[{val:"2.05",lbl:"xG ביתי",color:"o"},{val:"0.88",lbl:"xG חוץ",color:"o"},{val:"61%",lbl:"כדור ביתי"},{val:"39%",lbl:"כדור חוץ"}],
       h2h:[{d:"אוג 25",s:"3-0",c:"SWE"},{d:"מאי 25",s:"2-1",c:"SWE"},{d:"ספט 24",s:"1-0",c:"SWE"}],
     },
-    { id:"f5", sport:"football", leagueKey:"Eredivisie", league:"בלגיה — פלייאוף אליפות", country:"בלגיה",
-      home:"גנט", away:"אוניון סן-ז'ילואז", time:"21/05 · 21:30",
+    { id:"f5", sport:"football", leagueKey:"ProLeague", league:"פרו ליג בלגיה — פלייאוף אליפות", country:"בלגיה",
+      home:"גנט", away:"אוניון סן-ז'ילוואז", time:"22/05 · 21:30", winnerAvailable:true,
       hForm:["L","D","W","L","D"], aForm:["W","W","D","W","L"],
       o1:"4.52", oX:"3.75", o2:"1.83", bestSide:"2", conf:66,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -869,7 +912,7 @@ const FALLBACK = {
         {name:"SportyTrader",odds:"4.52 / 3.75 / 1.83",note:"זהה"},
       ],
       picks:[
-        {market:"1X2 — תוצאת סיום (ללא הארכות)",pick:"2 — אוניון סן-ז'ילואז",odds:"1.83",tag:"val"},
+        {market:"1X2 — תוצאת סיום (ללא הארכות)",pick:"2 — אוניון סן-ז'ילוואז",odds:"1.83",tag:"val"},
         {market:"מעל/מתחת שערים",pick:"מעל 1.5",odds:"1.42",tag:"rec"},
         {market:"שתי קבוצות כובשות",pick:"כן",odds:"1.74",tag:""},
       ],
@@ -877,8 +920,8 @@ const FALLBACK = {
       stats:[{val:"1.12",lbl:"xG ביתי",color:"o"},{val:"1.76",lbl:"xG חוץ",color:"o"},{val:"47%",lbl:"כדור ביתי"},{val:"53%",lbl:"כדור חוץ"}],
       h2h:[{d:"אפר 26",s:"1-2",c:"BEL"},{d:"דצמ 25",s:"0-1",c:"BEL"},{d:"ספט 25",s:"1-1",c:"BEL"}],
     },
-    { id:"f6", sport:"football", leagueKey:"Eredivisie", league:"בלגיה — פלייאוף אליפות", country:"בלגיה",
-      home:"מכלן", away:"קלאב ברוז'", time:"21/05 · 21:30",
+    { id:"f6", sport:"football", leagueKey:"ProLeague", league:"פרו ליג בלגיה — פלייאוף אליפות", country:"בלגיה",
+      home:"מכלן", away:"קלאב ברוז'", time:"22/05 · 21:30", winnerAvailable:true,
       hForm:["L","L","D","W","L"], aForm:["W","W","W","D","W"],
       o1:"5.50", oX:"4.60", o2:"1.40", bestSide:"2", conf:81,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -896,8 +939,8 @@ const FALLBACK = {
       stats:[{val:"0.92",lbl:"xG ביתי",color:"o"},{val:"2.12",lbl:"xG חוץ",color:"o"},{val:"42%",lbl:"כדור ביתי"},{val:"58%",lbl:"כדור חוץ"}],
       h2h:[{d:"מרץ 26",s:"0-3",c:"BEL"},{d:"נוב 25",s:"1-2",c:"BEL"},{d:"מאי 25",s:"0-2",c:"BEL"}],
     },
-    { id:"f7", sport:"football", leagueKey:"Ligue1", league:"יוון — פלייאוף תחתון", country:"יוון",
-      home:"אטרומיטוס", away:"פאנסראיקוס", time:"21/05 · 18:00",
+    { id:"f7", sport:"football", leagueKey:"GreekSL", league:"סופר ליג יוון — פלייאוף הישרדות", country:"יוון",
+      home:"אטרומיטוס", away:"פאנתטולאיקוס", time:"22/05 · 18:00", winnerAvailable:true,
       hForm:["W","D","W","L","D"], aForm:["L","L","D","W","L"],
       o1:"1.68", oX:"4.20", o2:"6.00", bestSide:"1", conf:69,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -911,12 +954,12 @@ const FALLBACK = {
         {market:"מעל/מתחת שערים",pick:"מתחת 3.5",odds:"1.44",tag:"rec"},
         {market:"שתי קבוצות כובשות",pick:"לא",odds:"1.76",tag:""},
       ],
-      analysis:"אטרומיטוס יציבה יותר בבית מול פאנסראיקוס שמגיעה עם קושי התקפי בחוץ. המודל מעריך 59% לניצחון ביתי ויחס 1.68 משאיר Value נקי.",
+      analysis:"אטרומיטוס יציבה יותר בבית מול פאנתטולאיקוס שמגיעה עם קושי התקפי בחוץ. המודל מעריך 59% לניצחון ביתי ויחס 1.68 משאיר Value נקי.",
       stats:[{val:"1.48",lbl:"xG ביתי",color:"o"},{val:"0.82",lbl:"xG חוץ",color:"o"},{val:"52%",lbl:"כדור ביתי"},{val:"48%",lbl:"כדור חוץ"}],
       h2h:[{d:"פבר 26",s:"2-0",c:"GRE"},{d:"נוב 25",s:"1-1",c:"GRE"},{d:"מרץ 25",s:"1-0",c:"GRE"}],
     },
-    { id:"f8", sport:"football", leagueKey:"LigaBr", league:"קופה ליברטדורס — שלב בתים", country:"דרום אמריקה",
-      home:"אוניברסידד קתוליקה", away:"ברצלונה SC", time:"21/05 · 20:30",
+    { id:"f8", sport:"football", leagueKey:"LibertaCopa", league:"קופה ליברטדורס — שלב בתים", country:"דרום אמריקה",
+      home:"אוניברסידד קתוליקה", away:"ברצלונה SC", time:"22/05 · 20:30", winnerAvailable:true,
       hForm:["W","W","D","L","W"], aForm:["L","D","W","L","D"],
       o1:"1.78", oX:"3.60", o2:"5.00", bestSide:"1", conf:67,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -934,8 +977,8 @@ const FALLBACK = {
       stats:[{val:"1.62",lbl:"xG ביתי",color:"o"},{val:"1.04",lbl:"xG חוץ",color:"o"},{val:"54%",lbl:"כדור ביתי"},{val:"46%",lbl:"כדור חוץ"}],
       h2h:[{d:"אפר 26",s:"1-1",c:"LIB"},{d:"מאי 22",s:"2-0",c:"LIB"},{d:"מרץ 22",s:"1-0",c:"LIB"}],
     },
-    { id:"f9", sport:"football", leagueKey:"LigaBr", league:"קופה סודאמריקנה — שלב בתים", country:"דרום אמריקה",
-      home:"מאקארה", away:"אליאנסה אתלטיקו", time:"21/05 · 22:00",
+    { id:"f9", sport:"football", leagueKey:"SudameCopa", league:"קופה סודאמריקנה — שלב בתים", country:"דרום אמריקה",
+      home:"מאקארה", away:"אליאנסה אטלטיקו", time:"22/05 · 22:00", winnerAvailable:true,
       hForm:["W","D","W","W","L"], aForm:["L","D","L","W","L"],
       o1:"1.65", oX:"4.40", o2:"7.00", bestSide:"1", conf:70,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -949,12 +992,12 @@ const FALLBACK = {
         {market:"מעל/מתחת שערים",pick:"מתחת 3.5",odds:"1.47",tag:"rec"},
         {market:"שתי קבוצות כובשות",pick:"לא",odds:"1.80",tag:""},
       ],
-      analysis:"מאקארה חזקה משמעותית בבית והיריבה מגיעה עם מאזן חוץ חלש. התמחור 1.65 סביר ביחס להסתברות מודל של 61%.",
+      analysis:"מאקארה חזקה משמעותית בבית ואליאנסה אטלטיקו מגיעה עם מאזן חוץ חלש. התמחור 1.65 סביר ביחס להסתברות מודל של 61%.",
       stats:[{val:"1.70",lbl:"xG ביתי",color:"o"},{val:"0.78",lbl:"xG חוץ",color:"o"},{val:"57%",lbl:"כדור ביתי"},{val:"43%",lbl:"כדור חוץ"}],
       h2h:[{d:"אפר 26",s:"2-1",c:"SUD"},{d:"יול 24",s:"1-0",c:"SUD"},{d:"מאי 24",s:"0-0",c:"SUD"}],
     },
-    { id:"f10", sport:"football", leagueKey:"J1", league:"J.League — גביע הליגה", country:"יפן",
-      home:"מאצ'ידה זלביה", away:"אוראווה רדס", time:"22/05 · 06:30",
+    { id:"f10", sport:"football", leagueKey:"J1", league:"J1 ליג — מחזור 14", country:"יפן",
+      home:"מאצ'ידה זלביה", away:"אוראווה רד דיימונדס", time:"22/05 · 06:30", winnerAvailable:true,
       hForm:["W","D","W","L","W"], aForm:["D","W","L","D","W"],
       o1:"1.88", oX:"3.25", o2:"4.20", bestSide:"1", conf:62,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -968,14 +1011,14 @@ const FALLBACK = {
         {market:"מעל/מתחת שערים",pick:"מתחת 3.5",odds:"1.40",tag:"rec"},
         {market:"שתי קבוצות כובשות",pick:"כן",odds:"1.82",tag:""},
       ],
-      analysis:"מאצ'ידה בבית מול אוראווה במשחק שקול אך עם יתרון קל למארחת לפי כושר אחרון ויצירת מצבים. היחס 1.88 משקף Value גבולי אך מתאים לטווח.",
+      analysis:"מאצ'ידה בבית מול אוראווה רד דיימונדס במשחק שקול אך עם יתרון קל למארחת לפי כושר אחרון ויצירת מצבים. היחס 1.88 משקף Value גבולי אך מתאים לטווח.",
       stats:[{val:"1.46",lbl:"xG ביתי",color:"o"},{val:"1.18",lbl:"xG חוץ",color:"o"},{val:"51%",lbl:"כדור ביתי"},{val:"49%",lbl:"כדור חוץ"}],
       h2h:[{d:"ספט 25",s:"1-0",c:"J1"},{d:"מאי 25",s:"1-1",c:"J1"},{d:"אוג 24",s:"2-1",c:"J1"}],
     }
   ],
   basketball: [
-    { id:"b1", sport:"basketball", leagueKey:"NBA", league:"NBA — גמר המזרח", country:"ארה\"ב",
-      home:"ניו יורק ניקס", away:"קליבלנד קאבלירס", time:"22/05 · 03:00",
+    { id:"b1", sport:"basketball", leagueKey:"NBA", league:"NBA — גמר הכנס המזרחי", country:"ארה\"ב",
+      home:"ניו יורק ניקס", away:"קליבלנד קאבלירס", time:"22/05 · 03:00", winnerAvailable:true,
       hForm:["W","W","W","W","W"], aForm:["L","W","L","W","W"],
       o1:"1.45", oX:"20.00", o2:"2.82", bestSide:"1", ou:"215.5", conf:78,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -986,7 +1029,7 @@ const FALLBACK = {
       ],
       picks:[
         {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"ניו יורק ניקס",odds:"1.45",tag:"val"},
-        {market:"מעל/מתחת נקודות",pick:"NYK -5.5",odds:"1.90",tag:"val"},
+        {market:"מעל/מתחת נקודות",pick:"ניקס -5.5",odds:"1.90",tag:"val"},
         {market:"הימור יתרון — ללא הארכות",pick:"מתחת 215.5",odds:"1.88",tag:"rec"},
       ],
       analysis:"ניקס מובילה 1-0 בגמר המזרח ומארחת במדיסון סקוור גארדן. ברונסון אחרי משחק גדול והקו מתמחר 66% לניקס. יחס 1.45 בתוך הטווח עם Edge שמרני.",
@@ -994,8 +1037,8 @@ const FALLBACK = {
       h2h:[{d:"מאי 26",s:"NYK 1-0",c:"ECF G1"},{d:"אפר 26",s:"108-102 NYK",c:"RS"},{d:"ינו 26",s:"114-109 CLE",c:"RS"}],
       series:"NYK מובילה 1-0",
     },
-    { id:"b2", sport:"basketball", leagueKey:"NBA", league:"NBA — גמר המערב", country:"ארה\"ב",
-      home:"סן אנטוניו ספרס", away:"אוקלהומה סיטי ת'אנדר", time:"23/05 · 03:30",
+    { id:"b2", sport:"basketball", leagueKey:"NBA", league:"NBA — גמר הכנס המערבי", country:"ארה\"ב",
+      home:"סן אנטוניו ספרס", away:"אוקלהומה סיטי ת'אנדר", time:"22/05 · 03:30", winnerAvailable:true,
       hForm:["L","W","W","L","W"], aForm:["W","L","W","W","W"],
       o1:"2.15", oX:"20.00", o2:"1.72", bestSide:"2", ou:"218.5", conf:66,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -1015,7 +1058,7 @@ const FALLBACK = {
       series:"1-1 בסדרה",
     },
     { id:"b3", sport:"basketball", leagueKey:"EL", league:"יורוליג — חצי גמר פיינל פור", country:"אירופה",
-      home:"אולימפיאקוס", away:"פנרבחצ'ה", time:"22/05 · 18:00",
+      home:"אולימפיאקוס", away:"פנרבהצ'ה", time:"22/05 · 18:00", winnerAvailable:true,
       hForm:["W","W","W","L","W"], aForm:["W","L","W","W","W"],
       o1:"1.50", oX:"18.00", o2:"2.70", bestSide:"1", ou:"160.5", conf:76,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -1029,13 +1072,13 @@ const FALLBACK = {
         {market:"מעל/מתחת נקודות",pick:"מתחת 160.5",odds:"1.88",tag:"val"},
         {market:"הימור יתרון — ללא הארכות",pick:"OLY -4.5",odds:"1.90",tag:"rec"},
       ],
-      analysis:"אולימפיאקוס מגיעה כפייבוריטית לפיינל פור באתונה, עם הגנה יציבה וניסיון רב במעמד. פנרבחצ'ה איכותית, אך יחס 1.50 עדיין מגלם ערך על הפייבוריטית.",
+      analysis:"אולימפיאקוס מגיעה כפייבוריטית לפיינל פור באתונה, עם הגנה יציבה וניסיון רב במעמד. פנרבהצ'ה איכותית, אך יחס 1.50 עדיין מגלם ערך על הפייבוריטית.",
       stats:[{val:"84.8",lbl:"נק' ביתי",color:"o"},{val:"79.6",lbl:"נק' חוץ",color:"o"},{val:"36.2",lbl:"ריב' ביתי"},{val:"33.8",lbl:"ריב' חוץ"}],
-      h2h:[{d:"מרץ 26",s:"82-76 OLY",c:"EL"},{d:"דצמ 25",s:"77-74 FEN",c:"EL"},{d:"מאי 25",s:"87-78 OLY",c:"EL"}],
+      h2h:[{d:"מרץ 26",s:"82-76 OLY",c:"EL"},{d:"דצמ 25",s:"77-74 FEN",c:"EL"},{d:"מאי 25",s:"87-78 OLY",c:"EL"}], winnerAvailable:true,
       series:"חצי גמר פיינל פור",
     },
     { id:"b4", sport:"basketball", leagueKey:"EL", league:"יורוליג — חצי גמר פיינל פור", country:"אירופה",
-      home:"ולנסיה", away:"ריאל מדריד", time:"22/05 · 21:00",
+      home:"ולנסיה בסקט", away:"ריאל מדריד", time:"22/05 · 21:00", winnerAvailable:true,
       hForm:["W","W","L","W","W"], aForm:["W","L","W","W","L"],
       o1:"2.25", oX:"18.00", o2:"1.64", bestSide:"2", ou:"166.5", conf:67,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -1049,73 +1092,73 @@ const FALLBACK = {
         {market:"מעל/מתחת נקודות",pick:"מעל 166.5",odds:"1.88",tag:"val"},
         {market:"הימור יתרון — ללא הארכות",pick:"RMA -3.5",odds:"1.90",tag:"rec"},
       ],
-      analysis:"ריאל מדריד מנוסה יותר במעמד הפיינל פור ומגיעה מול ולנסיה בהופעת בכורה היסטורית. הפער בניסיון ובקו האחורי מצדיק יחס 1.64 לצד 2.",
+      analysis:"ריאל מדריד מנוסה יותר במעמד הפיינל פור ומגיעה מול ולנסיה בסקט בהופעת בכורה היסטורית. הפער בניסיון ובקו האחורי מצדיק יחס 1.64 לצד 2.",
       stats:[{val:"82.1",lbl:"נק' ביתי",color:"o"},{val:"86.4",lbl:"נק' חוץ",color:"o"},{val:"34.8",lbl:"ריב' ביתי"},{val:"36.0",lbl:"ריב' חוץ"}],
       h2h:[{d:"אפר 26",s:"88-82 RMA",c:"ACB"},{d:"פבר 26",s:"85-79 RMA",c:"EL"},{d:"נוב 25",s:"91-88 VAL",c:"EL"}],
       series:"חצי גמר פיינל פור",
     },
-    { id:"b5", sport:"basketball", leagueKey:"EL", league:"BBL גרמניה — פלייאוף", country:"גרמניה",
-      home:"ראסטה וכטה", away:"אלבה ברלין", time:"22/05 · 19:30",
-      hForm:["L","W","L","D","W"], aForm:["W","W","L","W","W"],
-      o1:"2.22", oX:"18.00", o2:"1.60", bestSide:"2", ou:"171.5", conf:70,
+    { id:"b5", sport:"basketball", leagueKey:"ACB", league:"ACB ספרד — פלייאוף", country:"ספרד",
+      home:"ברסה בסקט", away:"ריאל מדריד", time:"22/05 · 20:30", winnerAvailable:true,
+      hForm:["W","W","L","W","W"], aForm:["W","L","W","W","L"],
+      o1:"2.10", oX:"18.00", o2:"1.72", bestSide:"2", ou:"168.5", conf:69,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
       sourceData:[
-        {name:"ווינר",odds:"2.22 / 18.00 / 1.60",note:"ראשי"},
-        {name:"365scores",odds:"2.22 / 18.00 / 1.60",note:"±0.01"},
-        {name:"SportyTrader",odds:"2.22 / 18.00 / 1.60",note:"זהה"},
+        {name:"ווינר",odds:"2.10 / 18.00 / 1.72",note:"ראשי"},
+        {name:"365scores",odds:"2.10 / 18.00 / 1.72",note:"±0.01"},
+        {name:"SportyTrader",odds:"2.10 / 18.00 / 1.72",note:"זהה"},
       ],
       picks:[
-        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"אלבה ברלין",odds:"1.60",tag:"val"},
-        {market:"מעל/מתחת נקודות",pick:"מעל 171.5",odds:"1.88",tag:"val"},
-        {market:"הימור יתרון — ללא הארכות",pick:"ALBA -4.5",odds:"1.90",tag:"rec"},
+        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"ריאל מדריד",odds:"1.72",tag:"val"},
+        {market:"מעל/מתחת נקודות",pick:"מעל 168.5",odds:"1.88",tag:"val"},
+        {market:"הימור יתרון — ללא הארכות",pick:"RMA -3.5",odds:"1.90",tag:"rec"},
       ],
-      analysis:"אלבה ברלין עדיפה בעומק ובניסיון פלייאוף. וכטה מסוכנת בבית אך סופגת בקצב גבוה מול קבוצות צמרת. יחס 1.60 מגלם יתרון איכות ברור.",
+      analysis:"ריאל מדריד עדיפה בעומק ובניסיון הפלייאוף. ברסה בסקט מסוכנת בבית אך יחס 1.72 מגלם יתרון איכות ברור לריאל.",
       stats:[{val:"83.5",lbl:"נק' ביתי",color:"o"},{val:"89.2",lbl:"נק' חוץ",color:"o"},{val:"33.4",lbl:"ריב' ביתי"},{val:"36.6",lbl:"ריב' חוץ"}],
-      h2h:[{d:"אפר 26",s:"92-84 ALBA",c:"BBL"},{d:"ינו 26",s:"88-79 ALBA",c:"BBL"},{d:"מאי 25",s:"81-76 VEC",c:"BBL"}],
-      series:"פלייאוף BBL",
+      h2h:[{d:"אפר 26",s:"88-82 RMA",c:"ACB"},{d:"ינו 26",s:"84-79 RMA",c:"ACB"},{d:"מאי 25",s:"81-78 BRC",c:"ACB"}],
+      series:"פלייאוף ACB",
     },
-    { id:"b6", sport:"basketball", leagueKey:"EL", league:"BBL גרמניה — פלייאוף", country:"גרמניה",
-      home:"וירצבורג", away:"Baskets בון", time:"22/05 · 21:30",
-      hForm:["W","W","D","W","L"], aForm:["L","W","L","W","D"],
-      o1:"1.52", oX:"18.00", o2:"2.55", bestSide:"1", ou:"165.5", conf:73,
+    { id:"b6", sport:"basketball", leagueKey:"BSL", league:"ליגת הכדורסל ישראל — גמר", country:"ישראל",
+      home:"מכבי תל אביב", away:"הפועל תל אביב", time:"22/05 · 20:00", winnerAvailable:true,
+      hForm:["W","W","W","L","W"], aForm:["L","W","L","W","W"],
+      o1:"1.55", oX:"18.00", o2:"2.50", bestSide:"1", ou:"160.5", conf:74,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
       sourceData:[
-        {name:"ווינר",odds:"1.52 / 18.00 / 2.55",note:"ראשי"},
-        {name:"365scores",odds:"1.52 / 18.00 / 2.55",note:"±0.01"},
-        {name:"SportyTrader",odds:"1.52 / 18.00 / 2.55",note:"זהה"},
+        {name:"ווינר",odds:"1.55 / 18.00 / 2.50",note:"ראשי"},
+        {name:"365scores",odds:"1.55 / 18.00 / 2.50",note:"±0.01"},
+        {name:"SportyTrader",odds:"1.55 / 18.00 / 2.50",note:"זהה"},
       ],
       picks:[
-        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"וירצבורג",odds:"1.52",tag:"val"},
-        {market:"מעל/מתחת נקודות",pick:"מתחת 165.5",odds:"1.88",tag:"val"},
-        {market:"הימור יתרון — ללא הארכות",pick:"WUR -5.5",odds:"1.90",tag:"rec"},
+        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"מכבי תל אביב",odds:"1.55",tag:"val"},
+        {market:"מעל/מתחת נקודות",pick:"מעל 160.5",odds:"1.88",tag:"val"},
+        {market:"הימור יתרון — ללא הארכות",pick:"מכבי -4.5",odds:"1.90",tag:"rec"},
       ],
-      analysis:"וירצבורג מגיעה בכושר טוב יותר ועם יתרון ביתיות ברור. בון תנודתית מחוץ לבית. יחס 1.52 מתאים להסתברות מודל סביב 66%.",
+      analysis:"מכבי תל אביב מגיעה לגמר עם עדיפות ברורה בהקצב התקפי ועומק הסגל. הפועל תל אביב מסוכנת אך 1.55 על מכבי מגלם Value בדרבי.",
       stats:[{val:"86.0",lbl:"נק' ביתי",color:"o"},{val:"80.4",lbl:"נק' חוץ",color:"o"},{val:"35.1",lbl:"ריב' ביתי"},{val:"32.9",lbl:"ריב' חוץ"}],
-      h2h:[{d:"מרץ 26",s:"84-77 WUR",c:"BBL"},{d:"דצמ 25",s:"91-88 BON",c:"BBL"},{d:"אפר 25",s:"82-74 WUR",c:"BBL"}],
-      series:"פלייאוף BBL",
+      h2h:[{d:"מרץ 26",s:"88-77 MTA",c:"BSL"},{d:"דצמ 25",s:"91-84 MTA",c:"BSL"},{d:"אפר 25",s:"82-80 HPT",c:"BSL"}],
+      series:"גמר BSL",
     },
-    { id:"b7", sport:"basketball", leagueKey:"EL", league:"הליגה האדריאטית — פלייאוף", country:"אזורי",
-      home:"הכוכב האדום", away:"פרטיזן בלגרד", time:"21/05 · 21:00",
+    { id:"b7", sport:"basketball", leagueKey:"LegaBK", league:"לגה באסקט — גמר", country:"איטליה",
+      home:"אולימפיה מילאנו", away:"ויירטוס בולוניה", time:"22/05 · 21:00", winnerAvailable:true,
       hForm:["W","W","W","L","W"], aForm:["L","W","W","L","D"],
-      o1:"1.44", oX:"18.00", o2:"2.90", bestSide:"1", ou:"163.5", conf:74,
+      o1:"1.60", oX:"18.00", o2:"2.40", bestSide:"1", ou:"161.5", conf:72,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
       sourceData:[
-        {name:"ווינר",odds:"1.44 / 18.00 / 2.90",note:"ראשי"},
-        {name:"365scores",odds:"1.44 / 18.00 / 2.90",note:"±0.01"},
-        {name:"SportyTrader",odds:"1.44 / 18.00 / 2.90",note:"זהה"},
+        {name:"ווינר",odds:"1.60 / 18.00 / 2.40",note:"ראשי"},
+        {name:"365scores",odds:"1.60 / 18.00 / 2.40",note:"±0.01"},
+        {name:"SportyTrader",odds:"1.60 / 18.00 / 2.40",note:"זהה"},
       ],
       picks:[
-        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"הכוכב האדום",odds:"1.44",tag:"val"},
-        {market:"מעל/מתחת נקודות",pick:"מתחת 163.5",odds:"1.88",tag:"val"},
-        {market:"הימור יתרון — ללא הארכות",pick:"CZV -5.5",odds:"1.90",tag:"rec"},
+        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"אולימפיה מילאנו",odds:"1.60",tag:"val"},
+        {market:"מעל/מתחת נקודות",pick:"מתחת 161.5",odds:"1.88",tag:"val"},
+        {market:"הימור יתרון — ללא הארכות",pick:"MIL -4.5",odds:"1.90",tag:"rec"},
       ],
-      analysis:"דרבי בלגרדי בפלייאוף, אך הכוכב האדום מגיעה עם יתרון ביתיות וכושר הגנתי חזק יותר. יחס 1.44 נמוך אך מתאים לפייבוריטית ברורה.",
+      analysis:"אולימפיה מילאנו עדיפה בבית עם הגנה יציבה וניסיון רב בגמרים. ויירטוס בולוניה מסוכנת אך 1.60 על מילאנו מגלם ערך ברור.",
       stats:[{val:"84.5",lbl:"נק' ביתי",color:"o"},{val:"78.8",lbl:"נק' חוץ",color:"o"},{val:"36.0",lbl:"ריב' ביתי"},{val:"34.1",lbl:"ריב' חוץ"}],
-      h2h:[{d:"אפר 26",s:"81-76 CZV",c:"ABA"},{d:"ינו 26",s:"88-84 PAR",c:"EL"},{d:"דצמ 25",s:"79-72 CZV",c:"ABA"}],
-      series:"פלייאוף ABA",
+      h2h:[{d:"אפר 26",s:"81-76 MIL",c:"LBA"},{d:"ינו 26",s:"88-84 VIR",c:"EL"},{d:"דצמ 25",s:"79-72 MIL",c:"LBA"}],
+      series:"גמר לגה באסקט",
     },
-    { id:"b8", sport:"basketball", leagueKey:"EL", league:"NBL צ'כיה — פלייאוף", country:"צ'כיה",
-      home:"ברנו", away:"פארדוביצה", time:"21/05 · 19:00",
+    { id:"b8", sport:"basketball", leagueKey:"EL", league:"יורוליג — משחק 3rd Place", country:"אירופה",
+      home:"פנרבהצ'ה", away:"פרטיזן בלגרד", time:"22/05 · 17:00", winnerAvailable:true,
       hForm:["W","L","W","W","D"], aForm:["L","W","L","D","W"],
       o1:"1.66", oX:"18.00", o2:"2.16", bestSide:"1", ou:"159.5", conf:65,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
@@ -1125,54 +1168,54 @@ const FALLBACK = {
         {name:"SportyTrader",odds:"1.66 / 18.00 / 2.16",note:"זהה"},
       ],
       picks:[
-        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"ברנו",odds:"1.66",tag:"val"},
+        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"פנרבהצ'ה",odds:"1.66",tag:"val"},
         {market:"מעל/מתחת נקודות",pick:"מעל 159.5",odds:"1.88",tag:"val"},
-        {market:"הימור יתרון — ללא הארכות",pick:"BRN -3.5",odds:"1.90",tag:"rec"},
+        {market:"הימור יתרון — ללא הארכות",pick:"FEN -3.5",odds:"1.90",tag:"rec"},
       ],
-      analysis:"ברנו יציבה יותר בבית ומייצרת אחוזי קליעה גבוהים יותר באזור הצבע. פארדוביצה פחות אמינה בחוץ. המודל נותן 59% לברנו.",
+      analysis:"פנרבהצ'ה עדיפה בחוץ ובמומנטום, אך פרטיזן מסוכנת. 1.66 על פנרבהצ'ה מגלם ערך סביר במשחק המקום השלישי.",
       stats:[{val:"82.7",lbl:"נק' ביתי",color:"o"},{val:"78.9",lbl:"נק' חוץ",color:"o"},{val:"34.0",lbl:"ריב' ביתי"},{val:"32.7",lbl:"ריב' חוץ"}],
-      h2h:[{d:"אפר 26",s:"86-80 BRN",c:"NBL"},{d:"פבר 26",s:"79-75 PAR",c:"NBL"},{d:"דצמ 25",s:"83-78 BRN",c:"NBL"}],
-      series:"פלייאוף NBL",
+      h2h:[{d:"מרץ 26",s:"81-76 FEN",c:"EL"},{d:"פבר 26",s:"79-75 PAR",c:"EL"},{d:"דצמ 25",s:"83-78 FEN",c:"EL"}],
+      series:"3rd Place EuroLeague",
     },
-    { id:"b9", sport:"basketball", leagueKey:"EL", league:"ליגת קפריסין — פלייאוף", country:"קפריסין",
-      home:"קרבנוס", away:"א.א.ק לרנקה", time:"21/05 · 19:30",
+    { id:"b9", sport:"basketball", leagueKey:"NBA", league:"NBA — גמר הכנס המזרחי", country:"ארה\"ב",
+      home:"בוסטון סלטיקס", away:"ניו יורק ניקס", time:"22/05 · 01:30", winnerAvailable:true,
       hForm:["W","L","W","D","W"], aForm:["W","W","L","W","D"],
-      o1:"1.90", oX:"18.00", o2:"1.80", bestSide:"2", ou:"158.5", conf:61,
+      o1:"1.80", oX:"20.00", o2:"2.00", bestSide:"1", ou:"210.5", conf:63,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
       sourceData:[
-        {name:"ווינר",odds:"1.90 / 18.00 / 1.80",note:"ראשי"},
-        {name:"365scores",odds:"1.90 / 18.00 / 1.80",note:"±0.01"},
-        {name:"SportyTrader",odds:"1.90 / 18.00 / 1.80",note:"זהה"},
+        {name:"ווינר",odds:"1.80 / 20.00 / 2.00",note:"ראשי"},
+        {name:"365scores",odds:"1.80 / 20.00 / 2.00",note:"±0.01"},
+        {name:"SportyTrader",odds:"1.80 / 20.00 / 2.00",note:"זהה"},
       ],
       picks:[
-        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"א.א.ק לרנקה",odds:"1.80",tag:"val"},
-        {market:"מעל/מתחת נקודות",pick:"מתחת 158.5",odds:"1.88",tag:"val"},
-        {market:"הימור יתרון — ללא הארכות",pick:"AEK -1.5",odds:"1.90",tag:"rec"},
+        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"בוסטון סלטיקס",odds:"1.80",tag:"val"},
+        {market:"מעל/מתחת נקודות",pick:"מתחת 210.5",odds:"1.88",tag:"val"},
+        {market:"הימור יתרון — ללא הארכות",pick:"BOS -2.5",odds:"1.90",tag:"rec"},
       ],
-      analysis:"משחק שקול בפלייאוף הקפריסאי, אך א.א.ק לרנקה מגיעה עם יציבות טובה יותר בקו האחורי. יחס 1.80 מספק Value מתון לצד האורח.",
-      stats:[{val:"79.2",lbl:"נק' ביתי",color:"o"},{val:"81.0",lbl:"נק' חוץ",color:"o"},{val:"33.4",lbl:"ריב' ביתי"},{val:"34.2",lbl:"ריב' חוץ"}],
-      h2h:[{d:"אפר 26",s:"77-74 AEK",c:"CYP"},{d:"מרץ 26",s:"80-78 KER",c:"CYP"},{d:"ינו 26",s:"82-76 AEK",c:"CYP"}],
-      series:"פלייאוף קפריסין",
+      analysis:"בוסטון בבית עם יתרון ברור בהגנה ובניסיון פלייאוף. ניקס מגיעה חזקה אך 1.80 על הסלטיקס בבית מגלם ערך מתון.",
+      stats:[{val:"112.0",lbl:"נק' ביתי",color:"o"},{val:"108.5",lbl:"נק' חוץ",color:"o"},{val:"44.2",lbl:"ריב' ביתי"},{val:"42.8",lbl:"ריב' חוץ"}],
+      h2h:[{d:"אפר 26",s:"108-102 BOS",c:"ECF"},{d:"מרץ 26",s:"114-109 NYK",c:"RS"},{d:"ינו 26",s:"112-106 BOS",c:"RS"}],
+      series:"גמר הכנס המזרחי",
     },
-    { id:"b10", sport:"basketball", leagueKey:"EL", league:"סופרליג גאורגיה — פלייאוף", country:"גאורגיה",
-      home:"אוניברסיטת טביליסי", away:"בטומי", time:"21/05 · 18:30",
+    { id:"b10", sport:"basketball", leagueKey:"ACB", league:"ACB ספרד — פלייאוף", country:"ספרד",
+      home:"גראן קנריה", away:"מלגה", time:"22/05 · 18:30", winnerAvailable:true,
       hForm:["W","D","W","L","W"], aForm:["W","L","D","W","L"],
-      o1:"1.86", oX:"18.00", o2:"1.84", bestSide:"1", ou:"162.5", conf:60,
+      o1:"1.75", oX:"18.00", o2:"2.10", bestSide:"1", ou:"158.5", conf:65,
       sourcesMatch:true, sources:["ווינר","365","SportyTrader"],
       sourceData:[
-        {name:"ווינר",odds:"1.86 / 18.00 / 1.84",note:"ראשי"},
-        {name:"365scores",odds:"1.86 / 18.00 / 1.84",note:"±0.01"},
-        {name:"SportyTrader",odds:"1.86 / 18.00 / 1.84",note:"זהה"},
+        {name:"ווינר",odds:"1.75 / 18.00 / 2.10",note:"ראשי"},
+        {name:"365scores",odds:"1.75 / 18.00 / 2.10",note:"±0.01"},
+        {name:"SportyTrader",odds:"1.75 / 18.00 / 2.10",note:"זהה"},
       ],
       picks:[
-        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"אוניברסיטת טביליסי",odds:"1.86",tag:"val"},
-        {market:"מעל/מתחת נקודות",pick:"מעל 162.5",odds:"1.88",tag:"val"},
-        {market:"הימור יתרון — ללא הארכות",pick:"TSU",odds:"1.82",tag:"rec"},
+        {market:"המנצח/ת — כולל הארכות אם יהיו",pick:"גראן קנריה",odds:"1.75",tag:"val"},
+        {market:"מעל/מתחת נקודות",pick:"מעל 158.5",odds:"1.88",tag:"val"},
+        {market:"הימור יתרון — ללא הארכות",pick:"GCB -2.5",odds:"1.82",tag:"rec"},
       ],
-      analysis:"טביליסי ובטומי מתומחרות כמעט שווה, אבל יתרון הבית והפתיחה החזקה של TSU נותנים עדיפות קלה. יחס 1.86 מתאים להמלצת Value בסיכון גבוה יותר.",
+      analysis:"גראן קנריה חזקה בבית ועם יתרון קל במאזן האחרון. מלגה תנודתית בחוץ. יחס 1.75 מתאים להמלצת Value סבירה.",
       stats:[{val:"81.8",lbl:"נק' ביתי",color:"o"},{val:"80.9",lbl:"נק' חוץ",color:"o"},{val:"34.6",lbl:"ריב' ביתי"},{val:"34.0",lbl:"ריב' חוץ"}],
-      h2h:[{d:"אפר 26",s:"84-81 TSU",c:"GEO"},{d:"פבר 26",s:"79-77 BAT",c:"GEO"},{d:"דצמ 25",s:"88-83 TSU",c:"GEO"}],
-      series:"פלייאוף גאורגיה",
+      h2h:[{d:"אפר 26",s:"84-81 GCB",c:"ACB"},{d:"פבר 26",s:"79-77 MLG",c:"ACB"},{d:"דצמ 25",s:"88-83 GCB",c:"ACB"}],
+      series:"פלייאוף ACB",
     }
   ]
 };
@@ -1194,6 +1237,7 @@ export default function App() {
     "מחפש משחקי היום מכל העולם...",
     "בודק יחסים ב-ווינר, 365, bet365...",
     "מאמת עקביות יחסים בין מקורות...",
+    "בודק זמינות משחקים ב-Winner.co.il...",
     "מסנן לטווח 1.40–1.90 בלבד...",
     "מדרג לפי ציון ערך + סיכוי פגיעה...",
   ];
@@ -1203,12 +1247,13 @@ export default function App() {
     setLoadStep(0);
     const stepInterval = setInterval(() => {
       setLoadStep(s => Math.min(s+1, STEPS.length-1));
-    }, 600);
+    }, 700);
 
     try {
       const data = await fetchMatchesFromAI(sp);
-      // Filter: only keep odds in range 1.40–1.90
-      const filtered = data.filter(m => {
+      const withWinner = await checkWinnerAvailability(data);
+      const filtered = withWinner.filter(m => {
+        if (m.winnerAvailable === false) return false;
         const best = m.bestSide==="1"?parseFloat(m.o1):m.bestSide==="2"?parseFloat(m.o2):parseFloat(m.oX);
         return best >= ODDS_MIN && best <= ODDS_MAX;
       });
