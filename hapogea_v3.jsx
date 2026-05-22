@@ -28,14 +28,14 @@ const ODDS_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 min
 
 const TIP_STATUS = {
   pending: { label:"ממתין", icon:"⏳", color:"#facc15", bg:"rgba(250,204,21,.08)", border:"rgba(250,204,21,.25)" },
-  won:     { label:"נתפס",  icon:"✓",  color:"#4ade80", bg:"rgba(74,222,128,.08)", border:"rgba(74,222,128,.25)" },
+  won:     { label:"תפס",   icon:"✔",  color:"#4ade80", bg:"rgba(74,222,128,.08)", border:"rgba(74,222,128,.25)" },
   lost:    { label:"נפל",   icon:"✕",  color:"#f87171", bg:"rgba(248,113,113,.06)", border:"rgba(248,113,113,.2)" },
 };
 
 const FILTER_TABS = [
   { key:"all",     label:"הכל" },
   { key:"pending", label:"ממתין" },
-  { key:"won",     label:"נתפס" },
+  { key:"won",     label:"תפס" },
   { key:"lost",    label:"נפל" },
 ];
 
@@ -796,6 +796,26 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
                   : tip.status==="lost"? "linear-gradient(90deg,#f87171,#ef4444)"
                   : "linear-gradient(90deg,#facc15,#eab308)"
       }}/>
+      {(tip.status==="won" || tip.status==="lost") && (
+        <div style={{
+          padding:"7px 14px",
+          background: tip.status==="won" ? "rgba(74,222,128,.15)" : "rgba(248,113,113,.12)",
+          borderBottom:`2px solid ${tip.status==="won"?"#4ade80":"#f87171"}`,
+          display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+        }}>
+          <span style={{
+            fontFamily:"'Bebas Neue',cursive",fontSize:24,letterSpacing:2,
+            color: tip.status==="won" ? "#4ade80" : "#f87171",
+          }}>
+            {tip.status==="won" ? "✔ תפס" : "✕ נפל"}
+          </span>
+          {tip.finalScore && (
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,color:"#F5E6CC",opacity:.7}}>
+              {tip.finalScore}
+            </span>
+          )}
+        </div>
+      )}
       <div className="tip-league-row">
         <span style={{fontSize:15}}>{lm.flag||"🏆"}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#B8936A"}}>{lm.name||tip.league}</span>
@@ -860,7 +880,7 @@ const TodayWins = ({ tips }) => {
     <div className="today-wins">
       <div className="tw-hdr">
         <div className="tw-title">פגעו היום ב-Winner 🎯</div>
-        <div className="tw-ct">{won.length} נתפס{won.length===1?"":"ו"} היום</div>
+        <div className="tw-ct">{won.length} תפס{won.length===1?"":"ו"} היום</div>
       </div>
       <div className="grid">
         {won.map(t => <TipCard key={t.id} tip={t} isAdmin={false}/>)}
