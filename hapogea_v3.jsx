@@ -564,7 +564,7 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
       </div>
       <div className="tip-footer">
         <StatusBadge status={tip.status}/>
-        <span className="tip-src">📍 Winner.co.il</span>
+        <span style={{marginRight:"auto"}}/>
         {tip.oddsUpdatedAt && (
           <span className="tip-time">עודכן: {fmtTime(tip.oddsUpdatedAt)}</span>
         )}
@@ -787,7 +787,7 @@ const LeagueBadge = ({lk}) => {
 };
 
 // ─── MATCH CARD ────────────────────────────────────────────────
-const MatchCard = ({m, rank, onClick}) => {
+const MatchCard = ({m, rank, onClick, tipStatus}) => {
   const lm = LM[m.leagueKey] || {};
   const bestOdds = m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX;
   const hp = hitProb(bestOdds);
@@ -858,6 +858,18 @@ const MatchCard = ({m, rank, onClick}) => {
         <div className={`winner-badge ${m.winnerAvailable===false?"off":""}`}>
           {m.winnerAvailable===false ? "⚠ לא בווינר" : "✓ ווינר"}
         </div>
+        {tipStatus && (
+          <div style={{
+            fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,
+            letterSpacing:.5,textTransform:"uppercase",padding:"2px 9px",borderRadius:5,
+            background: TIP_STATUS[tipStatus].bg,
+            border:`1px solid ${TIP_STATUS[tipStatus].border}`,
+            color: TIP_STATUS[tipStatus].color,
+            whiteSpace:"nowrap",
+          }}>
+            {TIP_STATUS[tipStatus].icon} {TIP_STATUS[tipStatus].label}
+          </div>
+        )}
       </div>
 
       {/* PICKS */}
@@ -1862,6 +1874,16 @@ export default function App() {
                     </div>
                     <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                       <div className="vbadge">VALUE BET {hitProb(top.bestSide==="1"?top.o1:top.o2)}% פגיעה</div>
+                      {tips.find(t=>t.matchId===top.id) && (() => {
+                        const st = TIP_STATUS[tips.find(t=>t.matchId===top.id).status];
+                        return (
+                          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,
+                            letterSpacing:.5,textTransform:"uppercase",padding:"3px 10px",borderRadius:5,
+                            background:st.bg,border:`1px solid ${st.border}`,color:st.color}}>
+                            {st.icon} {st.label}
+                          </div>
+                        );
+                      })()}
                       <button className="detail-btn" onClick={()=>setSel(top)}>ניתוח מלא + כל שוקי ווינר ←</button>
                     </div>
                   </div>
@@ -1879,7 +1901,8 @@ export default function App() {
                 ) : (
                   <div className="grid">
                     {sorted.map((m,i) => (
-                      <MatchCard key={m.id} m={m} rank={i+1} onClick={setSel}/>
+                      <MatchCard key={m.id} m={m} rank={i+1} onClick={setSel}
+                        tipStatus={tips.find(t=>t.matchId===m.id)?.status}/>
                     ))}
                   </div>
                 )}
