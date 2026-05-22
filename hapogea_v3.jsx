@@ -246,6 +246,7 @@ body,#root{
 
 /* PICKS */
 .picks-box{margin:0 11px 11px;background:rgba(49,209,135,.05);border:1px solid rgba(49,209,135,.2);border-radius:9px;padding:10px 11px}
+.card-analysis{margin:0 14px 14px;padding:10px 12px;background:rgba(49,209,135,.06);border:1px solid rgba(49,209,135,.15);border-radius:8px;font-family:'Assistant',sans-serif;font-size:12px;line-height:1.7;color:rgba(245,230,204,.75);direction:rtl}
 .picks-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px}
 .picks-ic{width:24px;height:24px;background:linear-gradient(135deg,#ff7a45,#ef5350);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Heebo',sans-serif;font-size:10px;font-weight:900;color:white;flex-shrink:0}
 .picks-title{font-family:'Assistant',sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#31d187}
@@ -2527,7 +2528,7 @@ const LeaguesView = ({ onLeagueSelect, activeLeague }) => {
 
 // ─── MAIN APP ──────────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState("matches"); // "matches" | "tracker" | "agent" | "live" | "finished" | "wc2026" | "leagues"
+  const [view, setView] = useState("matches"); // "matches" | "agent" | "live" | "finished" | "wc2026" | "leagues"
   const [sport, setSport] = useState("football");
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2636,14 +2637,14 @@ export default function App() {
   const top = sorted[0];
   const mins = Math.floor(nextRefresh/60000);
   const secs = Math.floor((nextRefresh%60000)/1000);
-  const tickerTxt = sorted.slice(0,5).map(m=>`🔥 ${m.home} vs ${m.away} — ${m.picks[0]?.pick} @ ${m.picks[0]?.odds}`).join(" · ");
+  const tickerTxt = sorted.slice(0,5).map(m=>`${m.home} vs ${m.away} — ${m.picks[0]?.pick} @ ${m.picks[0]?.odds}`).join(" · ");
 
   return (
     <>
       <style>{CSS}</style>
       <div>
         <div className="ticker">
-          <span className="tkr">{tickerTxt || "⏳ טוען המלצות..."} · {tickerTxt || ""} ·</span>
+          <span className="tkr">{tickerTxt || "טוען המלצות..."} · {tickerTxt || ""} ·</span>
         </div>
 
         <header className="hdr">
@@ -2655,48 +2656,31 @@ export default function App() {
             {(view==="matches"||view==="leagues") && (
               <div style={{display:"flex",alignItems:"center",gap:6,flex:1,maxWidth:400}}>
                 <div className="srch" style={{flex:1}}>
-                  <span style={{color:"rgba(184,147,106,.5)",fontSize:13}}>🔍</span>
                   <input placeholder="חפש קבוצה או הימור..." value={srch} onChange={e=>setSrch(e.target.value)}/>
                 </div>
                 {srchIsQuestion && (
                   <button onClick={()=>setView("agent")}
                     style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:.5,padding:"6px 10px",borderRadius:7,border:"1px solid rgba(196,12,12,.3)",background:"rgba(196,12,12,.12)",color:"#FF6200",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
-                    🎯 נתח עם AI
+                    נתח עם AI
                   </button>
                 )}
               </div>
             )}
             <nav className="navt">
               <button className={`nt ${view==="matches"&&sport==="football"?"on":""}`}
-                onClick={()=>{setView("matches");setSport("football");setSrch("");}}>⚽ כדורגל</button>
+                onClick={()=>{setView("matches");setSport("football");setSrch("");}}>כדורגל</button>
               <button className={`nt ${view==="matches"&&sport==="basketball"?"on":""}`}
-                onClick={()=>{setView("matches");setSport("basketball");setSrch("");}}>🏀 כדורסל</button>
-              <button className={`nt ${view==="tracker"?"on":""}`}
-                onClick={()=>setView("tracker")} style={{position:"relative"}}>
-                🎯 תופס שלי
-                {tips.filter(t=>t.status==="pending").length > 0 && (
-                  <span style={{position:"absolute",top:-4,left:-4,background:"#C40C0C",color:"white",borderRadius:"50%",width:16,height:16,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif"}}>
-                    {tips.filter(t=>t.status==="pending").length}
-                  </span>
-                )}
-              </button>
+                onClick={()=>{setView("matches");setSport("basketball");setSrch("");}}>כדורסל</button>
               <button className={`nt ${view==="agent"?"on":""}`}
                 onClick={()=>setView("agent")}
                 style={{background:view==="agent"?"":"linear-gradient(135deg,rgba(255,215,0,.08),rgba(255,98,0,.05))",border:view==="agent"?"":"1px solid rgba(255,215,0,.2)"}}>
-                {isPremium ? "🎯 הפוגע AI" : "🔒 הפוגע AI"}
+                {isPremium ? "הפוגע AI" : "הפוגע AI"}
               </button>
             </nav>
           </div>
         </header>
 
         <main>
-          {view==="tracker" && (
-            <TipTracker
-              isAdmin={isAdmin}
-              onAdminRequest={()=>setShowAdminLogin(true)}
-              onAdminLogout={()=>setIsAdmin(false)}
-            />
-          )}
           {view==="agent" && (
             <PogueaAgent isPremium={isPremium} onUnlock={unlockPremium}/>
           )}
@@ -2718,7 +2702,6 @@ export default function App() {
                 <button onClick={()=>setLeagueFilter(null)} style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,letterSpacing:.5,padding:"2px 9px",borderRadius:5,border:"1px solid rgba(196,12,12,.3)",background:"transparent",color:"#FF6200",cursor:"pointer"}}>✕ נקה</button>
               </div>
             )}
-            <TodayStatsBar tips={tips}/>
             {/* STATUS BAR */}
             <div className="status-bar">
               <div className={`status-dot ${loading?"loading":lastUpdate?"live":"err"}`}/>
@@ -2734,7 +2717,7 @@ export default function App() {
                 </div>
               )}
               <button className="refresh-btn" onClick={()=>loadData(sport)} disabled={loading}>
-                {loading?"...":"רענן עכשיו 🔄"}
+                {loading?"...":"רענן עכשיו"}
               </button>
             </div>
 
@@ -2756,7 +2739,7 @@ export default function App() {
                 {/* BANNER */}
                 {top && (
                   <div className="banner" style={{marginBottom:22}}>
-                    <div className="b-badge">🔥 הטיפ החם ביותר — ציון ערך {valueScore(top.o1,top.oX,top.o2,top.bestSide)}/100</div>
+                    <div className="b-badge">הטיפ החם ביותר — ציון ערך {valueScore(top.o1,top.oX,top.o2,top.bestSide)}/100</div>
                     <div className="b-lg">
                       <LeagueBadge lk={top.leagueKey}/>
                       <div>
@@ -2795,16 +2778,6 @@ export default function App() {
                     </div>
                     <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                       <div className="vbadge">VALUE BET {hitProb(top.bestSide==="1"?top.o1:top.o2)}% פגיעה</div>
-                      {tips.find(t=>t.matchId===top.id) && (() => {
-                        const st = TIP_STATUS[tips.find(t=>t.matchId===top.id).status];
-                        return (
-                          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,
-                            letterSpacing:.5,textTransform:"uppercase",padding:"3px 10px",borderRadius:5,
-                            background:st.bg,border:`1px solid ${st.border}`,color:st.color}}>
-                            {st.icon} {st.label}
-                          </div>
-                        );
-                      })()}
                       <button className="detail-btn" onClick={()=>setSel(top)}>ניתוח מלא + כל שוקי ווינר ←</button>
                     </div>
                   </div>
@@ -2822,8 +2795,7 @@ export default function App() {
                 ) : (
                   <div className="grid">
                     {sorted.map((m,i) => (
-                      <MatchCard key={m.id} m={m} rank={i+1} onClick={setSel}
-                        tipStatus={tips.find(t=>t.matchId===m.id)?.status}/>
+                      <MatchCard key={m.id} m={m} rank={i+1} onClick={setSel}/>
                     ))}
                   </div>
                 )}
@@ -2833,7 +2805,7 @@ export default function App() {
         </main>
 
         <div className="footer-disc">
-          <p>⚠️ <strong style={{color:"#F5E6CC"}}>Disclaimer:</strong> "הפוגע" הוא כלי ניתוח סטטיסטי בלבד. היחסים מבוססים על נתונים היסטוריים ו-AI — אינם מהווים המלצת הימור. האתר אינו אחראי לתוצאות. הימור אחראי בלבד. גיל מינימלי 18+.</p>
+          <p><strong style={{color:"#F5E6CC"}}>Disclaimer:</strong> "הפוגע" הוא כלי ניתוח סטטיסטי בלבד. היחסים מבוססים על נתונים היסטוריים ו-AI — אינם מהווים המלצת הימור. האתר אינו אחראי לתוצאות. הימור אחראי בלבד. גיל מינימלי 18+.</p>
         </div>
         <footer className="footer">
           <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:24,background:"linear-gradient(135deg,#C40C0C,#FF6200)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",marginBottom:5}}>הפוגע</div>
@@ -2841,18 +2813,14 @@ export default function App() {
           <div style={{marginTop:5,opacity:.4}}>כל הזכויות שמורות — לצרכי מידע בלבד</div>
         </footer>
 
-        {sel && <Modal m={sel} onClose={()=>setSel(null)} onAddTip={addTip}/>}
+        {sel && <Modal m={sel} onClose={()=>setSel(null)}/>}
         {showAdminLogin && (
           <AdminLogin
-            onAuth={()=>{ setIsAdmin(true); setShowAdminLogin(false); setView("tracker"); }}
+            onAuth={()=>{ setIsAdmin(true); setShowAdminLogin(false); setView("matches"); }}
             onClose={()=>setShowAdminLogin(false)}
           />
         )}
-        <BottomNav
-          view={view}
-          setView={setView}
-          pendingCount={tips.filter(t=>t.status==="pending").length}
-        />
+        <BottomNav view={view} setView={setView}/>
       </div>
     </>
   );
