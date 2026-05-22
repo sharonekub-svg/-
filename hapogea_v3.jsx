@@ -15,6 +15,26 @@ const API_KEY =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_ANTHROPIC_API_KEY) ||
   (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_ANTHROPIC_API_KEY) ||
   "";
+const ADMIN_PASS =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_ADMIN_PASS) || "hapogea2025";
+
+// ─── TRACKER CONSTANTS ─────────────────────────────────────────
+const TRACKER_KEY = "hapogea_tips_v1";
+const ODDS_CACHE_KEY = "hapogea_odds_v1";
+const ODDS_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 min
+
+const TIP_STATUS = {
+  pending: { label:"ממתין", icon:"⏳", color:"#facc15", bg:"rgba(250,204,21,.08)", border:"rgba(250,204,21,.25)" },
+  won:     { label:"נתפס",  icon:"✓",  color:"#4ade80", bg:"rgba(74,222,128,.08)", border:"rgba(74,222,128,.25)" },
+  lost:    { label:"נפל",   icon:"✕",  color:"#f87171", bg:"rgba(248,113,113,.06)", border:"rgba(248,113,113,.2)" },
+};
+
+const FILTER_TABS = [
+  { key:"all",     label:"הכל" },
+  { key:"pending", label:"ממתין" },
+  { key:"won",     label:"נתפס" },
+  { key:"lost",    label:"נפל" },
+];
 
 const LM = {
   EPL:        { name:"פרמיר ליג",           flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", c:"#3D195B" },
@@ -271,7 +291,80 @@ body,#root{background:#0D0D0D;color:#F5E6CC;font-family:'Barlow',sans-serif;dire
 .footer-disc p{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 14px;font-size:10px;color:#B8936A;line-height:1.7}
 .footer{border-top:1px solid rgba(61,26,10,.35);padding:18px 20px;max-width:1400px;margin:0 auto;text-align:center;font-size:10px;color:#B8936A;line-height:1.8}
 @media(max-width:720px){.navt{display:none}.grid{grid-template-columns:1fr}.sg4{grid-template-columns:repeat(2,1fr)}}
+
+/* ── TRACKER TABS ───────────────────────────────────────────────── */
+.tracker-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.tracker-tab{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 16px;border-radius:8px;border:1px solid rgba(61,26,10,.5);background:rgba(255,255,255,.03);color:#B8936A;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px}
+.tracker-tab:hover{border-color:rgba(196,12,12,.3);color:#F5E6CC}
+.tracker-tab.active{background:linear-gradient(135deg,rgba(196,12,12,.18),rgba(255,98,0,.09));border-color:rgba(196,12,12,.45);color:#FF6200}
+.tab-ct{background:rgba(255,255,255,.07);border-radius:10px;padding:1px 7px;font-size:11px;color:#B8936A;min-width:18px;text-align:center}
+.tracker-tab.active .tab-ct{background:rgba(196,12,12,.2);color:#FF6200}
+
+/* ── TODAY WINS ──────────────────────────────────────────────────── */
+.today-wins{margin-bottom:26px;padding:18px;background:linear-gradient(135deg,rgba(74,222,128,.04),rgba(34,197,94,.02));border:1px solid rgba(74,222,128,.2);border-radius:14px;position:relative;overflow:hidden}
+.today-wins::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#4ade80,#22c55e,#4ade80);background-size:200%;animation:sh 4s ease infinite}
+.tw-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.tw-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:2px;background:linear-gradient(135deg,#4ade80,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tw-ct{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:10px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80}
+
+/* ── TIP CARD ────────────────────────────────────────────────────── */
+.tip-card{background:linear-gradient(160deg,#1C0B0B,#160808);border-radius:14px;padding:14px;position:relative;overflow:hidden;transition:all .2s}
+.tip-card:hover{transform:translateY(-2px)}
+.tip-stripe{position:absolute;top:0;right:0;left:0;height:3px;border-radius:14px 14px 0 0}
+.tip-league-row{display:flex;align-items:center;gap:7px;margin-bottom:9px;flex-wrap:wrap}
+.tip-teams{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.tip-home{font-family:'Bebas Neue',cursive;font-size:20px;color:white;letter-spacing:.5px}
+.tip-vs{font-family:'Bebas Neue',cursive;font-size:13px;color:rgba(196,12,12,.45)}
+.tip-details{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.tip-box{background:rgba(255,255,255,.04);border:1px solid rgba(61,26,10,.5);border-radius:7px;padding:6px 10px;flex:1;min-width:90px}
+.tip-box-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#B8936A;margin-bottom:2px}
+.tip-box-val{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#F5E6CC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tip-odds-box{background:linear-gradient(135deg,rgba(255,98,0,.1),rgba(196,12,12,.06));border:1px solid rgba(255,98,0,.25);border-radius:7px;padding:6px 13px;text-align:center;flex-shrink:0}
+.tip-odds-val{font-family:'Bebas Neue',cursive;font-size:26px;color:#FFD166;line-height:1}
+.tip-odds-prev{font-family:'Barlow Condensed',sans-serif;font-size:9px;color:rgba(184,147,106,.5);margin-top:1px;text-decoration:line-through}
+.tip-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.status-badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 10px;border-radius:5px;white-space:nowrap}
+.tip-src{font-family:'Barlow Condensed',sans-serif;font-size:9px;color:rgba(184,147,106,.5);margin-right:auto}
+.tip-time{font-family:'Barlow Condensed',sans-serif;font-size:9px;color:rgba(184,147,106,.4);letter-spacing:.5px}
+.tip-admin-btns{display:flex;gap:6px;margin-top:10px;border-top:1px solid rgba(61,26,10,.35);padding-top:10px}
+.tip-admin-btn{flex:1;padding:5px 0;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .12s;border:1px solid transparent}
+
+/* ── ODDS LOG (admin) ─────────────────────────────────────────── */
+.odds-log{margin-top:20px;background:rgba(255,255,255,.02);border:1px solid rgba(61,26,10,.4);border-radius:10px;overflow:hidden}
+.odds-log-hdr{padding:8px 12px;background:rgba(0,0,0,.2);border-bottom:1px solid rgba(61,26,10,.35);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#B8936A;display:flex;align-items:center;justify-content:space-between}
+.log-row{display:flex;gap:12px;padding:7px 12px;border-bottom:1px solid rgba(61,26,10,.2);font-family:'Barlow Condensed',sans-serif;font-size:11px;align-items:center}
+.log-row:last-child{border-bottom:none}
+.log-status{font-weight:700;letter-spacing:.5px}
+.log-status.ok{color:#4ade80}.log-status.fail{color:#f87171}.log-status.warn{color:#facc15}
 `;
+
+// ─── TRACKER HELPERS ───────────────────────────────────────────
+
+function loadTips() {
+  try { return JSON.parse(localStorage.getItem(TRACKER_KEY) || "[]"); } catch { return []; }
+}
+function saveTips(tips) {
+  try { localStorage.setItem(TRACKER_KEY, JSON.stringify(tips)); } catch {}
+}
+function loadOddsCache() {
+  try { return JSON.parse(localStorage.getItem(ODDS_CACHE_KEY) || "{}"); } catch { return {}; }
+}
+function saveOddsCache(c) {
+  try { localStorage.setItem(ODDS_CACHE_KEY, JSON.stringify(c)); } catch {}
+}
+function fmtTime(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleTimeString("he-IL", { hour:"2-digit", minute:"2-digit" });
+}
+function fmtDateShort(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleDateString("he-IL", { day:"2-digit", month:"2-digit" });
+}
+function isToday(ts) {
+  if (!ts) return false;
+  const d = new Date(ts), n = new Date();
+  return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
+}
 
 // ─── HELPERS ───────────────────────────────────────────────────
 
@@ -392,6 +485,296 @@ function buildBasketballMarkets(home, away, ou) {
   ];
 }
 
+// ─── ODDS REFRESH (Claude-powered — no direct Winner API) ──────
+async function fetchLatestOdds(tips) {
+  if (!API_KEY) return { updated: null, odds: {}, log: null };
+  const pending = tips.filter(t => t.status === "pending");
+  if (!pending.length) return { updated: null, odds: {}, log: null };
+  const list = pending.map((t,i)=>`${i+1}. ${t.home} נגד ${t.away} | ${t.league} | בחירה: ${t.pick} @ ${t.odds}`).join("\n");
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01" },
+      body:JSON.stringify({
+        model:"claude-haiku-4-5-20251001", max_tokens:800,
+        messages:[{ role:"user", content:`You are checking current Winner.co.il odds.\nFor each match below, return the current main 1X2 odds from Winner.co.il based on your knowledge.\nIf uncertain, return the original odds unchanged.\nMatches:\n${list}\nReturn JSON only:\n{"odds":[{"index":1,"currentOdds":"1.72","o1":"1.72","oX":"3.50","o2":"4.20","available":true}]}` }]
+      })
+    });
+    const d = await resp.json();
+    const txt = (d.content||[]).find(b=>b.type==="text")?.text||"";
+    const { odds } = JSON.parse(txt.replace(/```json|```/g,"").trim());
+    const map = {};
+    odds.forEach(o => { const t = pending[o.index-1]; if (t) map[t.id] = o; });
+    return {
+      updated: Date.now(), odds: map,
+      log: { ts: Date.now(), status:"ok", source:"Claude / Winner.co.il", count: pending.length }
+    };
+  } catch(e) {
+    return { updated: null, odds: {}, log:{ ts:Date.now(), status:"fail", source:"Claude / Winner.co.il", count:0, err:e?.message } };
+  }
+}
+
+// ─── STATUS BADGE ──────────────────────────────────────────────
+const StatusBadge = ({ status }) => {
+  const st = TIP_STATUS[status] || TIP_STATUS.pending;
+  return (
+    <span className="status-badge" style={{ background:st.bg, border:`1px solid ${st.border}`, color:st.color }}>
+      {st.icon} {st.label}
+    </span>
+  );
+};
+
+// ─── TIP CARD ──────────────────────────────────────────────────
+const TipCard = ({ tip, isAdmin, onStatusChange }) => {
+  const lm = LM[tip.leagueKey] || {};
+  const st = TIP_STATUS[tip.status] || TIP_STATUS.pending;
+  const oddsMoved = tip.currentOdds && tip.currentOdds !== tip.odds;
+  return (
+    <div className="tip-card" style={{ border:`1px solid ${st.border}` }}>
+      <div className="tip-stripe" style={{
+        background: tip.status==="won" ? "linear-gradient(90deg,#4ade80,#22c55e)"
+                  : tip.status==="lost"? "linear-gradient(90deg,#f87171,#ef4444)"
+                  : "linear-gradient(90deg,#facc15,#eab308)"
+      }}/>
+      <div className="tip-league-row">
+        <span style={{fontSize:15}}>{lm.flag||"🏆"}</span>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#B8936A"}}>{lm.name||tip.league}</span>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.45)"}}>{tip.sport==="football"?"⚽ כדורגל":"🏀 כדורסל"}</span>
+        <span style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#FF6200"}}>{fmtDateShort(tip.addedAt)} · {fmtTime(tip.addedAt)}</span>
+      </div>
+      <div className="tip-teams">
+        <span className="tip-home">{tip.home}</span>
+        <span className="tip-vs">VS</span>
+        <span className="tip-home">{tip.away}</span>
+      </div>
+      <div className="tip-details">
+        <div className="tip-box">
+          <div className="tip-box-lbl">סוג הימור</div>
+          <div className="tip-box-val">{tip.market}</div>
+        </div>
+        <div className="tip-box" style={{background:"rgba(196,12,12,.05)",borderColor:"rgba(196,12,12,.18)"}}>
+          <div className="tip-box-lbl">בחירה</div>
+          <div className="tip-box-val">{tip.pick}</div>
+        </div>
+        <div className="tip-odds-box">
+          <div className="tip-box-lbl" style={{textAlign:"center"}}>יחס ווינר</div>
+          <div className="tip-odds-val">{tip.currentOdds || tip.odds}</div>
+          {oddsMoved && <div className="tip-odds-prev">{tip.odds}</div>}
+        </div>
+      </div>
+      <div className="tip-footer">
+        <StatusBadge status={tip.status}/>
+        <span className="tip-src">📍 Winner.co.il</span>
+        {tip.oddsUpdatedAt && (
+          <span className="tip-time">עודכן: {fmtTime(tip.oddsUpdatedAt)}</span>
+        )}
+      </div>
+      {isAdmin && (
+        <div className="tip-admin-btns">
+          {["pending","won","lost"].map(s => (
+            <button key={s} className="tip-admin-btn"
+              onClick={() => onStatusChange(tip.id, s)}
+              style={{
+                background: tip.status===s ? TIP_STATUS[s].bg : "transparent",
+                borderColor: TIP_STATUS[s].border, color: TIP_STATUS[s].color,
+              }}>
+              {TIP_STATUS[s].icon} {TIP_STATUS[s].label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── TODAY WINS ────────────────────────────────────────────────
+const TodayWins = ({ tips }) => {
+  const won = tips.filter(t => t.status==="won" && isToday(t.addedAt));
+  if (!won.length) return null;
+  return (
+    <div className="today-wins">
+      <div className="tw-hdr">
+        <div className="tw-title">פגעו היום ב-Winner 🎯</div>
+        <div className="tw-ct">{won.length} נתפס{won.length===1?"":"ו"} היום</div>
+      </div>
+      <div className="grid">
+        {won.map(t => <TipCard key={t.id} tip={t} isAdmin={false}/>)}
+      </div>
+    </div>
+  );
+};
+
+// ─── ADMIN PANEL (login overlay) ───────────────────────────────
+const AdminLogin = ({ onAuth, onClose }) => {
+  const [pass, setPass] = useState("");
+  const [err, setErr] = useState(false);
+  const submit = () => {
+    if (pass === ADMIN_PASS) { onAuth(); }
+    else { setErr(true); setTimeout(() => setErr(false), 2000); setPass(""); }
+  };
+  return (
+    <div className="ovl" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{background:"#110606",border:"1px solid rgba(196,12,12,.4)",borderRadius:16,padding:28,width:"100%",maxWidth:360,margin:"auto",animation:"su .25s ease"}}>
+        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,letterSpacing:2,marginBottom:4}}>⚙ כניסת אדמין</div>
+        <div style={{fontSize:11,color:"#B8936A",marginBottom:18,letterSpacing:.5}}>הזן סיסמת מנהל לניהול טיפים</div>
+        <input className={`admin-panel-input${err?" err":""}`} type="password" value={pass}
+          onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="סיסמה..."/>
+        {err && <div style={{color:"#f87171",fontSize:12,margin:"8px 0"}}>סיסמה שגויה</div>}
+        <button onClick={submit} style={{marginTop:12,width:"100%",padding:12,background:"linear-gradient(135deg,#C40C0C,#FF6200)",border:"none",borderRadius:10,cursor:"pointer",fontFamily:"'Bebas Neue',cursive",fontSize:17,letterSpacing:3,color:"white"}}>
+          כניסה
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── TIP TRACKER VIEW ──────────────────────────────────────────
+const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
+  const [tips, setTips] = useState(loadTips);
+  const [filter, setFilter] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastOddsUpdate, setLastOddsUpdate] = useState(() => loadOddsCache().updatedAt || null);
+  const [logs, setLogs] = useState(() => loadOddsCache().logs || []);
+  const oddsTimerRef = useRef(null);
+
+  // Persist tips whenever they change
+  useEffect(() => { saveTips(tips); }, [tips]);
+
+  const doRefreshOdds = useCallback(async (silent = false) => {
+    if (!silent) setRefreshing(true);
+    const result = await fetchLatestOdds(tips);
+    if (result.updated) {
+      setTips(prev => prev.map(t => result.odds[t.id]
+        ? { ...t, currentOdds: result.odds[t.id].currentOdds, oddsUpdatedAt: result.updated }
+        : t
+      ));
+      setLastOddsUpdate(result.updated);
+      if (result.log) {
+        setLogs(prev => {
+          const updated = [result.log, ...prev].slice(0, 20);
+          const cache = loadOddsCache();
+          saveOddsCache({ ...cache, updatedAt: result.updated, logs: updated });
+          return updated;
+        });
+      }
+    } else if (result.log) {
+      setLogs(prev => {
+        const updated = [result.log, ...prev].slice(0, 20);
+        const cache = loadOddsCache();
+        saveOddsCache({ ...cache, logs: updated });
+        return updated;
+      });
+    }
+    if (!silent) setRefreshing(false);
+  }, [tips]);
+
+  // Auto-refresh every 30 min
+  useEffect(() => {
+    oddsTimerRef.current = setInterval(() => doRefreshOdds(true), ODDS_REFRESH_INTERVAL);
+    return () => clearInterval(oddsTimerRef.current);
+  }, [doRefreshOdds]);
+
+  const changeStatus = (id, status) => {
+    setTips(prev => prev.map(t => t.id===id ? { ...t, status } : t));
+  };
+
+  const counts = {
+    all: tips.length,
+    pending: tips.filter(t=>t.status==="pending").length,
+    won:     tips.filter(t=>t.status==="won").length,
+    lost:    tips.filter(t=>t.status==="lost").length,
+  };
+  const filtered = filter==="all" ? tips : tips.filter(t=>t.status===filter);
+
+  return (
+    <div className="wrap">
+      <TodayWins tips={tips}/>
+
+      {/* Status bar */}
+      <div className="status-bar">
+        <div className={`status-dot ${refreshing?"loading":"live"}`}/>
+        <div className="status-txt">
+          {refreshing ? "מרענן יחסים מ-Winner..." : "מעקב טיפים — Winner.co.il"}
+        </div>
+        {lastOddsUpdate && (
+          <div className="status-time">עודכן לאחרונה: {fmtTime(lastOddsUpdate)}</div>
+        )}
+        <button className="refresh-btn" onClick={()=>doRefreshOdds()} disabled={refreshing||!API_KEY}>
+          {refreshing ? "..." : "⟳ רענן יחסים"}
+        </button>
+        {isAdmin ? (
+          <button className="refresh-btn" style={{color:"#facc15",borderColor:"rgba(250,204,21,.3)"}} onClick={onAdminLogout}>
+            ⚙ אדמין — יציאה
+          </button>
+        ) : (
+          <button className="refresh-btn" onClick={onAdminRequest}>⚙ אדמין</button>
+        )}
+      </div>
+
+      {!API_KEY && (
+        <div className="disc" style={{marginBottom:16}}>⚠ הגדר <code>VITE_ANTHROPIC_API_KEY</code> ב-Vercel כדי לרענן יחסים אוטומטית.</div>
+      )}
+
+      {/* Filter tabs */}
+      <div className="tracker-tabs">
+        {FILTER_TABS.map(tab=>(
+          <button key={tab.key} className={`tracker-tab ${filter===tab.key?"active":""}`}
+            onClick={()=>setFilter(tab.key)}>
+            {tab.label}
+            <span className="tab-ct">{counts[tab.key]||0}</span>
+          </button>
+        ))}
+      </div>
+
+      {tips.length === 0 ? (
+        <div style={{textAlign:"center",padding:"60px 20px",color:"rgba(184,147,106,.5)"}}>
+          <div style={{fontSize:48,marginBottom:14}}>🎯</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>אין טיפים עדיין</div>
+          <div style={{fontSize:12,maxWidth:280,margin:"0 auto",lineHeight:1.7}}>
+            לחץ על כרטיס משחק ← "ניתוח מלא" ← "הוסף לתופס שלי" כדי להוסיף טיפ למעקב
+          </div>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{textAlign:"center",padding:"40px 20px",color:"rgba(184,147,106,.4)",fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,letterSpacing:1}}>
+          אין טיפים בסטטוס זה
+        </div>
+      ) : (
+        <div className="grid">
+          {filtered.map(tip => (
+            <TipCard key={tip.id} tip={tip} isAdmin={isAdmin} onStatusChange={changeStatus}/>
+          ))}
+        </div>
+      )}
+
+      {/* Admin: odds log */}
+      {isAdmin && logs.length > 0 && (
+        <div className="odds-log" style={{marginTop:28}}>
+          <div className="odds-log-hdr">
+            <span>לוג עדכוני יחסים</span>
+            <span style={{color:"rgba(184,147,106,.5)",fontSize:10}}>{logs.length} רשומות</span>
+          </div>
+          {logs.slice(0,8).map((l,i) => (
+            <div key={i} className="log-row">
+              <span style={{color:"rgba(184,147,106,.5)",minWidth:50}}>{fmtTime(l.ts)}</span>
+              <span className={`log-status ${l.status==="ok"?"ok":l.status==="fail"?"fail":"warn"}`}>
+                {l.status==="ok"?"✓ הצלחה":l.status==="fail"?"✕ כישלון":"⚠ אזהרה"}
+              </span>
+              <span style={{color:"rgba(184,147,106,.6)",flex:1,fontSize:10}}>{l.source}</span>
+              <span style={{color:"#B8936A",minWidth:40,textAlign:"left"}}>{l.count} משחקים</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="disc" style={{marginTop:22}}>
+        <strong style={{color:"#F5E6CC"}}>שימו לב:</strong> יחסי ווינר מתעדכנים אוטומטית כל 30 דקות דרך AI.
+        היחסים עשויים להשתנות — בדקו תמיד ב-<strong style={{color:"#F5E6CC"}}>Winner.co.il</strong> לפני ביצוע הימור.
+        הימור אחראי בלבד. גיל 18+.
+      </div>
+    </div>
+  );
+};
+
 const FDot = ({r}) => <span className={`fd ${r==="W"?"fw":r==="D"?"fdraw":"fl"}`}>{r}</span>;
 
 const LeagueBadge = ({lk}) => {
@@ -501,7 +884,7 @@ const MatchCard = ({m, rank, onClick}) => {
 };
 
 // ─── MODAL ─────────────────────────────────────────────────────
-const Modal = ({m, onClose}) => {
+const Modal = ({m, onClose, onAddTip}) => {
   const isB = m.sport==="basketball";
   const markets = isB
     ? buildBasketballMarkets(m.home, m.away, m.ou||220)
@@ -637,7 +1020,26 @@ const Modal = ({m, onClose}) => {
             </div>
           </div>
 
-          <button className="add-btn">הוסף לתופס שלי ←</button>
+          <button className="add-btn" onClick={() => {
+            if (!onAddTip) return;
+            const topPick = (m.picks||[])[0];
+            onAddTip({
+              id: Date.now().toString() + Math.random().toString(36).slice(2),
+              matchId: m.id,
+              sport: m.sport,
+              leagueKey: m.leagueKey,
+              league: (LM[m.leagueKey]?.name) || m.league || m.leagueKey,
+              home: m.home,
+              away: m.away,
+              market: topPick?.market || "1X2",
+              pick: topPick?.pick || (m.bestSide==="1"?`1 — ${m.home}`:m.bestSide==="2"?`2 — ${m.away}`:"X"),
+              odds: topPick?.odds || (m.bestSide==="1"?m.o1:m.bestSide==="2"?m.o2:m.oX),
+              status: "pending",
+              addedAt: Date.now(),
+              source: "Winner.co.il",
+              winnerAvailable: m.winnerAvailable,
+            });
+          }}>הוסף לתופס שלי ←</button>
           <div className="disc"><strong style={{color:"#F5E6CC"}}>Disclaimer:</strong> לצורכי מידע ואנליזה בלבד. אינו מבטיח תוצאות. הימור אחראי בלבד.</div>
         </div>
       </div>
@@ -1222,6 +1624,7 @@ const FALLBACK = {
 
 // ─── MAIN APP ──────────────────────────────────────────────────
 export default function App() {
+  const [view, setView] = useState("matches"); // "matches" | "tracker"
   const [sport, setSport] = useState("football");
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1230,8 +1633,39 @@ export default function App() {
   const [srch, setSrch] = useState("");
   const [lastUpdate, setLastUpdate] = useState(null);
   const [nextRefresh, setNextRefresh] = useState(REFRESH_MS);
+  const [tips, setTips] = useState(loadTips);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const logoClickCount = useRef(0);
+  const logoTimer = useRef(null);
   const timerRef = useRef(null);
   const countdownRef = useRef(null);
+
+  // Persist tips to localStorage
+  useEffect(() => { saveTips(tips); }, [tips]);
+
+  // Secret admin: click logo 5× within 3 seconds
+  const handleLogoClick = () => {
+    logoClickCount.current += 1;
+    clearTimeout(logoTimer.current);
+    if (logoClickCount.current >= 5) {
+      logoClickCount.current = 0;
+      setShowAdminLogin(true);
+    } else {
+      logoTimer.current = setTimeout(() => { logoClickCount.current = 0; }, 3000);
+    }
+  };
+
+  const addTip = useCallback((tip) => {
+    setTips(prev => {
+      if (prev.some(t => t.matchId === tip.matchId)) {
+        return prev.map(t => t.matchId===tip.matchId ? { ...t, odds:tip.odds, market:tip.market, pick:tip.pick } : t);
+      }
+      return [tip, ...prev];
+    });
+    setSel(null);
+    setView("tracker");
+  }, []);
 
   const STEPS = [
     "מחפש משחקי היום מכל העולם...",
@@ -1314,27 +1748,44 @@ export default function App() {
 
         <header className="hdr">
           <div className="hdr-in">
-            <div onClick={()=>setSrch("")} style={{cursor:"pointer"}}>
+            <div onClick={handleLogoClick} style={{cursor:"pointer"}}>
               <div className="logo">הפוגע</div>
               <div className="logo-s">Sports Analytics AI</div>
             </div>
-            <div className="srch">
-              <span style={{color:"rgba(184,147,106,.5)",fontSize:13}}>🔍</span>
-              <input placeholder="חפש קבוצה..." value={srch} onChange={e=>setSrch(e.target.value)}/>
-            </div>
+            {view==="matches" && (
+              <div className="srch">
+                <span style={{color:"rgba(184,147,106,.5)",fontSize:13}}>🔍</span>
+                <input placeholder="חפש קבוצה..." value={srch} onChange={e=>setSrch(e.target.value)}/>
+              </div>
+            )}
             <nav className="navt">
-              {[{k:"football",l:"⚽ כדורגל"},{k:"basketball",l:"🏀 כדורסל"}].map(t=>(
-                <button key={t.k} className={`nt ${sport===t.k?"on":""}`}
-                  onClick={()=>{setSport(t.k);setSrch("");}}>
-                  {t.l}
-                </button>
-              ))}
+              <button className={`nt ${view==="matches"&&sport==="football"?"on":""}`}
+                onClick={()=>{setView("matches");setSport("football");setSrch("");}}>⚽ כדורגל</button>
+              <button className={`nt ${view==="matches"&&sport==="basketball"?"on":""}`}
+                onClick={()=>{setView("matches");setSport("basketball");setSrch("");}}>🏀 כדורסל</button>
+              <button className={`nt ${view==="tracker"?"on":""}`}
+                onClick={()=>setView("tracker")}
+                style={view==="tracker"?{}:{position:"relative"}}>
+                🎯 תופס שלי
+                {tips.filter(t=>t.status==="pending").length > 0 && (
+                  <span style={{position:"absolute",top:-4,left:-4,background:"#C40C0C",color:"white",borderRadius:"50%",width:16,height:16,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif"}}>
+                    {tips.filter(t=>t.status==="pending").length}
+                  </span>
+                )}
+              </button>
             </nav>
           </div>
         </header>
 
         <main>
-          <div className="wrap">
+          {view==="tracker" && (
+            <TipTracker
+              isAdmin={isAdmin}
+              onAdminRequest={()=>setShowAdminLogin(true)}
+              onAdminLogout={()=>setIsAdmin(false)}
+            />
+          )}
+          <div className="wrap" style={{display:view==="matches"?"block":"none"}}>
             {/* STATUS BAR */}
             <div className="status-bar">
               <div className={`status-dot ${loading?"loading":lastUpdate?"live":"err"}`}/>
@@ -1446,7 +1897,13 @@ export default function App() {
           <div style={{marginTop:5,opacity:.4}}>כל הזכויות שמורות — לצרכי מידע בלבד</div>
         </footer>
 
-        {sel && <Modal m={sel} onClose={()=>setSel(null)}/>}
+        {sel && <Modal m={sel} onClose={()=>setSel(null)} onAddTip={addTip}/>}
+        {showAdminLogin && (
+          <AdminLogin
+            onAuth={()=>{ setIsAdmin(true); setShowAdminLogin(false); setView("tracker"); }}
+            onClose={()=>setShowAdminLogin(false)}
+          />
+        )}
       </div>
     </>
   );
