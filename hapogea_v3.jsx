@@ -893,7 +893,7 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
         <span style={{fontSize:15}}>{lm.flag||"🏆"}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#B8936A"}}>{lm.name||tip.league}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.45)"}}>{tip.sport==="football"?"כדורגל":"כדורסל"}</span>
-        <span style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#FF6200"}}>{getDateLabel(tip.addedAt)} · {fmtTime(tip.addedAt)</span>
+        <span style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#FF6200"}}>{getDateLabel(tip.addedAt)} · {fmtTime(tip.addedAt)}</span>
       </div>
       <div className="tip-teams">
         <span className="tip-home">{tip.home}</span>
