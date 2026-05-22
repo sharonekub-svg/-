@@ -590,15 +590,18 @@ function hitProb(odds) {
 }
 
 function valueScore(o1, oX, o2, bestSide) {
-  const bestOdds = bestSide === "1" ? parseFloat(o1) : bestSide === "2" ? parseFloat(o2) : parseFloat(oX);
-  const margin = (1/parseFloat(o1) + 1/parseFloat(oX) + 1/parseFloat(o2) - 1) * 100;
-  // Edge = implied prob × (1 - winner margin share) — how much we beat the book
+  const f1 = parseFloat(o1) || 1.50;
+  const fX = parseFloat(oX) || 3.50;
+  const f2 = parseFloat(o2) || 2.00;
+  const bestOdds = bestSide === "1" ? f1 : bestSide === "2" ? f2 : fX;
+  if (!isFinite(bestOdds) || bestOdds <= 1) return 0;
+  const margin = (1/f1 + 1/fX + 1/f2 - 1) * 100;
   const impliedProb = (1 / bestOdds) * 100;
-  const adjProb = impliedProb * (1 - margin / 100);
-  // Score 0-100: best when odds in sweet spot 1.50-1.70 AND margin <8%
-  const oddsScore = Math.max(0, 100 - Math.abs(bestOdds - 1.62) * 90);
-  const marginScore = Math.max(0, 100 - margin * 8);
-  return Math.round((oddsScore * 0.5 + marginScore * 0.3 + adjProb * 0.2));
+  const adjProb = impliedProb * (1 - Math.min(margin, 30) / 100);
+  // Sweet spot 1.50–1.75; penalise heavily outside range
+  const oddsScore = Math.max(0, 100 - Math.abs(bestOdds - 1.625) * 85);
+  const marginScore = Math.max(0, 100 - margin * 7);
+  return Math.round(oddsScore * 0.5 + marginScore * 0.3 + adjProb * 0.2);
 }
 
 function oddsColor(score) {
@@ -1292,11 +1295,47 @@ const PogueaAgent = ({ isPremium, onUnlock }) => {
   );
 };
 
-const PremiumCodeInput = () => (
-  <button className="prem-btn" onClick={() => window.open(PAYMENT_URL, "_blank")}>
-    פתח גישה
-  </button>
-);
+const PremiumCodeInput = ({ onUnlock }) => {
+  const [codeOpen, setCodeOpen] = React.useState(false);
+  const [code, setCode] = React.useState("");
+  const [err, setErr] = React.useState(false);
+  const tryCode = () => {
+    if (code.trim().toUpperCase() === PREMIUM_CODE) {
+      onUnlock();
+    } else {
+      setErr(true);
+      setTimeout(() => setErr(false), 900);
+    }
+  };
+  return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
+      <button className="prem-btn" onClick={() => window.open(PAYMENT_URL, "_blank")}>
+        פתח גישה
+      </button>
+      {!codeOpen ? (
+        <button onClick={() => setCodeOpen(true)}
+          style={{background:"none",border:"none",color:"rgba(184,147,106,.5)",fontSize:11,cursor:"pointer",fontFamily:"'Assistant',sans-serif",textDecoration:"underline"}}>
+          כבר רכשת? הזן קוד
+        </button>
+      ) : (
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <input
+            className={`prem-input ${err ? "shake" : ""}`}
+            placeholder="קוד גישה..."
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && tryCode()}
+            style={{direction:"ltr",textAlign:"center",letterSpacing:3}}
+            autoFocus
+          />
+          <button className="prem-btn" style={{padding:"8px 16px",fontSize:13}} onClick={tryCode}>
+            אישור
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─── TODAY STATS BAR ───────────────────────────────────────────
 const TodayStatsBar = ({ tips }) => {
@@ -1630,83 +1669,104 @@ Return ONLY valid JSON:
 
 // ─── AI FETCH ──────────────────────────────────────────────────
 async function fetchMatchesFromAI(sport) {
+  if (!API_KEY) return [];
   const today = new Date();
   const dateStr = today.toLocaleDateString("he-IL", {day:"2-digit",month:"2-digit",year:"numeric"});
   const dayName = ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"][today.getDay()];
 
-  const prompt = `You are an advanced sports betting algorithm. Today is ${dateStr} (יום ${dayName}).
+  const prompt = `You are an elite sports betting quantitative analyst with real-time knowledge of today's matches (${dateStr}, יום ${dayName}).
 
 ## MISSION
-Find exactly 10 ${sport==="football"?"football":"basketball"} matches for TODAY with the highest EV (Expected Value) in the odds range ${ODDS_MIN}–${ODDS_MAX}.
+Find exactly 10 ${sport==="football"?"football":"basketball"} matches for TODAY with the highest positive Expected Value (EV) on Winner.co.il, strictly within odds ${ODDS_MIN}–${ODDS_MAX}.
 
-## STEP 1 — DATA COLLECTION (simulate searching public sources)
+## STEP 1 — DATA COLLECTION
 For each candidate match, gather from your knowledge base:
-- Current league standings: points, wins, draws, losses, goals for/against
-- Last 5–10 results for each team (home record separate from away record)
-- Head-to-head (H2H): last 5 meetings, who won, scores
-- Attack/defense stats: avg goals scored, avg goals conceded, xG where available
-- Key absences: injured star players, suspended key defender, manager sacked recently
-- Home/away split: % wins at home for home team, % losses away for away team
-- Tournament context: must-win, dead rubber, fatigue from midweek, altitude
+- Current league table: position, points, form (last 5 home for home team, last 5 away for away team)
+- Exact last-5-match results with scores for each team
+- Head-to-head: last 5 meetings (date, score, venue, who won)
+- Attack/defense: average goals scored, conceded, xG where available, clean sheets last 5
+- Key absences: injured key attackers (-0.15 on P_real), suspended key defenders (-0.10 on P_real)
+- Context: must-win, dead rubber, cup vs league, midweek fatigue flag, travel distance
+- Line movement: if odds moved since opening, note direction (closing line value indicator)
 
 ## STEP 2 — ALGORITHM (apply for EACH match)
 
-**2a. Implied probability (from bookmaker odds):**
-P_imp = 1 / odds
-Then normalize: P_imp_norm = P_imp / (1/o1 + 1/oX + 1/o2) — removes vig
+**2a. Implied probability (remove bookmaker margin):**
+P_imp(side) = (1/odds_side) / (1/o1 + 1/oX + 1/o2)
 
-**2b. Statistical probability (from data):**
-P_stat = 0.30 × P_home_win_rate
-       + 0.20 × P_away_loss_rate
-       + 0.20 × P_H2H_win_rate
-       + 0.20 × P_attack_defense_edge
-       + 0.10 × P_injury_adjustment
-(Injury adjustment: -0.05 if home key striker out; +0.05 if away key defender missing)
+**2b. Statistical probability — Poisson/Elo hybrid:**
+For football:
+  λ_home = home_attack_strength × away_defense_weakness × league_avg_goals × 1.32
+  λ_away = away_attack_strength × home_defense_weakness × league_avg_goals
+  P_home = Σ P(goals_home > goals_away) over Poisson distributions
+  P_draw = Σ P(goals_home = goals_away)
+  P_away = 1 − P_home − P_draw
+  Injury adjustment: subtract 0.08 per missing key attacker, add 0.05 per missing opp key defender
 
-**2c. Real probability:**
-P_real = 0.55 × P_imp_norm + 0.45 × P_stat
+For basketball:
+  Use Elo ratings + pace-adjusted efficiency differential
+  Home court advantage: +3.5 points spread equivalent
 
-**2d. EV:**
+**2c. Ensemble probability:**
+P_real = 0.45 × P_imp + 0.35 × P_poisson + 0.20 × P_elo_form
+(P_elo_form = weighted win% last 8 games, home/away split, decaying older games 0.7^n)
+
+**2d. Kelly Criterion:**
+b = odds − 1
+Kelly_f = (P_real × b − (1 − P_real)) / b
+Full Kelly > 0.04 → strong value
+Full Kelly 0.02–0.04 → moderate value
+Full Kelly < 0.02 → skip
+
+**2e. EV and quality gate:**
 EV = (P_real × odds) − 1
-Keep ONLY matches where EV > 0 AND P_real > P_imp_norm
+Include ONLY if:
+  - EV > 0.03 (minimum 3% edge)
+  - P_real > P_imp (we are smarter than the book)
+  - Kelly_f > 0.02
+  - Odds in ${ODDS_MIN}–${ODDS_MAX} (preferred center: 1.52–1.78)
+  - sourcesMatch: odds within ±0.08 across Winner, 365scores, bet365
+  - No dead-rubber flag (match has competitive stakes)
+  - winnerAvailable: league is in Winner.co.il
 
-**2e. Quality filter:**
-- Odds strictly between ${ODDS_MIN} and ${ODDS_MAX} (preferred center: 1.55–1.75)
-- Stable league with sufficient data (not obscure regional cup)
-- sourcesMatch: true (odds consistent across Winner, 365scores, bet365 within ±0.08)
-- winnerAvailable: true (league/match listed on Winner.co.il)
-- No high-risk flags: no heavily rotated squad, no extreme weather, no travel fatigue
+**2f. Confidence score (0–100):**
+conf = round(P_real × 100)
+Boost +4 if Kelly_f > 0.06
+Boost +3 if last 3 H2H favor this side
+Boost +2 if odds moved in our favor (CLV indicator)
+Penalty −5 if key player absent
+Penalty −3 if travel fatigue
 
-## STEP 3 — WINNER.CO.IL FILTER
-ONLY include matches available on Winner.co.il:
-Covered: EPL, LaLiga, Bundesliga, SerieA, Ligue1, CoupeFR, UCL, UEL, NBA, EuroLeague, Israeli Premier League, BSL (Israeli basketball), J1, MLS, Eredivisie, Brasileirão, Copa Libertadores, Copa Sudamericana, Ekstraklasa, Allsvenskan, Belgian Pro League, Greek Super League, Portuguese Liga, Turkish SL, ACB, LegaBK
-NOT covered: obscure regional leagues, lower divisions, minor cup games
+## STEP 3 — WINNER.CO.IL AVAILABILITY
+Only include leagues from this list: EPL, LaLiga, Bundesliga, SerieA, Ligue1, CoupeFR, UCL, UEL, NBA, EL, ISL, BSL, J1, CSL, ACB, LegaBK, MLS, Eredivisie, LigaBr, LibertaCopa, SudameCopa, Ekstraklasa, Allsvenskan, ProLeague, GreekSL, PortLiga, TurSL
+Exclude: lower divisions (2nd/3rd tier), obscure regional cups, friendly matches
 
-## STEP 4 — OUTPUT
-Return the top 10 matches ranked by EV descending. For each, provide complete data.
+## STEP 4 — RANKING
+Sort top 10 by Kelly_f descending. For each match output FULL data.
 
-Return ONLY valid JSON, no markdown:
+Return ONLY valid JSON (no markdown, no preamble):
 {
   "matches": [
     {
       "id": "unique_id",
       "sport": "${sport}",
-      "leagueKey": "one of: EPL,LaLiga,Bundesliga,SerieA,Ligue1,CoupeFR,UCL,UEL,NBA,ISL,BSL,J1,CSL,EL,ACB,LegaBK,MLS,Eredivisie,LigaBr,LibertaCopa,SudameCopa,Ekstraklasa,Allsvenskan,ProLeague,GreekSL,PortLiga,TurSL",
-      "league": "full league name in Hebrew",
+      "leagueKey": "one of the league keys above",
+      "league": "full name in Hebrew",
       "country": "country in Hebrew",
-      "home": "exact team name in Hebrew — correct spelling",
-      "away": "exact team name in Hebrew — correct spelling",
-      "time": "${dateStr.split('/').reverse().slice(1).join('/')||dateStr} · HH:MM",
+      "home": "team name in Hebrew",
+      "away": "team name in Hebrew",
+      "time": "${dateStr.split('/').slice(0,2).reverse().join('/')||dateStr} · HH:MM",
       "hForm": ["W","W","D","L","W"],
       "aForm": ["L","D","W","W","L"],
-      "o1": "home odds",
-      "oX": "draw odds",
-      "o2": "away odds",
-      "bestSide": "1 or 2 — whichever has EV > 0 in range ${ODDS_MIN}–${ODDS_MAX}",
-      "conf": "P_real as integer 0-100",
-      "ev": "EV rounded to 3 decimal places",
-      "pImp": "P_imp_norm rounded to 3 decimal places",
-      "pReal": "P_real rounded to 3 decimal places",
+      "o1": "1.XX",
+      "oX": "X.XX",
+      "o2": "X.XX",
+      "bestSide": "1 or 2",
+      "conf": 68,
+      "ev": "0.089",
+      "kelly": "0.051",
+      "pImp": "0.581",
+      "pReal": "0.634",
       "winnerAvailable": true,
       "sourcesMatch": true,
       "sources": ["ווינר","365","bet365"],
@@ -1720,7 +1780,7 @@ Return ONLY valid JSON, no markdown:
         {"market":"מעל/מתחת שערים","pick":"מעל 2.5","odds":"1.72","tag":"rec"},
         {"market":"שתי קבוצות כובשות","pick":"לא","odds":"1.62","tag":""}
       ],
-      "analysis": "3-4 משפטים בעברית: ציין P_imp, P_real, EV, סטטיסטיקות ספציפיות (אחוז ניצחונות בית, H2H, xG), סיבה מדוע יש ערך מול מרווח הספר. לדוגמה: 'אחוז ניצחון ביתי של 67%, H2H 4-1 בזכות הבית, P_real=0.63 מול P_imp=0.58 — EV חיובי של 0.089'",
+      "analysis": "3-4 משפטים: P_imp=X.XX, P_real=X.XX, EV=+X.XX, Kelly=X.X%. ציין נתונים ספציפיים: xG, H2H, אחוז ניצחון ביתי/חוץ, פציעות, מגמה. לדוגמה: 'אחוז ניצחון ביתי 67% ב-10 משחקים אחרונים, H2H 4-1, xG 1.8 מול 0.9. P_real=0.63 מול P_imp=0.58 — EV חיובי 8.9% עם Kelly 5.1%.'",
       "stats": [
         {"val":"1.85","lbl":"xG ביתי","color":"o"},
         {"val":"1.10","lbl":"xG חוץ","color":"o"},
@@ -1728,8 +1788,8 @@ Return ONLY valid JSON, no markdown:
         {"val":"38%","lbl":"% הפסד חוץ"}
       ],
       "h2h": [
-        {"d":"Mar 26","s":"2-0","c":"League name"},
-        {"d":"Oct 25","s":"1-0","c":"League name"}
+        {"d":"Mar 26","s":"2-0","c":"League"},
+        {"d":"Oct 25","s":"1-0","c":"League"}
       ]
     }
   ]
@@ -1750,8 +1810,14 @@ Return ONLY valid JSON, no markdown:
   });
   const data = await resp.json();
   const txt = (data.content||[]).find(b=>b.type==="text")?.text||"";
-  const clean = txt.replace(/```json|```/g,"").trim();
-  return JSON.parse(clean).matches||[];
+  const clean = txt.replace(/```json[\s\S]*?```|```/g, m => m.startsWith("```json") ? m.slice(7,-3) : "").replace(/```/g,"").trim();
+  const jsonMatch = clean.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return [];
+  try {
+    return JSON.parse(jsonMatch[0]).matches || [];
+  } catch {
+    return [];
+  }
 }
 
 // ─── WINNER AVAILABILITY CHECK ─────────────────────────────────
