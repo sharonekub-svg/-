@@ -69,6 +69,81 @@ const LM = {
   TurSL:      { name:"סופר ליג טורקיה",      flag:"🇹🇷", c:"#E30A17" },
 };
 
+const WC2026_GROUPS = [
+  { id:"A", teams:[
+    {name:"מקסיקו",flag:"🇲🇽",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ג'מייקה",flag:"🇯🇲",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ונצואלה",flag:"🇻🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אקוודור",flag:"🇪🇨",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"B", teams:[
+    {name:'ארה"ב',flag:"🇺🇸",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קנדה",flag:"🇨🇦",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אורוגוואי",flag:"🇺🇾",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"בוליביה",flag:"🇧🇴",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"C", teams:[
+    {name:"ארגנטינה",flag:"🇦🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"צ'ילה",flag:"🇨🇱",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פרו",flag:"🇵🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פרגוואי",flag:"🇵🇾",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"D", teams:[
+    {name:"ברזיל",flag:"🇧🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קולומביה",flag:"🇨🇴",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פנמה",flag:"🇵🇦",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קוסטה ריקה",flag:"🇨🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"E", teams:[
+    {name:"ספרד",flag:"🇪🇸",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"מרוקו",flag:"🇲🇦",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פורטוגל",flag:"🇵🇹",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קרואטיה",flag:"🇭🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"F", teams:[
+    {name:"צרפת",flag:"🇫🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"גרמניה",flag:"🇩🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"גאנה",flag:"🇬🇭",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קוט ד'איבואר",flag:"🇨🇮",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"G", teams:[
+    {name:"אנגליה",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"הולנד",flag:"🇳🇱",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"טורקיה",flag:"🇹🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ניגריה",flag:"🇳🇬",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"H", teams:[
+    {name:"בלגיה",flag:"🇧🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"יפן",flag:"🇯🇵",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"סנגל",flag:"🇸🇳",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אלג'יריה",flag:"🇩🇿",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"I", teams:[
+    {name:"איטליה",flag:"🇮🇹",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"פולין",flag:"🇵🇱",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"סקוטלנד",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"גינאה",flag:"🇬🇳",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"J", teams:[
+    {name:"שוויץ",flag:"🇨🇭",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קוריאה",flag:"🇰🇷",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"קמרון",flag:"🇨🇲",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אוסטרליה",flag:"🇦🇺",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"K", teams:[
+    {name:"דנמרק",flag:"🇩🇰",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אירלנד",flag:"🇮🇪",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"טוניסיה",flag:"🇹🇳",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אינדונזיה",flag:"🇮🇩",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+  { id:"L", teams:[
+    {name:"סרביה",flag:"🇷🇸",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"אוקראינה",flag:"🇺🇦",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ניו זילנד",flag:"🇳🇿",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+    {name:"ג'ורדן",flag:"🇯🇴",host:false,pts:0,w:0,d:0,l:0,gf:0,ga:0},
+  ]},
+];
+
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -397,6 +472,72 @@ body,#root{background:#0D0D0D;color:#F5E6CC;font-family:'Barlow',sans-serif;dire
 .stat-val{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:.5px;line-height:1}
 .stat-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#B8936A;margin-top:2px}
 .stat-divider{width:1px;background:rgba(61,26,10,.5);align-self:stretch;margin:0 4px}
+
+/* ── BOTTOM NAV ──────────────────────────────────────────────── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(8,0,0,.97);backdrop-filter:blur(14px);border-top:1px solid rgba(196,12,12,.25);display:flex;padding:0 4px;padding-bottom:env(safe-area-inset-bottom,0)}
+.bn-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px 6px;cursor:pointer;border:none;background:transparent;color:rgba(184,147,106,.55);transition:all .15s;position:relative;min-width:0}
+.bn-tab.active{color:#FF6200}
+.bn-tab.active .bn-ic{background:linear-gradient(135deg,#C40C0C22,#FF620011);border-color:rgba(196,12,12,.3)}
+.bn-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;border:1px solid transparent;margin-bottom:3px;transition:all .15s}
+.bn-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.bn-badge{position:absolute;top:4px;right:calc(50% - 20px);background:#C40C0C;color:white;border-radius:8px;padding:1px 5px;font-size:8px;font-weight:700;font-family:'Barlow Condensed',sans-serif;min-width:14px;text-align:center}
+body,#root{padding-bottom:60px}
+
+/* ── LIVE SECTION ────────────────────────────────────────────── */
+.live-card{background:linear-gradient(160deg,#1A0A0A,#130505);border:1px solid rgba(196,12,12,.35);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.live-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#C40C0C,#FF6200);animation:sh 2s ease infinite}
+.live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(196,12,12,.15);border:1px solid rgba(196,12,12,.4);color:#FF6200;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;border-radius:20px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#FF6200;animation:pulse 1s ease infinite}
+.live-score{display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 0 10px}
+.live-team{font-family:'Bebas Neue',cursive;font-size:22px;color:white;letter-spacing:.5px;flex:1;text-align:center}
+.live-score-num{font-family:'Bebas Neue',cursive;font-size:38px;color:#FFD166;letter-spacing:2px;line-height:1}
+.live-sep{font-family:'Bebas Neue',cursive;font-size:22px;color:rgba(196,12,12,.5)}
+.live-events{display:flex;flex-direction:column;gap:4px;padding:6px 0}
+.live-event{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#B8936A;display:flex;align-items:center;gap:6px}
+.live-min{color:#FF6200;font-weight:700;min-width:28px}
+
+/* ── FINISHED SECTION ───────────────────────────────────────── */
+.fin-card{background:linear-gradient(160deg,#111,#0D0D0D);border:1px solid rgba(61,26,10,.6);border-radius:14px;padding:12px 14px}
+.fin-score{font-family:'Bebas Neue',cursive;font-size:32px;color:white;letter-spacing:2px;text-align:center;line-height:1}
+.fin-teams{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.fin-team-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:white}
+.poss-bar{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin:8px 0}
+.poss-fill{height:100%;background:linear-gradient(90deg,#C40C0C,#FF6200);border-radius:3px}
+.fin-stat-row{display:flex;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#B8936A;letter-spacing:.5px}
+
+/* ── WORLD CUP 2026 ─────────────────────────────────────────── */
+.wc-header{background:linear-gradient(135deg,#1A1200,#2A1A00,#1A0800);border:1px solid rgba(255,215,0,.25);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden}
+.wc-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#FFD166,#FF6200,#FFD166);background-size:200%;animation:sh 3s ease infinite}
+.wc-title{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:3px;background:linear-gradient(135deg,#FFD166,#FF6200);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.wc-sub{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#B8936A;margin-top:4px}
+.wc-hosts{display:flex;justify-content:center;gap:12px;margin-top:12px}
+.wc-host{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#FFD166;letter-spacing:1px;display:flex;align-items:center;gap:4px}
+.wc-tabs{display:flex;gap:6px;margin-bottom:18px}
+.wc-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:7px 16px;border-radius:8px;border:1px solid rgba(255,215,0,.2);background:rgba(255,215,0,.04);color:#B8936A;cursor:pointer;transition:all .15s}
+.wc-tab.active{background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,98,0,.08));border-color:rgba(255,215,0,.4);color:#FFD166}
+.wc-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.wc-group{background:rgba(255,215,0,.03);border:1px solid rgba(255,215,0,.15);border-radius:10px;overflow:hidden}
+.wc-group-hdr{padding:7px 12px;background:rgba(255,215,0,.08);border-bottom:1px solid rgba(255,215,0,.15);font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:2px;color:#FFD166;display:flex;align-items:center;justify-content:space-between}
+.wc-team-row{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid rgba(255,215,0,.07)}
+.wc-team-row:last-child{border-bottom:none}
+.wc-team-flag{font-size:16px;flex-shrink:0}
+.wc-team-name{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#F5E6CC;flex:1}
+.wc-team-pts{font-family:'Bebas Neue',cursive;font-size:16px;color:#FFD166;min-width:20px;text-align:left}
+.wc-team-host{font-size:9px;color:#FF6200;letter-spacing:.5px;font-family:'Barlow Condensed',sans-serif;font-weight:700}
+.wc-match{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,215,0,.1);border-radius:9px;margin-bottom:6px}
+.wc-match-teams{flex:1}
+.wc-match-home{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:white}
+.wc-match-date{font-family:'Barlow Condensed',sans-serif;font-size:9px;color:#B8936A;letter-spacing:.5px;margin-top:2px}
+.wc-match-score{font-family:'Bebas Neue',cursive;font-size:22px;color:#FFD166;min-width:50px;text-align:center}
+.wc-stadium{font-family:'Barlow Condensed',sans-serif;font-size:9px;color:rgba(184,147,106,.5);margin-top:2px;display:flex;align-items:center;gap:3px}
+
+/* ── LEAGUES VIEW ────────────────────────────────────────────── */
+.league-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.league-card{background:rgba(255,255,255,.03);border:1px solid rgba(61,26,10,.5);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.league-card:hover,.league-card.active{transform:translateY(-2px);border-color:rgba(196,12,12,.4)}
+.league-card.active{background:rgba(196,12,12,.08)}
+.league-card-flag{font-size:28px}
+.league-card-name{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;color:#F5E6CC}
 `;
 
 // ─── TRACKER HELPERS ───────────────────────────────────────────
@@ -1460,6 +1601,51 @@ const Modal = ({m, onClose, onAddTip}) => {
   );
 };
 
+// ─── LIVE MATCHES FETCH ────────────────────────────────────────
+async function fetchLiveMatches(sport) {
+  if (!API_KEY) return [];
+  const prompt = `You are a live sports data feed. Return exactly 6 currently live ${sport==="football"?"football":"basketball"} matches happening right now.
+For each match return:
+- Home/away teams (in Hebrew), current score (e.g. "2-1"), current minute (e.g. "67'")
+- League name (in Hebrew), current in-play odds (1X2 for football, ML for basketball)
+- Recent events: goals or cards in last 10 minutes (2-3 events max)
+Return ONLY valid JSON:
+{"matches":[{"id":"l1","home":"מנצ'סטר סיטי","away":"ארסנל","score":"1-0","minute":"34'","league":"פרמיר ליג","leagueKey":"EPL","o1":"1.55","oX":"4.20","o2":"5.50","events":[{"min":"28'","text":"שער! האלנד 1-0"},{"min":"31'","text":"כרטיס צהוב — פרטי"}]}]}`;
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01"},
+      body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1500,messages:[{role:"user",content:prompt}]})
+    });
+    const d = await resp.json();
+    const txt = (d.content||[]).find(b=>b.type==="text")?.text||"";
+    return JSON.parse(txt.replace(/```json|```/g,"").trim()).matches||[];
+  } catch { return []; }
+}
+
+// ─── FINISHED MATCHES FETCH ────────────────────────────────────
+async function fetchFinishedMatches(sport) {
+  if (!API_KEY) return [];
+  const today = new Date().toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const prompt = `You are a sports results database. Return exactly 8 ${sport==="football"?"football":"basketball"} matches that FINISHED today (${today}).
+For each match return:
+- Home/away teams (in Hebrew), final score, winning team, scorers with minutes
+- League name (in Hebrew), possession % (football only), shots on target
+- Whether any common bet (home win/away win) was correct
+Return ONLY valid JSON:
+{"matches":[{"id":"d1","home":"ברצלונה","away":"ריאל מדריד","score":"2-1","winner":"home","scorers":["לוויין 23'","פדרי 67'"],"leagueKey":"LaLiga","league":"לה ליגה","possession":{"home":58,"away":42},"shots":{"home":14,"away":9},"betCorrect":true}]}`;
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01"},
+      body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1800,messages:[{role:"user",content:prompt}]})
+    });
+    const d = await resp.json();
+    const txt = (d.content||[]).find(b=>b.type==="text")?.text||"";
+    return JSON.parse(txt.replace(/```json|```/g,"").trim()).matches||[];
+  } catch { return []; }
+}
+
 // ─── AI FETCH ──────────────────────────────────────────────────
 async function fetchMatchesFromAI(sport) {
   const today = new Date();
@@ -2035,9 +2221,333 @@ const FALLBACK = {
   ]
 };
 
+// ─── BOTTOM NAV ────────────────────────────────────────────────
+const BottomNav = ({ view, setView, pendingCount }) => {
+  const tabs = [
+    { key:"matches", icon:"🏠", label:"ראשי" },
+    { key:"live",    icon:"🔴", label:"לייב" },
+    { key:"finished",icon:"✅", label:"תקצירים" },
+    { key:"tracker", icon:"🎯", label:"תופס",  badge: pendingCount > 0 ? pendingCount : null },
+    { key:"wc2026",  icon:"🏆", label:"מונדיאל" },
+    { key:"leagues", icon:"⚽", label:"ליגות" },
+  ];
+  return (
+    <nav className="bottom-nav">
+      {tabs.map(t => (
+        <button key={t.key} className={`bn-tab ${view===t.key?"active":""}`} onClick={()=>setView(t.key)}>
+          {t.badge != null && <span className="bn-badge">{t.badge}</span>}
+          <div className="bn-ic">{t.icon}</div>
+          <div className="bn-lbl">{t.label}</div>
+        </button>
+      ))}
+    </nav>
+  );
+};
+
+// ─── LIVE MATCH CARD ───────────────────────────────────────────
+const LiveMatchCard = ({ m }) => (
+  <div className="live-card">
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+      <div className="live-badge">
+        <div className="live-dot"/>
+        לייב · {m.minute}
+      </div>
+      <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:1}}>{m.league}</span>
+    </div>
+    <div className="live-score">
+      <div className="live-team" style={{textAlign:"right"}}>{m.home}</div>
+      <div style={{display:"flex",alignItems:"center",gap:4}}>
+        <div className="live-score-num">{m.score}</div>
+      </div>
+      <div className="live-team" style={{textAlign:"left"}}>{m.away}</div>
+    </div>
+    {m.events && m.events.length > 0 && (
+      <div className="live-events">
+        {m.events.map((ev,i) => (
+          <div key={i} className="live-event">
+            <span className="live-min">{ev.min}</span>
+            <span>{ev.text}</span>
+          </div>
+        ))}
+      </div>
+    )}
+    {m.o1 && (
+      <div style={{display:"flex",gap:6,marginTop:10}}>
+        {[{l:"1",v:m.o1},{l:"X",v:m.oX},{l:"2",v:m.o2}].map((c,i) => (
+          <div key={i} style={{flex:1,textAlign:"center",background:"rgba(255,255,255,.04)",border:"1px solid rgba(61,26,10,.4)",borderRadius:7,padding:"5px 4px"}}>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:"#B8936A",letterSpacing:1.5}}>{c.l}</div>
+            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:19,color:"white"}}>{c.v}</div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+// ─── LIVE VIEW ─────────────────────────────────────────────────
+const LiveView = ({ sport }) => {
+  const [liveMatches, setLiveMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchLiveMatches(sport).then(data => {
+      setLiveMatches(data);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [sport]);
+
+  const LIVE_FALLBACK = [
+    {id:"lf1",home:"מנצ'סטר יונייטד",away:"צ'לסי",score:"1-0",minute:"54'",league:"פרמיר ליג",leagueKey:"EPL",o1:"1.55",oX:"3.80",o2:"6.00",events:[{min:"49'",text:"שער! בראשיק 1-0"},{min:"52'",text:"כרטיס צהוב — גלגלחא'"}]},
+    {id:"lf2",home:"ריאל מדריד",away:"ברצלונה",score:"0-0",minute:"28'",league:"לה ליגה",leagueKey:"LaLiga",o1:"1.80",oX:"3.60",o2:"4.20",events:[{min:"22'",text:"כרטיס צהוב — למין ימל"},{min:"26'",text:"ניסיון שער — ויניסיוס"}]},
+    {id:"lf3",home:"באיירן מינכן",away:"בורוסיה דורטמונד",score:"2-1",minute:"71'",league:"בונדסליגה",leagueKey:"Bundesliga",o1:"1.45",oX:"4.50",o2:"6.50",events:[{min:"62'",text:"שער! קיין 2-1"},{min:"68'",text:"כרטיס אדום — הוּמלס"}]},
+    {id:"lf4",home:"ניקס",away:"סלטיקס",score:"54-58",minute:"Q3",league:"NBA",leagueKey:"NBA",o1:"2.10",oX:"22.00",o2:"1.70",events:[{min:"Q3","text":"בראנסון 18 נקודות"},{min:"Q3",text:"ריבאונד גדול — הארטנשטיין"}]},
+  ];
+
+  const items = liveMatches.length > 0 ? liveMatches : (!loading ? LIVE_FALLBACK : []);
+
+  return (
+    <div className="wrap">
+      <div className="sec-hdr" style={{marginBottom:16}}>
+        <div className="sec-ttl">🔴 משחקים לייב</div>
+        <div className="sec-ct">{items.length} משחקים פעילים</div>
+        <div className="sec-line"/>
+      </div>
+      {loading ? (
+        <div className="loading-box"><div className="spin"/><div className="load-txt">טוען משחקים חיים...</div></div>
+      ) : items.length === 0 ? (
+        <div style={{textAlign:"center",padding:"60px 20px",color:"rgba(184,147,106,.5)"}}>
+          <div style={{fontSize:48,marginBottom:14}}>📡</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,letterSpacing:2,textTransform:"uppercase"}}>אין משחקים חיים כרגע</div>
+        </div>
+      ) : (
+        <div className="grid">
+          {items.map(m => <LiveMatchCard key={m.id} m={m}/>)}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── FINISHED MATCH CARD ───────────────────────────────────────
+const FinishedMatchCard = ({ m }) => {
+  const lm = LM[m.leagueKey] || {};
+  const homeWon = m.winner === "home";
+  const awayWon = m.winner === "away";
+  return (
+    <div className="fin-card">
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:1,display:"flex",alignItems:"center",gap:4}}>
+          {lm.flag||"🏆"} {m.league}
+        </span>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,letterSpacing:1,
+          color:m.betCorrect?"#4ade80":"#f87171",
+          background:m.betCorrect?"rgba(74,222,128,.08)":"rgba(248,113,113,.06)",
+          border:`1px solid ${m.betCorrect?"rgba(74,222,128,.25)":"rgba(248,113,113,.2)"}`,
+          borderRadius:4,padding:"2px 7px"}}>
+          {m.betCorrect!=null ? (m.betCorrect ? "✓ הימור נכון" : "✕ הימור נפל") : "⏳ לא עקבנו"}
+        </span>
+      </div>
+      <div className="fin-teams">
+        <div className="fin-team-name" style={{color:homeWon?"#FFD166":"white",opacity:awayWon?.55:1}}>{m.home}</div>
+        <div className="fin-score">{m.score}</div>
+        <div className="fin-team-name" style={{textAlign:"left",color:awayWon?"#FFD166":"white",opacity:homeWon?.55:1}}>{m.away}</div>
+      </div>
+      {m.possession && (
+        <>
+          <div className="fin-stat-row"><span>כדור ביתי</span><span>כדור חוץ</span></div>
+          <div className="poss-bar">
+            <div className="poss-fill" style={{width:`${m.possession.home}%`}}/>
+          </div>
+          <div className="fin-stat-row"><span>{m.possession.home}%</span><span>{m.possession.away}%</span></div>
+        </>
+      )}
+      {m.scorers && m.scorers.length > 0 && (
+        <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:4}}>
+          {m.scorers.map((s,i)=>(
+            <span key={i} style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#B8936A",background:"rgba(255,255,255,.04)",border:"1px solid rgba(61,26,10,.4)",borderRadius:4,padding:"2px 7px"}}>⚽ {s}</span>
+          ))}
+        </div>
+      )}
+      {m.shots && (
+        <div className="fin-stat-row" style={{marginTop:8}}>
+          <span>יריות: {m.shots.home}</span>
+          <span>{m.shots.away} :יריות</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── FINISHED VIEW ─────────────────────────────────────────────
+const FinishedView = ({ sport }) => {
+  const [finMatches, setFinMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchFinishedMatches(sport).then(data => {
+      setFinMatches(data);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [sport]);
+
+  const FIN_FALLBACK = [
+    {id:"ff1",home:"ליברפול",away:"טוטנהאם",score:"3-1",winner:"home",scorers:["סאלח 12'","נונז 44'","גאקפו 78'"],leagueKey:"EPL",league:"פרמיר ליג",possession:{home:62,away:38},shots:{home:18,away:7},betCorrect:true},
+    {id:"ff2",home:"אינטר מילאן",away:"יובנטוס",score:"0-0",winner:"draw",scorers:[],leagueKey:"SerieA",league:"סרי א",possession:{home:51,away:49},shots:{home:9,away:8},betCorrect:false},
+    {id:"ff3",home:"פריז",away:"מרסיי",score:"2-0",winner:"home",scorers:["דמבלה 33'","ב. סאקה 67'"],leagueKey:"Ligue1",league:"ליג 1",possession:{home:58,away:42},shots:{home:15,away:5},betCorrect:true},
+    {id:"ff4",home:"אתלטיקו מדריד",away:"ויאריאל",score:"1-0",winner:"home",scorers:["מוראטה 55'"],leagueKey:"LaLiga",league:"לה ליגה",possession:{home:44,away:56},shots:{home:10,away:14},betCorrect:true},
+  ];
+
+  const items = finMatches.length > 0 ? finMatches : (!loading ? FIN_FALLBACK : []);
+
+  return (
+    <div className="wrap">
+      <div className="sec-hdr" style={{marginBottom:16}}>
+        <div className="sec-ttl">✅ תקצירי היום</div>
+        <div className="sec-ct">{items.length} משחקים הסתיימו</div>
+        <div className="sec-line"/>
+      </div>
+      {loading ? (
+        <div className="loading-box"><div className="spin"/><div className="load-txt">טוען תוצאות...</div></div>
+      ) : items.length === 0 ? (
+        <div style={{textAlign:"center",padding:"60px 20px",color:"rgba(184,147,106,.5)"}}>
+          <div style={{fontSize:48,marginBottom:14}}>📋</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,letterSpacing:2,textTransform:"uppercase"}}>אין תוצאות להיום עדיין</div>
+        </div>
+      ) : (
+        <div className="grid">
+          {items.map(m => <FinishedMatchCard key={m.id} m={m}/>)}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── WC 2026 VIEW ──────────────────────────────────────────────
+const WC_SCHEDULE = [
+  {date:"11 יוני 2026",home:"מקסיקו 🇲🇽",away:"ג'מייקה 🇯🇲",group:"A",stadium:"אזטקה, מקסיקו סיטי"},
+  {date:"11 יוני 2026",home:'ארה"ב 🇺🇸',away:"קנדה 🇨🇦",group:"B",stadium:"מטלייף סטיום, ניו ג'רזי"},
+  {date:"12 יוני 2026",home:"ארגנטינה 🇦🇷",away:"צ'ילה 🇨🇱",group:"C",stadium:"דאלאס, טקסס"},
+  {date:"12 יוני 2026",home:"ברזיל 🇧🇷",away:"קולומביה 🇨🇴",group:"D",stadium:"לוס אנג'לס"},
+  {date:"13 יוני 2026",home:"ספרד 🇪🇸",away:"מרוקו 🇲🇦",group:"E",stadium:"מיאמי"},
+  {date:"13 יוני 2026",home:"צרפת 🇫🇷",away:"גרמניה 🇩🇪",group:"F",stadium:"אטלנטה"},
+  {date:"14 יוני 2026",home:"אנגליה 🏴󠁧󠁢󠁥󠁮󠁧󠁿",away:"הולנד 🇳🇱",group:"G",stadium:"סיאטל"},
+  {date:"14 יוני 2026",home:"בלגיה 🇧🇪",away:"יפן 🇯🇵",group:"H",stadium:"בוסטון"},
+  {date:"15 יוני 2026",home:"איטליה 🇮🇹",away:"פולין 🇵🇱",group:"I",stadium:"ניויורק"},
+  {date:"15 יוני 2026",home:"שוויץ 🇨🇭",away:"קוריאה 🇰🇷",group:"J",stadium:"סן פרנסיסקו"},
+  {date:"16 יוני 2026",home:"דנמרק 🇩🇰",away:"אירלנד 🇮🇪",group:"K",stadium:"קנזס סיטי"},
+  {date:"16 יוני 2026",home:"סרביה 🇷🇸",away:"אוקראינה 🇺🇦",group:"L",stadium:"שיקגו"},
+];
+
+const WC2026View = () => {
+  const [wcTab, setWcTab] = useState("groups");
+  return (
+    <div className="wrap">
+      <div className="wc-header">
+        <div className="wc-title">FIFA WORLD CUP 2026</div>
+        <div className="wc-sub">ארצות הברית · קנדה · מקסיקו · 11 יוני — 19 יולי 2026</div>
+        <div className="wc-hosts">
+          <div className="wc-host">🏟️ ארה"ב</div>
+          <div className="wc-host">🏟️ קנדה</div>
+          <div className="wc-host">🏟️ מקסיקו</div>
+        </div>
+      </div>
+      <div className="wc-tabs">
+        {[{k:"groups",l:"קבוצות"},{k:"schedule",l:"לוח משחקים"},{k:"final",l:"הגמר"}].map(t=>(
+          <button key={t.k} className={`wc-tab ${wcTab===t.k?"active":""}`} onClick={()=>setWcTab(t.k)}>{t.l}</button>
+        ))}
+      </div>
+      {wcTab==="groups" && (
+        <div className="wc-groups">
+          {WC2026_GROUPS.map(g => (
+            <div key={g.id} className="wc-group">
+              <div className="wc-group-hdr">
+                <span>קבוצה {g.id}</span>
+                <span style={{fontSize:10,color:"rgba(255,215,0,.5)",letterSpacing:1}}>W D L PTS</span>
+              </div>
+              {g.teams.map((t,i) => (
+                <div key={i} className="wc-team-row">
+                  <span className="wc-team-flag">{t.flag}</span>
+                  <span className="wc-team-name">{t.name}</span>
+                  {t.host && <span className="wc-team-host">🏟️</span>}
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.5)",minWidth:50,textAlign:"left"}}>0 0 0</span>
+                  <span className="wc-team-pts">0</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+      {wcTab==="schedule" && (
+        <div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>שלב הבתים — סיבוב ראשון</div>
+          {WC_SCHEDULE.map((m,i) => (
+            <div key={i} className="wc-match">
+              <div className="wc-match-teams">
+                <div className="wc-match-home">{m.home} <span style={{color:"rgba(255,215,0,.4)"}}>vs</span> {m.away}</div>
+                <div className="wc-match-date">{m.date} · קבוצה {m.group}</div>
+                <div className="wc-stadium">🏟️ {m.stadium}</div>
+              </div>
+              <div className="wc-match-score">—</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {wcTab==="final" && (
+        <div style={{textAlign:"center",padding:"30px 20px"}}>
+          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:48,letterSpacing:4,background:"linear-gradient(135deg,#FFD166,#FF6200)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",marginBottom:8}}>גמר המונדיאל</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"#B8936A",letterSpacing:2,marginBottom:20}}>19 יולי 2026</div>
+          <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.2)",borderRadius:14,padding:24,maxWidth:480,margin:"0 auto"}}>
+            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,color:"#FFD166",letterSpacing:2,marginBottom:8}}>מטלייף סטיום</div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:12,color:"#B8936A",marginBottom:16}}>איסט ראתרפורד, ניו ג'רזי, ארה"ב</div>
+            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:32,color:"white",letterSpacing:2}}>? vs ?</div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.4)",marginTop:12,letterSpacing:1}}>המשחק המהמר ביותר בהיסטוריה · 80,000 מושבים</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── LEAGUES VIEW ──────────────────────────────────────────────
+const LeaguesView = ({ onLeagueSelect, activeLeague }) => {
+  return (
+    <div className="wrap">
+      <div className="sec-hdr" style={{marginBottom:16}}>
+        <div className="sec-ttl">⚽ ליגות</div>
+        <div className="sec-ct">{Object.keys(LM).length} ליגות</div>
+        <div className="sec-line"/>
+      </div>
+      <div style={{marginBottom:14}}>
+        <button
+          className={`wc-tab ${!activeLeague?"active":""}`}
+          style={{marginBottom:10}}
+          onClick={()=>onLeagueSelect(null)}>
+          הכל
+        </button>
+      </div>
+      <div className="league-grid">
+        {Object.entries(LM).map(([key, lg]) => (
+          <div
+            key={key}
+            className={`league-card ${activeLeague===key?"active":""}`}
+            onClick={()=>onLeagueSelect(key)}
+            style={{borderColor: activeLeague===key ? lg.c+"88" : undefined, background: activeLeague===key ? lg.c+"18" : undefined}}
+          >
+            <div className="league-card-flag">{lg.flag}</div>
+            <div className="league-card-name">{lg.name}</div>
+            <div style={{width:30,height:3,borderRadius:2,background:lg.c,opacity:.7,marginTop:2}}/>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ─── MAIN APP ──────────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState("matches"); // "matches" | "tracker" | "agent"
+  const [view, setView] = useState("matches"); // "matches" | "tracker" | "agent" | "live" | "finished" | "wc2026" | "leagues"
   const [sport, setSport] = useState("football");
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2050,6 +2560,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isPremium, setIsPremium] = useState(loadPremium);
+  const [leagueFilter, setLeagueFilter] = useState(null);
   const logoClickCount = useRef(0);
   const logoTimer = useRef(null);
   const timerRef = useRef(null);
@@ -2156,12 +2667,16 @@ export default function App() {
     return () => clearInterval(countdownRef.current);
   }, [lastUpdate]);
 
-  const filtered = matches.filter(m =>
-    !srch ||
-    m.home.toLowerCase().includes(srch.toLowerCase()) ||
-    m.away.toLowerCase().includes(srch.toLowerCase()) ||
-    (m.league||"").includes(srch)
-  );
+  const filtered = matches.filter(m => {
+    if (leagueFilter && m.leagueKey !== leagueFilter) return false;
+    if (!srch) return true;
+    return (
+      m.home.toLowerCase().includes(srch.toLowerCase()) ||
+      m.away.toLowerCase().includes(srch.toLowerCase()) ||
+      (m.league||"").includes(srch)
+    );
+  });
+  const srchIsQuestion = srch.trim().split(/\s+/).length > 4;
 
   const sorted = [...filtered].sort((a,b) =>
     valueScore(b.o1,b.oX,b.o2,b.bestSide) - valueScore(a.o1,a.oX,a.o2,a.bestSide)
@@ -2186,10 +2701,18 @@ export default function App() {
               <div className="logo">הפוגע</div>
               <div className="logo-s">Sports Analytics AI</div>
             </div>
-            {view==="matches" && (
-              <div className="srch">
-                <span style={{color:"rgba(184,147,106,.5)",fontSize:13}}>🔍</span>
-                <input placeholder="חפש קבוצה..." value={srch} onChange={e=>setSrch(e.target.value)}/>
+            {(view==="matches"||view==="leagues") && (
+              <div style={{display:"flex",alignItems:"center",gap:6,flex:1,maxWidth:400}}>
+                <div className="srch" style={{flex:1}}>
+                  <span style={{color:"rgba(184,147,106,.5)",fontSize:13}}>🔍</span>
+                  <input placeholder="חפש קבוצה או הימור..." value={srch} onChange={e=>setSrch(e.target.value)}/>
+                </div>
+                {srchIsQuestion && (
+                  <button onClick={()=>setView("agent")}
+                    style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:.5,padding:"6px 10px",borderRadius:7,border:"1px solid rgba(196,12,12,.3)",background:"rgba(196,12,12,.12)",color:"#FF6200",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+                    🎯 נתח עם AI
+                  </button>
+                )}
               </div>
             )}
             <nav className="navt">
@@ -2226,7 +2749,24 @@ export default function App() {
           {view==="agent" && (
             <PogueaAgent isPremium={isPremium} onUnlock={unlockPremium}/>
           )}
+          {view==="live" && <LiveView sport={sport}/>}
+          {view==="finished" && <FinishedView sport={sport}/>}
+          {view==="wc2026" && <WC2026View/>}
+          {view==="leagues" && (
+            <LeaguesView
+              activeLeague={leagueFilter}
+              onLeagueSelect={(k)=>{ setLeagueFilter(k); setView("matches"); }}
+            />
+          )}
           <div className="wrap" style={{display:view==="matches"?"block":"none"}}>
+            {leagueFilter && (
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,padding:"7px 12px",background:"rgba(196,12,12,.06)",border:"1px solid rgba(196,12,12,.2)",borderRadius:8}}>
+                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,color:"#FF6200",letterSpacing:1}}>
+                  {LM[leagueFilter]?.flag} {LM[leagueFilter]?.name} — מסנן פעיל
+                </span>
+                <button onClick={()=>setLeagueFilter(null)} style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,letterSpacing:.5,padding:"2px 9px",borderRadius:5,border:"1px solid rgba(196,12,12,.3)",background:"transparent",color:"#FF6200",cursor:"pointer"}}>✕ נקה</button>
+              </div>
+            )}
             <TodayStatsBar tips={tips}/>
             {/* STATUS BAR */}
             <div className="status-bar">
@@ -2357,6 +2897,11 @@ export default function App() {
             onClose={()=>setShowAdminLogin(false)}
           />
         )}
+        <BottomNav
+          view={view}
+          setView={setView}
+          pendingCount={tips.filter(t=>t.status==="pending").length}
+        />
       </div>
     </>
   );
