@@ -1438,6 +1438,7 @@ const MatchCard = ({m, rank, onClick}) => {
         </div>
         <div className="vm-num" style={{color:vsC}}>{vs}</div>
         <div className="vm-hit">{hp}% פגיעה</div>
+        {m.ev && <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:parseFloat(m.ev)>0?"#4ade80":"#f87171",letterSpacing:.5,marginTop:2}}>EV {parseFloat(m.ev)>0?"+":""}{(parseFloat(m.ev)*100).toFixed(1)}%</div>}
       </div>
 
       {/* SOURCE BADGES */}
@@ -1458,6 +1459,7 @@ const MatchCard = ({m, rank, onClick}) => {
           <div style={{marginRight:"auto",textAlign:"center"}}>
             <div className="conf-lbl">ביטחון</div>
             <div className="conf-num" style={{color:m.conf>=75?"#4ade80":m.conf>=65?"#FF6200":"#B8936A"}}>{m.conf}%</div>
+            {m.kelly && <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:"#55d6ff",letterSpacing:1}}>Kelly {(parseFloat(m.kelly)*100).toFixed(1)}%</div>}
           </div>
         </div>
         {(m.picks||[]).map((p,i)=>(
@@ -2607,6 +2609,7 @@ export default function App() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isPremium, setIsPremium] = useState(loadPremium);
   const [leagueFilter, setLeagueFilter] = useState(null);
+  const [isFallback, setIsFallback] = useState(false);
   const logoClickCount = useRef(0);
   const logoTimer = useRef(null);
   const timerRef = useRef(null);
@@ -2655,10 +2658,13 @@ export default function App() {
         return best >= ODDS_MIN && best <= ODDS_MAX;
       });
       clearInterval(stepInterval);
-      setMatches(filtered.length >= 3 ? filtered : FALLBACK[sp]);
+      const result = filtered.length >= 3 ? filtered : FALLBACK[sp];
+      setMatches(result);
+      setIsFallback(filtered.length < 3);
     } catch {
       clearInterval(stepInterval);
       setMatches(FALLBACK[sp]);
+      setIsFallback(true);
     }
     setLastUpdate(new Date());
     setNextRefresh(REFRESH_MS);
@@ -2696,9 +2702,14 @@ export default function App() {
   });
   const srchIsQuestion = srch.trim().split(/\s+/).length > 4;
 
-  const sorted = [...filtered].sort((a,b) =>
-    valueScore(b.o1,b.oX,b.o2,b.bestSide) - valueScore(a.o1,a.oX,a.o2,a.bestSide)
-  );
+  const sorted = [...filtered].sort((a, b) => {
+    const evA = parseFloat(a.ev);
+    const evB = parseFloat(b.ev);
+    if (isFinite(evA) && isFinite(evB)) return evB - evA;
+    if (isFinite(evA)) return -1;
+    if (isFinite(evB)) return 1;
+    return valueScore(b.o1,b.oX,b.o2,b.bestSide) - valueScore(a.o1,a.oX,a.o2,a.bestSide);
+  });
 
   const top = sorted[0];
   const mins = Math.floor(nextRefresh/60000);
@@ -2770,9 +2781,9 @@ export default function App() {
             )}
             {/* STATUS BAR */}
             <div className="status-bar">
-              <div className={`status-dot ${loading?"loading":lastUpdate?"live":"err"}`}/>
+              <div className={`status-dot ${loading?"loading":isFallback?"err":lastUpdate?"live":"err"}`}/>
               <div className="status-txt">
-                {loading ? "מעדכן יחסים..." : `יחסים עדכניים — ${sorted.length} משחקים | טווח 1.40–1.90 בלבד`}
+                {loading ? "מעדכן יחסים..." : isFallback ? `נתוני גיבוי — ${sorted.length} משחקים | AI לא זמין` : `יחסים עדכניים — ${sorted.length} משחקים | טווח 1.40–1.90 בלבד`}
               </div>
               <div className="status-time">
                 {lastUpdate && `עודכן: ${lastUpdate.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}`}
