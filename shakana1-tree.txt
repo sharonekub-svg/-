@@ -1,0 +1,227 @@
+shakana1/
+|-- .ai-codex
+|-- .github
+|  `-- workflows
+|     |-- mobile-ci.yml
+|     `-- supabase-deploy.yml
+|-- .vercel
+|  |-- project.json
+|  `-- README.txt
+|-- api
+|  `-- fetch-product-page.js
+|-- apps
+|  `-- mobile
+|     |-- app
+|     |  |-- (auth)
+|     |  |  |-- _layout.tsx
+|     |  |  |-- address.tsx
+|     |  |  |-- name.tsx
+|     |  |  |-- otp.tsx
+|     |  |  |-- phone.tsx
+|     |  |  |-- success.tsx
+|     |  |  `-- welcome.tsx
+|     |  |-- (tabs)
+|     |  |  |-- order
+|     |  |  |  `-- new.tsx
+|     |  |  |-- _layout.tsx
+|     |  |  |-- account.tsx
+|     |  |  |-- building.tsx
+|     |  |  `-- orders.tsx
+|     |  |-- join
+|     |  |  |-- [token].tsx
+|     |  |  `-- [token].web.tsx
+|     |  |-- order
+|     |  |  |-- [id]
+|     |  |  |  |-- complete.tsx
+|     |  |  |  |-- escrow.tsx
+|     |  |  |  |-- index.tsx
+|     |  |  |  |-- invite.tsx
+|     |  |  |  |-- pay.tsx
+|     |  |  |  `-- pay.web.tsx
+|     |  |  |-- _layout.tsx
+|     |  |  `-- new.tsx
+|     |  |-- profile
+|     |  |  |-- _layout.tsx
+|     |  |  |-- alerts.tsx
+|     |  |  |-- delete.tsx
+|     |  |  |-- index.tsx
+|     |  |  |-- payment.tsx
+|     |  |  |-- privacy.tsx
+|     |  |  `-- terms.tsx
+|     |  |-- store
+|     |  |  |-- orders
+|     |  |  |  `-- [orderId].tsx
+|     |  |  `-- index.tsx
+|     |  |-- _layout.tsx
+|     |  |-- [...missing].tsx
+|     |  |-- +html.tsx
+|     |  |-- auth-callback.tsx
+|     |  |-- index.tsx
+|     |  |-- login.tsx
+|     |  |-- share.tsx
+|     |  |-- user.tsx
+|     |  `-- welcome.tsx
+|     |-- assets
+|     |  |-- adaptive-icon.png
+|     |  |-- icon.png
+|     |  |-- README.md
+|     |  `-- splash.png
+|     |-- scripts
+|     |  |-- patch-web-html.cjs
+|     |  `-- serve-dist.cjs
+|     |-- src
+|     |  |-- __tests__
+|     |  |  |-- deeplinks.test.ts
+|     |  |  |-- israeliCities.test.ts
+|     |  |  |-- locationAutocomplete.test.ts
+|     |  |  `-- sharedProduct.test.ts
+|     |  |-- api
+|     |  |  |-- account.ts
+|     |  |  |-- auth.ts
+|     |  |  |-- invites.ts
+|     |  |  |-- orders.ts
+|     |  |  |-- payments.ts
+|     |  |  |-- payments.web.ts
+|     |  |  |-- productInsights.ts
+|     |  |  `-- profile.ts
+|     |  |-- components
+|     |  |  |-- demo
+|     |  |  |  |-- BuildingSections.tsx
+|     |  |  |  `-- DemoPrimitives.tsx
+|     |  |  |-- primitives
+|     |  |  |  |-- AutoField.tsx
+|     |  |  |  |-- BackBtn.tsx
+|     |  |  |  |-- Button.tsx
+|     |  |  |  |-- EmptyState.tsx
+|     |  |  |  |-- Field.tsx
+|     |  |  |  |-- LanguageSwitcher.tsx
+|     |  |  |  |-- NumField.tsx
+|     |  |  |  |-- ScreenBase.tsx
+|     |  |  |  |-- ShakanaMark.tsx
+|     |  |  |  |-- StepDots.tsx
+|     |  |  |  `-- ToastLayer.tsx
+|     |  |  |-- StripeProviderShim.tsx
+|     |  |  `-- StripeProviderShim.web.tsx
+|     |  |-- demo
+|     |  |  `-- catalog.ts
+|     |  |-- i18n
+|     |  |  `-- locale.ts
+|     |  |-- lib
+|     |  |  |-- deeplinks.ts
+|     |  |  |-- env.ts
+|     |  |  |-- israeliCities.ts
+|     |  |  |-- locationAutocomplete.ts
+|     |  |  |-- posthog.ts
+|     |  |  |-- posthog.web.ts
+|     |  |  |-- secureStorage.ts
+|     |  |  |-- sentry.ts
+|     |  |  |-- sentry.web.ts
+|     |  |  |-- sharedProduct.ts
+|     |  |  |-- streetSearch.ts
+|     |  |  |-- stripe.ts
+|     |  |  `-- supabase.ts
+|     |  |-- stores
+|     |  |  |-- authStore.ts
+|     |  |  |-- demoCommerceStore.ts
+|     |  |  |-- notificationSettingsStore.ts
+|     |  |  |-- orderDraftStore.ts
+|     |  |  |-- paymentSettingsStore.ts
+|     |  |  |-- profileDraftStore.ts
+|     |  |  `-- uiStore.ts
+|     |  |-- theme
+|     |  |  |-- fonts.ts
+|     |  |  |-- rtl.ts
+|     |  |  `-- tokens.ts
+|     |  |-- types
+|     |  |  |-- database.ts
+|     |  |  `-- domain.ts
+|     |  `-- utils
+|     |     |-- format.ts
+|     |     |-- idempotency.ts
+|     |     |-- timer.ts
+|     |     `-- validation.ts
+|     |-- .eslintrc.cjs
+|     |-- .gitignore
+|     |-- app.config.ts
+|     |-- babel.config.js
+|     |-- eas.json
+|     |-- expo-env.d.ts
+|     |-- global.css
+|     |-- index.js
+|     |-- metro.config.js
+|     |-- nativewind-env.d.ts
+|     |-- package.json
+|     |-- tailwind.config.js
+|     `-- tsconfig.json
+|-- scripts
+|  `-- apply-env.sh
+|-- supabase
+|  |-- .temp
+|  |  |-- cli-latest
+|  |  |-- gotrue-version
+|  |  |-- linked-project.json
+|  |  |-- pooler-url
+|  |  |-- postgres-version
+|  |  |-- project-ref
+|  |  |-- rest-version
+|  |  |-- storage-migration
+|  |  `-- storage-version
+|  |-- functions
+|  |  |-- _shared
+|  |  |  |-- cors.ts
+|  |  |  |-- idempotency.ts
+|  |  |  |-- json.ts
+|  |  |  |-- stripe.ts
+|  |  |  `-- supabaseAdmin.ts
+|  |  |-- claim-invite
+|  |  |  `-- index.ts
+|  |  |-- close-order
+|  |  |  `-- index.ts
+|  |  |-- confirm-delivery
+|  |  |  `-- index.ts
+|  |  |-- create-order
+|  |  |  `-- index.ts
+|  |  |-- create-payment-intent
+|  |  |  `-- index.ts
+|  |  |-- delete-account
+|  |  |  `-- index.ts
+|  |  |-- fetch-product-page
+|  |  |  `-- index.ts
+|  |  |-- generate-invite
+|  |  |  `-- index.ts
+|  |  |-- get-order
+|  |  |  `-- index.ts
+|  |  |-- get-order-preview
+|  |  |  `-- index.ts
+|  |  |-- refund-escrow
+|  |  |  `-- index.ts
+|  |  |-- stripe-webhook
+|  |  |  `-- index.ts
+|  |  |-- update-delivery
+|  |  |  `-- index.ts
+|  |  `-- deno.json
+|  |-- migrations
+|  |  |-- 20260424000001_init_schema.sql
+|  |  |-- 20260424000002_rls.sql
+|  |  |-- 20260424000003_functions.sql
+|  |  |-- 20260428000001_delivery_pickup_flow.sql
+|  |  |-- 20260429000001_timer_based_orders.sql
+|  |  |-- 20260429000002_notification_preferences.sql
+|  |  `-- 20260430000001_rebalance_invite_amounts.sql
+|  |-- scripts
+|  |  |-- all-migrations.sql
+|  |  `-- README.md
+|  |-- .env.local
+|  |-- config.toml
+|  `-- seed.sql
+|-- .env.deploy
+|-- .env.deploy.example
+|-- .env.example
+|-- .gitignore
+|-- DEPLOY.md
+|-- package.json
+|-- pnpm-lock.yaml
+|-- pnpm-workspace.yaml
+|-- README.md
+|-- tsconfig.base.json
+`-- vercel.json

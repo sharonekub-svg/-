@@ -1,19 +1,22 @@
 {
-  "name": "hapogea",
-  "version": "1.0.0",
+  "name": "shakana",
   "private": true,
-  "type": "module",
+  "version": "1.0.0",
+  "packageManager": "pnpm@9.15.5",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "mobile": "pnpm --filter @shakana/mobile",
+    "mobile:start": "pnpm --filter @shakana/mobile start",
+    "mobile:ios": "pnpm --filter @shakana/mobile ios",
+    "mobile:android": "pnpm --filter @shakana/mobile android",
+    "mobile:typecheck": "pnpm --filter @shakana/mobile typecheck",
+    "mobile:lint": "pnpm --filter @shakana/mobile lint",
+    "mobile:test": "pnpm --filter @shakana/mobile test",
+    "supabase:db:reset": "supabase db reset",
+    "supabase:functions:serve": "supabase functions serve --env-file ./supabase/.env.local",
+    "supabase:functions:deploy": "supabase functions deploy",
+    "supabase:gen:types": "supabase gen types typescript --local --schema public > apps/mobile/src/types/database.ts"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.0"
+    "typescript": "^5.5.4"
   }
 }

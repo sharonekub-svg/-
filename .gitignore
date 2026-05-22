@@ -1,7 +1,54 @@
 node_modules/
+.pnpm-store/
+*.log
+.DS_Store
+
+# Expo
+.expo/
 dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Native
+ios/Pods/
+ios/build/
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Env
 .env
 .env.local
 .env.*.local
-*.log
-package-lock.json
+.env.deploy
+supabase/.env.local
+supabase/.env
+!.env.example
+!.env.deploy.example
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+
+# IDE
+.vscode/
+.idea/
+
+# Tests / coverage
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Web export / Vercel
+apps/mobile/dist/
+.vercel/
+.vercel

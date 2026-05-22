@@ -154,31 +154,65 @@ async function supabaseSearch(table, term) {
   return exact || rows[0];
 }
 
+async function sportsDbSearch(kind, term) {
+  const value = cleanText(term);
+  if (!value || value.length < 3) return null;
+  const endpoint = kind === "league" ? "search_all_leagues.php" : "searchteams.php";
+  const param = kind === "league" ? "l" : "t";
+  const url = `https://www.thesportsdb.com/api/v1/json/3/${endpoint}?${param}=${encodeURIComponent(value)}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1800);
+  const data = await fetchJson(url, { signal: controller.signal }).catch(() => null);
+  clearTimeout(timeout);
+  const rows = kind === "league" ? (data?.countries || data?.leagues) : data?.teams;
+  if (!Array.isArray(rows) || !rows.length) return null;
+  const normalized = value.toLowerCase();
+  const exact = rows.find((row) =>
+    cleanText(row.strTeam || row.strLeague).toLowerCase() === normalized
+  );
+  const row = exact || rows[0];
+  return {
+    name: cleanText(row.strTeam || row.strLeague || value),
+    logo_url: row.strBadge || row.strLogo || row.strFanart1 || "",
+    source: "TheSportsDB",
+  };
+}
+
 async function enrichLogos(rows) {
   const teamCache = new Map();
   const leagueCache = new Map();
   async function teamAsset(name) {
     const key = cleanText(name);
-    if (!teamCache.has(key)) teamCache.set(key, await supabaseSearch("teams", key));
+    if (!teamCache.has(key)) {
+      const mappedLogo = TEAM_LOGOS[key] || "";
+      const row = mappedLogo
+        ? { logo_url: mappedLogo, source: "curated teams" }
+        : await supabaseSearch("teams", key) || await sportsDbSearch("team", key);
+      teamCache.set(key, row);
+    }
     const row = teamCache.get(key);
-    const mappedLogo = TEAM_LOGOS[key] || "";
     return {
       name: key,
-      logo: row?.logo_url || mappedLogo || fallbackLogo(key, "team"),
+      logo: row?.logo_url || fallbackLogo(key, "team"),
       initials: initials(key),
-      logoSource: row?.logo_url ? "win2go teams" : mappedLogo ? "curated teams" : "generated team badge",
+      logoSource: row?.source || (row?.logo_url ? "win2go teams" : "generated team badge"),
     };
   }
   async function leagueAsset(name) {
     const key = cleanText(name);
-    if (!leagueCache.has(key)) leagueCache.set(key, await supabaseSearch("leagues", key));
+    if (!leagueCache.has(key)) {
+      const mappedLogo = LEAGUE_LOGOS[key] || "";
+      const row = mappedLogo
+        ? { logo_url: mappedLogo, source: "curated leagues" }
+        : await supabaseSearch("leagues", key) || await sportsDbSearch("league", key);
+      leagueCache.set(key, row);
+    }
     const row = leagueCache.get(key);
-    const mappedLogo = LEAGUE_LOGOS[key] || "";
     return {
       name: key,
-      logo: row?.logo_url || mappedLogo || fallbackLogo(key, "league"),
+      logo: row?.logo_url || fallbackLogo(key, "league"),
       initials: initials(key),
-      logoSource: row?.logo_url ? "win2go leagues" : mappedLogo ? "curated leagues" : "generated league badge",
+      logoSource: row?.source || (row?.logo_url ? "win2go leagues" : "generated league badge"),
     };
   }
   return Promise.all(rows.map(async (row) => {

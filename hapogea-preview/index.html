@@ -409,6 +409,50 @@
       grid-column: 1 / -1;
     }
     .error { color: #ffc5c3; border-color: rgba(239,83,80,.36); }
+    .wc-strip {
+      margin-top: 18px;
+      padding: 16px;
+      display: grid;
+      gap: 13px;
+    }
+    .wc-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .wc-head h3 { margin: 0; font-size: 22px; }
+    .wc-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .wc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+    }
+    .wc-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.03);
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+    }
+    .wc-card strong { font-size: 15px; }
+    .wc-score {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .wc-score b {
+      color: var(--gold);
+      font-size: 18px;
+      white-space: nowrap;
+    }
+    .wc-meta { color: var(--soft); font-size: 12px; line-height: 1.45; }
     .footer { padding-top: 18px; padding-bottom: 24px; color: var(--soft); font-size: 12px; line-height: 1.6; }
     @media (max-width: 1020px) {
       .hero, .content { grid-template-columns: 1fr; }
@@ -422,6 +466,7 @@
       .stats, .toolbar { grid-template-columns: 1fr; }
       .cards { grid-template-columns: 1fr; }
       .explain-grid { grid-template-columns: 1fr; }
+      .wc-grid { grid-template-columns: 1fr; }
       .teams-line { gap: 8px; }
     }
   </style>
@@ -462,6 +507,17 @@
         </div>
       </div>
       <aside class="hero-side" id="dailyTip"></aside>
+    </section>
+
+    <section class="panel wc-strip">
+      <div class="wc-head">
+        <div>
+          <h3>מונדיאל 2026</h3>
+          <p>תחזיות תוצאה לפי מודל עוצמה: יחס שוק, ביתיות, עומק סגל והפרש איכות משוער. התצוגה היא תחזית מוצרית ולא תוצאה רשמית.</p>
+        </div>
+        <span class="pill">תחזיות מודל</span>
+      </div>
+      <div class="wc-grid" id="wc2026"></div>
     </section>
 
     <section class="toolbar panel">
@@ -556,6 +612,17 @@
       error: "",
       selectedId: null
     };
+
+    const WC2026_PREDICTIONS = [
+      { stage: "בית", home: "ארצות הברית", away: "קנדה", score: "2:1", confidence: 63, note: "יתרון ביתיות וקצב התקפה גבוה יותר" },
+      { stage: "בית", home: "מקסיקו", away: "אקוודור", score: "1:1", confidence: 56, note: "פער איכות קטן וסיכוי תיקו גבוה" },
+      { stage: "בית", home: "ארגנטינה", away: "יפן", score: "2:0", confidence: 69, note: "עליונות יצירת מצבים וניסיון בטורנירים" },
+      { stage: "בית", home: "ברזיל", away: "מרוקו", score: "2:1", confidence: 64, note: "יתרון איכות קדמית מול יריבה מאורגנת" },
+      { stage: "בית", home: "ספרד", away: "קרואטיה", score: "1:0", confidence: 61, note: "שליטה בכדור וצפי למשחק נמוך שערים" },
+      { stage: "בית", home: "צרפת", away: "גאנה", score: "3:1", confidence: 71, note: "פער עומק וסיכוי שערים גבוה" },
+      { stage: "בית", home: "אנגליה", away: "הולנד", score: "1:1", confidence: 54, note: "שתי נבחרות מאוזנות עם רמת סיכון דומה" },
+      { stage: "בית", home: "פורטוגל", away: "אורוגוואי", score: "2:1", confidence: 60, note: "יתרון יצירת מצבים מול משחק פיזי" }
+    ];
 
     const statusClass = {
       "תפס": "hit",
@@ -734,6 +801,21 @@
       ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
     }
 
+    function renderWorldCup() {
+      const target = document.getElementById("wc2026");
+      if (!target) return;
+      target.innerHTML = WC2026_PREDICTIONS.map(item => `
+        <article class="wc-card">
+          <strong>${item.home} נגד ${item.away}</strong>
+          <div class="wc-score">
+            <span>${item.stage}</span>
+            <b>${item.score}</b>
+          </div>
+          <div class="wc-meta">ביטחון מודל ${item.confidence} אחוז. ${item.note}.</div>
+        </article>
+      `).join("");
+    }
+
     function renderDaily() {
       const tip = bestTip();
       const box = document.getElementById("dailyTip");
@@ -893,6 +975,7 @@
     function render() {
       renderTabs();
       renderStats();
+      renderWorldCup();
       renderDaily();
       renderCards();
     }

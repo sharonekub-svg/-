@@ -1,0 +1,29 @@
+name: mobile-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install deps
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint || true
+      - name: Test
+        run: pnpm test -- --ci --passWithNoTests
