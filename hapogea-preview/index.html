@@ -162,6 +162,25 @@
     .micro { color: var(--muted); font-size: 12px; font-weight: 700; }
     .pickbox strong { display: block; margin-top: 4px; font-size: 18px; }
     .odds { font: 900 33px/1 Heebo, Assistant, sans-serif; color: var(--green); }
+    .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.035);
+      padding: 10px;
+      min-height: 66px;
+    }
+    .metric b { display: block; font-size: 21px; color: #fff; }
+    .metric span { color: var(--muted); font-size: 11px; font-weight: 800; }
+    .feature-list { display: flex; gap: 6px; flex-wrap: wrap; }
+    .feature-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 7px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
     .status {
       border-radius: 999px;
       padding: 4px 8px;
@@ -417,6 +436,11 @@
           <p>מנוע יחסים מבוסס Winner</p>
         </div>
       </div>
+      <nav class="nav" id="dayTabs">
+        <button class="tab" data-day="yesterday">אתמול</button>
+        <button class="tab active" data-day="today">היום</button>
+        <button class="tab" data-day="tomorrow">מחר</button>
+      </nav>
       <nav class="nav" id="sportTabs">
         <button class="tab active" data-sport-tab="football">כדורגל</button>
         <button class="tab" data-sport-tab="basketball">כדורסל</button>
@@ -429,10 +453,10 @@
       <div class="hero-main">
         <div class="hero-content">
           <span class="eyebrow">Plan Mode: אימות מקור, חישוב, הצגה, בדיקה</span>
-          <h2>רק משחקים שאפשר להמר עליהם עכשיו ב-Winner, עם יחס פעיל ולוגו לכל קבוצה וליגה.</h2>
+          <h2>אתמול, היום ומחר. כדורגל וכדורסל. תחזיות Winner עם מעקב פגיעה חודשי.</h2>
           <p class="hero-copy">
-            הדמו מציג רק בחירות מנצח פתוחות להימור. ההסבר מתמקד בלמה הקבוצה צפויה לנצח:
-            פייבוריטיות, בית/חוץ, ופער מול היריבה בתוך שוק Winner.
+            היום ומחר מציגים רק בחירות מנצח פתוחות להימור עם יחס Winner פעיל. אתמול סוגר תחזיות מול תוצאה רשמית,
+            והסטטיסטיקה החודשית מתעדכנת לפי הבחירות שהמערכת שמרה.
           </p>
           <div class="stats" id="stats"></div>
         </div>
@@ -467,7 +491,7 @@
           </div>
           <div class="plan-item">
             <b>2. סינון קשיח</b>
-            <p>רק שוקי מנצח ביחס 1.40 עד 1.90, בלי ארכיון ובלי רשומות חסרות יחס.</p>
+            <p>היום ומחר: רק שוקי מנצח ביחס 1.40 עד 1.90. אתמול: תוצאות לסגירת תחזיות.</p>
           </div>
           <div class="plan-item">
             <b>3. לוגואים</b>
@@ -483,6 +507,10 @@
           <div class="method">
             <b>הסבר בחירה</b>
             <p>הטקסט מסביר למה הבחירה צפויה לנצח: פייבוריטית, בית/חוץ ופער מול היריבה, לא רק למה היחס מתאים.</p>
+          </div>
+          <div class="method">
+            <b>פיצ׳רי Win2Go</b>
+            <p>טאבים לפי ימים, קטגוריות ספורט, לוגואים, יחס אמיתי, ציון ביטחון, פירוט משחק, חיפוש, מיון ומעקב פגיעה.</p>
           </div>
         </div>
       </aside>
@@ -517,8 +545,10 @@
   </div>
 
   <script>
+    const TRACK_KEY = "hapogea_prediction_tracker_v1";
     const state = {
       feed: null,
+      day: "today",
       sportTab: "football",
       sort: "score",
       search: "",
@@ -530,7 +560,8 @@
     const statusClass = {
       "תפס": "hit",
       "נפל": "miss",
-      "ממתין": "wait"
+      "ממתין": "wait",
+      "נסגר": "wait"
     };
 
     function formatOdds(value) {
@@ -545,6 +576,106 @@
       return row.winnerPick || row.pick || "לא זמין";
     }
 
+    function readTracker() {
+      try {
+        const value = JSON.parse(localStorage.getItem(TRACK_KEY) || "[]");
+        return Array.isArray(value) ? value : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function writeTracker(items) {
+      localStorage.setItem(TRACK_KEY, JSON.stringify(items.slice(-400)));
+    }
+
+    function predictionKey(row) {
+      return `${row.eventId}:${row.marketId || row.market}:${row.outcomeId || row.pick}`;
+    }
+
+    function isOpenDay(day = state.day) {
+      return day === "today" || day === "tomorrow";
+    }
+
+    function daySportRows(day, sportTab) {
+      return state.feed?.tabs?.[day]?.sports?.[sportTab] || [];
+    }
+
+    function normalizePick(value) {
+      return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+    }
+
+    function rememberOpenPredictions(feed) {
+      if (!feed?.tabs) return;
+      const tracker = readTracker();
+      const byKey = new Map(tracker.map(item => [item.key, item]));
+      ["today", "tomorrow"].forEach(day => {
+        ["football", "basketball"].forEach(sport => {
+          (feed.tabs[day]?.sports?.[sport] || []).forEach(row => {
+            if (!row.odds) return;
+            const key = predictionKey(row);
+            if (byKey.has(key)) return;
+            byKey.set(key, {
+              key,
+              eventId: row.eventId,
+              marketId: row.marketId,
+              outcomeId: row.outcomeId,
+              sport,
+              pick: pickLabel(row),
+              match: row.match,
+              league: row.league,
+              odds: row.odds,
+              predictedDay: row.day,
+              month: String(row.day || "").slice(0, 7),
+              status: "pending"
+            });
+          });
+        });
+      });
+      writeTracker([...byKey.values()]);
+    }
+
+    function settleTrackedPredictions(feed) {
+      if (!feed?.tabs?.yesterday) return;
+      const results = Object.values(feed.tabs.yesterday.sports || {})
+        .flatMap(rows => rows || [])
+        .filter(row => row.actualWinner);
+      if (!results.length) return;
+      const resultByEvent = new Map(results.map(row => [String(row.eventId), row]));
+      const tracker = readTracker().map(item => {
+        if (item.status !== "pending") return item;
+        const result = resultByEvent.get(String(item.eventId));
+        if (!result) return item;
+        const hit = normalizePick(item.pick) === normalizePick(result.actualWinner);
+        return {
+          ...item,
+          status: hit ? "hit" : "miss",
+          actualWinner: result.actualWinner,
+          result: result.result,
+          settledDay: result.day,
+          settledMonth: String(result.day || "").slice(0, 7)
+        };
+      });
+      writeTracker(tracker);
+    }
+
+    function monthlyPerformance() {
+      const month = new Date().toISOString().slice(0, 7);
+      const items = readTracker().filter(item => (item.month || item.settledMonth) === month);
+      const settled = items.filter(item => item.status === "hit" || item.status === "miss");
+      const hits = settled.filter(item => item.status === "hit").length;
+      const pending = items.filter(item => item.status === "pending").length;
+      return {
+        month,
+        tracked: items.length,
+        settled: settled.length,
+        hits,
+        misses: settled.length - hits,
+        pending,
+        hitRate: settled.length ? Math.round((hits / settled.length) * 100) : 0
+      };
+    }
+
     function logoMarkup(asset, size = "") {
       if (!asset) return `<div class="logo-wrap ${size}">?</div>`;
       if (asset.logo) {
@@ -555,16 +686,18 @@
 
     function allRows() {
       if (!state.feed) return [];
-      return Object.values(state.feed.tabs).flatMap(tab => tab.rows || []);
+      return Object.values(state.feed.tabs)
+        .flatMap(tab => Object.values(tab.sports || {}).flatMap(rows => rows || []));
     }
 
     function currentRows() {
-      const tab = state.feed?.tabs?.[state.sportTab];
+      const tab = state.feed?.tabs?.[state.day];
       if (!tab) return [];
       const query = state.search.trim().toLowerCase();
-      let rows = [...(tab.rows || [])].filter(row => {
+      let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
-        return row.odds && row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo && (!query || text.includes(query));
+        const validOpen = !isOpenDay() || (row.odds && row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo);
+        return validOpen && (!query || text.includes(query));
       });
       rows.sort((a, b) => {
         if (state.sort === "odds") return (b.odds || 0) - (a.odds || 0);
@@ -576,37 +709,60 @@
     }
 
     function bestTip() {
-      const rows = currentRows().filter(row => row.status === "ממתין" && row.odds);
+      const rows = daySportRows("today", state.sportTab).filter(row => row.status === "ממתין" && row.odds);
       return rows.sort((a, b) => (b.score || 0) - (a.score || 0) || (b.odds || 0) - (a.odds || 0))[0];
     }
 
     function renderTabs() {
+      document.querySelectorAll("#dayTabs .tab").forEach(button => {
+        button.classList.toggle("active", button.dataset.day === state.day);
+      });
       document.querySelectorAll("#sportTabs .tab").forEach(button => {
         button.classList.toggle("active", button.dataset.sportTab === state.sportTab);
       });
     }
 
     function renderStats() {
-      const rows = allRows();
-      const waiting = rows.filter(row => row.status === "ממתין").length;
-      const hit = rows.filter(row => row.status === "תפס").length;
-      const miss = rows.filter(row => row.status === "נפל").length;
+      const rows = currentRows();
+      const performance = monthlyPerformance();
       const leagues = new Set(rows.map(row => row.league)).size;
       document.getElementById("stats").innerHTML = [
-        ["פתוחים", rows.length],
+        [state.day === "yesterday" ? "נסגרו" : "פתוחים", rows.length],
         ["ליגות", leagues],
-        ["עם יחס", rows.filter(row => row.odds).length],
-        ["עם לוגו", rows.filter(row => row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo).length]
+        ["פגיעה חודשית", performance.settled ? `${performance.hitRate}%` : "חדש"],
+        ["במעקב", performance.tracked]
       ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
     }
 
     function renderDaily() {
       const tip = bestTip();
       const box = document.getElementById("dailyTip");
+      const performance = monthlyPerformance();
+      const features = state.feed?.win2goFeatures || [];
+      const performanceMarkup = `
+        <div class="daily-head">
+          <h3>אחוז פגיעה חודשי</h3>
+          <span class="pill">${performance.month}</span>
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><b>${performance.settled ? `${performance.hitRate}%` : "חדש"}</b><span>פגיעה</span></div>
+          <div class="metric"><b>${performance.hits}/${performance.settled}</b><span>תפסו</span></div>
+          <div class="metric"><b>${performance.pending}</b><span>ממתינים</span></div>
+          <div class="metric"><b>${performance.tracked}</b><span>נשמרו</span></div>
+        </div>
+      `;
+      const featuresMarkup = `
+        <div>
+          <div class="daily-head" style="margin-bottom:8px"><h3>Win2Go</h3><span class="pill">פיצ׳רים</span></div>
+          <div class="feature-list">${features.map(feature => `<span class="feature-chip">${feature}</span>`).join("")}</div>
+        </div>
+      `;
       if (!tip) {
         box.innerHTML = `
           <div class="daily-head"><h3>הטיפ המוביל</h3><span class="pill">אין בחירה פתוחה</span></div>
           <p class="hero-copy" style="font-size:14px">לא נמצאה כרגע בחירה פתוחה בקטגוריה הזו עם יחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
+          ${performanceMarkup}
+          ${featuresMarkup}
         `;
         return;
       }
@@ -626,6 +782,8 @@
         <p class="hero-copy" style="font-size:14px">
           למה: ${(tip.explanation || [])[1] || "הבחירה היא פייבוריטית בשוק המנצח של Winner."}
         </p>
+        ${performanceMarkup}
+        ${featuresMarkup}
       `;
     }
 
@@ -648,7 +806,7 @@
             </div>
             <div class="market-row">
               <span class="name">בחירה: ${pickLabel(row)}</span>
-              <span class="price">${formatOdds(row.odds)}</span>
+              <span class="price">${row.odds ? formatOdds(row.odds) : row.actualWinner ? "תוצאה" : "נסגר"}</span>
               <span class="status ${cls}">${row.status}</span>
             </div>
             <div class="score-row">
@@ -658,7 +816,7 @@
             </div>
             <div class="signals">${(row.signals || []).map(signal => `<span class="signal">${signal}</span>`).join("")}</div>
             <div class="details">
-              יחס Winner: ${formatOdds(row.odds)}. למה: ${(row.explanation || [])[1] || "הבחירה מבוססת על שוק המנצח בווינר."}
+              ${row.odds ? `יחס Winner: ${formatOdds(row.odds)}.` : `תוצאה רשמית: ${row.actualWinner || row.result || "נסגר"}.`} למה: ${(row.explanation || [])[1] || "הבחירה מבוססת על שוק המנצח בווינר."}
               מזהה משחק בווינר: ${row.eventId}.
             </div>
             <button class="open-game" data-open="${row.id}">פירוט משחק</button>
@@ -687,7 +845,7 @@
         <div class="explain-grid">
           <div class="explain-box">
             <b>מי מנצח</b>
-            <p>${pickLabel(row)}. יחס Winner ${formatOdds(row.odds)}. הסתברות שוק ${formatPercent(row.probability)}.</p>
+            <p>${pickLabel(row)}. ${row.odds ? `יחס Winner ${formatOdds(row.odds)}. הסתברות שוק ${formatPercent(row.probability)}.` : `תוצאה רשמית: ${row.result || "נסגר"}.`}</p>
           </div>
           <div class="explain-box">
             <b>למה</b>
@@ -714,7 +872,7 @@
       const cards = document.getElementById("cards");
       const title = document.getElementById("listTitle");
       const meta = document.getElementById("resultMeta");
-      const tab = state.feed?.tabs?.[state.sportTab];
+      const tab = state.feed?.tabs?.[state.day];
       title.textContent = `${tab?.label || ""} · ${tab?.date || ""}`;
       if (state.error) {
         cards.innerHTML = `<div class="error">${state.error}</div>`;
@@ -723,10 +881,13 @@
       }
       const rows = currentRows();
       const sourceMode = state.feed?.fallback ? "מצב snapshot מאומת" : "מצב חי";
-      meta.textContent = `${rows.length} משחקים פתוחים להימור מתוך ${tab?.rows?.length || 0}. לכל משחק יש יחס Winner ולוגו. ${sourceMode}.`;
+      const totalRows = daySportRows(state.day, state.sportTab).length;
+      meta.textContent = isOpenDay()
+        ? `${rows.length} משחקים פתוחים להימור מתוך ${totalRows}. לכל משחק יש יחס Winner ולוגו. ${sourceMode}.`
+        : `${rows.length} תוצאות רשמיות מתוך ${totalRows}. המסך הזה סוגר תחזיות שנשמרו קודם. ${sourceMode}.`;
       cards.innerHTML = rows.length
         ? rows.map(rowCard).join("")
-        : `<div class="empty">לא נמצאו משחקים פתוחים בקטגוריה הזו. הדמו לא מציג משחק בלי יחס Winner פעיל.</div>`;
+        : `<div class="empty">${isOpenDay() ? "לא נמצאו משחקים פתוחים בקטגוריה הזו. הדמו לא מציג משחק בלי יחס Winner פעיל." : "אין תוצאות סגורות בקטגוריה הזו."}</div>`;
     }
 
     function render() {
@@ -745,6 +906,8 @@
         const feed = await response.json();
         if (!response.ok || !feed.ok) throw new Error(feed.detail || feed.error || "טעינת Winner נכשלה");
         state.feed = feed;
+        rememberOpenPredictions(feed);
+        settleTrackedPredictions(feed);
       } catch (error) {
         state.error = `שגיאה: ${error.message}`;
       } finally {
@@ -753,6 +916,12 @@
       }
     }
 
+    document.querySelectorAll("#dayTabs .tab").forEach(button => {
+      button.addEventListener("click", () => {
+        state.day = button.dataset.day;
+        render();
+      });
+    });
     document.querySelectorAll("#sportTabs .tab").forEach(button => {
       button.addEventListener("click", () => {
         state.sportTab = button.dataset.sportTab;

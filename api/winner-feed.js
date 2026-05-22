@@ -398,8 +398,8 @@ function buildResultRows(results, dateKey) {
       const market = markets.find((m) => cleanText(m.title).includes("1X2")) ||
         markets.find((m) => cleanText(m.title).includes("המנצח"));
       if (!market) return null;
-      const pick = cleanText(event.teamA);
-      const status = resultStatus(event, pick);
+      const actualWinnerRaw = cleanText((market.marketResults || [])[0]);
+      const actualWinner = actualWinnerRaw.toLowerCase() === "x" ? "תיקו" : actualWinnerRaw;
       const teams = { home: cleanText(event.teamA), away: cleanText(event.teamB) };
       return {
         id: `result-${event.eventid}`,
@@ -415,13 +415,15 @@ function buildResultRows(results, dateKey) {
         home: teams.home,
         away: teams.away,
         market: cleanText(market?.title || "תוצאת משחק"),
-        pick,
+        pick: actualWinner,
+        winnerPick: actualWinner,
+        actualWinner,
         odds: null,
         probability: null,
-        score: status === "תפס" ? 62 : 38,
-        status,
+        score: 0,
+        status: "נסגר",
         result: event.scoreA && event.scoreB ? `${event.scoreA}:${event.scoreB}` : cleanText(event.noScoreLabel || ""),
-        signals: ["תוצאה רשמית מווינר", "בחירת ארכיון ללא יחס", "לא הוזן משחק ידני"],
+        signals: ["תוצאה רשמית מווינר", "ארכיון לבדיקת פגיעה", "אין יחס עבר בממשק הציבורי"],
         allMarkets: (event.markets || []).map((item) => ({
           marketId: null,
           title: cleanText(item.title),
@@ -438,14 +440,21 @@ function buildResultRows(results, dateKey) {
           })),
         })),
         explanation: [
-          "זהו משחק מארכיון התוצאות של Winner.",
-          "ממשק התוצאות הציבורי מחזיר תוצאה ושווקים שנסגרו, אך לא מחזיר יחס סגירה לכל בחירה.",
-          "לכן הדמו מסמן תפס או נפל לפי תוצאה רשמית בלבד ולא ממציא יחס עבר.",
+          "זהו משחק סגור מארכיון התוצאות של Winner.",
+          `התוצאה הרשמית בשוק המנצח היא ${actualWinner || "לא זמינה"}. היא משמשת רק לסגירת תחזיות שנשמרו קודם לכן.`,
+          "ממשק התוצאות הציבורי לא מחזיר יחס סגירה, ולכן יחס עבר לא מוצג ולא מומצא.",
         ],
       };
     })
     .filter(Boolean)
-    .slice(0, 10);
+    .slice(0, 20);
+}
+
+function splitBySport(rows) {
+  return {
+    football: rows.filter((row) => row.sportId === 240),
+    basketball: rows.filter((row) => row.sportId === 227),
+  };
 }
 
 async function getWinnerLine() {
@@ -484,31 +493,52 @@ async function getResults(startDate, endDate) {
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
   try {
+    const yesterday = israelDate(-1);
     const today = israelDate(0);
     const tomorrow = israelDate(1);
-    const { hashes, markets } = await getWinnerLine();
-    const openRows = await enrichLogos([
-      ...buildCurrentPicks(markets, today, 30),
-      ...buildCurrentPicks(markets, tomorrow, 30),
+    const [{ hashes, markets }, resultEvents] = await Promise.all([
+      getWinnerLine(),
+      getResults(yesterday, today),
     ]);
-    const footballRows = openRows
-      .filter((row) => row.sportId === 240 && row.odds && row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo)
-      .slice(0, 20);
-    const basketballRows = openRows
-      .filter((row) => row.sportId === 227 && row.odds && row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo)
-      .slice(0, 20);
+    const yesterdayRows = splitBySport(await enrichLogos(buildResultRows(resultEvents, yesterday)));
+    const todayRows = splitBySport(await enrichLogos(buildCurrentPicks(markets, today, 40)
+      .filter((row) => row.odds)));
+    const tomorrowRows = splitBySport(await enrichLogos(buildCurrentPicks(markets, tomorrow, 40)
+      .filter((row) => row.odds)));
     res.status(200).json({
       ok: true,
       generatedAt: new Date().toISOString(),
       serverVersion: hashes.currentVersion,
       oddsRange: { min: ODDS_MIN, max: ODDS_MAX },
       tabs: {
-        football: { label: "כדורגל", date: `${today} / ${tomorrow}`, rows: footballRows },
-        basketball: { label: "כדורסל", date: `${today} / ${tomorrow}`, rows: basketballRows },
+        yesterday: { label: "אתמול", date: yesterday, sports: yesterdayRows },
+        today: { label: "היום", date: today, sports: todayRows },
+        tomorrow: { label: "מחר", date: tomorrow, sports: tomorrowRows },
       },
+      modelStats: {
+        title: "מה עומד מאחורי הניחושים",
+        factors: [
+          "שוק מנצח בלבד: 1X2 בכדורגל והמנצח/ת בכדורסל.",
+          "יחס Winner פעיל בטווח 1.40-1.90 עבור משחקים שעדיין פתוחים להימור.",
+          "פייבוריטיות ביחס לשאר התוצאות בשוק, כולל פער מול היריבה ותיקו כשיש.",
+          "בית/חוץ: פייבוריט בחוץ מקבל הסבר של פער איכות; פייבוריט בבית מקבל יתרון מגרש.",
+          "לא מוצגים פציעות, הרכבים או חדשות אם הם לא חזרו ממקור מאומת.",
+        ],
+      },
+      win2goFeatures: [
+        "טאבים אתמול/היום/מחר",
+        "קטגוריות כדורגל וכדורסל",
+        "יחסי Winner בזמן אמת או snapshot מאומת",
+        "לוגואים לקבוצות ולליגות",
+        "אחוז פגיעה חודשי לפי תחזיות שנשמרו",
+        "ציון ביטחון והסתברות שוק",
+        "הסבר למה הבחירה צפויה לנצח",
+        "חיפוש ומיון",
+        "פירוט משחק",
+      ],
       notes: [
-        "מוצגים רק משחקים פתוחים להימור בווינר-ליין.",
-        "כל בחירה חייבת יחס Winner פעיל בטווח 1.40-1.90.",
+        "היום ומחר מציגים רק משחקים פתוחים להימור בווינר-ליין.",
+        "אתמול הוא מסך סגירה ובדיקת פגיעה מול תוצאה רשמית, לא מסך הימור פתוח.",
         "לכל קבוצה וליגה מוצג לוגו ממקור חיצוני או תג גרפי כאשר אין לוגו רשמי זמין.",
       ],
     });
