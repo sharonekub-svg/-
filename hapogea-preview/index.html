@@ -982,6 +982,32 @@
       flex-wrap: wrap;
       align-items: center;
     }
+    .sport-section {
+      display: grid;
+      gap: 10px;
+      grid-column: 1 / -1;
+    }
+    .sport-section + .sport-section { margin-top: 8px; }
+    .sport-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 2px;
+      color: var(--text);
+      font-weight: 900;
+      font-size: 16px;
+    }
+    .sport-section-title span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .sport-section-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+    }
     @media (max-width: 620px) {
       .cards { grid-template-columns: 1fr; }
       .card-head, .card-body { padding: 10px; }
@@ -1059,7 +1085,8 @@
         <button class="tab" data-day="tomorrow">מחר</button>
       </nav>
       <nav class="nav" id="sportTabs">
-        <button class="tab active" data-sport-tab="football">כדורגל</button>
+        <button class="tab active" data-sport-tab="all">הכל</button>
+        <button class="tab" data-sport-tab="football">כדורגל</button>
         <button class="tab" data-sport-tab="basketball">כדורסל</button>
       </nav>
     </div>
@@ -1191,7 +1218,7 @@
     const state = {
       feed: null,
       day: "today",
-      sportTab: "football",
+      sportTab: "all",
       sort: "score",
       search: "",
       loading: true,
@@ -1386,7 +1413,9 @@
     }
 
     function daySportRows(day, sportTab) {
-      return state.feed?.tabs?.[day]?.sports?.[sportTab] || [];
+      const sports = state.feed?.tabs?.[day]?.sports || {};
+      if (sportTab === "all") return [...(sports.football || []), ...(sports.basketball || [])];
+      return sports?.[sportTab] || [];
     }
 
     function activeTodayDate(feed = state.feed) {
@@ -1549,6 +1578,32 @@
           || String(a.time).localeCompare(String(b.time));
       });
       return rows;
+    }
+
+    function currentRowsBySport() {
+      const query = state.search.trim().toLowerCase();
+      const filterRows = rows => (rows || []).filter(row => {
+        const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
+        return !query || text.includes(query);
+      });
+      return {
+        football: sortRows(filterRows(daySportRows(state.day, "football"))),
+        basketball: sortRows(filterRows(daySportRows(state.day, "basketball"))),
+      };
+    }
+
+    function sortRows(rows) {
+      return [...rows].sort((a, b) => {
+        if (!a.outsideRange && b.outsideRange) return -1;
+        if (a.outsideRange && !b.outsideRange) return 1;
+        if (state.sort === "odds") return (b.oddsRaw || b.odds || 0) - (a.oddsRaw || a.odds || 0);
+        if (state.sort === "probability") return (b.probability || 0) - (a.probability || 0);
+        if (state.sort === "time") return String(a.time).localeCompare(String(b.time));
+        return (b.recommendationScore || b.score || 0) - (a.recommendationScore || a.score || 0)
+          || (b.probability || 0) - (a.probability || 0)
+          || (b.odds || 0) - (a.odds || 0)
+          || String(a.time).localeCompare(String(b.time));
+      });
     }
 
     function bestTip() {
@@ -1996,15 +2051,36 @@
         ? `${withoutPick} ללא המלצה (${rankNoPick} לא בטופ 20, ${oddsNoPick} מחוץ לטווח)`
         : `${withoutPick} ללא המלצה`;
       meta.textContent = isOpenDay()
-        ? `${rows.length} משחקי Winner הכי חזקים · ${withPick} עם המלצה${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}.`
+        ? `${rows.length}/20 משחקי Winner הכי חזקים · ${withPick} עם המלצה${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}.`
         : `${rows.length} תוצאות רשמיות מתוך ${totalRows}. המסך הזה סוגר תחזיות שנשמרו קודם. ${sourceMode}.`;
+      if (state.sportTab === "all") {
+        const bySport = currentRowsBySport();
+        const sections = [
+          ["football", "כדורגל", bySport.football],
+          ["basketball", "כדורסל", bySport.basketball],
+        ].filter(([, , sportRows]) => sportRows.length);
+        cards.innerHTML = sections.length
+          ? sections.map(([, label, sportRows]) => `
+              <section class="sport-section">
+                <div class="sport-section-title">${label}<span>${sportRows.length} משחקים</span></div>
+                <div class="sport-section-grid">${sportRows.map(rowCard).join("")}</div>
+              </section>
+            `).join("")
+          : `<div class="empty">${isOpenDay() ? "לא נמצאו 20 משחקי Winner אמיתיים בטווח 1.40-1.90." : "אין תוצאות סגורות עם לוגואים מאומתים."}</div>`;
+        return;
+      }
       cards.innerHTML = rows.length
         ? rows.map(rowCard).join("")
         : `<div class="empty">${isOpenDay() ? "לא נמצאו משחקים ב-Winner לקטגוריה הזו." : "אין תוצאות סגורות בקטגוריה הזו."}</div>`;
     }
 
     function debugRows() {
-      const audit = state.feed?.debugAudit?.[state.day]?.[state.sportTab] || [];
+      const audit = state.sportTab === "all"
+        ? [
+            ...(state.feed?.debugAudit?.[state.day]?.football || []),
+            ...(state.feed?.debugAudit?.[state.day]?.basketball || []),
+          ]
+        : state.feed?.debugAudit?.[state.day]?.[state.sportTab] || [];
       const query = state.search.trim().toLowerCase();
       return audit.filter(row => {
         const text = `${row.match} ${row.league} ${row.pick} ${(row.reasons || []).join(" ")}`.toLowerCase();

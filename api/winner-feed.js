@@ -3,7 +3,7 @@ const SNAPSHOT = require("./winner-snapshot.json");
 
 const ODDS_MIN = 1.4;
 const ODDS_MAX = 1.9;
-/** Open Winner picks shown per sport on today / tomorrow (verified line + odds in range). */
+/** Top Winner picks shown per day (verified line + odds in range). */
 const TARGET_PICKS_PER_SPORT = 20;
 const SUPABASE_URL = "https://jgcmtrlviuivbtimtqjq.supabase.co";
 const SUPABASE_ANON_KEY =
@@ -17,6 +17,26 @@ const WINNER_BASKETBALL_ID = 227;
 const SCORES365_FOOTBALL_ID = 1;
 const SCORES365_BASKETBALL_ID = 2;
 // No hardcoded logo lists — logos are resolved dynamically via API search only.
+const TEAM_LOGO_ALIASES = new Map([
+  ["נורקופינג אף.קיי", "IFK Norrkoping"],
+  ["אוסטרס", "Osters IF"],
+  ["שיאולאי", "FA Siauliai"],
+  ["ריטריאיי", "FK Riteriai"],
+  ["לין 1896", "Lyn 1896 FK"],
+  ["סטרומן", "Strommen IF"],
+  ["נאנטר", "Nanterre 92"],
+  ["לה מאן", "Le Mans Sarthe Basket"],
+  ["בודוצ'נוסט פודגוריצה", "Buducnost Podgorica"],
+  ["בי.סי. דובאי", "Dubai Basketball"],
+  ["טים פוג", "Team FOG Naestved"],
+  ["באקן", "Bakken Bears"],
+  ["וולניגטון", "Wellington Saints"],
+  ["ביי הוקס", "Hawke's Bay Hawks"],
+  ["סאן אנטוניו ספרס", "San Antonio Spurs"],
+  ["אוקלהומה סיטי ת'אנדר", "Oklahoma City Thunder"],
+  ["סיאטל", "Seattle Storm"],
+  ["וושינגטון", "Washington Mystics"],
+]);
 
 function winnerHeaders(extra = {}) {
   return {
@@ -160,6 +180,18 @@ function fallbackLogo(name, kind) {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
+function logoSearchTerms(name, kind) {
+  const clean = cleanText(name);
+  const terms = [clean];
+  if (kind === "team" && TEAM_LOGO_ALIASES.has(clean)) terms.push(TEAM_LOGO_ALIASES.get(clean));
+  const withoutSuffixes = clean
+    .replace(/\b(אף\.קיי|בי\.סי|פ\.ק|מועדון|כדורסל|נשים)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (withoutSuffixes && withoutSuffixes !== clean) terms.push(withoutSuffixes);
+  return [...new Set(terms.filter(Boolean))];
+}
+
 async function supabaseSearch(table, term) {
   const value = cleanText(term);
   if (!value || value.length < 2) return null;
@@ -295,12 +327,15 @@ async function enrichLogos(rows) {
   async function teamAsset(name) {
     const key = cleanText(name);
     if (!teamCache.has(key)) {
-      // Dynamic search only — no hardcoded list
-      const row = await supabaseSearch("teams", key) ||
-          await sportsDbSearch("team", key) ||
-          await wikipediaLogoSearch(key, "team") ||
-          await wikipediaSearchLogo(key, "team") ||
-          await wikidataLogoSearch(key, "team");
+      let row = null;
+      for (const term of logoSearchTerms(key, "team")) {
+        row = await supabaseSearch("teams", term) ||
+          await sportsDbSearch("team", term) ||
+          await wikipediaLogoSearch(term, "team") ||
+          await wikipediaSearchLogo(term, "team") ||
+          await wikidataLogoSearch(term, "team");
+        if (row?.logo_url) break;
+      }
       teamCache.set(key, row);
     }
     const row = teamCache.get(key);
@@ -314,12 +349,15 @@ async function enrichLogos(rows) {
   async function leagueAsset(name) {
     const key = cleanText(name);
     if (!leagueCache.has(key)) {
-      // Dynamic search only — no hardcoded list
-      const row = await supabaseSearch("leagues", key) ||
-          await sportsDbSearch("league", key) ||
-          await wikipediaLogoSearch(key, "league") ||
-          await wikipediaSearchLogo(key, "league") ||
-          await wikidataLogoSearch(key, "league");
+      let row = null;
+      for (const term of logoSearchTerms(key, "league")) {
+        row = await supabaseSearch("leagues", term) ||
+          await sportsDbSearch("league", term) ||
+          await wikipediaLogoSearch(term, "league") ||
+          await wikipediaSearchLogo(term, "league") ||
+          await wikidataLogoSearch(term, "league");
+        if (row?.logo_url) break;
+      }
       leagueCache.set(key, row);
     }
     const row = leagueCache.get(key);
@@ -542,7 +580,7 @@ function allowedMarket(market) {
 
 function scoreOutcome(market, outcome) {
   const odds = decimal(outcome.price);
-  if (!odds || odds < ODDS_MIN || odds > ODDS_MAX) return null;
+  if (!odds || odds <= ODDS_MIN || odds >= ODDS_MAX) return null;
   const oddsBook = marketOddsBook(market);
   const reliability = marketReliability(market.mp, market.sId);
   const implied = 1 / odds;
@@ -760,11 +798,7 @@ function rejectionReasons(row) {
   if (!hasVerifiedLogo(row.homeAsset)) reasons.push("אין לוגו אמיתי לקבוצת הבית");
   if (!hasVerifiedLogo(row.awayAsset)) reasons.push("אין לוגו אמיתי לקבוצת החוץ");
   if (row.homeAsset?.logo && row.homeAsset.logo === row.awayAsset?.logo) reasons.push("לוגו זהה לשתי הקבוצות");
-  if (isCentralEvent(row)) reasons.push("משחק מרכזי מדי, לא נישה");
   if (!hasSingleClearFavorite(row)) reasons.push("אין פייבוריטית אחת מספיק ברורה");
-  if (row.sportId === WINNER_BASKETBALL_ID && Number.isFinite(Number(row.spread)) && Math.abs(Number(row.spread)) > 12) {
-    reasons.push("ליין כדורסל קיצוני מדי");
-  }
   if (Number(row.odds || 0) <= 1.42 && Number(row.marketGap || 0) < 0.08) {
     reasons.push("יחס נמוך מדי בלי פער שוק גדול");
   }
@@ -1182,23 +1216,51 @@ function mergeRows(primary, secondary) {
 }
 
 function finalOpenRows(rows) {
-  return (rows || [])
-    .filter((row) => rejectionReasons(row).length === 0)
+  const sorted = (rows || [])
+    .filter((row) => row.recommended && row.odds)
     .sort((a, b) => {
       return (b.recommendationScore || 0) - (a.recommendationScore || 0)
         || (b.probability || 0) - (a.probability || 0)
         || (b.odds || 0) - (a.odds || 0)
         || String(a.time).localeCompare(String(b.time));
-    })
-    .slice(0, TARGET_PICKS_PER_SPORT);
+    });
+  const strict = sorted.filter((row) => rejectionReasons(row).length === 0);
+  const strictIds = new Set(strict.map((row) => row.id));
+  const logoFill = sorted
+    .filter((row) => !strictIds.has(row.id))
+    .filter((row) => {
+      const hardReasons = rejectionReasons(row).filter((reason) => !reason.includes("לוגו"));
+      return hardReasons.length === 0;
+    });
+  return [...strict, ...logoFill]
+    .slice(0, TARGET_PICKS_PER_SPORT)
+    .map((row) => ({
+      ...row,
+      logoVerified: hasVerifiedTeamLogos(row),
+    }));
 }
 
-function finalOpenRowsBySport(rows) {
-  const split = splitBySport(rows || []);
-  return [
-    ...finalOpenRows(split.football),
-    ...finalOpenRows(split.basketball),
-  ];
+function finalOpenRowsByDay(rows) {
+  return finalOpenRows(rows || []);
+}
+
+function finalResultRowsByDay(rows) {
+  const sorted = (rows || [])
+    .sort((a, b) => {
+      const sourceA = a.source === "Winner Results" ? 1 : 0;
+      const sourceB = b.source === "Winner Results" ? 1 : 0;
+      return sourceB - sourceA ||
+        String(b.time || "").localeCompare(String(a.time || "")) ||
+        String(a.match || "").localeCompare(String(b.match || ""));
+    });
+  const strict = sorted.filter((row) => hasVerifiedTeamLogos(row));
+  const strictIds = new Set(strict.map((row) => row.id));
+  return [...strict, ...sorted.filter((row) => !strictIds.has(row.id))]
+    .slice(0, TARGET_PICKS_PER_SPORT)
+    .map((row) => ({
+      ...row,
+      logoVerified: hasVerifiedTeamLogos(row),
+    }));
 }
 
 function auditOpenRows(rows, acceptedRows) {
@@ -1285,22 +1347,22 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       ...build365BasketballRows(scores365Events, yesterday),
     ]
   );
-  const yesterdayRows = splitBySport(
-    withLogos ? await enrichLogos(yesterdayMerged) : yesterdayMerged
-  );
+  const yesterdayEnrichedRows = withLogos ? await enrichLogos(yesterdayMerged) : yesterdayMerged;
+  const yesterdayFinalRows = withLogos ? finalResultRowsByDay(yesterdayEnrichedRows) : yesterdayEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
+  const yesterdayRows = splitBySport(yesterdayFinalRows);
   const todayCurrentRows = [
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
   const todayEnrichedRows = withLogos ? await enrichLogos(todayCurrentRows) : todayCurrentRows;
-  const todayFinalRows = withLogos ? finalOpenRowsBySport(todayEnrichedRows) : todayEnrichedRows;
+  const todayFinalRows = withLogos ? finalOpenRowsByDay(todayEnrichedRows) : todayEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
   const todayRows = splitBySport(todayFinalRows);
   const tomorrowCurrentRows = [
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
   const tomorrowEnrichedRows = withLogos ? await enrichLogos(tomorrowCurrentRows) : tomorrowCurrentRows;
-  const tomorrowFinalRows = withLogos ? finalOpenRowsBySport(tomorrowEnrichedRows) : tomorrowEnrichedRows;
+  const tomorrowFinalRows = withLogos ? finalOpenRowsByDay(tomorrowEnrichedRows) : tomorrowEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
   const tomorrowRows = splitBySport(tomorrowFinalRows);
   const lineStats = {
     football: {
@@ -1310,6 +1372,11 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     basketball: {
       today: countRecommendedPicks(todayRows.basketball),
       tomorrow: countRecommendedPicks(tomorrowRows.basketball),
+    },
+    total: {
+      yesterday: yesterdayFinalRows.length,
+      today: todayFinalRows.length,
+      tomorrow: tomorrowFinalRows.length,
     },
   };
   return {
