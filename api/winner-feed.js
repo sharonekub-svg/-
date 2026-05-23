@@ -392,7 +392,8 @@ function resultPhase(event) {
   if (!event) return "scheduled";
   const status = cleanText(event.status || event.statusText || event.eventStatus || event.matchStatus || event.state);
   const hasScore = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
-  if (/live|in.?play|playing|׳—׳™|משוחק/i.test(status)) return "live";
+  if (/halftime|half.?time|half_time|הפסקה|מחצית/i.test(status)) return "ht";
+  if (/live|in.?play|playing|חי|משוחק/i.test(status)) return "live";
   if (resultWinner(event)) return "final";
   if (hasScore) return "live";
   return "scheduled";
@@ -822,10 +823,13 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
     if (!bestScored) continue; // market has no outcomes at all — skip
 
     const scored = bestScored;
+    const _verifiedAt = new Date().toISOString();
     const row = {
       id: `winner-${market.eId}`,
       eventId: String(market.eId),
       source: "Winner",
+      verifiedAt: _verifiedAt,
+      bettingStatus: "available",
       day: dateKey,
       time: winnerHour(market.m_hour),
       sport: SPORTS[market.sId],
@@ -913,14 +917,16 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
     })
     .slice(0, limit)
     .map((row) => {
+      const sc = row.recommendationScore || row.score || 0;
       return {
         ...row,
         recommended: true,
         recommendationReason: "top-20",
+        riskLevel: sc >= 70 ? "נמוך" : sc >= 50 ? "בינוני" : "גבוה",
         signals: [
           `סבירות פגיעה ${Math.round((row.probability || 0) * 100)} אחוז`,
           `יחס Winner ${Number(row.odds).toFixed(2)}`,
-          `ציון משולב ${row.recommendationScore || row.score || 0}`,
+          `ציון משולב ${sc}`,
         ],
       };
     });

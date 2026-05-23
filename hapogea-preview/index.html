@@ -766,37 +766,100 @@
       flex-wrap: wrap;
     }
     .footer { padding-top: 18px; padding-bottom: 24px; color: var(--soft); font-size: 12px; line-height: 1.6; }
-    .score-breakdown {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 7px;
+
+    /* ── Badge system ── */
+    .card-badge-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      border-radius: 5px; padding: 3px 7px;
+      font-size: 10px; font-weight: 900; letter-spacing: .4px;
+      white-space: nowrap; text-transform: uppercase; line-height: 1;
     }
+    .badge-selected { color: #06100c; background: var(--green); }
+    .badge-live     { color: #fff; background: var(--red); animation: pulse-live 1.4s infinite; }
+    .badge-ht       { color: #07090b; background: var(--orange); }
+    .badge-ft       { color: var(--panel); background: var(--muted); }
+    .badge-won      { color: #06100c; background: var(--green); }
+    .badge-lost     { color: #fff; background: var(--red); }
+    .badge-pending  { color: #06131a; background: var(--cyan); }
+    .badge-void, .badge-suspended { color: #211600; background: var(--gold); }
+    .badge-odds-changed { color: #07090b; background: var(--orange); }
+    .badge-removed, .badge-cancelled { color: #ffc5c3; background: rgba(239,83,80,.18); border: 1px solid rgba(239,83,80,.35); }
+    .badge-postponed { color: var(--muted); background: rgba(255,255,255,.07); border: 1px solid var(--line); }
+    @keyframes pulse-live { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+    /* ── Live score area ── */
+    .card-live-area {
+      border-radius: 7px; padding: 9px 12px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: rgba(239,83,80,.08); border: 1px solid rgba(239,83,80,.22);
+      font-weight: 900; text-align: center; min-height: 42px;
+    }
+    .card-live-area.phase-final { background: rgba(255,255,255,.04); border-color: var(--line); }
+    .card-live-area.phase-scheduled { background: rgba(255,255,255,.03); border-color: var(--line); color: var(--muted); }
+    .card-live-area.phase-ht { background: rgba(255,122,69,.08); border-color: rgba(255,122,69,.28); }
+    .card-live-area.phase-unavailable { background: rgba(255,255,255,.02); border-color: var(--line); }
+    .live-score-main { font: 900 20px/1 Heebo,Assistant,sans-serif; color: var(--text); letter-spacing: 1px; }
+    .live-minute { font-size: 11px; color: var(--red); font-weight: 900; }
+    .live-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+
+    /* ── Confidence panel ── */
+    .card-confidence {
+      display: grid; grid-template-columns: repeat(2,1fr); gap: 6px;
+      padding: 8px 10px; background: rgba(255,255,255,.03);
+      border: 1px solid var(--line); border-radius: 7px;
+    }
+    .conf-item { display: flex; flex-direction: column; gap: 2px; }
+    .conf-label { color: var(--soft); font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: .4px; }
+    .conf-value { font-weight: 900; font-size: 14px; color: var(--text); }
+    .conf-value.good { color: var(--green); }
+    .conf-value.ok   { color: var(--gold); }
+    .conf-value.weak { color: var(--red); }
+
+    /* ── Verified timestamp ── */
+    .card-verified {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; color: var(--soft); padding: 2px 0;
+    }
+    .vdot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+    /* ── Score breakdown ── */
+    .score-breakdown { display: flex; gap: 5px; flex-wrap: wrap; }
     .score-chip {
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 7px;
-      background: rgba(255,255,255,.025);
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.25;
+      display: inline-flex; align-items: center; gap: 3px;
+      border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px;
+      font-size: 10px; color: var(--muted); background: rgba(255,255,255,.025);
     }
-    .score-chip b {
-      display: block;
-      color: var(--text);
-      font-size: 15px;
-    }
+    .score-chip b { font-size: 11px; color: var(--text); }
+    .score-chip b.pos { color: var(--green); }
+    .score-chip b.neg { color: var(--red); }
+
+    /* ── Verified badge (legacy, kept for modal) ── */
     .verified-badge {
-      display: inline-flex;
-      align-items: center;
-      width: fit-content;
-      border: 1px solid rgba(49,209,135,.45);
-      border-radius: 999px;
-      padding: 4px 9px;
-      color: #bff8dc;
-      background: rgba(49,209,135,.08);
-      font-size: 11px;
-      font-weight: 900;
+      display: inline-flex; align-items: center; width: fit-content;
+      border: 1px solid rgba(49,209,135,.45); border-radius: 999px;
+      padding: 4px 9px; color: #bff8dc; background: rgba(49,209,135,.08);
+      font-size: 11px; font-weight: 900;
     }
+
+    /* ── Results history section ── */
+    .history-section { margin-top: 22px; }
+    .history-rate {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,.03); border: 1px solid var(--line);
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 12px;
+    }
+    .history-rate b { font-size: 24px; color: var(--green); }
+    .history-rate span { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .history-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 8px; }
+    .history-item {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 8px;
+      align-items: center; border: 1px solid var(--line); border-radius: 8px;
+      padding: 10px 12px; background: rgba(255,255,255,.02); font-size: 13px;
+    }
+    .history-item.hit  { border-color: rgba(49,209,135,.28); background: rgba(49,209,135,.05); }
+    .history-item.miss { border-color: rgba(239,83,80,.25);  background: rgba(239,83,80,.04); }
+    .h-pick { color: var(--muted); font-size: 11px; margin-top: 2px; }
     .debug-panel {
       display: none;
       gap: 12px;
@@ -965,6 +1028,8 @@
       </section>
     </section>
 
+    <section class="history-section shell" id="historySection" style="display:none"></section>
+
     <section class="panel debug-panel" id="debugPanel">
       <div class="section-title">
         <div>
@@ -1107,9 +1172,13 @@
       if (!breakdown) return "";
       const labels = breakdown.labels || {};
       const keys = ["hitProbability", "oddsValue", "marketGap", "niche", "clearFavorite", "overroundPenalty"];
-      return `<div class="score-breakdown">
-        ${keys.map(key => `<span class="score-chip"><b>${Number(breakdown[key] || 0) > 0 ? "+" : ""}${breakdown[key] || 0}</b>${labels[key] || key}</span>`).join("")}
-      </div>`;
+      const chips = keys.map(key => {
+        const val = Number(breakdown[key] || 0);
+        const sign = val > 0 ? "+" : "";
+        const cls = val > 0 ? "pos" : val < 0 ? "neg" : "";
+        return `<span class="score-chip"><b class="${cls}">${sign}${val}</b>${labels[key] || key}</span>`;
+      }).join("");
+      return `<div class="score-breakdown">${chips}</div>`;
     }
 
     function pickHelpText(row) {
@@ -1573,55 +1642,157 @@
       `;
     }
 
+    /* ── Card UI helpers ── */
+
+    function matchBadges(row) {
+      const outcome = rowOutcome(row);
+      const phase = row.matchPhase || "";
+      const badges = [];
+
+      // Match phase badge
+      if (phase === "live")      badges.push('<span class="badge badge-live">● LIVE</span>');
+      else if (phase === "ht")   badges.push('<span class="badge badge-ht">HT</span>');
+      else if (phase === "final") badges.push('<span class="badge badge-ft">FT</span>');
+      else if (row.status === "נסגר" && !row.odds) badges.push('<span class="badge badge-ft">נסגר</span>');
+
+      // Betting/availability badge
+      const bs = row.bettingStatus;
+      if (bs === "suspended")    badges.push('<span class="badge badge-suspended">SUSPENDED</span>');
+      else if (bs === "odds_changed") badges.push('<span class="badge badge-odds-changed">ODDS CHANGED</span>');
+      else if (bs === "removed") badges.push('<span class="badge badge-removed">REMOVED</span>');
+      else if (bs === "cancelled") badges.push('<span class="badge badge-cancelled">CANCELLED</span>');
+      else if (bs === "postponed") badges.push('<span class="badge badge-postponed">POSTPONED</span>');
+
+      // Prediction result badge
+      if (row.recommended) {
+        if (outcome.cls === "hit")  badges.push('<span class="badge badge-won">✓ WON</span>');
+        else if (outcome.cls === "miss") badges.push('<span class="badge badge-lost">✗ LOST</span>');
+        else if (outcome.cls === "closed") badges.push('<span class="badge badge-void">VOID</span>');
+        else badges.push('<span class="badge badge-selected">SELECTED</span>');
+      }
+
+      return badges.join("");
+    }
+
+    function liveScoreMarkup(row) {
+      const phase = row.matchPhase || "scheduled";
+      const score = row.liveScore || row.result || "";
+      const minute = row.matchMinute || "";
+
+      if (phase === "final") {
+        return `<div class="card-live-area phase-final">
+          <span class="live-label">FT</span>
+          <span class="live-score-main">${score || "—"}</span>
+        </div>`;
+      }
+      if (phase === "live") {
+        const minHtml = minute ? `<span class="live-minute">${minute}'</span>` : "";
+        const scoreHtml = score
+          ? `<span class="live-score-main">${score}</span>`
+          : `<span style="font-size:12px;color:var(--muted)">נתוני חי לא זמינים</span>`;
+        return `<div class="card-live-area">
+          ${minHtml}${scoreHtml}
+        </div>`;
+      }
+      if (phase === "ht") {
+        return `<div class="card-live-area phase-ht">
+          <span class="live-label" style="color:var(--orange)">HT</span>
+          <span class="live-score-main">${score || "—"}</span>
+        </div>`;
+      }
+      // Scheduled — show kickoff time
+      return `<div class="card-live-area phase-scheduled">
+        <span class="live-label">⏰ פתיחה</span>
+        <span style="font-size:14px;font-weight:900;color:var(--text)">${row.time || "—"}</span>
+      </div>`;
+    }
+
+    function confidenceMarkup(row) {
+      if (!row.recommended || row.outsideRange || !row.odds) return "";
+      const implied = row.odds ? Math.round((1 / row.odds) * 100) : 0;
+      const model  = Math.round((row.normalizedProbability || row.probability || 0) * 100);
+      const gap    = model - implied;
+      const score  = row.recommendationScore || row.score || 0;
+      const riskLabel = row.riskLevel || (score >= 70 ? "נמוך" : score >= 50 ? "בינוני" : "גבוה");
+      const riskCls   = score >= 70 ? "good" : score >= 50 ? "ok" : "weak";
+      const gapCls    = gap > 4 ? "good" : gap > 0 ? "ok" : "weak";
+      return `<div class="card-confidence">
+        <div class="conf-item">
+          <span class="conf-label">ציון</span>
+          <span class="conf-value ${riskCls}">${score}/100</span>
+        </div>
+        <div class="conf-item">
+          <span class="conf-label">סיכון</span>
+          <span class="conf-value ${riskCls}">${riskLabel}</span>
+        </div>
+        <div class="conf-item">
+          <span class="conf-label">הסתברות מודל</span>
+          <span class="conf-value">${model}%</span>
+        </div>
+        <div class="conf-item">
+          <span class="conf-label">יתרון מול שוק</span>
+          <span class="conf-value ${gapCls}">${gap > 0 ? "+" : ""}${gap}pp</span>
+        </div>
+      </div>`;
+    }
+
+    function cardVerifiedMarkup(row) {
+      const ts = row.verifiedAt || state.feed?.generatedAt;
+      if (!ts) return "";
+      try {
+        const t = new Date(ts).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
+        return `<div class="card-verified"><span class="vdot"></span>אומת מ-Winner: ${t}</div>`;
+      } catch { return ""; }
+    }
+
     function rowCard(row) {
-      const cls = statusClass[row.status] || "wait";
-      const isSettled = row.status === "תפס" || row.status === "נתפס" || row.status === "נפל" || row.status === "לא נתפס";
       const hasRecommendation = row.recommended || (!!row.odds && !row.outsideRange);
       const noPickLabel = row.recommendationReason === "rank"
         ? "לא בטופ 20"
         : row.recommendationReason === "odds-range"
-          ? "מחוץ לטווח"
-          : "ללא הימור";
-      const noPickText = row.oddsRaw || row.odds
-        ? `${explicitPickText(row)} — יחס ${formatOdds(row.oddsRaw || row.odds)}`
-        : explicitPickText(row);
-      const settledBanner = isSettled
-        ? `<div style="text-align:center;padding:6px 0 2px"><span class="status ${cls}" style="font-size:26px;padding:12px 28px;display:inline-block">${cls === "hit" ? "✓ נתפס" : "✗ לא נתפס"}</span></div>`
-        : "";
-      // For handicap rows, explicitPickText already includes the spread line
+          ? "מחוץ לטווח 1.40–1.90"
+          : "ללא המלצה";
+
       return `
         <article class="card" data-id="${row.id}">
           <div class="card-head">
-            <div>
-              <div class="league" style="display:flex;align-items:center;gap:7px">${logoMarkup(row.leagueAsset, "small")}<span>${row.league || "ליגה לא זמינה"}</span></div>
-              <div class="micro">${row.sport} · ${row.source}</div>
+            <div style="min-width:0;flex:1">
+              <div class="league" style="display:flex;align-items:center;gap:6px">
+                ${logoMarkup(row.leagueAsset, "small")}
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.league || "ליגה לא זמינה"}</span>
+              </div>
+              <div class="card-badge-row">${matchBadges(row)}</div>
             </div>
-            <div class="time">${row.day} · ${row.time}</div>
+            <div style="text-align:end;flex-shrink:0">
+              <div class="time" style="font-size:11px">${row.day}</div>
+              <div class="time" style="font-size:13px;color:var(--text);font-weight:900">${row.time}</div>
+              <div class="micro" style="margin-top:2px">${row.sport}</div>
+            </div>
           </div>
           <div class="card-body">
-            ${settledBanner}
+            ${liveScoreMarkup(row)}
             <div class="teams-line">
               ${teamsMarkup(row)}
             </div>
-            <div class="${hasRecommendation ? 'picked-bet' : 'picked-bet outside-range'}">
-              ${!hasRecommendation
-                ? `<span class="label" style="color:var(--soft)">ללא המלצה</span>
-                   <strong style="color:var(--muted);font-size:15px">${noPickText}</strong>
-                   <span class="picked-odds" style="background:var(--panel-soft);color:var(--muted)">${noPickLabel}</span>`
-                : `<span class="label">הימרנו</span>
+            ${hasRecommendation
+              ? `<div class="picked-bet">
+                   <span class="label">בחירת האלגוריתם</span>
                    <strong>${explicitPickText(row)}</strong>
                    <span class="picked-odds">${row.odds ? formatOdds(row.odds) : "תוצאה"}</span>
                    <span class="pick-action">${pickActionText(row)}</span>
-                   <span class="pick-help">${pickHelpText(row)}</span>`
-              }
-            </div>
-            <div class="market-row">
-              <span class="name">${row.market || "שוק מנצח"}</span>
-              <span class="price">${row.odds ? formatOdds(row.odds) : row.actualWinner ? "תוצאה" : "נסגר"}</span>
-              <span class="status ${cls}">${statusLabel(row.status)}</span>
-            </div>
+                   <span class="pick-help">${pickHelpText(row)}</span>
+                 </div>
+                 ${confidenceMarkup(row)}
+                 ${scoreBreakdownMarkup(row)}`
+              : `<div class="picked-bet outside-range" style="opacity:.72">
+                   <span class="label" style="color:var(--soft)">ללא המלצה</span>
+                   <strong style="color:var(--muted);font-size:14px">${explicitPickText(row)}${row.oddsRaw ? ` — ${formatOdds(row.oddsRaw)}` : ""}</strong>
+                   <span class="picked-odds" style="background:var(--panel-soft);color:var(--muted)">${noPickLabel}</span>
+                 </div>`
+            }
             ${resultMarkup(row)}
-            <button class="open-game" data-open="${row.id}">פירוט משחק</button>
+            ${cardVerifiedMarkup(row)}
+            <button class="open-game" data-open="${row.id}">פירוט משחק ↗</button>
           </div>
         </article>
       `;
@@ -1736,12 +1907,72 @@
       `).join("") : `<div class="empty">No debug rows for this tab.</div>`;
     }
 
+    function renderHistory() {
+      const target = document.getElementById("historySection");
+      if (!target) return;
+      const perf    = monthlyPerformance();
+      const tracker = readTracker();
+      const hits    = tracker.filter(i => i.status === "hit");
+      const misses  = tracker.filter(i => i.status === "miss");
+      const pending = tracker.filter(i => i.status === "pending");
+      const settled = [...hits, ...misses].sort((a, b) =>
+        String(b.settledDay || b.predictedDay || "").localeCompare(String(a.settledDay || a.predictedDay || ""))
+      );
+
+      if (!tracker.length) { target.style.display = "none"; return; }
+      target.style.display = "";
+
+      const rateText = perf.settled
+        ? `${perf.hits}/${perf.settled} (${perf.hitRate}%)`
+        : "אין תוצאות סגורות עדיין";
+
+      target.innerHTML = `
+        <div class="section-title">
+          <div>
+            <h3>היסטוריית תוצאות היום</h3>
+            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">בסיס: משחקים סגורים ומאומתים בלבד · ${perf.tracked} במעקב · ${perf.pending} ממתינות · אין ערבות לניצחון</p>
+          </div>
+        </div>
+        <div class="history-rate">
+          <b>${rateText}</b>
+          <div>
+            <span style="display:block;font-size:13px;color:var(--text)">אחוז פגיעה — ${hits.length} פגיעות · ${misses.length} החטאות</span>
+            <span>רק משחקים שנסגרו ומאומתים נספרים</span>
+          </div>
+        </div>
+        <div class="history-grid">
+          ${settled.map(item => `
+            <div class="history-item ${item.status}">
+              <span class="${item.status === "hit" ? "badge badge-won" : "badge badge-lost"}">${item.status === "hit" ? "✓ WON" : "✗ LOST"}</span>
+              <div>
+                <div style="font-weight:800;font-size:12px">${escapeHtml(item.match || "")}</div>
+                <div class="h-pick">בחירה: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
+                <div class="h-pick">תוצאה: ${escapeHtml(item.actualWinner || item.result || "ממתין לאימות")}</div>
+              </div>
+              <div style="font-size:10px;color:var(--soft)">${item.settledDay || item.predictedDay || ""}</div>
+            </div>
+          `).join("") || `<div class="empty" style="grid-column:1/-1">אין תוצאות סגורות עדיין — המשחקים ייסגרו לאחר סיומם.</div>`}
+          ${pending.map(item => `
+            <div class="history-item" style="opacity:.6">
+              <span class="badge badge-pending">PENDING</span>
+              <div>
+                <div style="font-weight:800;font-size:12px">${escapeHtml(item.match || "")}</div>
+                <div class="h-pick">בחירה: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
+              </div>
+              <div style="font-size:10px;color:var(--soft)">${item.predictedDay || ""}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
     function render() {
       renderTabs();
       renderStats();
       renderWorldCup();
       renderDaily();
       renderCards();
+      renderHistory();
       renderDebug();
     }
 
@@ -1762,6 +1993,13 @@
         state.loading = false;
         render();
       }
+    }
+
+    // Auto-refresh every 30 minutes (only when tab is visible)
+    if (!window._hapRefreshTimer) {
+      window._hapRefreshTimer = setInterval(() => {
+        if (!document.hidden) loadFeed();
+      }, 30 * 60 * 1000);
     }
 
     document.querySelectorAll("#dayTabs .tab").forEach(button => {
