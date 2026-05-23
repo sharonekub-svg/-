@@ -15,69 +15,7 @@ const SPORTS = {
 const WINNER_FOOTBALL_ID = 240;
 const WINNER_BASKETBALL_ID = 227;
 const SCORES365_BASKETBALL_ID = 2;
-const LEAGUE_LOGOS = {
-  NBA: "https://a.espncdn.com/i/leaguelogos/nba/500/nba.png",
-  "גביע קולומביאני": "https://media.api-sports.io/football/leagues/241.png",
-  "גביע אקוודורי": "https://media.api-sports.io/football/leagues/917.png",
-  "צ'יליאנית שניה": "https://media.api-sports.io/football/leagues/266.png",
-  "צ'מפיונשיפ": "https://media.api-sports.io/football/leagues/40.png",
-  "אנגלית ראשונה": "https://media.api-sports.io/football/leagues/39.png",
-  "ספרדית ראשונה": "https://media.api-sports.io/football/leagues/140.png",
-  "איטלקית ראשונה": "https://media.api-sports.io/football/leagues/135.png",
-  "גרמנית ראשונה": "https://media.api-sports.io/football/leagues/78.png",
-  "הולנדית ראשונה": "https://media.api-sports.io/football/leagues/88.png",
-  "בלגית ראשונה": "https://media.api-sports.io/football/leagues/144.png",
-  "אירית ראשונה": "https://media.api-sports.io/football/leagues/357.png",
-  "אירית שניה": "https://media.api-sports.io/football/leagues/358.png",
-  "סקוטית ראשונה": "https://media.api-sports.io/football/leagues/179.png",
-  "אוסטרלית ראשונה": "https://media.api-sports.io/football/leagues/188.png",
-  "בוליביאנית ראשונה": "https://media.api-sports.io/football/leagues/344.png",
-  "פרואנית ראשונה": "https://media.api-sports.io/football/leagues/281.png",
-  "איסלנדית ראשונה": "https://media.api-sports.io/football/leagues/164.png",
-  "מרוקאית ראשונה": "https://media.api-sports.io/football/leagues/200.png",
-  "ספרדית שלישית": "https://media.api-sports.io/football/leagues/437.png",
-  "אזרית ראשונה": "https://media.api-sports.io/football/leagues/419.png",
-  "סינית ראשונה": "https://media.api-sports.io/football/leagues/169.png",
-  "סלובנית ראשונה": "https://media.api-sports.io/football/leagues/373.png",
-  "פולנית ראשונה": "https://media.api-sports.io/football/leagues/106.png",
-  "אינדונזית ראשונה": "https://media.api-sports.io/football/leagues/274.png",
-  "פינית שניה": "https://media.api-sports.io/football/leagues/244.png",
-  "יפנית ראשונה": "https://media.api-sports.io/football/leagues/98.png",
-};
-const TEAM_LOGOS = {
-  "אוקלהומה סיטי ת'אנדר": "https://a.espncdn.com/i/teamlogos/nba/500/okc.png",
-  "סאן אנטוניו ספרס": "https://a.espncdn.com/i/teamlogos/nba/500/sas.png",
-  "אינדיאנה פייסרס": "https://a.espncdn.com/i/teamlogos/nba/500/ind.png",
-  "ניו יורק ניקס": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
-  "מינסוטה טימברוולבס": "https://a.espncdn.com/i/teamlogos/nba/500/min.png",
-  "גיסן": "https://commons.wikimedia.org/wiki/Special:FilePath/Giessen_46ers_logo.svg?width=160",
-  "קירשהיים": "https://commons.wikimedia.org/wiki/Special:FilePath/Kirchheim_Knights_logo.png?width=160",
-  "טריאסטה": "https://commons.wikimedia.org/wiki/Special:FilePath/Pallacanestro_Trieste_logo.svg?width=160",
-  "ברשיה": "https://commons.wikimedia.org/wiki/Special:FilePath/Germani_Basket_Brescia_logo.svg?width=160",
-  "נלסון": "https://commons.wikimedia.org/wiki/Special:FilePath/Nelson_Giants_logo.png?width=160",
-  "אוטאגו": "https://commons.wikimedia.org/wiki/Special:FilePath/Otago_Nuggets_logo.png?width=160",
-  "טרנקי": "https://commons.wikimedia.org/wiki/Special:FilePath/Taranaki_Airs_logo.png?width=160",
-  "קנטרברי": "https://commons.wikimedia.org/wiki/Special:FilePath/Canterbury_Rams_logo.png?width=160",
-  "בולטס": "https://commons.wikimedia.org/wiki/Special:FilePath/Meralco_Bolts_logo.svg?width=160",
-  "טרופנג גיגה": "https://commons.wikimedia.org/wiki/Special:FilePath/TNT_Tropang_Giga_logo.svg?width=160",
-  "באראנגי גינברה": "https://commons.wikimedia.org/wiki/Special:FilePath/Barangay_Ginebra_San_Miguel_logo.svg?width=160",
-  "ריין אור שיין": "https://commons.wikimedia.org/wiki/Special:FilePath/Rain_or_Shine_Elasto_Painters_logo.svg?width=160",
-  "ראנס פיק": "https://commons.wikimedia.org/wiki/Special:FilePath/RANS_PIK_Basketball_logo.png?width=160",
-  "פליטה ג'איה": "https://commons.wikimedia.org/wiki/Special:FilePath/Pelita_Jaya_Basketball_Club_logo.png?width=160",
-  "קליבלנד קבלירס": "https://a.espncdn.com/i/teamlogos/nba/500/cle.png",
-  "ניו יורק": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
-  "חובנטוד בדאלונה": "https://commons.wikimedia.org/wiki/Special:FilePath/Joventut_Badalona_logo.svg?width=160",
-  "סן פאבלו בורגוס": "https://commons.wikimedia.org/wiki/Special:FilePath/CB_Miraflores_logo.svg?width=160",
-  "ליידה": "https://commons.wikimedia.org/wiki/Special:FilePath/For%C3%A7a_Lleida_logo.svg?width=160",
-  "אנדורה": "https://commons.wikimedia.org/wiki/Special:FilePath/BC_Andorra_logo.svg?width=160",
-  "לאס ווגאס": "https://a.espncdn.com/i/teamlogos/wnba/500/lv.png",
-  "לוס אנג'לס": "https://a.espncdn.com/i/teamlogos/wnba/500/la.png",
-  "וורצבורג": "https://commons.wikimedia.org/wiki/Special:FilePath/W%C3%BCrzburg_Baskets_logo.svg?width=160",
-  "טלקום בון": "https://commons.wikimedia.org/wiki/Special:FilePath/Telekom_Baskets_Bonn_logo.svg?width=160",
-  "אטלנטה": "https://a.espncdn.com/i/teamlogos/wnba/500/atl.png",
-  "פיניקס": "https://a.espncdn.com/i/teamlogos/wnba/500/phx.png",
-  "דאלאס": "https://a.espncdn.com/i/teamlogos/wnba/500/dal.png",
-};
+// No hardcoded logo lists — logos are resolved dynamically via API search only.
 
 function winnerHeaders(extra = {}) {
   return {
@@ -356,10 +294,8 @@ async function enrichLogos(rows) {
   async function teamAsset(name) {
     const key = cleanText(name);
     if (!teamCache.has(key)) {
-      const mappedLogo = TEAM_LOGOS[key] || "";
-      const row = mappedLogo
-        ? { logo_url: mappedLogo, source: "curated teams" }
-        : await supabaseSearch("teams", key) ||
+      // Dynamic search only — no hardcoded list
+      const row = await supabaseSearch("teams", key) ||
           await sportsDbSearch("team", key) ||
           await wikipediaLogoSearch(key, "team") ||
           await wikipediaSearchLogo(key, "team") ||
@@ -377,10 +313,8 @@ async function enrichLogos(rows) {
   async function leagueAsset(name) {
     const key = cleanText(name);
     if (!leagueCache.has(key)) {
-      const mappedLogo = LEAGUE_LOGOS[key] || "";
-      const row = mappedLogo
-        ? { logo_url: mappedLogo, source: "curated leagues" }
-        : await supabaseSearch("leagues", key) ||
+      // Dynamic search only — no hardcoded list
+      const row = await supabaseSearch("leagues", key) ||
           await sportsDbSearch("league", key) ||
           await wikipediaLogoSearch(key, "league") ||
           await wikipediaSearchLogo(key, "league") ||
