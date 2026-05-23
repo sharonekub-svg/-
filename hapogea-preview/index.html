@@ -355,6 +355,40 @@
     }
     .market-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .market-row .price { font-weight: 900; color: var(--gold); }
+    .result-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px;
+      background: rgba(255,255,255,.025);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .result-line b { color: var(--text); }
+    .result-score {
+      font: 900 20px/1 Heebo, Assistant, sans-serif;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+    .verdict {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid var(--line-strong);
+      color: var(--muted);
+      width: fit-content;
+      margin-top: 4px;
+    }
+    .verdict.hit { color: #bff8dc; border-color: rgba(49,209,135,.4); background: rgba(49,209,135,.1); }
+    .verdict.miss { color: #ffc5c3; border-color: rgba(239,83,80,.36); background: rgba(239,83,80,.08); }
+    .verdict.wait { color: #d7edff; border-color: rgba(85,214,255,.36); background: rgba(85,214,255,.08); }
     .score-row { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; color: var(--muted); font-size: 12px; font-weight: 800; }
     .meter { height: 7px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
     .meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); }
@@ -880,6 +914,13 @@
       return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
     }
 
+    function samePick(a, b) {
+      const left = normalizePick(a);
+      const right = normalizePick(b);
+      if (!left || !right) return false;
+      return left === right || left.includes(right) || right.includes(left);
+    }
+
     function rememberOpenPredictions(feed) {
       if (!feed?.tabs) return;
       const tracker = readTracker();
@@ -912,8 +953,9 @@
 
     function settleTrackedPredictions(feed) {
       if (!feed?.tabs?.yesterday) return;
-      const results = Object.values(feed.tabs.yesterday.sports || {})
-        .flatMap(rows => rows || [])
+      const results = ["yesterday", "today"].flatMap(day =>
+        Object.values(feed.tabs?.[day]?.sports || {}).flatMap(rows => rows || [])
+      )
         .filter(row => row.actualWinner);
       if (!results.length) return;
       const resultByEvent = new Map(results.map(row => [String(row.eventId), row]));
@@ -921,7 +963,7 @@
         if (item.status !== "pending") return item;
         const result = resultByEvent.get(String(item.eventId));
         if (!result) return item;
-        const hit = normalizePick(item.pick) === normalizePick(result.actualWinner);
+        const hit = samePick(item.pick, result.actualWinner);
         return {
           ...item,
           status: hit ? "hit" : "miss",
@@ -951,12 +993,45 @@
       };
     }
 
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function assetInitials(value) {
+      return String(value || "?")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join("")
+        .toUpperCase() || "?";
+    }
+
+    function fallbackBadge(name, kind = "team") {
+      const label = assetInitials(name);
+      const stroke = kind === "flag" ? "#ffc857" : kind === "league" ? "#55d6ff" : "#31d187";
+      const bg = kind === "flag" ? "#211b10" : kind === "league" ? "#111f2a" : "#102219";
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="${bg}"/><circle cx="48" cy="48" r="43" fill="none" stroke="${stroke}" stroke-width="5"/><text x="48" y="57" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="800" fill="#f7f3ea">${escapeHtml(label)}</text></svg>`;
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
+    function imageWithFallback(src, name, kind) {
+      const fallback = fallbackBadge(name, kind);
+      return `<img src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${fallback}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
+    }
+
     function logoMarkup(asset, size = "") {
-      if (!asset) return `<div class="logo-wrap ${size}">?</div>`;
+      if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
       if (asset.logo) {
-        return `<div class="logo-wrap ${size}"><img src="${asset.logo}" alt="${asset.name || ""}" loading="lazy"></div>`;
+        return `<div class="logo-wrap ${size}">${imageWithFallback(asset.logo, asset.name || "", size === "small" ? "league" : "team")}</div>`;
       }
-      return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${asset.initials || "?"}</div>`;
+      return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team")}</div>`;
     }
 
     function allRows() {
@@ -988,6 +1063,49 @@
       return rows.sort((a, b) => (b.score || 0) - (a.score || 0) || (b.odds || 0) - (a.odds || 0))[0];
     }
 
+    function trackerForRow(row) {
+      const items = readTracker();
+      return items.find(item =>
+        String(item.eventId) === String(row.eventId) &&
+        (!row.marketId || !item.marketId || String(item.marketId) === String(row.marketId))
+      ) || items.find(item => String(item.eventId) === String(row.eventId));
+    }
+
+    function rowOutcome(row) {
+      const tracked = trackerForRow(row);
+      const guessed = tracked?.pick || row.winnerPick || row.pick || "לא נשמר";
+      const result = row.liveScore || row.result || "";
+      const actual = row.actualWinner || "";
+      let status = tracked?.status || "";
+      if ((!status || status === "pending") && actual && guessed !== "לא נשמר") {
+        status = samePick(guessed, actual) ? "hit" : "miss";
+      }
+      if (!status || status === "נסגר") status = actual ? "wait" : "pending";
+      const cls = status === "hit" || status === "תפס" ? "hit" : status === "miss" || status === "נפל" ? "miss" : "wait";
+      const label = cls === "hit" ? "תפס!" : cls === "miss" ? "נפל" : "ממתין";
+      return {
+        result: result || (row.matchPhase === "scheduled" ? "טרם התחיל" : "אין תוצאה"),
+        guessed,
+        actual,
+        cls,
+        label,
+      };
+    }
+
+    function resultMarkup(row) {
+      const outcome = rowOutcome(row);
+      return `
+        <div class="result-line">
+          <div>
+            <div><b>ניחוש:</b> ${outcome.guessed}</div>
+            <div><b>תוצאה בפועל:</b> ${outcome.actual || "ממתין לעדכון Winner"}</div>
+            <span class="verdict ${outcome.cls}">${outcome.label}</span>
+          </div>
+          <div class="result-score">${outcome.result}</div>
+        </div>
+      `;
+    }
+
     function renderTabs() {
       document.querySelectorAll("#dayTabs .tab").forEach(button => {
         button.classList.toggle("active", button.dataset.day === state.day);
@@ -1010,7 +1128,7 @@
     }
 
     function flagImg(code, name) {
-      return `<span class="wc-flag"><img src="https://flagcdn.com/w160/${code}.png" alt="דגל ${name}" loading="lazy"></span>`;
+      return `<span class="wc-flag">${imageWithFallback(`https://flagcdn.com/w160/${code}.png`, `דגל ${name}`, "flag")}</span>`;
     }
 
     function wcPickLabel(item) {
@@ -1163,6 +1281,7 @@
               <span class="price">${row.odds ? formatOdds(row.odds) : row.actualWinner ? "תוצאה" : "נסגר"}</span>
               <span class="status ${cls}">${row.status}</span>
             </div>
+            ${resultMarkup(row)}
             <div class="score-row">
               <span>ציון</span>
               <div class="meter"><span style="width:${Math.max(0, Math.min(100, row.score || 0))}%"></span></div>
@@ -1186,18 +1305,19 @@
     function renderModal(row) {
       if (!row) return;
       const modal = document.getElementById("gameModal");
+      const outcome = rowOutcome(row);
       document.getElementById("modalTitle").innerHTML = `
         <div class="teams-line" style="min-height:86px">
           ${teamsMarkup(row)}
         </div>
-        <div class="micro" style="text-align:center">${row.league} · ${row.day} · ${row.time} · מזהה Winner ${row.eventId}</div>
+        <div class="micro" style="text-align:center">${row.league} · ${row.day} · ${row.time} · תוצאה ${outcome.result} · מזהה Winner ${row.eventId}</div>
       `;
       const explanation = row.explanation || [];
       document.getElementById("modalBody").innerHTML = `
         <div class="explain-grid">
           <div class="explain-box">
             <b>מי מנצח</b>
-            <p>המסומן בירוק. ${row.odds ? `יחס Winner ${formatOdds(row.odds)}. הסתברות שוק ${formatPercent(row.probability)}.` : `תוצאה רשמית: ${row.result || "נסגר"}.`}</p>
+            <p>ניחוש: ${outcome.guessed}. תוצאה: ${outcome.result}. סטטוס: ${outcome.label}. ${row.odds ? `יחס Winner ${formatOdds(row.odds)}. הסתברות שוק ${formatPercent(row.probability)}.` : ""}</p>
           </div>
           <div class="explain-box">
             <b>למה</b>

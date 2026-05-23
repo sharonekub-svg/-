@@ -109,6 +109,13 @@ function decimal(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function scoreText(a, b, fallback = "") {
+  const left = cleanText(a);
+  const right = cleanText(b);
+  if (left !== "" && right !== "") return `${left}:${right}`;
+  return cleanText(fallback);
+}
+
 function splitTeams(match) {
   const [home, away] = cleanText(match).split(" - ").map(cleanText);
   return { home: home || cleanText(match), away: away || "" };
@@ -178,6 +185,26 @@ async function sportsDbSearch(kind, term) {
   };
 }
 
+async function wikipediaLogoSearch(name, kind) {
+  const value = cleanText(name);
+  if (!value || value.length < 3) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1800);
+  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(value)}`;
+  const data = await fetchJson(url, {
+    headers: { "User-Agent": "HapogeaLogoBot/1.0" },
+    signal: controller.signal,
+  }).catch(() => null);
+  clearTimeout(timeout);
+  const logo = data?.thumbnail?.source || data?.originalimage?.source || "";
+  if (!logo) return null;
+  return {
+    name: cleanText(data.title || value),
+    logo_url: logo,
+    source: `Wikipedia ${kind}`,
+  };
+}
+
 async function enrichLogos(rows) {
   const teamCache = new Map();
   const leagueCache = new Map();
@@ -187,7 +214,9 @@ async function enrichLogos(rows) {
       const mappedLogo = TEAM_LOGOS[key] || "";
       const row = mappedLogo
         ? { logo_url: mappedLogo, source: "curated teams" }
-        : await supabaseSearch("teams", key) || await sportsDbSearch("team", key);
+        : await supabaseSearch("teams", key) ||
+          await sportsDbSearch("team", key) ||
+          await wikipediaLogoSearch(key, "team");
       teamCache.set(key, row);
     }
     const row = teamCache.get(key);
@@ -204,7 +233,9 @@ async function enrichLogos(rows) {
       const mappedLogo = LEAGUE_LOGOS[key] || "";
       const row = mappedLogo
         ? { logo_url: mappedLogo, source: "curated leagues" }
-        : await supabaseSearch("leagues", key) || await sportsDbSearch("league", key);
+        : await supabaseSearch("leagues", key) ||
+          await sportsDbSearch("league", key) ||
+          await wikipediaLogoSearch(key, "league");
       leagueCache.set(key, row);
     }
     const row = leagueCache.get(key);
@@ -223,6 +254,49 @@ async function enrichLogos(rows) {
     ]);
     return { ...row, homeAsset, awayAsset, leagueAsset: leagueAssetValue };
   }));
+}
+
+function resultIndex(results) {
+  const map = new Map();
+  for (const event of results || []) {
+    map.set(String(event.eventid), event);
+  }
+  return map;
+}
+
+function resultWinner(event) {
+  const markets = event?.markets || [];
+  const market = markets.find((m) => cleanText(m.title).includes("1X2")) ||
+    markets.find((m) => cleanText(m.title).includes("׳”׳׳ ׳¦׳—"));
+  const raw = cleanText((market?.marketResults || [])[0]);
+  return raw.toLowerCase() === "x" ? "׳×׳™׳§׳•" : raw;
+}
+
+function resultPhase(event) {
+  if (!event) return "scheduled";
+  const status = cleanText(event.status || event.statusText || event.eventStatus || event.matchStatus || event.state);
+  const hasScore = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
+  if (/live|in.?play|playing|׳—׳™|משוחק/i.test(status)) return "live";
+  if (resultWinner(event)) return "final";
+  if (hasScore) return "live";
+  return "scheduled";
+}
+
+function applyResult(row, event) {
+  if (!event) return row;
+  const actualWinner = resultWinner(event);
+  const result = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
+  const phase = resultPhase(event);
+  return {
+    ...row,
+    liveScore: result || row.liveScore || "",
+    result: result || row.result || "",
+    actualWinner: actualWinner || row.actualWinner || "",
+    matchPhase: phase,
+    status: phase === "final"
+      ? resultStatus({ markets: event.markets || [] }, row.winnerPick || row.pick)
+      : "׳׳׳×׳™׳",
+  };
 }
 
 function marketReliability(title, sportId) {
@@ -361,7 +435,7 @@ function describeWinnerPick(market, scored, teams) {
   return `${pickText} נבחרת כי היא עדיין בחירת מנצח פתוחה ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זו בחירה מסוכנת יותר.` : ""}`.replace(/\s+/g, " ").trim();
 }
 
-function buildCurrentPicks(markets, dateKey, limit = 20) {
+function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Map()) {
   const events = new Map();
   for (const market of markets) {
     const date = winnerDateToIso(market.e_date);
@@ -407,8 +481,9 @@ function buildCurrentPicks(markets, dateKey, limit = 20) {
           "הפירוט מבוסס על יחסי Winner בלבד. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור.",
         ],
       };
-      if (!current || row.score > current.score || (row.score === current.score && row.odds < current.odds)) {
-        events.set(market.eId, row);
+      const enrichedRow = applyResult(row, resultsByEvent.get(String(market.eId)));
+      if (!current || enrichedRow.score > current.score || (enrichedRow.score === current.score && enrichedRow.odds < current.odds)) {
+        events.set(market.eId, enrichedRow);
       }
     }
   }
@@ -456,7 +531,9 @@ function buildResultRows(results, dateKey) {
         probability: null,
         score: 0,
         status: "נסגר",
-        result: event.scoreA && event.scoreB ? `${event.scoreA}:${event.scoreB}` : cleanText(event.noScoreLabel || ""),
+        liveScore: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
+        matchPhase: resultPhase(event),
+        result: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
         signals: ["תוצאה רשמית מווינר", "ארכיון לבדיקת פגיעה", "אין יחס עבר בממשק הציבורי"],
         allMarkets: (event.markets || []).map((item) => ({
           marketId: null,
@@ -489,6 +566,27 @@ function splitBySport(rows) {
     football: rows.filter((row) => row.sportId === 240),
     basketball: rows.filter((row) => row.sportId === 227),
   };
+}
+
+function mergeRows(primary, secondary) {
+  const byEvent = new Map();
+  for (const row of [...primary, ...secondary]) {
+    const key = String(row.eventId || row.id);
+    const current = byEvent.get(key);
+    if (!current) {
+      byEvent.set(key, row);
+      continue;
+    }
+    byEvent.set(key, {
+      ...row,
+      ...current,
+      liveScore: current.liveScore || row.liveScore || "",
+      result: current.result || row.result || "",
+      actualWinner: current.actualWinner || row.actualWinner || "",
+      matchPhase: current.matchPhase || row.matchPhase || "",
+    });
+  }
+  return [...byEvent.values()];
 }
 
 async function getWinnerLine() {
@@ -532,12 +630,14 @@ module.exports = async function handler(req, res) {
     const tomorrow = israelDate(1);
     const [{ hashes, markets }, resultEvents] = await Promise.all([
       getWinnerLine(),
-      getResults(yesterday, today),
+      getResults(yesterday, tomorrow),
     ]);
+    const resultsByEvent = resultIndex(resultEvents);
     const yesterdayRows = splitBySport(await enrichLogos(buildResultRows(resultEvents, yesterday)));
-    const todayRows = splitBySport(await enrichLogos(buildCurrentPicks(markets, today, 40)
-      .filter((row) => row.odds)));
-    const tomorrowRows = splitBySport(await enrichLogos(buildCurrentPicks(markets, tomorrow, 40)
+    const todayCurrentRows = buildCurrentPicks(markets, today, 40, resultsByEvent).filter((row) => row.odds);
+    const todayResultRows = buildResultRows(resultEvents, today);
+    const todayRows = splitBySport(await enrichLogos(mergeRows(todayCurrentRows, todayResultRows)));
+    const tomorrowRows = splitBySport(await enrichLogos(buildCurrentPicks(markets, tomorrow, 40, resultsByEvent)
       .filter((row) => row.odds)));
     res.status(200).json({
       ok: true,
