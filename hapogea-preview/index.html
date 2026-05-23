@@ -967,6 +967,8 @@
     }
     .verdict.unverified { color: #211600; border-color: rgba(255,200,87,.95); background: var(--gold); }
     .badge-unverified { color: #211600; background: var(--gold); }
+    .verdict.closed { color: var(--muted); border-color: rgba(255,255,255,.10); background: rgba(255,255,255,.05); }
+    .badge-closed { color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10); }
     .badge-cancelled-he { color: #ffc5c3; background: rgba(239,83,80,.18); border: 1px solid rgba(239,83,80,.35); }
     .card-verified {
       justify-content: space-between;
@@ -2210,6 +2212,7 @@
       if (raw === "miss" || raw === "נפל" || raw === "לא נתפס") return { key: "miss", label: "נפל", cls: "miss" };
       if (raw === "void" || raw === "cancelled" || raw === "בוטל") return { key: "void", label: "בוטל", cls: "unverified" };
       if (raw === "unverified" || raw === "לא אומת" || raw === "החזר") return { key: "unverified", label: "לא אומת", cls: "unverified" };
+      if (raw === "closed" || raw === "נסגר") return { key: "closed", label: "נסגר", cls: "closed" };
       return { key: "pending", label: "ממתין", cls: "wait" };
     }
 
@@ -2362,7 +2365,7 @@
       let status = tracked?.status || "";
       if (!status || status === "pending") {
         if (isVoidLikeRow(row)) status = row.status && String(row.status).includes("בוטל") ? "void" : "unverified";
-        else if (!hasSavedPick && (row.matchPhase === "final" || actual)) status = "unverified";
+        else if (!hasSavedPick && (row.matchPhase === "final" || actual)) status = row.verifiedAt ? "closed" : "unverified";
         else if (row.matchPhase === "final" && actual && guessed !== "לא נשמר") status = samePick(guessed, actual) ? "hit" : "miss";
         else status = "pending";
       }
@@ -2384,7 +2387,7 @@
       const match = matchStatusInfo(row);
       const outcome = rowOutcome(row);
       const badges = [`<span class="badge ${match.cls}">${match.label}</span>`];
-      if (row.recommended) badges.push(`<span class="badge ${outcome.cls === "hit" ? "badge-won" : outcome.cls === "miss" ? "badge-lost" : outcome.cls === "unverified" ? "badge-unverified" : "badge-pending"}">${outcome.label}</span>`);
+      if (row.recommended) badges.push(`<span class="badge ${outcome.cls === "hit" ? "badge-won" : outcome.cls === "miss" ? "badge-lost" : outcome.cls === "unverified" ? "badge-unverified" : outcome.cls === "closed" ? "badge-closed" : "badge-pending"}">${outcome.label}</span>`);
       if (row.isAlternativeMarket) badges.push('<span class="badge badge-odds-changed">שוק חלופי</span>');
       if (row.marketTier === "spread") badges.push('<span class="badge badge-pending">ליין כדורסל</span>');
       if (row.valueIndicator === "winner_higher") badges.push('<span class="badge badge-won">Value</span>');
@@ -2415,12 +2418,22 @@
 
     function resultMarkup(row) {
       const outcome = rowOutcome(row);
-      const verifyTime = outcome.resultVerifiedAt ? formatShortTime(outcome.resultVerifiedAt) : "";
-      const verifyLabel = outcome.key === "unverified" || outcome.key === "void"
-        ? "לא אומת מול מקור תוצאה רשמי"
-        : verifyTime
-          ? `מאומת · ${verifyTime}`
-          : "ממתין לתוצאה רשמית מאומתת";
+      const resultTime = outcome.resultVerifiedAt ? formatShortTime(outcome.resultVerifiedAt) : "";
+      const oddsTime = outcome.oddsVerifiedAt ? formatShortTime(outcome.oddsVerifiedAt) : "";
+      let verifyLabel;
+      if (outcome.key === "void" || outcome.key === "unverified") {
+        verifyLabel = oddsTime
+          ? `מאומת נתונים מ-Winner · ${oddsTime}`
+          : "לא נמצא מקור נתוני Winner";
+      } else if (resultTime) {
+        verifyLabel = `תוצאה מאומתת מ-Winner · ${resultTime}`;
+      } else if (oddsTime) {
+        verifyLabel = row.matchPhase === "final"
+          ? `מאומת מ-Winner · ${oddsTime} · תוצאה ממתינה`
+          : `מאומת מ-Winner · ${oddsTime}`;
+      } else {
+        verifyLabel = "ממתין לאימות מ-Winner";
+      }
       return `
         <div class="result-line">
           <div class="result-detail">
@@ -2450,12 +2463,12 @@
 
     function cardVerifiedMarkup(row) {
       const outcome = rowOutcome(row);
-      const oddsTime = formatShortTime(outcome.oddsVerifiedAt);
+      const oddsTime = formatShortTime(outcome.oddsVerifiedAt) || formatShortTime(row.verifiedAt);
       const resultTime = formatShortTime(outcome.resultVerifiedAt);
       if (!oddsTime && !resultTime) return "";
       return `<div class="card-verified">
-        <span><span class="vdot"></span>יחס Winner: ${oddsTime || "לא זמין"}</span>
-        <span>תוצאה: ${resultTime || "טרם אומתה"}</span>
+        <span><span class="vdot"></span>מאומת מ-Winner: ${oddsTime || "—"}</span>
+        <span>תוצאה: ${resultTime || "ממתין"}</span>
       </div>`;
     }
 
