@@ -331,14 +331,39 @@
       font-weight: 800;
       text-align: center;
     }
+    .team-odd {
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+      color: var(--gold);
+      background: rgba(255,200,87,.08);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .team-odd small { color: var(--muted); font-size: 10px; font-weight: 800; }
+    .team-side.selected .team-odd,
+    .versus.selected .team-odd {
+      color: #06100c;
+      background: var(--green);
+      border-color: rgba(49,209,135,.65);
+    }
+    .team-side.selected .team-odd small,
+    .versus.selected .team-odd small {
+      color: rgba(6,16,12,.72);
+    }
     .versus {
       position: relative;
-      width: 40px;
-      height: 40px;
+      width: 54px;
+      min-height: 56px;
       border-radius: 50%;
       border: 1px solid transparent;
       display: grid;
       place-items: center;
+      gap: 3px;
       font-weight: 900;
       color: var(--soft);
       letter-spacing: 0;
@@ -861,6 +886,10 @@
       return Number.isFinite(value) ? `${Math.round(value * 100)} אחוז` : "לא זמין";
     }
 
+    function formatGap(value) {
+      return Number.isFinite(value) ? `${Math.round(value * 100)} אחוז` : "לא זמין";
+    }
+
     function pickLabel(row) {
       return row.winnerPick || row.pick || "לא זמין";
     }
@@ -876,12 +905,22 @@
       return "";
     }
 
+    function oddsForSide(row, side) {
+      const item = row.oddsBook?.[side];
+      return item?.odds ? formatOdds(item.odds) : "";
+    }
+
+    function teamOddMarkup(row, side, label) {
+      const odds = oddsForSide(row, side);
+      return odds ? `<div class="team-odd"><small>${label}</small>${odds}</div>` : "";
+    }
+
     function teamsMarkup(row) {
       const side = pickSide(row);
       return `
-        <div class="team-side ${side === "home" ? "selected" : ""}">${logoMarkup(row.homeAsset)}<div class="team-name">${row.home || ""}</div></div>
-        <div class="versus ${side === "draw" ? "selected" : ""}">VS</div>
-        <div class="team-side ${side === "away" ? "selected" : ""}">${logoMarkup(row.awayAsset)}<div class="team-name">${row.away || ""}</div></div>
+        <div class="team-side ${side === "home" ? "selected" : ""}">${logoMarkup(row.homeAsset)}<div class="team-name">${row.home || ""}</div>${teamOddMarkup(row, "home", "1")}</div>
+        <div class="versus ${side === "draw" ? "selected" : ""}"><span>VS</span>${teamOddMarkup(row, "draw", "X")}</div>
+        <div class="team-side ${side === "away" ? "selected" : ""}">${logoMarkup(row.awayAsset)}<div class="team-name">${row.away || ""}</div>${teamOddMarkup(row, "away", "2")}</div>
       `;
     }
 
@@ -899,7 +938,7 @@
     }
 
     function predictionKey(row) {
-      return `${row.eventId}:${row.marketId || row.market}:${row.outcomeId || row.pick}`;
+      return `${row.resultKey || row.eventId}:${row.marketId || row.market}:${row.outcomeId || row.pick}`;
     }
 
     function isOpenDay(day = state.day) {
@@ -934,6 +973,7 @@
             byKey.set(key, {
               key,
               eventId: row.eventId,
+              resultKey: row.resultKey,
               marketId: row.marketId,
               outcomeId: row.outcomeId,
               sport,
@@ -959,9 +999,10 @@
         .filter(row => row.actualWinner);
       if (!results.length) return;
       const resultByEvent = new Map(results.map(row => [String(row.eventId), row]));
+      const resultByKey = new Map(results.filter(row => row.resultKey).map(row => [String(row.resultKey), row]));
       const tracker = readTracker().map(item => {
         if (item.status !== "pending") return item;
-        const result = resultByEvent.get(String(item.eventId));
+        const result = resultByEvent.get(String(item.eventId)) || resultByKey.get(String(item.resultKey || ""));
         if (!result) return item;
         const hit = samePick(item.pick, result.actualWinner);
         return {
@@ -1087,6 +1128,7 @@
         result: result || (row.matchPhase === "scheduled" ? "טרם התחיל" : "אין תוצאה"),
         guessed,
         actual,
+        odds: tracked?.odds || row.odds || null,
         cls,
         label,
       };
@@ -1098,6 +1140,7 @@
         <div class="result-line">
           <div>
             <div><b>ניחוש:</b> ${outcome.guessed}</div>
+            <div><b>יחס לפני המשחק:</b> ${outcome.odds ? formatOdds(outcome.odds) : "לא נשמר"}</div>
             <div><b>תוצאה בפועל:</b> ${outcome.actual || "ממתין לעדכון Winner"}</div>
             <span class="verdict ${outcome.cls}">${outcome.label}</span>
           </div>
@@ -1289,7 +1332,7 @@
             </div>
             <div class="signals">${(row.signals || []).map(signal => `<span class="signal">${signal}</span>`).join("")}</div>
             <div class="details">
-              ${row.odds ? `יחס Winner: ${formatOdds(row.odds)}.` : `תוצאה רשמית: ${row.actualWinner || row.result || "נסגר"}.`} למה: ${(row.explanation || [])[1] || "הסימון מבוסס על שוק המנצח בווינר."}
+              ${row.odds ? `יחס Winner לפני המשחק: ${formatOdds(row.odds)}. הסתברות מנוכת מרווח: ${formatPercent(row.normalizedProbability || row.probability)}. פער מול היריבה הקרובה: ${formatGap(row.marketGap)}.` : `תוצאה רשמית: ${row.actualWinner || row.result || "נסגר"}.`} למה: ${(row.explanation || [])[1] || "הסימון מבוסס על שוק המנצח בווינר."}
               מזהה משחק בווינר: ${row.eventId}.
             </div>
             <button class="open-game" data-open="${row.id}">פירוט משחק</button>
@@ -1317,7 +1360,7 @@
         <div class="explain-grid">
           <div class="explain-box">
             <b>מי מנצח</b>
-            <p>ניחוש: ${outcome.guessed}. תוצאה: ${outcome.result}. סטטוס: ${outcome.label}. ${row.odds ? `יחס Winner ${formatOdds(row.odds)}. הסתברות שוק ${formatPercent(row.probability)}.` : ""}</p>
+            <p>ניחוש: ${outcome.guessed}. יחס לפני המשחק: ${outcome.odds ? formatOdds(outcome.odds) : "לא נשמר"}. תוצאה: ${outcome.result}. סטטוס: ${outcome.label}. ${row.odds ? `הסתברות מנוכת מרווח ${formatPercent(row.normalizedProbability || row.probability)}. פער שוק ${formatGap(row.marketGap)}.` : ""}</p>
           </div>
           <div class="explain-box">
             <b>למה</b>

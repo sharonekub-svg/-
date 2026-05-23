@@ -10,6 +10,9 @@ const SPORTS = {
   240: "כדורגל",
   227: "כדורסל",
 };
+const WINNER_FOOTBALL_ID = 240;
+const WINNER_BASKETBALL_ID = 227;
+const SCORES365_BASKETBALL_ID = 2;
 const LEAGUE_LOGOS = {
   NBA: "https://a.espncdn.com/i/leaguelogos/nba/500/nba.png",
   "גביע קולומביאני": "https://media.api-sports.io/football/leagues/241.png",
@@ -126,6 +129,40 @@ function cleanText(value) {
     .replace(/[\u202A-\u202E\u202C\u200E\u200F]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizeMatchName(value) {
+  return cleanText(value)
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\b(fc|bc|bk|basket|basketball|club|women|w)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function resultKeyFor(row) {
+  const home = normalizeMatchName(row?.home || row?.teamA);
+  const away = normalizeMatchName(row?.away || row?.teamB);
+  const day = cleanText(row?.day || row?.date);
+  const sportId = Number(row?.sportId || row?.sportid || 0);
+  if (!day || !sportId || !home || !away) return "";
+  return `${sportId}:${day}:${home}:${away}`;
+}
+
+function resultKeyVariants(row) {
+  const key = resultKeyFor(row);
+  if (!key) return [];
+  const parts = key.split(":");
+  return [
+    key,
+    `${parts[0]}:${parts[1]}:${parts[3]}:${parts[2]}`,
+  ];
+}
+
+function scores365Date(dateKey) {
+  const [year, month, day] = String(dateKey || "").split("-");
+  return year && month && day ? `${day}/${month}/${year}` : "";
 }
 
 function initials(value) {
@@ -260,6 +297,14 @@ function resultIndex(results) {
   const map = new Map();
   for (const event of results || []) {
     map.set(String(event.eventid), event);
+    for (const key of resultKeyVariants({
+      day: event.date,
+      sportId: event.sportid,
+      home: event.teamA,
+      away: event.teamB,
+    })) {
+      map.set(key, event);
+    }
   }
   return map;
 }
@@ -336,6 +381,34 @@ function scoreAnyOutcome(market, outcome) {
   };
 }
 
+function marketOddsBook(market) {
+  const teams = splitTeams(market.desc);
+  const rawOutcomes = (market.outcomes || [])
+    .map((outcome) => ({
+      desc: cleanText(outcome.desc),
+      odds: decimal(outcome.price),
+    }))
+    .filter((outcome) => outcome.desc && outcome.odds);
+  const impliedTotal = rawOutcomes.reduce((total, outcome) => total + (1 / outcome.odds), 0);
+  const withProbability = rawOutcomes.map((outcome) => ({
+    ...outcome,
+    implied: 1 / outcome.odds,
+    noVigProbability: impliedTotal ? (1 / outcome.odds) / impliedTotal : null,
+  }));
+  const findBySide = (side) => {
+    const target = side === "home" ? teams.home : teams.away;
+    return withProbability.find((outcome) => cleanText(outcome.desc) === cleanText(target));
+  };
+  const draw = withProbability.find((outcome) => cleanText(outcome.desc).toLowerCase() === "x");
+  return {
+    home: findBySide("home") || null,
+    draw: draw || null,
+    away: findBySide("away") || null,
+    outcomes: withProbability,
+    overround: Math.max(0, impliedTotal - 1),
+  };
+}
+
 function buildEventMarkets(eventMarkets) {
   return eventMarkets.map((market) => {
     const outcomes = (market.outcomes || [])
@@ -379,23 +452,39 @@ function allowedMarket(market) {
 function scoreOutcome(market, outcome) {
   const odds = decimal(outcome.price);
   if (!odds || odds < ODDS_MIN || odds > ODDS_MAX) return null;
+  const oddsBook = marketOddsBook(market);
   const reliability = marketReliability(market.mp, market.sId);
   const implied = 1 / odds;
+  const current = oddsBook.outcomes.find((item) => item.desc === cleanText(outcome.desc) && item.odds === odds);
+  const normalizedProbability = current?.noVigProbability || implied;
+  const competitors = oddsBook.outcomes
+    .filter((item) => item.desc !== cleanText(outcome.desc))
+    .map((item) => item.noVigProbability || item.implied)
+    .sort((a, b) => b - a);
+  const closestCompetitor = competitors[0] || 0;
+  const marketGap = Math.max(0, normalizedProbability - closestCompetitor);
+  const marginPenalty = Math.min(0.16, oddsBook.overround) * 100;
   const sourceDepth = Math.min(1, Number(market.count || market.outcomes?.length || 1) / 8);
-  const hitProbability = Math.max(0.42, Math.min(0.78, implied * reliability));
+  const hitProbability = Math.max(0.34, Math.min(0.82, normalizedProbability * reliability));
   const score = Math.round(
-    hitProbability * 72 +
-      reliability * 18 +
-      sourceDepth * 10
+    normalizedProbability * 70 +
+      marketGap * 34 +
+      reliability * 12 +
+      sourceDepth * 6 -
+      marginPenalty
   );
   return {
     outcomeId: outcome.outcomeId,
     pick: cleanText(outcome.desc),
     odds,
     implied,
+    normalizedProbability,
+    marketGap,
+    overround: oddsBook.overround,
     hitProbability,
     reliability,
-    score,
+    score: Math.max(1, Math.min(100, score)),
+    oddsBook,
   };
 }
 
@@ -435,10 +524,11 @@ function describeWinnerPick(market, scored, teams) {
   return `${pickText} נבחרת כי היא עדיין בחירת מנצח פתוחה ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זו בחירה מסוכנת יותר.` : ""}`.replace(/\s+/g, " ").trim();
 }
 
-function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Map()) {
+function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Map(), sportIdFilter = null) {
   const events = new Map();
   for (const market of markets) {
     const date = winnerDateToIso(market.e_date);
+    if (sportIdFilter && Number(market.sId) !== Number(sportIdFilter)) continue;
     if (date !== dateKey || !allowedMarket(market)) continue;
     for (const outcome of market.outcomes || []) {
       const scored = scoreOutcome(market, outcome);
@@ -459,29 +549,36 @@ function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Ma
         match: cleanText(market.desc),
         home: teams.home,
         away: teams.away,
+        resultKey: resultKeyFor({ day: dateKey, sportId: market.sId, home: teams.home, away: teams.away }),
         market: cleanText(market.mp),
         marketId: market.mId,
         outcomeId: scored.outcomeId,
         pick: scored.pick,
         winnerPick: cleanText(scored.pick).toLowerCase() === "x" ? "תיקו" : scored.pick,
         odds: scored.odds,
+        oddsBook: scored.oddsBook,
         probability: scored.hitProbability,
+        normalizedProbability: scored.normalizedProbability,
+        marketGap: scored.marketGap,
+        overround: scored.overround,
         score: scored.score,
         status: "ממתין",
         result: "",
         signals: [
-          `הסתברות שוק ${Math.round(scored.implied * 100)} אחוז`,
+          `הסתברות Winner מנוכת מרווח ${Math.round(scored.normalizedProbability * 100)} אחוז`,
           `אמינות שוק ${Math.round(scored.reliability * 100)} אחוז`,
           `יחס Winner ${scored.odds.toFixed(2)}`,
+          `פער מול היריבה הקרובה ${Math.round(scored.marketGap * 100)} אחוז`,
         ],
         allMarkets: eventMarkets,
         explanation: [
           "המשחק מופיע בווינר-ליין ולכן ניתן להמר עליו בזמן משיכת הנתונים.",
           describeWinnerPick(market, scored, teams),
-          "הפירוט מבוסס על יחסי Winner בלבד. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור.",
+          "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור.",
         ],
       };
-      const enrichedRow = applyResult(row, resultsByEvent.get(String(market.eId)));
+      const matchedResult = resultsByEvent.get(String(market.eId)) || resultsByEvent.get(row.resultKey);
+      const enrichedRow = applyResult(row, matchedResult);
       if (!current || enrichedRow.score > current.score || (enrichedRow.score === current.score && enrichedRow.odds < current.odds)) {
         events.set(market.eId, enrichedRow);
       }
@@ -523,6 +620,7 @@ function buildResultRows(results, dateKey) {
         match: `${cleanText(event.teamA)} - ${cleanText(event.teamB)}`,
         home: teams.home,
         away: teams.away,
+        resultKey: resultKeyFor({ day: dateKey, sportId: event.sportid, home: teams.home, away: teams.away }),
         market: cleanText(market?.title || "תוצאת משחק"),
         pick: actualWinner,
         winnerPick: actualWinner,
@@ -561,6 +659,117 @@ function buildResultRows(results, dateKey) {
     .slice(0, 20);
 }
 
+async function get365BasketballResults(startDate, endDate) {
+  const dates = [startDate];
+  if (endDate && endDate !== startDate) dates.push(endDate);
+  const rows = [];
+  for (const dateKey of dates) {
+    const day = scores365Date(dateKey);
+    if (!day) continue;
+    const params = new URLSearchParams({
+      langId: "2",
+      timezoneName: "Asia/Jerusalem",
+      userCountryId: "6",
+      appTypeId: "5",
+      sports: String(SCORES365_BASKETBALL_ID),
+      startDate: day,
+      endDate: day,
+    });
+    const data = await fetchJson(`https://webws.365scores.com/web/games/?${params}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Origin: "https://www.365scores.com",
+        Referer: "https://www.365scores.com/he/basketball/match-results",
+        Accept: "application/json",
+      },
+    }).catch(() => null);
+    for (const game of data?.games || []) {
+      const home = cleanText(game.homeCompetitor?.name);
+      const away = cleanText(game.awayCompetitor?.name);
+      if (!home || !away) continue;
+      const homeScore = Number(game.homeCompetitor?.score);
+      const awayScore = Number(game.awayCompetitor?.score);
+      const hasScore = Number.isFinite(homeScore) && Number.isFinite(awayScore) && homeScore >= 0 && awayScore >= 0;
+      const isFinal = Number(game.statusGroup) === 4 || /final|ended|הסתיים/i.test(cleanText(game.statusText));
+      const actualWinner = hasScore && isFinal
+        ? homeScore === awayScore
+          ? "תיקו"
+          : homeScore > awayScore ? home : away
+        : "";
+      const start = game.startTime ? new Date(game.startTime) : null;
+      rows.push({
+        eventid: `365-${game.id}`,
+        eventid365: String(game.id),
+        date: dateKey,
+        time: start && !Number.isNaN(start.getTime())
+          ? new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", hour: "2-digit", minute: "2-digit", hour12: false }).format(start)
+          : "",
+        sportid: WINNER_BASKETBALL_ID,
+        league: cleanText(game.competitionDisplayName),
+        teamA: home,
+        teamB: away,
+        scoreA: hasScore ? String(homeScore) : "",
+        scoreB: hasScore ? String(awayScore) : "",
+        statusText: cleanText(game.statusText),
+        markets: actualWinner ? [{ title: "המנצח", marketResults: [actualWinner] }] : [],
+        source: "365Scores",
+      });
+    }
+  }
+  return rows;
+}
+
+function build365BasketballRows(results, dateKey) {
+  return (results || [])
+    .filter((event) => String(event.sportid) === String(WINNER_BASKETBALL_ID) && event.date === dateKey)
+    .map((event) => {
+      const actualWinner = resultWinner(event);
+      const teams = { home: cleanText(event.teamA), away: cleanText(event.teamB) };
+      return {
+        id: `result-${event.eventid}`,
+        eventId: String(event.eventid),
+        eventId365: event.eventid365 || String(event.eventid).replace(/^365-/, ""),
+        source: "365Scores Results",
+        day: dateKey,
+        time: String(event.time || "").slice(0, 5),
+        sport: SPORTS[WINNER_BASKETBALL_ID],
+        sportId: WINNER_BASKETBALL_ID,
+        league: cleanText(event.league),
+        country: "",
+        match: `${teams.home} - ${teams.away}`,
+        home: teams.home,
+        away: teams.away,
+        resultKey: resultKeyFor({ day: dateKey, sportId: WINNER_BASKETBALL_ID, home: teams.home, away: teams.away }),
+        market: "המנצח",
+        pick: actualWinner,
+        winnerPick: actualWinner,
+        actualWinner,
+        odds: null,
+        probability: null,
+        score: 0,
+        status: "נסגר",
+        liveScore: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
+        matchPhase: resultPhase(event),
+        result: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
+        signals: ["תוצאה מ-365Scores", "כיסוי כדורסל לכל הליגות", "משמש לסגירת תחזיות Winner"],
+        allMarkets: [{
+          marketId: null,
+          title: "המנצח",
+          category: marketCategory("המנצח"),
+          bettable: false,
+          best: null,
+          outcomes: actualWinner ? [{ outcomeId: null, desc: actualWinner, price: null, spread: "", probability: null, score: null }] : [],
+        }],
+        explanation: [
+          "זהו משחק כדורסל מארכיון התוצאות של 365Scores.",
+          `התוצאה הרשמית לפי 365Scores היא ${actualWinner || "לא זמינה"}.`,
+          "היחסים והבחירה עדיין מגיעים מ-Winner; 365Scores משמש רק לסגירת התוצאה.",
+        ],
+      };
+    })
+    .slice(0, 60);
+}
+
 function splitBySport(rows) {
   return {
     football: rows.filter((row) => row.sportId === 240),
@@ -571,7 +780,7 @@ function splitBySport(rows) {
 function mergeRows(primary, secondary) {
   const byEvent = new Map();
   for (const row of [...primary, ...secondary]) {
-    const key = String(row.eventId || row.id);
+    const key = String(row.resultKey || row.eventId || row.id);
     const current = byEvent.get(key);
     if (!current) {
       byEvent.set(key, row);
@@ -628,17 +837,34 @@ module.exports = async function handler(req, res) {
     const yesterday = israelDate(-1);
     const today = israelDate(0);
     const tomorrow = israelDate(1);
-    const [{ hashes, markets }, resultEvents] = await Promise.all([
+    const [{ hashes, markets }, winnerResultEvents, scores365BasketballEvents] = await Promise.all([
       getWinnerLine(),
       getResults(yesterday, tomorrow),
+      Promise.all([
+        get365BasketballResults(yesterday, yesterday),
+        get365BasketballResults(today, today),
+        get365BasketballResults(tomorrow, tomorrow),
+      ]).then((items) => items.flat()),
     ]);
+    const resultEvents = [...winnerResultEvents, ...scores365BasketballEvents];
     const resultsByEvent = resultIndex(resultEvents);
-    const yesterdayRows = splitBySport(await enrichLogos(buildResultRows(resultEvents, yesterday)));
-    const todayCurrentRows = buildCurrentPicks(markets, today, 40, resultsByEvent).filter((row) => row.odds);
-    const todayResultRows = buildResultRows(resultEvents, today);
+    const yesterdayRows = splitBySport(await enrichLogos(mergeRows(
+      buildResultRows(winnerResultEvents, yesterday),
+      build365BasketballRows(scores365BasketballEvents, yesterday)
+    )));
+    const todayCurrentRows = [
+      ...buildCurrentPicks(markets, today, 40, resultsByEvent, WINNER_FOOTBALL_ID),
+      ...buildCurrentPicks(markets, today, 40, resultsByEvent, WINNER_BASKETBALL_ID),
+    ].filter((row) => row.odds);
+    const todayResultRows = mergeRows(
+      buildResultRows(winnerResultEvents, today),
+      build365BasketballRows(scores365BasketballEvents, today)
+    );
     const todayRows = splitBySport(await enrichLogos(mergeRows(todayCurrentRows, todayResultRows)));
-    const tomorrowRows = splitBySport(await enrichLogos(buildCurrentPicks(markets, tomorrow, 40, resultsByEvent)
-      .filter((row) => row.odds)));
+    const tomorrowRows = splitBySport(await enrichLogos([
+      ...buildCurrentPicks(markets, tomorrow, 40, resultsByEvent, WINNER_FOOTBALL_ID),
+      ...buildCurrentPicks(markets, tomorrow, 40, resultsByEvent, WINNER_BASKETBALL_ID),
+    ].filter((row) => row.odds)));
     res.status(200).json({
       ok: true,
       generatedAt: new Date().toISOString(),
@@ -652,9 +878,9 @@ module.exports = async function handler(req, res) {
       modelStats: {
         title: "מה עומד מאחורי הניחושים",
         factors: [
-          "שוק מנצח בלבד: 1X2 בכדורגל והמנצח/ת בכדורסל.",
-          "יחס Winner פעיל בטווח 1.40-1.90 עבור משחקים שעדיין פתוחים להימור.",
-          "פייבוריטיות ביחס לשאר התוצאות בשוק, כולל פער מול היריבה ותיקו כשיש.",
+          "שוק מנצח בלבד: 1X2 בכדורגל והמנצח/ת בכדורסל מכל הליגות שמופיעות ב-Winner.",
+          "יחס Winner אמיתי לפני המשחק בטווח 1.40-1.90 עבור משחקים שעדיין פתוחים להימור.",
+          "היחסים מומרים להסתברות, עוברים ניכוי מרווח בית, ואז מדורגים לפי הסתברות מנורמלת ופער מול היריבה הקרובה.",
           "בית/חוץ: פייבוריט בחוץ מקבל הסבר של פער איכות; פייבוריט בבית מקבל יתרון מגרש.",
           "לא מוצגים פציעות, הרכבים או חדשות אם הם לא חזרו ממקור מאומת.",
         ],
