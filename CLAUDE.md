@@ -1,30 +1,25 @@
 # Instructions for Claude
 
-This repo currently uses the static Hapogea preview in `hapogea-preview/index.html`.
+This repository has one website only: Hapogea, the Winner odds site.
 
-Do not replace it with a React/Vite bundle, do not create `hapogea-preview/assets/*.js`,
-and do not change `hapogea-preview/index.html` into a shell that loads `/assets/...`.
-That replacement broke the intended site.
+Do not create or restore any old mobile app, backend app, Next.js app, Vite app, or duplicate website. Do not create a second output folder.
 
-Important files:
+Use these files:
 
+- `hapogea-preview/index.html` - the website UI. Edit this file directly.
 - `api/winner-feed.js` - live Winner data, odds model, basketball/football feed.
-- `hapogea-preview/index.html` - the actual preview UI. Edit this file directly.
-- `vercel.json` - deploys `hapogea-preview` as the output directory and rewrites `/api/*`.
+- `api/winner-snapshot.json` - fallback snapshot.
+- `scripts/refresh-winner-snapshot.js` - refreshes the snapshot.
+- `vercel.json` - deploys `hapogea-preview` and rewrites `/api/*`.
 
-Current product requirements:
+Vercel project:
 
-- Basketball must include all leagues available in Winner, not only NBA.
-- For basketball, use `המנצח/ת` when available.
-- If `המנצח/ת` is not available, use full-game handicap markets such as
-  `הימור יתרון - כולל הארכות אם יהיו`.
-- Odds must be real Winner pre-match odds.
-- Show clearly what was picked with a visible `הימרנו` section.
-- Show odds under each team. For handicap, show the line too, for example `+6.5 1.70`.
-- If the pick is draw, write `תיקו` clearly in the center between the two teams.
-- Make `תפס`, `נפל`, and `ממתין` status badges large and obvious.
+- Existing project name: `hit`
+- Production alias used by Codex: `https://hit-alpha.vercel.app`
+- Do not create a new Vercel project.
+- Do not deploy a separate preview-only app as the source of truth.
 
-Workflow:
+Important workflow:
 
 ```bash
 git fetch origin
@@ -36,8 +31,16 @@ Before pushing:
 
 ```bash
 node --check api/winner-feed.js
-node -e "const fs=require('fs'); const s=fs.readFileSync('hapogea-preview/index.html','utf8'); const js=s.match(/<script>([\\s\\S]*)<\\/script>/)?.[1]; if (js) new Function(js); console.log('preview js ok')"
+npm run check
 git status -sb
 ```
 
-Push only after rebasing. Never force-push unless the human explicitly asks.
+Current product requirements:
+
+- Basketball includes all Winner basketball leagues, not only NBA.
+- Use real Winner pre-match odds only.
+- Show exactly what was picked in the `הימרנו` section.
+- Show odds under each team; for handicap, include the line.
+- If the pick is draw, show `תיקו` clearly in the center.
+- Closed results show `נסגר`; settled tracked picks show `נתפס` or `לא נתפס`.
+- Public cards should stay compact and should not show the score meter.
