@@ -2446,6 +2446,45 @@
       renderDebug();
     }
 
+    function parseKickoffMs(day, time) {
+      if (!day || !time) return NaN;
+      const match = String(time).match(/(\d{1,2}):(\d{2})/);
+      if (!match) return NaN;
+      return new Date(`${day}T${match[1].padStart(2, "0")}:${match[2]}:00+03:00`).getTime();
+    }
+
+    function pendingRowsNeedingResultCheck(feed = state.feed) {
+      if (!feed?.tabs) return [];
+      const tracked = readTracker().filter(item => item.status === "pending");
+      const trackedKeys = new Set(tracked.flatMap(item => [String(item.eventId || ""), String(item.resultKey || "")]));
+      const now = Date.now();
+      return Object.values(feed.tabs)
+        .flatMap(tab => Object.values(tab.sports || {}).flatMap(rows => rows || []))
+        .filter(row => {
+          const keyHit = trackedKeys.has(String(row.eventId || "")) || trackedKeys.has(String(row.resultKey || ""));
+          const isTrackedPick = keyHit || row.recommended || (!!row.odds && !row.outsideRange);
+          if (!isTrackedPick) return false;
+          const outcome = rowOutcome(row);
+          if (outcome.key !== "pending") return false;
+          if (row.matchPhase === "live" || row.matchPhase === "ht") return true;
+          if (row.matchPhase === "final" || row.actualWinner) return true;
+          const kickoff = parseKickoffMs(row.day, row.time);
+          return Number.isFinite(kickoff) && now >= kickoff;
+        });
+    }
+
+    function nextRefreshMs(feed = state.feed) {
+      return pendingRowsNeedingResultCheck(feed).length ? 60 * 1000 : 5 * 60 * 1000;
+    }
+
+    function scheduleRefresh(feed = state.feed) {
+      if (window._hapRefreshTimer) clearTimeout(window._hapRefreshTimer);
+      window._hapRefreshTimer = setTimeout(() => {
+        if (!document.hidden) loadFeed();
+        else scheduleRefresh(feed);
+      }, nextRefreshMs(feed));
+    }
+
     async function loadFeed() {
       state.loading = true;
       state.error = "";
@@ -2462,15 +2501,14 @@
       } finally {
         state.loading = false;
         render();
+        scheduleRefresh(state.feed);
       }
     }
 
-    // Auto-refresh often enough to close live games after final verification.
-    if (!window._hapRefreshTimer) {
-      window._hapRefreshTimer = setInterval(() => {
-        if (!document.hidden) loadFeed();
-      }, 5 * 60 * 1000);
-    }
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) loadFeed();
+    });
+    window.addEventListener("focus", () => loadFeed());
 
     document.querySelectorAll("#dayTabs .tab").forEach(button => {
       button.addEventListener("click", () => {
