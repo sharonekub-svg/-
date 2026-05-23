@@ -1,4 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = "https://kyhhfksuaabwfeeozmeg.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5aGhma3N1YWFid2ZlZW96bWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MjI3MTUsImV4cCI6MjA5NTA5ODcxNX0.XzHaVUYOP7QFEuO4OdHgQYUDa8m7ikUSPbvH7bLJDwI";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ODDS_MIN = 1.40;
 const ODDS_MAX = 1.90;
@@ -611,15 +616,47 @@ body,#root{padding-bottom:60px}
 
 // ─── TRACKER HELPERS ───────────────────────────────────────────
 
-function loadTips() {
+function loadTipsLocal() {
   try { return JSON.parse(localStorage.getItem(TRACKER_KEY) || "[]"); } catch { return []; }
 }
-function saveTips(tips) {
-  try { localStorage.setItem(TRACKER_KEY, JSON.stringify(tips)); } catch {}
+async function loadTips() {
+  try {
+    const { data, error } = await sb.from("tips").select("*").order("created_at", { ascending: false });
+    if (error || !data?.length) return loadTipsLocal();
+    // map snake_case DB columns → camelCase used in app
+    const mapped = data.map(r => ({
+      id: r.id, home: r.home, away: r.away, league: r.league, sport: r.sport,
+      pick: r.pick, odds: r.odds, o1: r.o1, oX: r.ox, o2: r.o2,
+      ev: r.ev, kelly: r.kelly, valueScore: r.value_score,
+      status: r.status, finalScore: r.score, betCorrect: r.bet_correct,
+      pickedSide: r.picked_side, matchTime: r.match_time, analysis: r.analysis,
+      addedAt: new Date(r.created_at).getTime(),
+    }));
+    localStorage.setItem(TRACKER_KEY, JSON.stringify(mapped));
+    return mapped;
+  } catch { return loadTipsLocal(); }
 }
-function loadOddsCache() {
+async function saveTips(tips) {
+  try {
+    localStorage.setItem(TRACKER_KEY, JSON.stringify(tips));
+    if (!tips.length) return;
+    const rows = tips.map(t => ({
+      id: t.id, home: t.home, away: t.away, league: t.league || "", sport: t.sport || "football",
+      pick: t.pick || "", odds: parseFloat(t.odds) || 1.5,
+      o1: parseFloat(t.o1)||null, ox: parseFloat(t.oX)||null, o2: parseFloat(t.o2)||null,
+      ev: parseFloat(t.ev)||null, kelly: parseFloat(t.kelly)||null, value_score: parseFloat(t.valueScore)||null,
+      status: t.status || "pending", score: t.finalScore || null,
+      bet_correct: t.betCorrect ?? null, picked_side: t.pickedSide || null,
+      match_time: t.matchTime || null, analysis: t.analysis || null,
+      updated_at: new Date().toISOString(),
+    }));
+    await sb.from("tips").upsert(rows, { onConflict: "id" });
+  } catch {}
+}
+function loadOddsCacheLocal() {
   try { return JSON.parse(localStorage.getItem(ODDS_CACHE_KEY) || "{}"); } catch { return {}; }
 }
+function loadOddsCache() { return loadOddsCacheLocal(); }
 function saveOddsCache(c) {
   try { localStorage.setItem(ODDS_CACHE_KEY, JSON.stringify(c)); } catch {}
 }
@@ -1022,14 +1059,19 @@ const AdminLogin = ({ onAuth, onClose }) => {
 
 // ─── TIP TRACKER VIEW ──────────────────────────────────────────
 const TipTracker = ({ isAdmin, onAdminRequest, onAdminLogout }) => {
-  const [tips, setTips] = useState(loadTips);
+  const [tips, setTips] = useState(loadTipsLocal);
   const [filter, setFilter] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
   const [lastOddsUpdate, setLastOddsUpdate] = useState(() => loadOddsCache().updatedAt || null);
   const [logs, setLogs] = useState(() => loadOddsCache().logs || []);
   const oddsTimerRef = useRef(null);
 
-  // Persist tips whenever they change
+  // Load tips from Supabase on mount
+  useEffect(() => {
+    loadTips().then(t => { if (t.length) setTips(t); });
+  }, []);
+
+  // Persist tips to Supabase + localStorage whenever they change
   useEffect(() => { saveTips(tips); }, [tips]);
 
   const doRefreshOdds = useCallback(async (silent = false) => {
