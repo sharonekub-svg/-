@@ -585,24 +585,11 @@
       white-space: nowrap;
       font-size: 13px;
     }
-    .wc-team.selected .wc-flag,
-    .wc-prediction.selected {
-      border-color: rgba(49,209,135,.95);
-      box-shadow: 0 0 0 4px rgba(49,209,135,.16), 0 0 28px rgba(49,209,135,.22);
-      background: rgba(49,209,135,.10);
-    }
-    .wc-team.selected b,
-    .wc-prediction.selected b {
-      color: #bff8dc;
-    }
     .wc-prediction {
       display: grid;
       place-items: center;
       min-width: 74px;
       gap: 4px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      padding: 6px;
     }
     .wc-prediction b {
       color: var(--gold);
@@ -618,7 +605,6 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 7px;
-      direction: ltr;
     }
     .wc-odd {
       border: 1px solid var(--line);
@@ -628,7 +614,6 @@
       color: var(--muted);
       font-size: 11px;
       font-weight: 900;
-      direction: rtl;
     }
     .wc-odd.selected {
       color: #bff8dc;
@@ -966,45 +951,12 @@
       };
     }
 
-    function escapeHtml(value) {
-      return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    function assetInitials(value) {
-      return String(value || "?")
-        .replace(/\s+/g, " ")
-        .trim()
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(part => part[0])
-        .join("")
-        .toUpperCase() || "?";
-    }
-
-    function fallbackBadge(name, kind = "team") {
-      const label = assetInitials(name);
-      const stroke = kind === "flag" ? "#ffc857" : kind === "league" ? "#55d6ff" : "#31d187";
-      const bg = kind === "flag" ? "#211b10" : kind === "league" ? "#111f2a" : "#102219";
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="${bg}"/><circle cx="48" cy="48" r="42" fill="none" stroke="${stroke}" stroke-width="5"/><text x="48" y="57" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="800" fill="#f7f3ea">${escapeHtml(label)}</text></svg>`;
-      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-    }
-
-    function imageWithFallback(src, name, kind, className = "") {
-      const fallback = fallbackBadge(name, kind);
-      return `<img class="${className}" src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${fallback}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
-    }
-
     function logoMarkup(asset, size = "") {
-      if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
+      if (!asset) return `<div class="logo-wrap ${size}">?</div>`;
       if (asset.logo) {
-        return `<div class="logo-wrap ${size}">${imageWithFallback(asset.logo, asset.name || "", size === "small" ? "league" : "team")}</div>`;
+        return `<div class="logo-wrap ${size}"><img src="${asset.logo}" alt="${asset.name || ""}" loading="lazy"></div>`;
       }
-      return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team")}</div>`;
+      return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${asset.initials || "?"}</div>`;
     }
 
     function allRows() {
@@ -1058,7 +1010,7 @@
     }
 
     function flagImg(code, name) {
-      return `<span class="wc-flag">${imageWithFallback(`https://flagcdn.com/w160/${code}.png`, `דגל ${name}`, "flag")}</span>`;
+      return `<span class="wc-flag"><img src="https://flagcdn.com/w160/${code}.png" alt="דגל ${name}" loading="lazy"></span>`;
     }
 
     function wcPickLabel(item) {
@@ -1113,9 +1065,9 @@
           ${WC2026_PREDICTIONS.map(item => `
             <article class="wc-match">
               <div class="wc-teams">
-                <div class="wc-team ${item.pick === "home" ? "selected" : ""}">${flagImg(item.hc, item.home)}<b>${item.home}</b></div>
-                <div class="wc-prediction ${item.pick === "draw" ? "selected" : ""}"><span>${item.stage}</span><b>${item.score}</b><span>${item.xg} xG</span></div>
-                <div class="wc-team ${item.pick === "away" ? "selected" : ""}">${flagImg(item.ac, item.away)}<b>${item.away}</b></div>
+                <div class="wc-team">${flagImg(item.hc, item.home)}<b>${item.home}</b></div>
+                <div class="wc-prediction"><span>${item.stage}</span><b>${item.score}</b><span>${item.xg} xG</span></div>
+                <div class="wc-team">${flagImg(item.ac, item.away)}<b>${item.away}</b></div>
               </div>
               <div class="wc-odds">
                 <div class="wc-odd ${item.pick === "home" ? "selected" : ""}">1<br><b>${item.odds.home.toFixed(2)}</b></div>
