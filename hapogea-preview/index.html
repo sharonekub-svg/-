@@ -764,6 +764,68 @@
       flex-wrap: wrap;
     }
     .footer { padding-top: 18px; padding-bottom: 24px; color: var(--soft); font-size: 12px; line-height: 1.6; }
+    .score-breakdown {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 7px;
+    }
+    .score-chip {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px;
+      background: rgba(255,255,255,.025);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+    .score-chip b {
+      display: block;
+      color: var(--text);
+      font-size: 15px;
+    }
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border: 1px solid rgba(49,209,135,.45);
+      border-radius: 999px;
+      padding: 4px 9px;
+      color: #bff8dc;
+      background: rgba(49,209,135,.08);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .debug-panel {
+      display: none;
+      gap: 12px;
+    }
+    body.debug-mode .hero,
+    body.debug-mode #worldCupSection,
+    body.debug-mode .toolbar,
+    body.debug-mode .content {
+      display: none;
+    }
+    body.debug-mode .debug-panel {
+      display: grid;
+    }
+    .debug-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .debug-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 100px 1.2fr;
+      gap: 8px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255,255,255,.025);
+      font-size: 12px;
+    }
+    .debug-row.accepted { border-color: rgba(49,209,135,.42); }
+    .debug-row.rejected { border-color: rgba(239,83,80,.28); }
+    .debug-reasons { color: var(--muted); line-height: 1.45; }
     @media (max-width: 1020px) {
       .hero, .content { grid-template-columns: 1fr; }
       .toolbar { grid-template-columns: 1fr 1fr; }
@@ -782,6 +844,7 @@
       .wc-mark span { font-size: 14px; }
       .wc-match-grid { grid-template-columns: 1fr; }
       .teams-line { gap: 8px; }
+      .debug-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -899,6 +962,17 @@
         </div>
       </section>
     </section>
+
+    <section class="panel debug-panel" id="debugPanel">
+      <div class="section-title">
+        <div>
+          <h3>Debug Audit</h3>
+          <p id="debugMeta">Accepted and rejected Winner candidates with exact reasons.</p>
+        </div>
+        <span class="pill">/debug</span>
+      </div>
+      <div class="debug-grid" id="debugRows"></div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -926,8 +1000,10 @@
       loading: true,
       error: "",
       selectedId: null,
-      wcOpen: false
+      wcOpen: false,
+      debugMode: location.pathname.includes("debug")
     };
+    document.body.classList.toggle("debug-mode", state.debugMode);
 
     const WC2026_PREDICTIONS = [
       { stage: "בית", home: "ארצות הברית", away: "קנדה", hc: "us", ac: "ca", score: "2:1", pick: "home", odds: { home: 1.92, draw: 3.30, away: 3.75 }, confidence: 63, tempo: 74, xg: "1.8-1.1", note: "יתרון ביתיות, עומק התקפי ומדד יצירת מצבים גבוה יותר" },
@@ -1014,6 +1090,16 @@
       }
       if (row.sportId === 227) return `הבחירה שלנו: ${team} מנצחת את המשחק`;
       return `הבחירה שלנו: ${team} לניצחון`;
+    }
+
+    function scoreBreakdownMarkup(row) {
+      const breakdown = row.scoreBreakdown;
+      if (!breakdown) return "";
+      const labels = breakdown.labels || {};
+      const keys = ["hitProbability", "oddsValue", "marketGap", "niche", "clearFavorite", "overroundPenalty"];
+      return `<div class="score-breakdown">
+        ${keys.map(key => `<span class="score-chip"><b>${Number(breakdown[key] || 0) > 0 ? "+" : ""}${breakdown[key] || 0}</b>${labels[key] || key}</span>`).join("")}
+      </div>`;
     }
 
     function pickHelpText(row) {
@@ -1522,6 +1608,8 @@
               <b>${row.score || 0}</b>
             </div>
             <div class="signals">${(row.signals || []).map(signal => `<span class="signal">${signal}</span>`).join("")}</div>
+            <span class="verified-badge">Verified team logos only</span>
+            ${scoreBreakdownMarkup(row)}
             <div class="details">
               ${row.odds ? `יחס Winner לפני המשחק: ${formatOdds(row.odds)}. ${pickHelpText(row)} הסתברות מנוכת מרווח: ${formatPercent(row.normalizedProbability || row.probability)}. פער מול היריבה הקרובה: ${formatGap(row.marketGap)}.` : `תוצאה רשמית: ${row.actualWinner || row.result || "נסגר"}.`} למה: ${(row.explanation || [])[1] || "הסימון מבוסס על שוק המנצח בווינר."}
               מזהה משחק בווינר: ${row.eventId}.
@@ -1603,12 +1691,51 @@
         : `<div class="empty">${isOpenDay() ? "לא נמצאו משחקים ב-Winner לקטגוריה הזו." : "אין תוצאות סגורות בקטגוריה הזו."}</div>`;
     }
 
+    function debugRows() {
+      const audit = state.feed?.debugAudit?.[state.day]?.[state.sportTab] || [];
+      const query = state.search.trim().toLowerCase();
+      return audit.filter(row => {
+        const text = `${row.match} ${row.league} ${row.pick} ${(row.reasons || []).join(" ")}`.toLowerCase();
+        return !query || text.includes(query);
+      });
+    }
+
+    function renderDebug() {
+      const target = document.getElementById("debugRows");
+      const meta = document.getElementById("debugMeta");
+      if (!target || !meta) return;
+      if (!state.debugMode) {
+        target.innerHTML = "";
+        return;
+      }
+      if (state.error) {
+        target.innerHTML = `<div class="error">${state.error}</div>`;
+        meta.textContent = "Debug data failed to load";
+        return;
+      }
+      const rows = debugRows();
+      const accepted = rows.filter(row => row.accepted).length;
+      meta.textContent = `${rows.length} candidates · ${accepted} accepted · ${rows.length - accepted} rejected`;
+      target.innerHTML = rows.length ? rows.map(row => `
+        <article class="debug-row ${row.accepted ? "accepted" : "rejected"}">
+          <b>${row.accepted ? "ACCEPT" : "REJECT"}</b>
+          <div>
+            <strong>${row.match}</strong>
+            <div class="micro">${row.league} · ${row.sport} · pick ${row.pick || "none"} · odds ${row.odds ? formatOdds(row.odds) : "none"}</div>
+          </div>
+          <div>score ${row.recommendationScore || 0}</div>
+          <div class="debug-reasons">${(row.reasons || []).join(" · ")}<br>logos: ${row.homeLogoSource} / ${row.awayLogoSource}</div>
+        </article>
+      `).join("") : `<div class="empty">No debug rows for this tab.</div>`;
+    }
+
     function render() {
       renderTabs();
       renderStats();
       renderWorldCup();
       renderDaily();
       renderCards();
+      renderDebug();
     }
 
     async function loadFeed() {

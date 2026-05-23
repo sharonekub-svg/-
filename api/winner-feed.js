@@ -733,7 +733,7 @@ function hasSingleClearFavorite(row) {
   );
 }
 
-function recommendationRank(row) {
+function scoreBreakdown(row) {
   const odds = Number(row.odds || row.oddsRaw || 0);
   const oddsQuality = odds
     ? Math.max(0, Math.min(1, (odds - ODDS_MIN) / (ODDS_MAX - ODDS_MIN)))
@@ -742,17 +742,61 @@ function recommendationRank(row) {
   const marketGap = Number(row.marketGap || 0);
   const reliability = Number(row.reliability || 0);
   const overroundPenalty = Math.min(0.16, Number(row.overround || 0)) * 30;
-  const nicheBonus = isCentralEvent(row) ? -22 : 16;
-  const favoriteBonus = hasSingleClearFavorite(row) ? 18 : -30;
-  return Math.round(
-    hit * 72 +
-      marketGap * 34 +
-      oddsQuality * 18 +
-      reliability * 10 -
-      overroundPenalty +
-      nicheBonus +
-      favoriteBonus
-  );
+  const clearFavorite = hasSingleClearFavorite(row);
+  const central = isCentralEvent(row);
+  const spread = Number(row.spread);
+  const extremeSpreadPenalty = row.sportId === WINNER_BASKETBALL_ID && Number.isFinite(spread) && Math.abs(spread) > 12
+    ? 18
+    : 0;
+  const tooLowOddsPenalty = odds <= 1.42 && marketGap < 0.08 ? 10 : 0;
+  const components = {
+    hitProbability: Math.round(hit * 72),
+    oddsValue: Math.round(oddsQuality * 18),
+    marketGap: Math.round(marketGap * 34),
+    reliability: Math.round(reliability * 10),
+    niche: central ? -22 : 16,
+    clearFavorite: clearFavorite ? 18 : -30,
+    overroundPenalty: -Math.round(overroundPenalty),
+    lowOddsPenalty: -tooLowOddsPenalty,
+    extremeSpreadPenalty: -extremeSpreadPenalty,
+  };
+  const total = Object.values(components).reduce((sum, value) => sum + value, 0);
+  return {
+    ...components,
+    total,
+    labels: {
+      hitProbability: "סבירות פגיעה",
+      oddsValue: "ערך יחס",
+      marketGap: "פער שוק",
+      reliability: "אמינות שוק",
+      niche: "נישה",
+      clearFavorite: "פייבוריטית ברורה",
+      overroundPenalty: "מרווח בית",
+      lowOddsPenalty: "יחס נמוך מדי",
+      extremeSpreadPenalty: "ליין קיצוני",
+    },
+  };
+}
+
+function recommendationRank(row) {
+  return scoreBreakdown(row).total;
+}
+
+function rejectionReasons(row) {
+  const reasons = [];
+  if (!row.recommended || !row.odds) reasons.push("לא המלצה פעילה");
+  if (!hasVerifiedLogo(row.homeAsset)) reasons.push("אין לוגו אמיתי לקבוצת הבית");
+  if (!hasVerifiedLogo(row.awayAsset)) reasons.push("אין לוגו אמיתי לקבוצת החוץ");
+  if (row.homeAsset?.logo && row.homeAsset.logo === row.awayAsset?.logo) reasons.push("לוגו זהה לשתי הקבוצות");
+  if (isCentralEvent(row)) reasons.push("משחק מרכזי מדי, לא נישה");
+  if (!hasSingleClearFavorite(row)) reasons.push("אין פייבוריטית אחת מספיק ברורה");
+  if (row.sportId === WINNER_BASKETBALL_ID && Number.isFinite(Number(row.spread)) && Math.abs(Number(row.spread)) > 12) {
+    reasons.push("ליין כדורסל קיצוני מדי");
+  }
+  if (Number(row.odds || 0) <= 1.42 && Number(row.marketGap || 0) < 0.08) {
+    reasons.push("יחס נמוך מדי בלי פער שוק גדול");
+  }
+  return reasons;
 }
 
 function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, resultsByEvent = new Map(), sportIdFilter = null) {
@@ -896,6 +940,7 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
     .filter((row) => hasSingleClearFavorite(row))
     .map((row) => ({
       ...row,
+      scoreBreakdown: scoreBreakdown(row),
       recommendationScore: recommendationRank(row),
       nichePick: !isCentralEvent(row),
     }))
@@ -1133,8 +1178,7 @@ function mergeRows(primary, secondary) {
 
 function finalOpenRows(rows) {
   return (rows || [])
-    .filter((row) => row.recommended && row.odds && hasVerifiedTeamLogos(row))
-    .filter((row) => !isCentralEvent(row))
+    .filter((row) => rejectionReasons(row).length === 0)
     .sort((a, b) => {
       return (b.recommendationScore || 0) - (a.recommendationScore || 0)
         || (b.probability || 0) - (a.probability || 0)
@@ -1142,6 +1186,32 @@ function finalOpenRows(rows) {
         || String(a.time).localeCompare(String(b.time));
     })
     .slice(0, TARGET_PICKS_PER_SPORT);
+}
+
+function auditOpenRows(rows, acceptedRows) {
+  const acceptedIds = new Set((acceptedRows || []).map((row) => String(row.id)));
+  return (rows || [])
+    .map((row) => ({
+      id: row.id,
+      eventId: row.eventId,
+      day: row.day,
+      sport: row.sport,
+      sportId: row.sportId,
+      league: row.league,
+      match: row.match,
+      pick: row.pickTeam || row.winnerPick || row.pick,
+      odds: row.odds,
+      score: row.score,
+      recommendationScore: row.recommendationScore,
+      scoreBreakdown: row.scoreBreakdown,
+      homeLogoSource: row.homeAsset?.logoSource || "",
+      awayLogoSource: row.awayAsset?.logoSource || "",
+      leagueLogoSource: row.leagueAsset?.logoSource || "",
+      accepted: acceptedIds.has(String(row.id)),
+      reasons: acceptedIds.has(String(row.id)) ? ["accepted"] : rejectionReasons(row),
+    }))
+    .sort((a, b) => Number(b.accepted) - Number(a.accepted) || (b.recommendationScore || 0) - (a.recommendationScore || 0))
+    .slice(0, 120);
 }
 
 async function getWinnerLine() {
@@ -1204,13 +1274,15 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
   const todayEnrichedRows = withLogos ? await enrichLogos(todayCurrentRows) : todayCurrentRows;
-  const todayRows = splitBySport(withLogos ? finalOpenRows(todayEnrichedRows) : todayEnrichedRows);
+  const todayFinalRows = withLogos ? finalOpenRows(todayEnrichedRows) : todayEnrichedRows;
+  const todayRows = splitBySport(todayFinalRows);
   const tomorrowCurrentRows = [
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
   const tomorrowEnrichedRows = withLogos ? await enrichLogos(tomorrowCurrentRows) : tomorrowCurrentRows;
-  const tomorrowRows = splitBySport(withLogos ? finalOpenRows(tomorrowEnrichedRows) : tomorrowEnrichedRows);
+  const tomorrowFinalRows = withLogos ? finalOpenRows(tomorrowEnrichedRows) : tomorrowEnrichedRows;
+  const tomorrowRows = splitBySport(tomorrowFinalRows);
   const lineStats = {
     football: {
       today: countRecommendedPicks(todayRows.football),
@@ -1228,6 +1300,10 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     oddsRange: { min: ODDS_MIN, max: ODDS_MAX },
     targetPicksPerSport: TARGET_PICKS_PER_SPORT,
     lineStats,
+    debugAudit: {
+      today: splitBySport(auditOpenRows(todayEnrichedRows, todayFinalRows)),
+      tomorrow: splitBySport(auditOpenRows(tomorrowEnrichedRows, tomorrowFinalRows)),
+    },
     tabs: {
       yesterday: { label: "אתמול", date: yesterday, sports: yesterdayRows },
       today: { label: "היום", date: today, sports: todayRows },
