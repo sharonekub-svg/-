@@ -14,7 +14,8 @@
     "supabase:db:reset": "supabase db reset",
     "supabase:functions:serve": "supabase functions serve --env-file ./supabase/.env.local",
     "supabase:functions:deploy": "supabase functions deploy",
-    "supabase:gen:types": "supabase gen types typescript --local --schema public > apps/mobile/src/types/database.ts"
+    "supabase:gen:types": "supabase gen types typescript --local --schema public > apps/mobile/src/types/database.ts",
+    "winner:snapshot": "node scripts/refresh-winner-snapshot.js"
   },
   "devDependencies": {
     "typescript": "^5.5.4"

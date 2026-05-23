@@ -925,6 +925,33 @@
       { stage: "בית", home: "פורטוגל", away: "אורוגוואי", hc: "pt", ac: "uy", score: "2:1", pick: "home", odds: { home: 1.94, draw: 3.18, away: 3.70 }, confidence: 60, tempo: 75, xg: "1.7-1.1", note: "יתרון יצירת מצבים מול יריבה פיזית ומנוסה" }
     ];
 
+    const WC2026_FIXTURES = [
+      { date: "2026-06-11", stage: "בית A", home: "מקסיקו", away: "דרום אפריקה", hc: "mx", ac: "za", venue: "Mexico City Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-11", stage: "בית A", home: "קוריאה הדרומית", away: "צ'כיה", hc: "kr", ac: "cz", venue: "Estadio Guadalajara", source: "FIFA", odds: null },
+      { date: "2026-06-12", stage: "בית B", home: "קנדה", away: "בוסניה והרצגובינה", hc: "ca", ac: "ba", venue: "Toronto Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-12", stage: "בית D", home: "ארצות הברית", away: "פרגוואי", hc: "us", ac: "py", venue: "Los Angeles Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-13", stage: "בית C", home: "האיטי", away: "סקוטלנד", hc: "ht", ac: "gb-sct", venue: "Boston Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-13", stage: "בית D", home: "אוסטרליה", away: "טורקיה", hc: "au", ac: "tr", venue: "BC Place Vancouver", source: "FIFA", odds: null },
+      { date: "2026-06-13", stage: "בית C", home: "ברזיל", away: "מרוקו", hc: "br", ac: "ma", venue: "New York New Jersey Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-13", stage: "בית B", home: "קטאר", away: "שווייץ", hc: "qa", ac: "ch", venue: "San Francisco Bay Area Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-14", stage: "בית E", home: "חוף השנהב", away: "אקוודור", hc: "ci", ac: "ec", venue: "Philadelphia Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-14", stage: "בית E", home: "גרמניה", away: "קוראסאו", hc: "de", ac: "cw", venue: "Houston Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-14", stage: "בית F", home: "הולנד", away: "יפן", hc: "nl", ac: "jp", venue: "Dallas Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-14", stage: "בית F", home: "שבדיה", away: "תוניסיה", hc: "se", ac: "tn", venue: "Estadio Monterrey", source: "FIFA", odds: null },
+      { date: "2026-06-15", stage: "בית H", home: "ערב הסעודית", away: "אורוגוואי", hc: "sa", ac: "uy", venue: "Miami Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-15", stage: "בית H", home: "ספרד", away: "כף ורדה", hc: "es", ac: "cv", venue: "Atlanta Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-15", stage: "בית G", home: "איראן", away: "ניו זילנד", hc: "ir", ac: "nz", venue: "Los Angeles Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-15", stage: "בית G", home: "בלגיה", away: "מצרים", hc: "be", ac: "eg", venue: "Seattle Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-16", stage: "בית I", home: "צרפת", away: "סנגל", hc: "fr", ac: "sn", venue: "New York New Jersey Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-16", stage: "בית I", home: "עיראק", away: "נורווגיה", hc: "iq", ac: "no", venue: "Boston Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-16", stage: "בית J", home: "ארגנטינה", away: "אלג'יריה", hc: "ar", ac: "dz", venue: "Kansas City Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-16", stage: "בית J", home: "אוסטריה", away: "ירדן", hc: "at", ac: "jo", venue: "San Francisco Bay Area Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-17", stage: "בית L", home: "גאנה", away: "פנמה", hc: "gh", ac: "pa", venue: "Toronto Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-17", stage: "בית L", home: "אנגליה", away: "קרואטיה", hc: "gb-eng", ac: "hr", venue: "Dallas Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-17", stage: "בית K", home: "פורטוגל", away: "הרפובליקה הדמוקרטית של קונגו", hc: "pt", ac: "cd", venue: "Houston Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-17", stage: "בית K", home: "אוזבקיסטן", away: "קולומביה", hc: "uz", ac: "co", venue: "Mexico City Stadium", source: "FIFA", odds: null }
+    ];
+
     const statusClass = {
       "תפס": "hit",
       "נפל": "miss",
@@ -1244,8 +1271,21 @@
     }
 
     function wcPickLabel(item) {
+      if (!item.pick) return "אין בחירה";
       if (item.pick === "draw") return "תיקו";
       return item.pick === "home" ? item.home : item.away;
+    }
+
+    function wcFixtureOdds(item) {
+      if (!item.odds) return `<div class="wc-meta">אין יחס Winner פתוח כרגע. היחסים יוצגו רק כשיש שוק Winner אמיתי.</div>`;
+      const selected = item.pick || "";
+      return `
+        <div class="wc-odds">
+          <div class="wc-odd ${selected === "home" ? "selected" : ""}">1<br><b>${item.odds.home.toFixed(2)}</b></div>
+          <div class="wc-odd ${selected === "draw" ? "selected" : ""}">X<br><b>${item.odds.draw.toFixed(2)}</b></div>
+          <div class="wc-odd ${selected === "away" ? "selected" : ""}">2<br><b>${item.odds.away.toFixed(2)}</b></div>
+        </div>
+      `;
     }
 
     function wcImportance() {
@@ -1268,14 +1308,14 @@
               <h3>תצוגה מהירה</h3>
               <p>לחיצה על הבאנר פותחת את כל המשחקים עם דגלים, יחסים, הסברים ואלגוריתם מלא.</p>
             </div>
-            <span class="pill">${WC2026_PREDICTIONS.length} משחקים</span>
+            <span class="pill">${WC2026_FIXTURES.length} משחקים</span>
           </div>
           <div class="wc-grid">
-            ${WC2026_PREDICTIONS.slice(0, 4).map(item => `
+            ${WC2026_FIXTURES.slice(0, 4).map(item => `
               <article class="wc-card compact" data-wc-open="true">
                 <strong>${item.home} נגד ${item.away}</strong>
-                <div class="wc-score"><span>${item.stage}</span><b>${item.score}</b></div>
-                <div class="wc-meta">בחירה: ${wcPickLabel(item)}. יחס ${item.odds[item.pick].toFixed(2)}.</div>
+                <div class="wc-score"><span>${item.stage}</span><b>${item.date.slice(5)}</b></div>
+                <div class="wc-meta">${item.venue}. ${item.odds ? `יחס ${item.odds[item.pick].toFixed(2)}` : "אין יחס Winner פתוח כרגע"}.</div>
               </article>
             `).join("")}
           </div>
@@ -1292,26 +1332,22 @@
         </div>
         ${wcImportance()}
         <div class="wc-match-grid">
-          ${WC2026_PREDICTIONS.map(item => `
+          ${WC2026_FIXTURES.map(item => `
             <article class="wc-match">
               <div class="wc-teams">
                 <div class="wc-team">${flagImg(item.hc, item.home)}<b>${item.home}</b></div>
-                <div class="wc-prediction"><span>${item.stage}</span><b>${item.score}</b><span>${item.xg} xG</span></div>
+                <div class="wc-prediction"><span>${item.stage}</span><b>${item.date.slice(5)}</b><span>${item.venue}</span></div>
                 <div class="wc-team">${flagImg(item.ac, item.away)}<b>${item.away}</b></div>
               </div>
-              <div class="wc-odds">
-                <div class="wc-odd ${item.pick === "home" ? "selected" : ""}">1<br><b>${item.odds.home.toFixed(2)}</b></div>
-                <div class="wc-odd ${item.pick === "draw" ? "selected" : ""}">X<br><b>${item.odds.draw.toFixed(2)}</b></div>
-                <div class="wc-odd ${item.pick === "away" ? "selected" : ""}">2<br><b>${item.odds.away.toFixed(2)}</b></div>
-              </div>
+              ${wcFixtureOdds(item)}
               <div class="wc-why">
-                <b>בחירה: ${wcPickLabel(item)} · ביטחון ${item.confidence} אחוז</b><br>
-                ${item.note}. קצב אפקטיבי ${item.tempo}/100, ללא בונוס לאיטיות.
+                <b>${item.source} · ${item.date}</b><br>
+                אין סימון הימור עד ש-Winner פותח יחס אמיתי למשחק הזה.
               </div>
               <div class="wc-factors">
                 <span class="signal">שוק 1X2</span>
-                <span class="signal">xG ${item.xg}</span>
-                <span class="signal">קצב ${item.tempo}/100</span>
+                <span class="signal">לוח FIFA</span>
+                <span class="signal">ללא יחס מומצא</span>
                 <span class="signal">עומק סגל</span>
               </div>
             </article>
