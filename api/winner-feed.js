@@ -574,67 +574,147 @@ function describeWinnerPick(market, scored, teams) {
 
 function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Map(), sportIdFilter = null) {
   const events = new Map();
+
+  // First pass: collect all events that have an allowed market on this date
+  // regardless of odds range — so every Winner game is represented
   for (const market of markets) {
     const date = winnerDateToIso(market.e_date);
     if (sportIdFilter && Number(market.sId) !== Number(sportIdFilter)) continue;
     if (date !== dateKey || !allowedMarket(market)) continue;
+
+    const teams = splitTeams(market.desc);
+    const oddsBook = marketOddsBook(market);
+    const eventMarkets = buildEventMarkets(markets.filter((candidate) => candidate.eId === market.eId));
+
+    // Try to find an in-range scored outcome first
+    let bestScored = null;
     for (const outcome of market.outcomes || []) {
       const scored = scoreOutcome(market, outcome);
       if (!scored) continue;
-      const teams = splitTeams(market.desc);
-      const eventMarkets = buildEventMarkets(markets.filter((candidate) => candidate.eId === market.eId));
-      const current = events.get(market.eId);
-      const row = {
-        id: `winner-${market.eId}`,
-        eventId: String(market.eId),
-        source: "Winner",
-        day: dateKey,
-        time: winnerHour(market.m_hour),
-        sport: SPORTS[market.sId],
-        sportId: market.sId,
-        league: cleanText(market.league),
-        country: cleanText(market.country),
-        match: cleanText(market.desc),
-        home: teams.home,
-        away: teams.away,
-        resultKey: resultKeyFor({ day: dateKey, sportId: market.sId, home: teams.home, away: teams.away }),
-        market: cleanText(market.mp),
-        marketId: market.mId,
-        outcomeId: scored.outcomeId,
-        pick: scored.pick,
-        pickTeam: scored.pickTeam,
-        spread: scored.spread,
-        winnerPick: cleanText(scored.pick).toLowerCase() === "x" ? "תיקו" : scored.pick,
-        odds: scored.odds,
-        oddsBook: scored.oddsBook,
-        probability: scored.hitProbability,
-        normalizedProbability: scored.normalizedProbability,
-        marketGap: scored.marketGap,
-        overround: scored.overround,
-        score: scored.score,
-        status: "ממתין",
-        result: "",
-        signals: [
-          `הסתברות Winner מנוכת מרווח ${Math.round(scored.normalizedProbability * 100)} אחוז`,
-          `אמינות שוק ${Math.round(scored.reliability * 100)} אחוז`,
-          `יחס Winner ${scored.odds.toFixed(2)}`,
-          `פער מול היריבה הקרובה ${Math.round(scored.marketGap * 100)} אחוז`,
-        ],
-        allMarkets: eventMarkets,
-        explanation: [
-          "המשחק מופיע בווינר-ליין ולכן ניתן להמר עליו בזמן משיכת הנתונים.",
-          describeWinnerPick(market, scored, teams),
-          "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור.",
-        ],
-      };
-      const matchedResult = resultsByEvent.get(String(market.eId)) || resultsByEvent.get(row.resultKey);
-      const enrichedRow = applyResult(row, matchedResult);
-      if (!current || enrichedRow.score > current.score || (enrichedRow.score === current.score && enrichedRow.odds < current.odds)) {
-        events.set(market.eId, enrichedRow);
+      if (!bestScored || scored.score > bestScored.score || (scored.score === bestScored.score && scored.odds < bestScored.odds)) {
+        bestScored = scored;
       }
     }
+
+    // If no in-range outcome, pick the best (lowest odds = favourite) outcome
+    // and mark it as outside-range so the UI can show it without a recommendation
+    let outsideRange = false;
+    if (!bestScored) {
+      const allOutcomes = (market.outcomes || [])
+        .map((outcome) => ({ outcome, odds: decimal(outcome.price) }))
+        .filter((item) => item.odds)
+        .sort((a, b) => a.odds - b.odds); // ascending = favourite first
+      if (allOutcomes.length) {
+        const best = allOutcomes[0];
+        const odds = best.odds;
+        const pickTeam = outcomeTeam(best.outcome.desc);
+        const spread = parseSpread(best.outcome.desc);
+        const normalizedProbability = oddsBook.outcomes.find(
+          (item) => item.desc === cleanText(best.outcome.desc)
+        )?.noVigProbability || (1 / odds);
+        bestScored = {
+          outcomeId: best.outcome.outcomeId,
+          pick: cleanText(best.outcome.desc),
+          pickTeam,
+          spread,
+          odds,
+          implied: 1 / odds,
+          normalizedProbability,
+          marketGap: 0,
+          overround: oddsBook.overround,
+          hitProbability: normalizedProbability,
+          reliability: marketReliability(market.mp, market.sId),
+          score: 0,
+          oddsBook,
+        };
+        outsideRange = true;
+      }
+    }
+
+    if (!bestScored) continue; // market has no outcomes at all — skip
+
+    const scored = bestScored;
+    const row = {
+      id: `winner-${market.eId}`,
+      eventId: String(market.eId),
+      source: "Winner",
+      day: dateKey,
+      time: winnerHour(market.m_hour),
+      sport: SPORTS[market.sId],
+      sportId: market.sId,
+      league: cleanText(market.league),
+      country: cleanText(market.country),
+      match: cleanText(market.desc),
+      home: teams.home,
+      away: teams.away,
+      resultKey: resultKeyFor({ day: dateKey, sportId: market.sId, home: teams.home, away: teams.away }),
+      market: cleanText(market.mp),
+      marketId: market.mId,
+      outcomeId: scored.outcomeId,
+      pick: scored.pick,
+      pickTeam: scored.pickTeam,
+      spread: scored.spread,
+      winnerPick: cleanText(scored.pick).toLowerCase() === "x" ? "תיקו" : scored.pick,
+      odds: outsideRange ? null : scored.odds,           // null = no recommendation
+      oddsRaw: scored.odds,                               // always the actual odds
+      outsideRange,
+      oddsBook: scored.oddsBook,
+      probability: outsideRange ? null : scored.hitProbability,
+      normalizedProbability: scored.normalizedProbability,
+      marketGap: scored.marketGap,
+      overround: scored.overround,
+      score: outsideRange ? 0 : scored.score,
+      status: "ממתין",
+      result: "",
+      signals: outsideRange
+        ? [
+            `יחס Winner ${scored.odds.toFixed(2)} — מחוץ לטווח ההמלצה (1.40–1.90)`,
+            `הסתברות שוק ${Math.round(scored.normalizedProbability * 100)} אחוז`,
+            "המשחק מוצג ללא בחירה",
+          ]
+        : [
+            `הסתברות Winner מנוכת מרווח ${Math.round(scored.normalizedProbability * 100)} אחוז`,
+            `אמינות שוק ${Math.round(scored.reliability * 100)} אחוז`,
+            `יחס Winner ${scored.odds.toFixed(2)}`,
+            `פער מול היריבה הקרובה ${Math.round(scored.marketGap * 100)} אחוז`,
+          ],
+      allMarkets: eventMarkets,
+      explanation: outsideRange
+        ? [
+            "המשחק מופיע בווינר-ליין אך הפייבוריט מחוץ לטווח ההמלצה.",
+            `יחס הפייבוריט הוא ${scored.odds.toFixed(2)} — ${scored.odds < 1.4 ? "נמוך מדי (פערים ברורים מדי, סיכון גבוה להפתעה)" : "גבוה מדי (שוק פתוח מדי, אין יתרון ברור)"}. אין כאן המלצה.`,
+            "האלגוריתם מציג את המשחק כדי שתוכל לראות את כל הלוח — אך לא ממליץ על הימור.",
+          ]
+        : [
+            "המשחק מופיע בווינר-ליין ולכן ניתן להמר עליו בזמן משיכת הנתונים.",
+            describeWinnerPick(market, scored, teams),
+            "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור.",
+          ],
+    };
+
+    const matchedResult = resultsByEvent.get(String(market.eId)) || resultsByEvent.get(row.resultKey);
+    const enrichedRow = applyResult(row, matchedResult);
+
+    const current = events.get(market.eId);
+    // Prefer: in-range pick > outside-range; within same category prefer higher score
+    const currentOutside = current?.outsideRange ?? true;
+    const newOutside = enrichedRow.outsideRange;
+    const shouldReplace = !current
+      || (currentOutside && !newOutside)
+      || (!currentOutside && !newOutside && (enrichedRow.score > current.score || (enrichedRow.score === current.score && (enrichedRow.oddsRaw || 0) < (current.oddsRaw || 0))));
+    if (shouldReplace) {
+      events.set(market.eId, enrichedRow);
+    }
   }
-  return [...events.values()].sort((a, b) => b.score - a.score || a.odds - b.odds).slice(0, limit);
+
+  // Sort: in-range picks first (by score desc), then outside-range (by time)
+  return [...events.values()]
+    .sort((a, b) => {
+      if (!a.outsideRange && b.outsideRange) return -1;
+      if (a.outsideRange && !b.outsideRange) return 1;
+      return (b.score || 0) - (a.score || 0) || String(a.time).localeCompare(String(b.time));
+    })
+    .slice(0, limit);
 }
 
 function resultStatus(event, pick) {
@@ -903,18 +983,18 @@ module.exports = async function handler(req, res) {
       build365BasketballRows(scores365BasketballEvents, yesterday)
     )));
     const todayCurrentRows = [
-      ...buildCurrentPicks(markets, today, 40, resultsByEvent, WINNER_FOOTBALL_ID),
-      ...buildCurrentPicks(markets, today, 40, resultsByEvent, WINNER_BASKETBALL_ID),
-    ].filter((row) => row.odds);
+      ...buildCurrentPicks(markets, today, 200, resultsByEvent, WINNER_FOOTBALL_ID),
+      ...buildCurrentPicks(markets, today, 200, resultsByEvent, WINNER_BASKETBALL_ID),
+    ];
     const todayResultRows = mergeRows(
       buildResultRows(winnerResultEvents, today),
       build365BasketballRows(scores365BasketballEvents, today)
     );
     const todayRows = splitBySport(await enrichLogos(mergeRows(todayCurrentRows, todayResultRows)));
     const tomorrowRows = splitBySport(await enrichLogos([
-      ...buildCurrentPicks(markets, tomorrow, 40, resultsByEvent, WINNER_FOOTBALL_ID),
-      ...buildCurrentPicks(markets, tomorrow, 40, resultsByEvent, WINNER_BASKETBALL_ID),
-    ].filter((row) => row.odds)));
+      ...buildCurrentPicks(markets, tomorrow, 200, resultsByEvent, WINNER_FOOTBALL_ID),
+      ...buildCurrentPicks(markets, tomorrow, 200, resultsByEvent, WINNER_BASKETBALL_ID),
+    ]));
     res.status(200).json({
       ok: true,
       generatedAt: new Date().toISOString(),

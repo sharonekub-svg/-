@@ -1034,7 +1034,7 @@
       ["today", "tomorrow"].forEach(day => {
         ["football", "basketball"].forEach(sport => {
           (feed.tabs[day]?.sports?.[sport] || []).forEach(row => {
-            if (!row.odds) return;
+            if (!row.odds || row.outsideRange) return;
             const key = predictionKey(row);
             if (byKey.has(key)) return;
             byKey.set(key, {
@@ -1154,14 +1154,18 @@
       const query = state.search.trim().toLowerCase();
       let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
-        const validOpen = !isOpenDay() || (row.odds && row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo);
+        // Show all Winner events (with or without in-range odds) as long as logos loaded
+        const validOpen = !isOpenDay() || (row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo);
         return validOpen && (!query || text.includes(query));
       });
       rows.sort((a, b) => {
-        if (state.sort === "odds") return (b.odds || 0) - (a.odds || 0);
+        // In-range picks first, then outside-range
+        if (!a.outsideRange && b.outsideRange) return -1;
+        if (a.outsideRange && !b.outsideRange) return 1;
+        if (state.sort === "odds") return (b.oddsRaw || b.odds || 0) - (a.oddsRaw || a.odds || 0);
         if (state.sort === "probability") return (b.probability || 0) - (a.probability || 0);
         if (state.sort === "time") return String(a.time).localeCompare(String(b.time));
-        return (b.score || 0) - (a.score || 0);
+        return (b.score || 0) - (a.score || 0) || String(a.time).localeCompare(String(b.time));
       });
       return rows;
     }
@@ -1392,10 +1396,15 @@
             <div class="teams-line">
               ${teamsMarkup(row)}
             </div>
-            <div class="picked-bet">
-              <span class="label">הימרנו</span>
-              <strong>${explicitPickText(row)}</strong>
-              <span class="picked-odds">${row.odds ? formatOdds(row.odds) : "תוצאה"}</span>
+            <div class="${row.outsideRange ? 'picked-bet outside-range' : 'picked-bet'}">
+              ${row.outsideRange
+                ? `<span class="label" style="color:var(--soft)">ללא המלצה</span>
+                   <strong style="color:var(--muted);font-size:15px">${explicitPickText(row)} — יחס ${formatOdds(row.oddsRaw || row.odds)}</strong>
+                   <span class="picked-odds" style="background:var(--panel-soft);color:var(--muted)">מחוץ לטווח</span>`
+                : `<span class="label">הימרנו</span>
+                   <strong>${explicitPickText(row)}</strong>
+                   <span class="picked-odds">${row.odds ? formatOdds(row.odds) : "תוצאה"}</span>`
+              }
             </div>
             <div class="market-row">
               <span class="name">${row.market || "שוק מנצח"}</span>
@@ -1475,12 +1484,14 @@
       const rows = currentRows();
       const sourceMode = state.feed?.fallback ? "מצב snapshot מאומת" : "מצב חי";
       const totalRows = daySportRows(state.day, state.sportTab).length;
+      const withPick = rows.filter(r => !r.outsideRange).length;
+      const withoutPick = rows.filter(r => r.outsideRange).length;
       meta.textContent = isOpenDay()
-        ? `${rows.length} משחקים פתוחים להימור מתוך ${totalRows}. לכל משחק יש יחס Winner ולוגו. ${sourceMode}.`
+        ? `${rows.length} משחקי Winner · ${withPick} עם המלצה · ${withoutPick} ללא המלצה (יחס מחוץ לטווח). ${sourceMode}.`
         : `${rows.length} תוצאות רשמיות מתוך ${totalRows}. המסך הזה סוגר תחזיות שנשמרו קודם. ${sourceMode}.`;
       cards.innerHTML = rows.length
         ? rows.map(rowCard).join("")
-        : `<div class="empty">${isOpenDay() ? "לא נמצאו משחקים פתוחים בקטגוריה הזו. הדמו לא מציג משחק בלי יחס Winner פעיל." : "אין תוצאות סגורות בקטגוריה הזו."}</div>`;
+        : `<div class="empty">${isOpenDay() ? "לא נמצאו משחקים ב-Winner לקטגוריה הזו." : "אין תוצאות סגורות בקטגוריה הזו."}</div>`;
     }
 
     function render() {
