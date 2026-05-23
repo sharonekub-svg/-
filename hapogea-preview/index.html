@@ -246,26 +246,26 @@
     .section-title { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
     .section-title h3 { margin: 0; font-size: 22px; }
     .section-title p { margin: 4px 0 0; color: var(--muted); }
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
     .card { overflow: hidden; transition: .18s ease; }
     .card:hover { border-color: rgba(85,214,255,.34); transform: translateY(-2px); }
     .card-head {
       display: flex;
       justify-content: space-between;
       gap: 10px;
-      padding: 12px 13px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--line);
       background: rgba(255,255,255,.025);
     }
     .league { font-weight: 900; }
     .time { color: var(--muted); font-size: 12px; font-weight: 800; }
-    .card-body { padding: 13px; display: grid; gap: 11px; }
+    .card-body { padding: 10px; display: grid; gap: 8px; }
     .teams-line {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      gap: 12px;
-      min-height: 96px;
+      gap: 8px;
+      min-height: 76px;
       direction: ltr;
     }
     .team-side {
@@ -277,8 +277,8 @@
       position: relative;
     }
     .logo-wrap {
-      width: 58px;
-      height: 58px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       display: grid;
       place-items: center;
@@ -312,7 +312,7 @@
     .versus.selected:after {
       content: "הבחירה";
       position: absolute;
-      top: -12px;
+      top: -10px;
       inset-inline-end: calc(50% - 44px);
       min-width: 60px;
       text-align: center;
@@ -322,7 +322,7 @@
       color: #06100c;
       font-size: 11px;
       font-weight: 900;
-      padding: 4px 8px;
+      padding: 3px 7px;
       z-index: 2;
       box-shadow: 0 10px 28px rgba(49,209,135,.26);
     }
@@ -331,19 +331,19 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
       font-weight: 800;
       text-align: center;
     }
     .team-odd {
-      min-height: 24px;
+      min-height: 22px;
       display: inline-flex;
       align-items: center;
       gap: 4px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      padding: 3px 8px;
+      padding: 2px 7px;
       color: var(--gold);
       background: rgba(255,200,87,.08);
       font-size: 11px;
@@ -363,7 +363,7 @@
     .versus {
       position: relative;
       width: 70px;
-      min-height: 78px;
+      min-height: 66px;
       border-radius: 999px;
       border: 1px solid transparent;
       display: grid;
@@ -374,8 +374,8 @@
       letter-spacing: 0;
     }
     .versus-main {
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       display: grid;
       place-items: center;
@@ -392,47 +392,47 @@
       display: grid;
       grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: 9px;
+      gap: 7px;
       border: 2px solid rgba(49,209,135,.75);
       border-radius: 10px;
-      padding: 13px 14px;
+      padding: 10px 11px;
       background: rgba(49,209,135,.13);
       color: var(--text);
       box-shadow: 0 0 0 1px rgba(49,209,135,.15), 0 8px 28px rgba(49,209,135,.12);
     }
     .picked-bet .label {
       color: var(--green);
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 900;
       white-space: nowrap;
       letter-spacing: 0.5px;
     }
     .picked-bet strong {
-      font-size: 22px;
+      font-size: 18px;
       line-height: 1.15;
     }
     .pick-action {
       grid-column: 1 / -1;
       color: #bff8dc;
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 900;
       line-height: 1.35;
       border-top: 1px solid rgba(49,209,135,.22);
-      padding-top: 8px;
+      padding-top: 6px;
     }
     .pick-help {
-      grid-column: 2 / -1;
+      grid-column: 1 / -1;
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1.35;
     }
     .picked-bet .picked-odds {
       color: #06100c;
       background: var(--green);
       border-radius: 999px;
-      padding: 8px 13px;
+      padding: 6px 10px;
       font-weight: 900;
-      font-size: 16px;
+      font-size: 14px;
       white-space: nowrap;
     }
     .market-row {
@@ -443,7 +443,7 @@
       border: 1px solid rgba(49,209,135,.35);
       background: rgba(49,209,135,.07);
       border-radius: 7px;
-      padding: 9px;
+      padding: 7px;
     }
     .market-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .market-row .price { font-weight: 900; color: var(--gold); }
@@ -1602,18 +1602,6 @@
               <span class="status ${cls}">${row.status}</span>
             </div>
             ${resultMarkup(row)}
-            <div class="score-row">
-              <span>ציון</span>
-              <div class="meter"><span style="width:${Math.max(0, Math.min(100, row.score || 0))}%"></span></div>
-              <b>${row.score || 0}</b>
-            </div>
-            <div class="signals">${(row.signals || []).map(signal => `<span class="signal">${signal}</span>`).join("")}</div>
-            <span class="verified-badge">Verified team logos only</span>
-            ${scoreBreakdownMarkup(row)}
-            <div class="details">
-              ${row.odds ? `יחס Winner לפני המשחק: ${formatOdds(row.odds)}. ${pickHelpText(row)} הסתברות מנוכת מרווח: ${formatPercent(row.normalizedProbability || row.probability)}. פער מול היריבה הקרובה: ${formatGap(row.marketGap)}.` : `תוצאה רשמית: ${row.actualWinner || row.result || "נסגר"}.`} למה: ${(row.explanation || [])[1] || "הסימון מבוסס על שוק המנצח בווינר."}
-              מזהה משחק בווינר: ${row.eventId}.
-            </div>
             <button class="open-game" data-open="${row.id}">פירוט משחק</button>
           </div>
         </article>
