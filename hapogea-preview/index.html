@@ -1307,16 +1307,30 @@
 
     function explicitPickText(row) {
       const side = pickSide(row);
+      if (side === "draw") return "תיקו";
+      if (row.marketTier === "alternative-total") {
+        const dir = row.pickTeam
+          || (String(row.winnerPick || row.pick || "").split(" ")[0])
+          || "מעל";
+        const line = row.spread != null
+          ? row.spread
+          : (() => { const m = String(row.winnerPick || row.pick || "").match(/(\d+(?:\.\d+)?)/); return m ? Number(m[1]) : null; })();
+        return line != null ? `${dir} ${line} גולים` : dir;
+      }
       const pick = pickLabel(row);
-      const spread = Number.isFinite(Number(row.spread))
+      const spread = row.spread != null && Number.isFinite(Number(row.spread))
         ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}`
         : "";
-      if (side === "draw") return "תיקו";
       if (row.pickTeam && row.pickTeam !== pick) return `${row.pickTeam}${spread}`;
       return `${pick}${spread && !String(pick).includes(String(row.spread)) ? spread : ""}`;
     }
 
     function pickActionText(row) {
+      if (row.marketTier === "alternative-total") {
+        const dir = row.pickTeam || "מעל";
+        const line = row.spread != null ? row.spread : null;
+        return line != null ? `הבחירה שלנו: ${dir} ${line} גולים` : `הבחירה שלנו: ${dir} גולים`;
+      }
       const team = row.pickTeam || pickLabel(row);
       const side = pickSide(row);
       const spread = Number(row.spread);
@@ -1345,10 +1359,18 @@
     }
 
     function pickHelpText(row) {
+      if (row.marketTier === "alternative-total") {
+        const dir = row.pickTeam || "מעל";
+        const line = row.spread != null ? row.spread : null;
+        const lineText = line != null ? `${line} גולים` : "גולים";
+        const impliedPct = row.normalizedProbability ? Math.round(row.normalizedProbability * 100) : null;
+        const pctText = impliedPct ? ` — הסתברות שוק ${impliedPct}%` : "";
+        return `כדורגל מעל/מתחת: בחרנו ${dir} ${lineText}${pctText}. האלגוריתם מבוסס על ניתוח יחסי Winner בשוק הגולים לאחר ניכוי מרווח הבית.`;
+      }
       const spread = Number(row.spread);
       const team = row.pickTeam || pickLabel(row);
       const market = row.market || "";
-      if (row.sportId === 227 && Number.isFinite(spread)) {
+      if (row.sportId === 227 && Number.isFinite(spread) && row.spread != null) {
         const abs = Math.abs(spread);
         if (spread > 0) {
           return `כדורסל - הימור יתרון: בחרנו ${team} +${abs}. ההימור תופס אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
