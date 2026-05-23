@@ -1178,6 +1178,8 @@
       search: "",
       loading: true,
       error: "",
+      fromLocalCache: false,
+      localCachedAt: null,
       selectedId: null,
       wcOpen: false,
       debugMode: location.pathname.includes("debug")
@@ -1382,6 +1384,25 @@
 
     function writeTracker(items) {
       localStorage.setItem(TRACK_KEY, JSON.stringify(items.slice(-400)));
+    }
+
+    const FEED_LS_KEY = "hapogea_feed_v3";
+    const FEED_LS_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+    function saveFeedLocally(feed) {
+      try {
+        localStorage.setItem(FEED_LS_KEY, JSON.stringify({ feed, at: Date.now() }));
+      } catch (_) {}
+    }
+
+    function loadFeedLocally() {
+      try {
+        const raw = localStorage.getItem(FEED_LS_KEY);
+        if (!raw) return null;
+        const { feed, at } = JSON.parse(raw);
+        if (!feed?.ok || Date.now() - at > FEED_LS_MAX_AGE_MS) return null;
+        return { feed, at };
+      } catch (_) { return null; }
     }
 
     function predictionKey(row) {
@@ -2016,11 +2037,14 @@
         return;
       }
       const rows = currentRows();
-      const sourceMode = state.feed?.fallback ? "מצב snapshot מאומת" : "מצב חי";
+      const isRefreshing = state.loading && state.feed;
+      const sourceMode = state.fromLocalCache
+        ? "מתעדכן..."
+        : (state.feed?.fallback || state.feed?.stale) ? "snapshot מאומת" : "נתונים חיים";
       const totalRows = daySportRows(state.day, state.sportTab).length;
       meta.textContent = isOpenDay()
-        ? `${rows.length} בחירות Winner היום · ${sourceMode}`
-        : `${rows.length} בחירות סגורות. ${sourceMode}.`;
+        ? `${rows.length} בחירות Winner${isRefreshing ? " · מתעדכן..." : " · " + sourceMode}`
+        : `${rows.length} בחירות סגורות · ${sourceMode}${isRefreshing ? " · מתעדכן..." : ""}`;
       if (state.sportTab === "all") {
         const bySport = currentRowsBySport();
         const sections = [
@@ -2591,18 +2615,37 @@
     }
 
     async function loadFeed() {
+      // Show cached data immediately — user sees something right away
+      if (!state.feed) {
+        const local = loadFeedLocally();
+        if (local) {
+          state.feed = local.feed;
+          state.fromLocalCache = true;
+          state.localCachedAt = local.at;
+          rememberOpenPredictions(local.feed);
+          settleTrackedPredictions(local.feed);
+          render();
+        }
+      }
       state.loading = true;
       state.error = "";
-      document.getElementById("cards").innerHTML = `<div class="empty">טוען נתונים חיים מווינר.</div>`;
+      // Only blank the page if there's truly nothing to show
+      if (!state.feed) {
+        document.getElementById("cards").innerHTML = `<div class="empty">טוען נתונים מ-Winner...</div>`;
+      }
       try {
         const response = await fetch(`/api/winner-feed?ts=${Date.now()}`);
         const feed = await response.json();
         if (!response.ok || !feed.ok) throw new Error(feed.detail || feed.error || "טעינת Winner נכשלה");
         state.feed = feed;
+        state.fromLocalCache = false;
+        state.localCachedAt = null;
+        saveFeedLocally(feed);
         rememberOpenPredictions(feed);
         settleTrackedPredictions(feed);
       } catch (error) {
-        state.error = `שגיאה: ${error.message}`;
+        // Keep showing cached data if available — don't clear it on error
+        if (!state.feed) state.error = `שגיאה: ${error.message}`;
       } finally {
         state.loading = false;
         render();

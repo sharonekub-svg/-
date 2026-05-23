@@ -447,31 +447,39 @@ async function wikidataLogoSearch(name, kind) {
 async function resolveLogoRow(table, kind, name) {
   const key = `${kind}:${cleanText(name)}`;
   if (globalLogoCache.has(key)) return globalLogoCache.get(key);
-  // Deduplicate concurrent requests for the same key
   if (globalLogoCache.has(`${key}:pending`)) {
     await globalLogoCache.get(`${key}:pending`);
     return globalLogoCache.get(key) || null;
   }
-  let resolve;
-  const pending = new Promise(r => { resolve = r; });
+  let resolvePending;
+  const pending = new Promise(r => { resolvePending = r; });
   globalLogoCache.set(`${key}:pending`, pending);
   let row = null;
-  for (const term of logoSearchTerms(cleanText(name), kind)) {
-    row = await supabaseSearch(table, term);
-    if (row?.logo_url) break;
-    // Race all slower sources in parallel instead of sequential waterfall
-    const results = await Promise.allSettled([
-      sportsDbSearch(kind, term),
-      wikipediaLogoSearch(term, kind),
-      wikipediaSearchLogo(term, kind),
-      wikidataLogoSearch(term, kind),
+  try {
+    row = await Promise.race([
+      (async () => {
+        for (const term of logoSearchTerms(cleanText(name), kind)) {
+          const supabaseRow = await supabaseSearch(table, term);
+          if (supabaseRow?.logo_url) return supabaseRow;
+          const results = await Promise.allSettled([
+            sportsDbSearch(kind, term),
+            wikipediaLogoSearch(term, kind),
+            wikipediaSearchLogo(term, kind),
+            wikidataLogoSearch(term, kind),
+          ]);
+          const found = results.find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
+          if (found?.logo_url) return found;
+        }
+        return null;
+      })(),
+      new Promise(resolve => setTimeout(() => resolve(null), 6000)),
     ]);
-    row = results.find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
-    if (row?.logo_url) break;
+  } catch (_) {
+    row = null;
   }
   globalLogoCache.set(key, row);
   globalLogoCache.delete(`${key}:pending`);
-  resolve();
+  resolvePending();
   return row;
 }
 
@@ -1698,12 +1706,24 @@ function normalizeFallbackRows(payload) {
 async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   const key = cacheKeyForToday();
   const cached = await kvGet(key);
+  // Fresh hit — serve immediately
   if (!force && isFreshCache(cached, CACHE_TTL_MS.full)) {
     return {
       ...cached.payload,
       cache: { status: "hit", key, cachedAt: cached.cachedAt, ttlMs: CACHE_TTL_MS.full },
     };
   }
+  // Stale but recent (< 20 min): serve immediately, let CDN stale-while-revalidate
+  // trigger the background rebuild on the next CDN revalidation cycle.
+  const staleAgeMs = cached?.cachedAt ? Date.now() - Number(cached.cachedAt) : Infinity;
+  if (!force && cached?.payload && staleAgeMs < 20 * 60 * 1000) {
+    return {
+      ...cached.payload,
+      stale: true,
+      cache: { status: "stale-recent", key, cachedAt: cached.cachedAt, staleAgeMs },
+    };
+  }
+  // Cache missing or very stale: full rebuild
   let payload;
   try {
     payload = await buildWinnerFeedPayload({ withLogos: true });
@@ -1725,7 +1745,7 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+  res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=86400");
   try {
     const force = String(req?.query?.force || "").toLowerCase() === "1";
     const payload = await buildCachedWinnerFeedPayload({ force });
