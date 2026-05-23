@@ -411,6 +411,12 @@
       font-size: 20px;
       line-height: 1.15;
     }
+    .pick-help {
+      grid-column: 2 / -1;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
     .picked-bet .picked-odds {
       color: #06100c;
       background: var(--green);
@@ -987,6 +993,24 @@
       return `${pick}${spread && !String(pick).includes(String(row.spread)) ? spread : ""}`;
     }
 
+    function pickHelpText(row) {
+      const spread = Number(row.spread);
+      const team = row.pickTeam || pickLabel(row);
+      const market = row.market || "";
+      if (row.sportId === 227 && Number.isFinite(spread)) {
+        const abs = Math.abs(spread);
+        if (spread > 0) {
+          return `כדורסל - הימור יתרון: בחרנו ${team} +${abs}. ההימור תופס אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+        }
+        return `כדורסל - הימור יתרון: בחרנו ${team} ${spread}. ההימור תופס רק אם ${team} מנצחת ביותר מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+      }
+      if (row.sportId === 227 && market.includes("המנצח")) {
+        return `כדורסל - מנצחת המשחק: בחרנו ${team} לניצחון במשחק${market.includes("כולל הארכות") ? " כולל הארכות" : ""}.`;
+      }
+      if (pickSide(row) === "draw") return "כדורגל - בחרנו תיקו בתוצאת הסיום.";
+      return `בחרנו ${team} בשוק ${market || "המנצח"}.`;
+    }
+
     function pickSide(row) {
       const pick = normalizePick(pickLabel(row));
       const home = normalizePick(row.home);
@@ -1407,7 +1431,8 @@
           <div>
             <div class="micro">${tip.sport} · ${tip.league} · ${tip.time}</div>
             <strong>${tip.match}</strong>
-            <div class="micro" style="margin-top:6px">הבחירה מסומנת בירוק · יחס Winner ${formatOdds(tip.odds)}</div>
+            <div class="micro" style="margin-top:6px">${explicitPickText(tip)} · יחס Winner ${formatOdds(tip.odds)}</div>
+            <div class="micro" style="margin-top:6px">${pickHelpText(tip)}</div>
           </div>
           <div class="odds">${formatOdds(tip.odds)}</div>
         </div>
@@ -1456,7 +1481,8 @@
                    <span class="picked-odds" style="background:var(--panel-soft);color:var(--muted)">${noPickLabel}</span>`
                 : `<span class="label">הימרנו</span>
                    <strong>${explicitPickText(row)}</strong>
-                   <span class="picked-odds">${row.odds ? formatOdds(row.odds) : "תוצאה"}</span>`
+                   <span class="picked-odds">${row.odds ? formatOdds(row.odds) : "תוצאה"}</span>
+                   <span class="pick-help">${pickHelpText(row)}</span>`
               }
             </div>
             <div class="market-row">
@@ -1472,7 +1498,7 @@
             </div>
             <div class="signals">${(row.signals || []).map(signal => `<span class="signal">${signal}</span>`).join("")}</div>
             <div class="details">
-              ${row.odds ? `יחס Winner לפני המשחק: ${formatOdds(row.odds)}. הסתברות מנוכת מרווח: ${formatPercent(row.normalizedProbability || row.probability)}. פער מול היריבה הקרובה: ${formatGap(row.marketGap)}.` : `תוצאה רשמית: ${row.actualWinner || row.result || "נסגר"}.`} למה: ${(row.explanation || [])[1] || "הסימון מבוסס על שוק המנצח בווינר."}
+              ${row.odds ? `יחס Winner לפני המשחק: ${formatOdds(row.odds)}. ${pickHelpText(row)} הסתברות מנוכת מרווח: ${formatPercent(row.normalizedProbability || row.probability)}. פער מול היריבה הקרובה: ${formatGap(row.marketGap)}.` : `תוצאה רשמית: ${row.actualWinner || row.result || "נסגר"}.`} למה: ${(row.explanation || [])[1] || "הסימון מבוסס על שוק המנצח בווינר."}
               מזהה משחק בווינר: ${row.eventId}.
             </div>
             <button class="open-game" data-open="${row.id}">פירוט משחק</button>

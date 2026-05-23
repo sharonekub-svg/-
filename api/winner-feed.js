@@ -236,20 +236,90 @@ async function sportsDbSearch(kind, term) {
 async function wikipediaLogoSearch(name, kind) {
   const value = cleanText(name);
   if (!value || value.length < 3) return null;
+  for (const lang of ["he", "en"]) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1800);
+    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(value)}`;
+    const data = await fetchJson(url, {
+      headers: { "User-Agent": "HapogeaLogoBot/1.0" },
+      signal: controller.signal,
+    }).catch(() => null);
+    clearTimeout(timeout);
+    const logo = data?.thumbnail?.source || data?.originalimage?.source || "";
+    if (logo) {
+      return {
+        name: cleanText(data.title || value),
+        logo_url: logo,
+        source: `Wikipedia ${lang} ${kind}`,
+      };
+    }
+  }
+  return null;
+}
+
+async function wikipediaSearchLogo(name, kind) {
+  const value = cleanText(name);
+  if (!value || value.length < 3) return null;
+  for (const lang of ["he", "en"]) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2200);
+    const params = new URLSearchParams({
+      action: "query",
+      generator: "search",
+      gsrsearch: value,
+      gsrlimit: "1",
+      prop: "pageimages",
+      pithumbsize: "160",
+      format: "json",
+      origin: "*",
+    });
+    const data = await fetchJson(`https://${lang}.wikipedia.org/w/api.php?${params}`, {
+      headers: { "User-Agent": "HapogeaLogoBot/1.0" },
+      signal: controller.signal,
+    }).catch(() => null);
+    clearTimeout(timeout);
+    const page = Object.values(data?.query?.pages || {})[0];
+    const logo = page?.thumbnail?.source || page?.original?.source || "";
+    if (logo) {
+      return {
+        name: cleanText(page.title || value),
+        logo_url: logo,
+        source: `Wikipedia search ${lang} ${kind}`,
+      };
+    }
+  }
+  return null;
+}
+
+async function wikidataLogoSearch(name, kind) {
+  const value = cleanText(name);
+  if (!value || value.length < 3) return null;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 1800);
-  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(value)}`;
-  const data = await fetchJson(url, {
+  const timeout = setTimeout(() => controller.abort(), 2200);
+  const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=1&search=${encodeURIComponent(value)}`;
+  const search = await fetchJson(searchUrl, {
     headers: { "User-Agent": "HapogeaLogoBot/1.0" },
     signal: controller.signal,
   }).catch(() => null);
   clearTimeout(timeout);
-  const logo = data?.thumbnail?.source || data?.originalimage?.source || "";
-  if (!logo) return null;
+  const id = search?.search?.[0]?.id;
+  if (!id) return null;
+
+  const entityController = new AbortController();
+  const entityTimeout = setTimeout(() => entityController.abort(), 2200);
+  const entity = await fetchJson(`https://www.wikidata.org/wiki/Special:EntityData/${id}.json`, {
+    headers: { "User-Agent": "HapogeaLogoBot/1.0" },
+    signal: entityController.signal,
+  }).catch(() => null);
+  clearTimeout(entityTimeout);
+  const claims = entity?.entities?.[id]?.claims || {};
+  const image = claims.P154?.[0]?.mainsnak?.datavalue?.value ||
+    claims.P18?.[0]?.mainsnak?.datavalue?.value;
+  if (!image) return null;
   return {
-    name: cleanText(data.title || value),
-    logo_url: logo,
-    source: `Wikipedia ${kind}`,
+    name: value,
+    logo_url: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(image)}?width=160`,
+    source: `Wikidata ${kind}`,
   };
 }
 
@@ -264,7 +334,9 @@ async function enrichLogos(rows) {
         ? { logo_url: mappedLogo, source: "curated teams" }
         : await supabaseSearch("teams", key) ||
           await sportsDbSearch("team", key) ||
-          await wikipediaLogoSearch(key, "team");
+          await wikipediaLogoSearch(key, "team") ||
+          await wikipediaSearchLogo(key, "team") ||
+          await wikidataLogoSearch(key, "team");
       teamCache.set(key, row);
     }
     const row = teamCache.get(key);
@@ -283,7 +355,9 @@ async function enrichLogos(rows) {
         ? { logo_url: mappedLogo, source: "curated leagues" }
         : await supabaseSearch("leagues", key) ||
           await sportsDbSearch("league", key) ||
-          await wikipediaLogoSearch(key, "league");
+          await wikipediaLogoSearch(key, "league") ||
+          await wikipediaSearchLogo(key, "league") ||
+          await wikidataLogoSearch(key, "league");
       leagueCache.set(key, row);
     }
     const row = leagueCache.get(key);

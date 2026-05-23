@@ -1,7 +1,7 @@
 {
   "ok": true,
-  "generatedAt": "2026-05-23T15:21:10.437Z",
-  "serverVersion": "1779549624607",
+  "generatedAt": "2026-05-23T15:28:54.776Z",
+  "serverVersion": "1779550104979",
   "oddsRange": {
     "min": 1.4,
     "max": 1.9
@@ -14,7 +14,7 @@
     },
     "basketball": {
       "today": 10,
-      "tomorrow": 11
+      "tomorrow": 12
     }
   },
   "tabs": {
@@ -172,9 +172,9 @@
             ],
             "homeAsset": {
               "name": "תשיעי באוקטובר",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%AA%D7%91%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "תב",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "מנטה",
@@ -4764,9 +4764,9 @@
             },
             "awayAsset": {
               "name": "יו.סי.דבלין",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%99%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "י",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "leagueAsset": {
               "name": "אירית שניה",
@@ -5251,9 +5251,9 @@
             ],
             "homeAsset": {
               "name": "Sodie Mesquita (W)",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3ESM%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "SM",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "Salvador Basketball (W)",
@@ -5322,9 +5322,9 @@
             },
             "awayAsset": {
               "name": "Defensor Sporting Club (W)",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3EDS%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "DS",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "leagueAsset": {
               "name": "LFB (W)",
@@ -5446,9 +5446,9 @@
             ],
             "homeAsset": {
               "name": "Colonias Gold Basketball",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3ECG%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "CG",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "Olimpia",
@@ -5771,9 +5771,9 @@
             ],
             "homeAsset": {
               "name": "אגואדה",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%90%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "א",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "נאסיונל",
@@ -5842,15 +5842,15 @@
             },
             "awayAsset": {
               "name": "Brampton Honey Badgers",
-              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3EBH%3C%2Ftext%3E%3C%2Fsvg%3E",
+              "logo": "https://upload.wikimedia.org/wikipedia/en/7/74/Hamilton_Honey_Badgers_Logo.png",
               "initials": "BH",
-              "logoSource": "generated team badge"
+              "logoSource": "Wikipedia en team"
             },
             "leagueAsset": {
               "name": "CEBL",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/e/ee/Canadian_Elite_Basketball_League_logo.png/330px-Canadian_Elite_Basketball_League_logo.png",
               "initials": "C",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           },
           {
@@ -6305,7 +6305,7 @@
               "name": "WNBA",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/9/97/WNBA_logo.svg/330px-WNBA_logo.svg.png",
               "initials": "W",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           },
           {
@@ -6370,7 +6370,7 @@
               "name": "WNBA",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/9/97/WNBA_logo.svg/330px-WNBA_logo.svg.png",
               "initials": "W",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           },
           {
@@ -6427,9 +6427,9 @@
             },
             "awayAsset": {
               "name": "Gigantes De Carolina",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3EGD%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "GD",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "leagueAsset": {
               "name": "BSN",
@@ -6486,9 +6486,9 @@
             ],
             "homeAsset": {
               "name": "Cangrejeros",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3EC%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "C",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "Capitanes De Arecibo",
@@ -6622,9 +6622,9 @@
             },
             "awayAsset": {
               "name": "San Isidro (SF)",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3ESI%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "SI",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "leagueAsset": {
               "name": "Liga Argentina - חצי גמר",
@@ -6752,9 +6752,9 @@
             },
             "awayAsset": {
               "name": "San Martín (Marcos Juárez)",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3ESM%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "SM",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "leagueAsset": {
               "name": "Liga Federal - Conferencia Litoral",
@@ -6882,9 +6882,9 @@
             },
             "awayAsset": {
               "name": "All Boys de Santa Rosa",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3EAB%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "AB",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "leagueAsset": {
               "name": "Liga Federal - Conferencia Sudeste",
@@ -7071,9 +7071,9 @@
             ],
             "homeAsset": {
               "name": "CD Valdivia",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3ECV%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "CV",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "CD Español Osorno",
@@ -7333,7 +7333,7 @@
               "name": "Paisas",
               "logo": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Juan_Valdez%2C_actor.jpg",
               "initials": "P",
-              "logoSource": "Wikipedia team"
+              "logoSource": "Wikipedia en team"
             },
             "awayAsset": {
               "name": "Caimanes",
@@ -7396,15 +7396,15 @@
             ],
             "homeAsset": {
               "name": "Metapan BC",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3EMB%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "MB",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "Santa Tecla IMDELS",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3EST%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "ST",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "leagueAsset": {
               "name": "Liga Mayor",
@@ -7605,7 +7605,7 @@
               "name": "WNBA",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/9/97/WNBA_logo.svg/330px-WNBA_logo.svg.png",
               "initials": "W",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           },
           {
@@ -7851,9 +7851,9 @@
             ],
             "homeAsset": {
               "name": "Tnt Tropang Giga",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3ETT%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "TT",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "Meralco Bolts",
@@ -7916,9 +7916,9 @@
             ],
             "homeAsset": {
               "name": "Beijing Ducks",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "https://upload.wikimedia.org/wikipedia/en/3/30/Beijing_Ducks.png",
               "initials": "BD",
-              "logoSource": "TheSportsDB"
+              "logoSource": "Wikipedia en team"
             },
             "awayAsset": {
               "name": "Shanghai Sharks",
@@ -8962,9 +8962,9 @@
             },
             "awayAsset": {
               "name": "לאנסטדה",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%9C%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "ל",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "leagueAsset": {
               "name": "BNXT League - פלייאוף",
@@ -9021,9 +9021,9 @@
             ],
             "homeAsset": {
               "name": "אוליבר באסקט",
-              "logo": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%90%D7%91%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "אב",
-              "logoSource": "TheSportsDB"
+              "logoSource": "generated team badge"
             },
             "awayAsset": {
               "name": "טלקום בסקטס",
@@ -9346,7 +9346,7 @@
                     "outcomeId": 286766796,
                     "desc": "3 - 3",
                     "team": "3 - 3",
-                    "price": 40,
+                    "price": 45,
                     "spread": null,
                     "probability": 0.08,
                     "score": 32
@@ -9370,18 +9370,18 @@
                     "score": 32
                   },
                   {
-                    "outcomeId": 286766789,
-                    "desc": "1 - 5",
-                    "team": "1 - 5",
-                    "price": 30,
+                    "outcomeId": 286766805,
+                    "desc": "3 - 2",
+                    "team": "3 - 2",
+                    "price": 35,
                     "spread": null,
                     "probability": 0.08,
                     "score": 32
                   },
                   {
-                    "outcomeId": 286766805,
-                    "desc": "3 - 2",
-                    "team": "3 - 2",
+                    "outcomeId": 286766789,
+                    "desc": "1 - 5",
+                    "team": "1 - 5",
                     "price": 30,
                     "spread": null,
                     "probability": 0.08,
@@ -9401,15 +9401,6 @@
                     "desc": "2 - 4",
                     "team": "2 - 4",
                     "price": 27,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 32
-                  },
-                  {
-                    "outcomeId": 286766798,
-                    "desc": "1 - 0",
-                    "team": "1 - 0",
-                    "price": 16,
                     "spread": null,
                     "probability": 0.08,
                     "score": 32
@@ -9442,6 +9433,15 @@
                     "score": 32
                   },
                   {
+                    "outcomeId": 286766798,
+                    "desc": "1 - 0",
+                    "team": "1 - 0",
+                    "price": 15,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 32
+                  },
+                  {
                     "outcomeId": 286766786,
                     "desc": "1 - 4",
                     "team": "1 - 4",
@@ -9460,18 +9460,18 @@
                     "score": 32
                   },
                   {
-                    "outcomeId": 286766794,
-                    "desc": "2 - 2",
-                    "team": "2 - 2",
-                    "price": 11.5,
+                    "outcomeId": 286766819,
+                    "desc": "אחר",
+                    "team": "אחר",
+                    "price": 12,
                     "spread": null,
                     "probability": 0.08,
                     "score": 32
                   },
                   {
-                    "outcomeId": 286766819,
-                    "desc": "אחר",
-                    "team": "אחר",
+                    "outcomeId": 286766794,
+                    "desc": "2 - 2",
+                    "team": "2 - 2",
                     "price": 11.5,
                     "spread": null,
                     "probability": 0.08,
@@ -9665,20 +9665,20 @@
                   "outcomeId": 286766853,
                   "desc": "מחצית שנייה",
                   "team": "מחצית שנייה",
-                  "price": 1.8,
+                  "price": 1.85,
                   "spread": null,
-                  "probability": 0.4,
-                  "score": 54
+                  "probability": 0.3891891891891891,
+                  "score": 53
                 },
                 "outcomes": [
                   {
                     "outcomeId": 286766853,
                     "desc": "מחצית שנייה",
                     "team": "מחצית שנייה",
-                    "price": 1.8,
+                    "price": 1.85,
                     "spread": null,
-                    "probability": 0.4,
-                    "score": 54
+                    "probability": 0.3891891891891891,
+                    "score": 53
                   },
                   {
                     "outcomeId": 286766849,
@@ -9693,9 +9693,9 @@
                     "outcomeId": 286766851,
                     "desc": "מספר שערים זהה",
                     "team": "מספר שערים זהה",
-                    "price": 3.3,
+                    "price": 3.25,
                     "spread": null,
-                    "probability": 0.21818181818181817,
+                    "probability": 0.22153846153846155,
                     "score": 42
                   }
                 ]
@@ -10019,16 +10019,16 @@
                     "outcomeId": 286766841,
                     "desc": "אחר",
                     "team": "אחר",
-                    "price": 6,
+                    "price": 6.2,
                     "spread": null,
-                    "probability": 0.12,
+                    "probability": 0.11612903225806451,
                     "score": 35
                   },
                   {
                     "outcomeId": 286766833,
                     "desc": "2 - 2",
                     "team": "2 - 2",
-                    "price": 40,
+                    "price": 45,
                     "spread": null,
                     "probability": 0.08,
                     "score": 32
@@ -10507,9 +10507,9 @@
                     "outcomeId": 295539264,
                     "desc": "0 - 1",
                     "team": "0 - 1",
-                    "price": 2.65,
+                    "price": 2.7,
                     "spread": null,
-                    "probability": 0.27169811320754716,
+                    "probability": 0.26666666666666666,
                     "score": 45
                   },
                   {
@@ -11020,9 +11020,9 @@
                     "outcomeId": 295539287,
                     "desc": "אין שערים",
                     "team": "אין שערים",
-                    "price": 8,
+                    "price": 8.2,
                     "spread": null,
-                    "probability": 0.09,
+                    "probability": 0.0878048780487805,
                     "score": 33
                   }
                 ]
@@ -11196,9 +11196,9 @@
                     "outcomeId": 295539228,
                     "desc": "0 - 0",
                     "team": "0 - 0",
-                    "price": 8,
+                    "price": 8.2,
                     "spread": null,
-                    "probability": 0.09,
+                    "probability": 0.0878048780487805,
                     "score": 33
                   },
                   {
@@ -11274,18 +11274,18 @@
                     "score": 32
                   },
                   {
-                    "outcomeId": 295539234,
-                    "desc": "3 - 3",
-                    "team": "3 - 3",
-                    "price": 70,
+                    "outcomeId": 295539223,
+                    "desc": "0 - 5",
+                    "team": "0 - 5",
+                    "price": 60,
                     "spread": null,
                     "probability": 0.08,
                     "score": 32
                   },
                   {
-                    "outcomeId": 295539223,
-                    "desc": "0 - 5",
-                    "team": "0 - 5",
+                    "outcomeId": 295539234,
+                    "desc": "3 - 3",
+                    "team": "3 - 3",
                     "price": 60,
                     "spread": null,
                     "probability": 0.08,
@@ -11331,7 +11331,7 @@
                     "outcomeId": 295539262,
                     "desc": "אחר",
                     "team": "אחר",
-                    "price": 30,
+                    "price": 29,
                     "spread": null,
                     "probability": 0.08,
                     "score": 32
@@ -11376,7 +11376,7 @@
                     "outcomeId": 295539232,
                     "desc": "2 - 2",
                     "team": "2 - 2",
-                    "price": 12.5,
+                    "price": 12,
                     "spread": null,
                     "probability": 0.08,
                     "score": 32
@@ -15958,18 +15958,18 @@
                     "outcomeId": 286767066,
                     "desc": "1 - 0",
                     "team": "1 - 0",
-                    "price": 4.5,
+                    "price": 4.4,
                     "spread": null,
-                    "probability": 0.15999999999999998,
+                    "probability": 0.16363636363636364,
                     "score": 38
                   },
                   {
                     "outcomeId": 286767064,
                     "desc": "1 - 1",
                     "team": "1 - 1",
-                    "price": 5.2,
+                    "price": 5.4,
                     "spread": null,
-                    "probability": 0.13846153846153844,
+                    "probability": 0.13333333333333333,
                     "score": 36
                   },
                   {
@@ -16109,9 +16109,9 @@
                     "outcomeId": 286767088,
                     "desc": "1 - 0",
                     "team": "1 - 0",
-                    "price": 4.1,
+                    "price": 4,
                     "spread": null,
-                    "probability": 0.175609756097561,
+                    "probability": 0.18,
                     "score": 39
                   }
                 ]
@@ -26187,9 +26187,9 @@
                     "outcomeId": 286060593,
                     "desc": "(-1) X",
                     "team": "(-1) X",
-                    "price": 3.55,
+                    "price": 3.6,
                     "spread": -1,
-                    "probability": 0.24788732394366197,
+                    "probability": 0.24444444444444446,
                     "score": 43
                   }
                 ]
@@ -26222,18 +26222,18 @@
                     "outcomeId": 286060547,
                     "desc": "x - לכיה גדנסק",
                     "team": "x - לכיה גדנסק",
-                    "price": 3.9,
+                    "price": 3.95,
                     "spread": null,
-                    "probability": 0.18461538461538463,
+                    "probability": 0.1822784810126582,
                     "score": 36
                   },
                   {
                     "outcomeId": 286060542,
                     "desc": "טרמליקה - טרמליקה",
                     "team": "טרמליקה - טרמליקה",
-                    "price": 4.6,
+                    "price": 4.5,
                     "spread": null,
-                    "probability": 0.1565217391304348,
+                    "probability": 0.15999999999999998,
                     "score": 34
                   },
                   {
@@ -26249,10 +26249,10 @@
                     "outcomeId": 286060545,
                     "desc": "x - טרמליקה",
                     "team": "x - טרמליקה",
-                    "price": 6.8,
+                    "price": 7,
                     "spread": null,
-                    "probability": 0.10588235294117647,
-                    "score": 31
+                    "probability": 0.10285714285714284,
+                    "score": 30
                   },
                   {
                     "outcomeId": 286060548,
@@ -26419,16 +26419,7 @@
                     "outcomeId": 286060566,
                     "desc": "3 - 3",
                     "team": "3 - 3",
-                    "price": 26,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 29
-                  },
-                  {
-                    "outcomeId": 286060575,
-                    "desc": "4 - 2",
-                    "team": "4 - 2",
-                    "price": 24,
+                    "price": 25,
                     "spread": null,
                     "probability": 0.08,
                     "score": 29
@@ -26443,10 +26434,10 @@
                     "score": 29
                   },
                   {
-                    "outcomeId": 286060555,
-                    "desc": "1 - 3",
-                    "team": "1 - 3",
-                    "price": 22,
+                    "outcomeId": 286060575,
+                    "desc": "4 - 2",
+                    "team": "4 - 2",
+                    "price": 23,
                     "spread": null,
                     "probability": 0.08,
                     "score": 29
@@ -26455,6 +26446,15 @@
                     "outcomeId": 286060552,
                     "desc": "0 - 2",
                     "team": "0 - 2",
+                    "price": 22,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 29
+                  },
+                  {
+                    "outcomeId": 286060555,
+                    "desc": "1 - 3",
+                    "team": "1 - 3",
                     "price": 21,
                     "spread": null,
                     "probability": 0.08,
@@ -26497,6 +26497,15 @@
                     "score": 29
                   },
                   {
+                    "outcomeId": 286060570,
+                    "desc": "3 - 0",
+                    "team": "3 - 0",
+                    "price": 13,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 29
+                  },
+                  {
                     "outcomeId": 286060572,
                     "desc": "3 - 2",
                     "team": "3 - 2",
@@ -26506,19 +26515,10 @@
                     "score": 29
                   },
                   {
-                    "outcomeId": 286060570,
-                    "desc": "3 - 0",
-                    "team": "3 - 0",
-                    "price": 12.5,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 29
-                  },
-                  {
                     "outcomeId": 286060553,
                     "desc": "1 - 2",
                     "team": "1 - 2",
-                    "price": 10,
+                    "price": 10.5,
                     "spread": null,
                     "probability": 0.08,
                     "score": 29
@@ -26527,7 +26527,7 @@
                     "outcomeId": 286060567,
                     "desc": "1 - 0",
                     "team": "1 - 0",
-                    "price": 9.8,
+                    "price": 10,
                     "spread": null,
                     "probability": 0.08,
                     "score": 29
@@ -26536,7 +26536,7 @@
                     "outcomeId": 286060568,
                     "desc": "2 - 0",
                     "team": "2 - 0",
-                    "price": 9.2,
+                    "price": 9.4,
                     "spread": null,
                     "probability": 0.08,
                     "score": 29
@@ -26554,18 +26554,18 @@
                     "outcomeId": 286060565,
                     "desc": "2 - 2",
                     "team": "2 - 2",
-                    "price": 9,
+                    "price": 8.8,
                     "spread": null,
-                    "probability": 0.08,
+                    "probability": 0.08181818181818182,
                     "score": 29
                   },
                   {
                     "outcomeId": 286060579,
                     "desc": "אחר",
                     "team": "אחר",
-                    "price": 9,
+                    "price": 8.6,
                     "spread": null,
-                    "probability": 0.08,
+                    "probability": 0.08372093023255814,
                     "score": 29
                   }
                 ]
@@ -26623,9 +26623,9 @@
                   "outcomeId": 286060583,
                   "desc": "0 - 0",
                   "team": "0 - 0",
-                  "price": 3,
+                  "price": 3.05,
                   "spread": null,
-                  "probability": 0.24,
+                  "probability": 0.2360655737704918,
                   "score": 40
                 },
                 "outcomes": [
@@ -26633,9 +26633,9 @@
                     "outcomeId": 286060583,
                     "desc": "0 - 0",
                     "team": "0 - 0",
-                    "price": 3,
+                    "price": 3.05,
                     "spread": null,
-                    "probability": 0.24,
+                    "probability": 0.2360655737704918,
                     "score": 40
                   },
                   {
@@ -26693,18 +26693,18 @@
                     "score": 29
                   },
                   {
-                    "outcomeId": 286060582,
-                    "desc": "1 - 2",
-                    "team": "1 - 2",
-                    "price": 15,
+                    "outcomeId": 286060581,
+                    "desc": "0 - 2",
+                    "team": "0 - 2",
+                    "price": 14.5,
                     "spread": null,
                     "probability": 0.08,
                     "score": 29
                   },
                   {
-                    "outcomeId": 286060581,
-                    "desc": "0 - 2",
-                    "team": "0 - 2",
+                    "outcomeId": 286060582,
+                    "desc": "1 - 2",
+                    "team": "1 - 2",
                     "price": 14.5,
                     "spread": null,
                     "probability": 0.08,
@@ -27370,7 +27370,7 @@
               "name": "WNBA",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/9/97/WNBA_logo.svg/330px-WNBA_logo.svg.png",
               "initials": "W",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           },
           {
@@ -45692,7 +45692,7 @@
               "name": "WNBA",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/9/97/WNBA_logo.svg/330px-WNBA_logo.svg.png",
               "initials": "W",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           },
           {
@@ -45830,7 +45830,7 @@
               "name": "WNBA",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/9/97/WNBA_logo.svg/330px-WNBA_logo.svg.png",
               "initials": "W",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           },
           {
@@ -46244,6 +46244,144 @@
               "name": "ניו זילנדית ראשונה",
               "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23111f2a%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2355d6ff%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%A0%D7%96%3C%2Ftext%3E%3C%2Fsvg%3E",
               "initials": "נז",
+              "logoSource": "generated league badge"
+            }
+          },
+          {
+            "id": "winner-10477822",
+            "eventId": "10477822",
+            "source": "Winner",
+            "day": "2026-05-24",
+            "time": "12:00",
+            "sport": "כדורסל",
+            "sportId": 227,
+            "league": "סל - פיליפינים, קומישיונר קאפ",
+            "country": "פיליפינים",
+            "match": "בולטס - טרופנג גיגה",
+            "home": "בולטס",
+            "away": "טרופנג גיגה",
+            "resultKey": "227:2026-05-24:בולטס:טרופנג גיגה",
+            "market": "הימור יתרון - כולל הארכות אם יהיו",
+            "marketId": 37127306,
+            "outcomeId": 339154436,
+            "pick": "בולטס (-10.5)",
+            "pickTeam": "בולטס",
+            "spread": -10.5,
+            "winnerPick": "בולטס (-10.5)",
+            "odds": 1.65,
+            "oddsRaw": 1.65,
+            "outsideRange": false,
+            "oddsBook": {
+              "home": {
+                "desc": "בולטס (-10.5)",
+                "team": "בולטס",
+                "spread": -10.5,
+                "odds": 1.65,
+                "implied": 0.6060606060606061,
+                "noVigProbability": 0.5
+              },
+              "draw": null,
+              "away": {
+                "desc": "טרופנג גיגה (+10.5)",
+                "team": "טרופנג גיגה",
+                "spread": 10.5,
+                "odds": 1.65,
+                "implied": 0.6060606060606061,
+                "noVigProbability": 0.5
+              },
+              "outcomes": [
+                {
+                  "desc": "בולטס (-10.5)",
+                  "team": "בולטס",
+                  "spread": -10.5,
+                  "odds": 1.65,
+                  "implied": 0.6060606060606061,
+                  "noVigProbability": 0.5
+                },
+                {
+                  "desc": "טרופנג גיגה (+10.5)",
+                  "team": "טרופנג גיגה",
+                  "spread": 10.5,
+                  "odds": 1.65,
+                  "implied": 0.6060606060606061,
+                  "noVigProbability": 0.5
+                }
+              ],
+              "overround": 0.21212121212121215
+            },
+            "probability": 0.44,
+            "normalizedProbability": 0.5,
+            "marketGap": 0,
+            "overround": 0.21212121212121215,
+            "score": 30,
+            "status": "ממתין",
+            "result": "",
+            "signals": [
+              "סבירות פגיעה 44 אחוז",
+              "יחס Winner 1.65",
+              "ציון משולב 36"
+            ],
+            "allMarkets": [
+              {
+                "marketId": 37127306,
+                "title": "הימור יתרון - כולל הארכות אם יהיו",
+                "category": "יתרון",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 339154436,
+                  "desc": "בולטס (-10.5)",
+                  "team": "בולטס",
+                  "price": 1.65,
+                  "spread": -10.5,
+                  "probability": 0.5333333333333333,
+                  "score": 54
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 339154436,
+                    "desc": "בולטס (-10.5)",
+                    "team": "בולטס",
+                    "price": 1.65,
+                    "spread": -10.5,
+                    "probability": 0.5333333333333333,
+                    "score": 54
+                  },
+                  {
+                    "outcomeId": 339154437,
+                    "desc": "טרופנג גיגה (+10.5)",
+                    "team": "טרופנג גיגה",
+                    "price": 1.65,
+                    "spread": 10.5,
+                    "probability": 0.5333333333333333,
+                    "score": 54
+                  }
+                ]
+              }
+            ],
+            "explanation": [
+              "המשחק מופיע בווינר-ליין ולכן ניתן להמר עליו בזמן משיכת הנתונים.",
+              "בולטס (-10.5) נבחרת לניצחון כי היא הפייבוריטית הברורה בשוק המנצח של Winner. בולטס (-10.5) משחקת בבית, ולכן הבחירה מקבלת גם יתרון מגרש. מול טרופנג גיגה (+10.5), השוק נותן ליריבה יחס 1.65, כלומר Winner רואה אותה כפחות סבירה לניצחון. החלופות בשוק: טרופנג גיגה (+10.5) 1.65.",
+              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
+            ],
+            "recommendationScore": 36,
+            "recommended": true,
+            "recommendationReason": "top-20",
+            "homeAsset": {
+              "name": "בולטס",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%91%3C%2Ftext%3E%3C%2Fsvg%3E",
+              "initials": "ב",
+              "logoSource": "generated team badge"
+            },
+            "awayAsset": {
+              "name": "טרופנג גיגה",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23102219%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2331d187%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%98%D7%92%3C%2Ftext%3E%3C%2Fsvg%3E",
+              "initials": "טג",
+              "logoSource": "generated team badge"
+            },
+            "leagueAsset": {
+              "name": "סל - פיליפינים, קומישיונר קאפ",
+              "logo": "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Crect%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%2248%22%20fill%3D%22%23111f2a%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2248%22%20r%3D%2243%22%20fill%3D%22none%22%20stroke%3D%22%2355d6ff%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%2248%22%20y%3D%2257%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2228%22%20font-weight%3D%22800%22%20fill%3D%22%23f7f3ea%22%3E%D7%A1-%3C%2Ftext%3E%3C%2Fsvg%3E",
+              "initials": "ס-",
               "logoSource": "generated league badge"
             }
           },
@@ -46723,7 +46861,7 @@
               "name": "WNBA",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/9/97/WNBA_logo.svg/330px-WNBA_logo.svg.png",
               "initials": "W",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           },
           {
@@ -46861,7 +46999,7 @@
               "name": "WNBA",
               "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/9/97/WNBA_logo.svg/330px-WNBA_logo.svg.png",
               "initials": "W",
-              "logoSource": "Wikipedia league"
+              "logoSource": "Wikipedia en league"
             }
           }
         ]
