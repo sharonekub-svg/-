@@ -1154,9 +1154,7 @@
       const query = state.search.trim().toLowerCase();
       let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
-        // Show all Winner events (with or without in-range odds) as long as logos loaded
-        const validOpen = !isOpenDay() || (row.homeAsset?.logo && row.awayAsset?.logo && row.leagueAsset?.logo);
-        return validOpen && (!query || text.includes(query));
+        return !query || text.includes(query);
       });
       rows.sort((a, b) => {
         // In-range picks first, then outside-range
