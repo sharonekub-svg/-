@@ -940,21 +940,24 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
                   : tip.status==="lost"? "linear-gradient(90deg,#f87171,#ef4444)"
                   : "linear-gradient(90deg,#facc15,#eab308)"
       }}/>
-      {(tip.status==="won" || tip.status==="lost") && (
+      {(tip.status==="won" || tip.status==="lost" || tip.status==="pending") && (
         <div style={{
-          padding:"7px 14px",
-          background: tip.status==="won" ? "rgba(74,222,128,.15)" : "rgba(248,113,113,.12)",
-          borderBottom:`2px solid ${tip.status==="won"?"#4ade80":"#f87171"}`,
-          display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+          padding: tip.status==="pending" ? "8px 14px" : "12px 14px",
+          background: tip.status==="won" ? "rgba(74,222,128,.13)" : tip.status==="lost" ? "rgba(248,113,113,.11)" : "rgba(250,204,21,.07)",
+          borderBottom:`3px solid ${tip.status==="won"?"#4ade80":tip.status==="lost"?"#f87171":"#facc15"}`,
+          display:"flex",alignItems:"center",justifyContent:"center",gap:10,
         }}>
           <span style={{
-            fontFamily:"'Bebas Neue',cursive",fontSize:24,letterSpacing:2,
-            color: tip.status==="won" ? "#4ade80" : "#f87171",
+            fontFamily:"'Bebas Neue',cursive",
+            fontSize: tip.status==="pending" ? 28 : 44,
+            letterSpacing:3,lineHeight:1,
+            color: tip.status==="won" ? "#4ade80" : tip.status==="lost" ? "#f87171" : "#facc15",
+            textShadow: tip.status==="won" ? "0 0 16px #4ade8066" : tip.status==="lost" ? "0 0 16px #f8717166" : "0 0 16px #facc1566",
           }}>
-            {tip.status==="won" ? " תפס" : " נפל"}
+            {tip.status==="won" ? "תפס!" : tip.status==="lost" ? "נפל" : "ממתין"}
           </span>
           {tip.finalScore && (
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,color:"#F5E6CC",opacity:.7}}>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"#F5E6CC",opacity:.65}}>
               {tip.finalScore}
             </span>
           )}
@@ -2539,10 +2542,19 @@ const BottomNav = ({ view, setView }) => {
 };
 
 // ─── LIVE MATCH CARD ───────────────────────────────────────────
+const PickIndicator = ({ active, color="#facc15" }) => active ? (
+  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,marginBottom:4}}>
+    <div style={{width:14,height:14,borderRadius:"50%",background:color,boxShadow:`0 0 8px ${color}99`,border:`2px solid white`}}/>
+    <div style={{width:1,height:6,background:color,opacity:.5}}/>
+  </div>
+) : <div style={{height:24}}/>;
+
 const LiveMatchCard = ({ m }) => {
   const sport = m.sport || (m.oX && parseFloat(m.oX) > 10 ? "basketball" : "football");
-  const pick = m.bestSide === "1" ? m.home : m.bestSide === "2" ? m.away : "תיקו";
   const pickOdds = m.bestSide === "1" ? m.o1 : m.bestSide === "2" ? m.o2 : m.oX;
+  const isDrawPick = m.bestSide === "X";
+  const isHomePick = m.bestSide === "1";
+  const isAwayPick = m.bestSide === "2";
   return (
   <div className="live-card">
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
@@ -2552,29 +2564,45 @@ const LiveMatchCard = ({ m }) => {
       </div>
       <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:1}}>{m.league}</span>
     </div>
-    <div className="live-score">
-      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
-        <TeamLogo name={m.home} sport={sport} size={28}/>
-        <div className="live-team" style={{textAlign:"right"}}>{m.home}</div>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-        <div className="live-score-num">{m.score}</div>
-        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:"rgba(184,147,106,.4)",letterSpacing:1}}>תוצאה לייב</div>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4}}>
-        <TeamLogo name={m.away} sport={sport} size={28}/>
-        <div className="live-team" style={{textAlign:"left"}}>{m.away}</div>
-      </div>
-    </div>
-    {/* AI Prediction status */}
+
+    {/* ממתין banner — prominent */}
     {m.bestSide && (
-      <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"rgba(250,204,21,.06)",border:"1px solid rgba(250,204,21,.2)",borderRadius:7,margin:"8px 0"}}>
-        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:"rgba(184,147,106,.7)"}}>ניחוש AI:</span>
-        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:12,fontWeight:700,color:"#facc15"}}>{pick}</span>
-        {pickOdds && <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:15,color:"white",marginRight:"auto"}}>@ {pickOdds}</span>}
-        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:800,letterSpacing:1,color:"#facc15",background:"rgba(250,204,21,.08)",border:"1px solid rgba(250,204,21,.25)",borderRadius:4,padding:"2px 7px"}}>ממתין</span>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"10px 14px",background:"rgba(250,204,21,.09)",border:"2px solid rgba(250,204,21,.4)",borderRadius:10,marginBottom:10}}>
+        <div style={{width:10,height:10,borderRadius:"50%",background:"#facc15",boxShadow:"0 0 8px #facc1588",animation:"pulse 1.5s infinite"}}/>
+        <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:32,letterSpacing:3,color:"#facc15",lineHeight:1}}>ממתין</span>
+        {pickOdds && <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:20,color:"rgba(255,255,255,.7)"}}>@ {pickOdds}</span>}
       </div>
     )}
+
+    <div className="live-score">
+      {/* HOME */}
+      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:0}}>
+        <PickIndicator active={isHomePick} color="#facc15"/>
+        <TeamLogo name={m.home} sport={sport} size={28}/>
+        <div className="live-team" style={{textAlign:"right",fontWeight:isHomePick?900:400,color:isHomePick?"#facc15":"white"}}>{m.home}</div>
+      </div>
+
+      {/* SCORE + draw pick */}
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+        {isDrawPick && (
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,marginBottom:4}}>
+            <div style={{width:14,height:14,borderRadius:"50%",background:"#facc15",boxShadow:"0 0 8px #facc1588",border:"2px solid white"}}/>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,fontWeight:800,color:"#facc15",letterSpacing:1}}>תיקו</div>
+          </div>
+        )}
+        {!isDrawPick && <div style={{height:24}}/>}
+        <div className="live-score-num">{m.score}</div>
+        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:"rgba(184,147,106,.4)",letterSpacing:1}}>לייב</div>
+      </div>
+
+      {/* AWAY */}
+      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:0}}>
+        <PickIndicator active={isAwayPick} color="#facc15"/>
+        <TeamLogo name={m.away} sport={sport} size={28}/>
+        <div className="live-team" style={{textAlign:"left",fontWeight:isAwayPick?900:400,color:isAwayPick?"#facc15":"white"}}>{m.away}</div>
+      </div>
+    </div>
+
     {m.events && m.events.length > 0 && (
       <div className="live-events">
         {m.events.map((ev,i) => (
@@ -2651,28 +2679,40 @@ const FinishedMatchCard = ({ m }) => {
   const awayWon = m.winner === "away";
   const sport = m.sport || (m.leagueKey === "NBA" || m.leagueKey === "EL" || m.leagueKey === "BSL" || m.leagueKey === "ACB" || m.leagueKey === "LegaBK" ? "basketball" : "football");
   const resultKnown = m.betCorrect != null;
+  const resultColor = m.betCorrect ? "#4ade80" : "#f87171";
+  // Determine which column was picked
+  const homeIsPick = m.pickedSide && m.pickedSide === m.home;
+  const awayIsPick = m.pickedSide && m.pickedSide === m.away;
+  const drawIsPick = m.pickedSide && !homeIsPick && !awayIsPick;
   return (
     <div className="fin-card" style={{overflow:"hidden"}}>
-      {/* Result banner */}
-      {resultKnown && (
+      {/* Big result banner */}
+      {resultKnown ? (
         <div style={{
-          padding:"8px 14px",
-          background: m.betCorrect ? "rgba(74,222,128,.14)" : "rgba(248,113,113,.12)",
-          borderBottom: `2px solid ${m.betCorrect ? "#4ade80" : "#f87171"}`,
-          display:"flex",alignItems:"center",justifyContent:"center",gap:10,
+          padding:"14px 14px 10px",
+          background: m.betCorrect ? "rgba(74,222,128,.12)" : "rgba(248,113,113,.10)",
+          borderBottom: `3px solid ${resultColor}`,
+          display:"flex",flexDirection:"column",alignItems:"center",gap:4,
         }}>
-          <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,letterSpacing:2,color:m.betCorrect?"#4ade80":"#f87171"}}>
-            {m.betCorrect ? " תפס!" : " נפל"}
+          <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:52,letterSpacing:4,lineHeight:1,color:resultColor,textShadow:`0 0 20px ${resultColor}66`}}>
+            {m.betCorrect ? "תפס!" : "נפל"}
           </span>
-          {m.pickedSide && (
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"rgba(240,237,230,.55)"}}>
-              ניחוש: {m.pickedSide}
-            </span>
-          )}
-          <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:15,color:"rgba(240,237,230,.4)",marginRight:"auto"}}>
-            תוצאה: {m.score}
-          </span>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {m.pickedSide && (
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700,color:"rgba(240,237,230,.7)"}}>
+                הימרנו על: <span style={{color:resultColor}}>{m.pickedSide}</span>
+              </span>
+            )}
+            {m.score && (
+              <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:18,color:"rgba(240,237,230,.45)"}}>
+                · {m.score}
+              </span>
+            )}
+          </div>
         </div>
+      ) : (
+        /* No tracked bet — still show ממתין if no result */
+        null
       )}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px 4px"}}>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:1,display:"flex",alignItems:"center",gap:4}}>
@@ -2685,17 +2725,28 @@ const FinishedMatchCard = ({ m }) => {
         )}
       </div>
       <div className="fin-teams" style={{padding:"6px 12px 8px"}}>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+        {/* HOME */}
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:0}}>
+          <PickIndicator active={homeIsPick} color={resultColor}/>
           <TeamLogo name={m.home} sport={sport} size={28}/>
-          <div className="fin-team-name" style={{color:homeWon?"#FFD166":"white",opacity:awayWon?.55:1}}>{m.home}</div>
+          <div className="fin-team-name" style={{color:homeWon?"#FFD166":homeIsPick?resultColor:"white",opacity:awayWon&&!homeIsPick?.6:1,fontWeight:homeIsPick?900:400}}>{m.home}</div>
         </div>
+        {/* SCORE */}
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+          {drawIsPick ? (
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,marginBottom:4}}>
+              <div style={{width:14,height:14,borderRadius:"50%",background:resultColor,boxShadow:`0 0 8px ${resultColor}88`,border:"2px solid white"}}/>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,fontWeight:800,color:resultColor,letterSpacing:1}}>תיקו</div>
+            </div>
+          ) : <div style={{height:24}}/>}
           <div className="fin-score">{m.score}</div>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:"rgba(184,147,106,.4)",letterSpacing:1}}>סיים</div>
         </div>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4}}>
+        {/* AWAY */}
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:0}}>
+          <PickIndicator active={awayIsPick} color={resultColor}/>
           <TeamLogo name={m.away} sport={sport} size={28}/>
-          <div className="fin-team-name" style={{textAlign:"left",color:awayWon?"#FFD166":"white",opacity:homeWon?.55:1}}>{m.away}</div>
+          <div className="fin-team-name" style={{textAlign:"left",color:awayWon?"#FFD166":awayIsPick?resultColor:"white",opacity:homeWon&&!awayIsPick?.6:1,fontWeight:awayIsPick?900:400}}>{m.away}</div>
         </div>
       </div>
       {m.possession && (
