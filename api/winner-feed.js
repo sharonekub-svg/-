@@ -50,6 +50,33 @@ const TEAM_LOGOS = {
   "אינדיאנה פייסרס": "https://a.espncdn.com/i/teamlogos/nba/500/ind.png",
   "ניו יורק ניקס": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
   "מינסוטה טימברוולבס": "https://a.espncdn.com/i/teamlogos/nba/500/min.png",
+  "גיסן": "https://commons.wikimedia.org/wiki/Special:FilePath/Giessen_46ers_logo.svg?width=160",
+  "קירשהיים": "https://commons.wikimedia.org/wiki/Special:FilePath/Kirchheim_Knights_logo.png?width=160",
+  "טריאסטה": "https://commons.wikimedia.org/wiki/Special:FilePath/Pallacanestro_Trieste_logo.svg?width=160",
+  "ברשיה": "https://commons.wikimedia.org/wiki/Special:FilePath/Germani_Basket_Brescia_logo.svg?width=160",
+  "נלסון": "https://commons.wikimedia.org/wiki/Special:FilePath/Nelson_Giants_logo.png?width=160",
+  "אוטאגו": "https://commons.wikimedia.org/wiki/Special:FilePath/Otago_Nuggets_logo.png?width=160",
+  "טרנקי": "https://commons.wikimedia.org/wiki/Special:FilePath/Taranaki_Airs_logo.png?width=160",
+  "קנטרברי": "https://commons.wikimedia.org/wiki/Special:FilePath/Canterbury_Rams_logo.png?width=160",
+  "בולטס": "https://commons.wikimedia.org/wiki/Special:FilePath/Meralco_Bolts_logo.svg?width=160",
+  "טרופנג גיגה": "https://commons.wikimedia.org/wiki/Special:FilePath/TNT_Tropang_Giga_logo.svg?width=160",
+  "באראנגי גינברה": "https://commons.wikimedia.org/wiki/Special:FilePath/Barangay_Ginebra_San_Miguel_logo.svg?width=160",
+  "ריין אור שיין": "https://commons.wikimedia.org/wiki/Special:FilePath/Rain_or_Shine_Elasto_Painters_logo.svg?width=160",
+  "ראנס פיק": "https://commons.wikimedia.org/wiki/Special:FilePath/RANS_PIK_Basketball_logo.png?width=160",
+  "פליטה ג'איה": "https://commons.wikimedia.org/wiki/Special:FilePath/Pelita_Jaya_Basketball_Club_logo.png?width=160",
+  "קליבלנד קבלירס": "https://a.espncdn.com/i/teamlogos/nba/500/cle.png",
+  "ניו יורק": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
+  "חובנטוד בדאלונה": "https://commons.wikimedia.org/wiki/Special:FilePath/Joventut_Badalona_logo.svg?width=160",
+  "סן פאבלו בורגוס": "https://commons.wikimedia.org/wiki/Special:FilePath/CB_Miraflores_logo.svg?width=160",
+  "ליידה": "https://commons.wikimedia.org/wiki/Special:FilePath/For%C3%A7a_Lleida_logo.svg?width=160",
+  "אנדורה": "https://commons.wikimedia.org/wiki/Special:FilePath/BC_Andorra_logo.svg?width=160",
+  "לאס ווגאס": "https://a.espncdn.com/i/teamlogos/wnba/500/lv.png",
+  "לוס אנג'לס": "https://a.espncdn.com/i/teamlogos/wnba/500/la.png",
+  "וורצבורג": "https://commons.wikimedia.org/wiki/Special:FilePath/W%C3%BCrzburg_Baskets_logo.svg?width=160",
+  "טלקום בון": "https://commons.wikimedia.org/wiki/Special:FilePath/Telekom_Baskets_Bonn_logo.svg?width=160",
+  "אטלנטה": "https://a.espncdn.com/i/teamlogos/wnba/500/atl.png",
+  "פיניקס": "https://a.espncdn.com/i/teamlogos/wnba/500/phx.png",
+  "דאלאס": "https://a.espncdn.com/i/teamlogos/wnba/500/dal.png",
 };
 
 function winnerHeaders(extra = {}) {
@@ -422,8 +449,8 @@ function spreadStatus(event, row) {
       ? awayScore + spread - homeScore
       : null;
   if (adjusted === null) return "";
-  if (adjusted > 0) return "תפס";
-  if (adjusted < 0) return "נפל";
+  if (adjusted > 0) return "נתפס";
+  if (adjusted < 0) return "לא נתפס";
   return "החזר";
 }
 
@@ -970,8 +997,8 @@ function resultStatus(event, pick) {
   if (!results.length) return "ממתין";
   const cleanPick = cleanText(pick);
   return results.some((result) => result === cleanPick || result.includes(cleanPick) || cleanPick.includes(result))
-    ? "תפס"
-    : "נפל";
+    ? "נתפס"
+    : "לא נתפס";
 }
 
 function buildResultRows(results, dateKey) {
@@ -1188,6 +1215,14 @@ function finalOpenRows(rows) {
     .slice(0, TARGET_PICKS_PER_SPORT);
 }
 
+function finalOpenRowsBySport(rows) {
+  const split = splitBySport(rows || []);
+  return [
+    ...finalOpenRows(split.football),
+    ...finalOpenRows(split.basketball),
+  ];
+}
+
 function auditOpenRows(rows, acceptedRows) {
   const acceptedIds = new Set((acceptedRows || []).map((row) => String(row.id)));
   return (rows || [])
@@ -1274,14 +1309,14 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
   const todayEnrichedRows = withLogos ? await enrichLogos(todayCurrentRows) : todayCurrentRows;
-  const todayFinalRows = withLogos ? finalOpenRows(todayEnrichedRows) : todayEnrichedRows;
+  const todayFinalRows = withLogos ? finalOpenRowsBySport(todayEnrichedRows) : todayEnrichedRows;
   const todayRows = splitBySport(todayFinalRows);
   const tomorrowCurrentRows = [
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
   const tomorrowEnrichedRows = withLogos ? await enrichLogos(tomorrowCurrentRows) : tomorrowCurrentRows;
-  const tomorrowFinalRows = withLogos ? finalOpenRows(tomorrowEnrichedRows) : tomorrowEnrichedRows;
+  const tomorrowFinalRows = withLogos ? finalOpenRowsBySport(tomorrowEnrichedRows) : tomorrowEnrichedRows;
   const tomorrowRows = splitBySport(tomorrowFinalRows);
   const lineStats = {
     football: {
@@ -1327,6 +1362,8 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       "אחוז פגיעה חודשי לפי תחזיות שנשמרו",
       "ציון ביטחון והסתברות שוק",
       "הסבר למה הבחירה צפויה לנצח",
+      "AI Advisor למנוי: ניתוח הימור ידני, סיכון, חלופה מומלצת וסטטיסטיקות רלוונטיות",
+      "מונדיאל: המלצות רק בחלון 48 שעות לפני משחק עם פציעות, סגלים, מאמנים וכושר",
       "חיפוש ומיון",
       "פירוט משחק",
     ],

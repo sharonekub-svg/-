@@ -196,6 +196,7 @@
     .status.hit { color: #06100c; border-color: rgba(49,209,135,.95); background: var(--green); box-shadow: 0 0 0 4px rgba(49,209,135,.18), 0 12px 32px rgba(49,209,135,.28); }
     .status.miss { color: #fff; border-color: rgba(239,83,80,.85); background: var(--red); box-shadow: 0 0 0 4px rgba(239,83,80,.18), 0 12px 32px rgba(239,83,80,.28); }
     .status.wait { color: #06131a; border-color: rgba(85,214,255,.85); background: var(--cyan); box-shadow: 0 0 0 4px rgba(85,214,255,.18), 0 12px 32px rgba(85,214,255,.22); }
+    .status.closed { color: #211600; border-color: rgba(255,200,87,.95); background: var(--gold); box-shadow: 0 0 0 4px rgba(255,200,87,.18), 0 12px 32px rgba(255,200,87,.24); }
     .toolbar {
       margin-top: 18px;
       display: grid;
@@ -483,6 +484,7 @@
     .verdict.hit { color: #06100c; border-color: rgba(49,209,135,.95); background: var(--green); box-shadow: 0 0 0 4px rgba(49,209,135,.18), 0 12px 32px rgba(49,209,135,.28); }
     .verdict.miss { color: #fff; border-color: rgba(239,83,80,.85); background: var(--red); box-shadow: 0 0 0 4px rgba(239,83,80,.18), 0 12px 32px rgba(239,83,80,.28); }
     .verdict.wait { color: #06131a; border-color: rgba(85,214,255,.85); background: var(--cyan); box-shadow: 0 0 0 4px rgba(85,214,255,.18), 0 12px 32px rgba(85,214,255,.22); }
+    .verdict.closed { color: #211600; border-color: rgba(255,200,87,.95); background: var(--gold); box-shadow: 0 0 0 4px rgba(255,200,87,.18), 0 12px 32px rgba(255,200,87,.24); }
     .score-row { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; color: var(--muted); font-size: 12px; font-weight: 800; }
     .meter { height: 7px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
     .meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); }
@@ -1045,11 +1047,19 @@
 
     const statusClass = {
       "תפס": "hit",
+      "נתפס": "hit",
       "נפל": "miss",
+      "לא נתפס": "miss",
       "החזר": "wait",
       "ממתין": "wait",
-      "נסגר": "wait"
+      "נסגר": "closed"
     };
+
+    function statusLabel(value) {
+      if (value === "תפס" || value === "נתפס") return "נתפס";
+      if (value === "נפל" || value === "לא נתפס") return "לא נתפס";
+      return value || "ממתין";
+    }
 
     function formatOdds(value) {
       return Number.isFinite(Number(value)) ? Number(value).toFixed(2) : "לא זמין";
@@ -1357,12 +1367,20 @@
       const result = row.liveScore || row.result || "";
       const actual = row.actualWinner || "";
       let status = tracked?.status || "";
+      const isClosedArchive = row.status === "נסגר" && !tracked && !row.odds;
       if ((!status || status === "pending") && actual && guessed !== "לא נשמר") {
         status = samePick(guessed, actual) ? "hit" : "miss";
       }
-      if (!status || status === "נסגר") status = actual ? "wait" : "pending";
-      const cls = status === "hit" || status === "תפס" ? "hit" : status === "miss" || status === "נפל" ? "miss" : "wait";
-      const label = cls === "hit" ? "תפס!" : cls === "miss" ? "נפל" : "ממתין";
+      if (isClosedArchive) status = "closed";
+      if (!status || status === "נסגר") status = actual || result ? "closed" : "pending";
+      const cls = status === "hit" || status === "תפס" || status === "נתפס"
+        ? "hit"
+        : status === "miss" || status === "נפל" || status === "לא נתפס"
+          ? "miss"
+          : status === "closed"
+            ? "closed"
+            : "wait";
+      const label = cls === "hit" ? "נתפס" : cls === "miss" ? "לא נתפס" : cls === "closed" ? "נסגר" : "ממתין";
       return {
         result: result || (row.matchPhase === "scheduled" ? "טרם התחיל" : "אין תוצאה"),
         guessed,
@@ -1420,7 +1438,7 @@
     }
 
     function wcFixtureOdds(item) {
-      if (!item.odds) return `<div class="wc-meta">אין יחס Winner פתוח כרגע. היחסים יוצגו רק כשיש שוק Winner אמיתי.</div>`;
+      if (!item.odds) return `<div class="wc-meta">אין יחס Winner פתוח כרגע. לא מוצגת תחזית לפני שיש שוק אמיתי; בדיקת AI מלאה נפתחת 48 שעות לפני המשחק עם פציעות, סגלים, מאמנים וכושר.</div>`;
       const selected = item.pick || "";
       return `
         <div class="wc-odds">
@@ -1435,7 +1453,7 @@
       return `
         <div class="wc-why">
           <b>למה זה חשוב:</b>
-          במונדיאל השוק זז מהר בגלל הרכבים, עייפות מסעות, לחץ משחקים ופציעות. לכן כל תחזית צריכה להראות מי נבחר, מה היחס, ומה הסיבה. אין כאן יתרון לאיטיות: המודל מתגמל קצב אפקטיבי, לחץ, יצירת מצבים ואיכות החלטה.
+          במונדיאל לא מנחשים תוצאה חודשים מראש. ההמלצה נפתחת רק כשיש יחס Winner אמיתי, וב-48 השעות שלפני המשחק היא משקללת פציעות, סגלים, מאמנים, כושר, עומס מסעות, לחץ משחקים, קצב אפקטיבי ויצירת מצבים.
         </div>
       `;
     }
@@ -1458,7 +1476,7 @@
               <article class="wc-card compact" data-wc-open="true">
                 <strong>${item.home} נגד ${item.away}</strong>
                 <div class="wc-score"><span>${item.stage}</span><b>${item.date.slice(5)}</b></div>
-                <div class="wc-meta">${item.venue}. ${item.odds ? `יחס ${item.odds[item.pick].toFixed(2)}` : "אין יחס Winner פתוח כרגע"}.</div>
+                <div class="wc-meta">${item.venue}. ${item.odds ? `יחס ${item.odds[item.pick].toFixed(2)}` : "תחזית תיפתח 48 שעות לפני המשחק כשיש יחס Winner אמיתי"}.</div>
               </article>
             `).join("")}
           </div>
@@ -1485,13 +1503,14 @@
               ${wcFixtureOdds(item)}
               <div class="wc-why">
                 <b>${item.source} · ${item.date}</b><br>
-                אין סימון הימור עד ש-Winner פותח יחס אמיתי למשחק הזה.
+                אין סימון הימור ואין תוצאת תחזית כרגע. 48 שעות לפני המשחק, ורק כשיש יחס Winner אמיתי, ה-AI Advisor יחשב פציעות, סגלים, מאמנים, כושר ונבחרת חזקה יותר לפני המלצה.
               </div>
               <div class="wc-factors">
                 <span class="signal">שוק 1X2</span>
                 <span class="signal">לוח FIFA</span>
                 <span class="signal">ללא יחס מומצא</span>
                 <span class="signal">עומק סגל</span>
+                <span class="signal">חלון 48 שעות</span>
               </div>
             </article>
           `).join("")}
@@ -1556,7 +1575,7 @@
 
     function rowCard(row) {
       const cls = statusClass[row.status] || "wait";
-      const isSettled = row.status === "תפס" || row.status === "נפל";
+      const isSettled = row.status === "תפס" || row.status === "נתפס" || row.status === "נפל" || row.status === "לא נתפס";
       const hasRecommendation = row.recommended || (!!row.odds && !row.outsideRange);
       const noPickLabel = row.recommendationReason === "rank"
         ? "לא בטופ 20"
@@ -1567,7 +1586,7 @@
         ? `${explicitPickText(row)} — יחס ${formatOdds(row.oddsRaw || row.odds)}`
         : explicitPickText(row);
       const settledBanner = isSettled
-        ? `<div style="text-align:center;padding:6px 0 2px"><span class="status ${cls}" style="font-size:26px;padding:12px 28px;display:inline-block">${row.status === "תפס" ? "✓ תפס!" : "✗ נפל"}</span></div>`
+        ? `<div style="text-align:center;padding:6px 0 2px"><span class="status ${cls}" style="font-size:26px;padding:12px 28px;display:inline-block">${cls === "hit" ? "✓ נתפס" : "✗ לא נתפס"}</span></div>`
         : "";
       // For handicap rows, explicitPickText already includes the spread line
       return `
@@ -1599,7 +1618,7 @@
             <div class="market-row">
               <span class="name">${row.market || "שוק מנצח"}</span>
               <span class="price">${row.odds ? formatOdds(row.odds) : row.actualWinner ? "תוצאה" : "נסגר"}</span>
-              <span class="status ${cls}">${row.status}</span>
+              <span class="status ${cls}">${statusLabel(row.status)}</span>
             </div>
             ${resultMarkup(row)}
             <button class="open-game" data-open="${row.id}">פירוט משחק</button>
