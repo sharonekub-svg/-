@@ -1413,68 +1413,10 @@
       return left === right || left.includes(right) || right.includes(left);
     }
 
-    function rememberOpenPredictions(feed) {
-      if (!feed?.tabs) return;
-      const todayDate = activeTodayDate(feed);
-      const tracker = readTracker();
-      const byKey = new Map(tracker.map(item => [item.key, item]));
-      ["football", "basketball"].forEach(sport => {
-        (feed.tabs.today?.sports?.[sport] || []).forEach(row => {
-          if (!row.odds || row.outsideRange || row.day !== todayDate) return;
-          const key = predictionKey(row);
-          if (byKey.has(key)) return;
-          byKey.set(key, {
-            key,
-            eventId: row.eventId,
-            resultKey: row.resultKey,
-            marketId: row.marketId,
-            outcomeId: row.outcomeId,
-            sport,
-            pick: pickLabel(row),
-            match: row.match,
-            league: row.league,
-            odds: row.odds,
-            predictedDay: row.day,
-            month: String(row.day || "").slice(0, 7),
-            status: "pending"
-          });
-        });
-      });
-      writeTracker([...byKey.values()].filter(item => item.predictedDay === todayDate));
-    }
-
-    function settleTrackedPredictions(feed) {
-      if (!feed?.tabs?.yesterday) return;
-      const results = ["yesterday", "today"].flatMap(day =>
-        Object.values(feed.tabs?.[day]?.sports || {}).flatMap(rows => rows || [])
-      )
-        .filter(row => row.actualWinner);
-      if (!results.length) return;
-      const resultByEvent = new Map(results.map(row => [String(row.eventId), row]));
-      const resultByKey = new Map(results.filter(row => row.resultKey).map(row => [String(row.resultKey), row]));
-      const tracker = readTracker().map(item => {
-        if (item.status !== "pending") return item;
-        const result = resultByEvent.get(String(item.eventId)) || resultByKey.get(String(item.resultKey || ""));
-        if (!result) return item;
-        const hit = samePick(item.pick, result.actualWinner);
-        return {
-          ...item,
-          status: hit ? "hit" : "miss",
-          actualWinner: result.actualWinner,
-          result: result.result,
-          settledDay: result.day,
-          settledMonth: String(result.day || "").slice(0, 7)
-        };
-      });
-      writeTracker(tracker);
-    }
-
     function monthlyPerformance() {
       const month = new Date().toISOString().slice(0, 7);
-      const todayDate = activeTodayDate();
       const items = readTracker().filter(item =>
-        item.predictedDay === todayDate &&
-        (item.month || item.settledMonth) === month
+        (item.settledMonth || item.month || String(item.predictedDay || "").slice(0, 7)) === month
       );
       const settled = items.filter(item => item.status === "hit" || item.status === "miss");
       const hits = settled.filter(item => item.status === "hit").length;
@@ -1541,13 +1483,28 @@
       return row.recommended === true || (!!row.odds && !row.outsideRange);
     }
 
+    function trackedResultKeys() {
+      const items = readTracker();
+      return {
+        byResultKey: new Set(items.map(i => String(i.resultKey || "")).filter(Boolean)),
+        byEventId: new Set(items.map(i => String(i.eventId || "")).filter(Boolean)),
+      };
+    }
+
+    function isTrackedRow(row, keys) {
+      return keys.byResultKey.has(String(row.resultKey || ""))
+        || keys.byEventId.has(String(row.eventId || ""));
+    }
+
     function currentRows() {
       const tab = state.feed?.tabs?.[state.day];
       if (!tab) return [];
       const query = state.search.trim().toLowerCase();
       const isYesterday = state.day === "yesterday";
+      const tKeys = isYesterday ? trackedResultKeys() : null;
       let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
-        if (!isYesterday && !hasPick(row)) return false;
+        if (isYesterday) { if (!isTrackedRow(row, tKeys)) return false; }
+        else if (!hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
@@ -1569,8 +1526,10 @@
     function currentRowsBySport() {
       const query = state.search.trim().toLowerCase();
       const isYesterday = state.day === "yesterday";
+      const tKeys = isYesterday ? trackedResultKeys() : null;
       const filterRows = rows => (rows || []).filter(row => {
-        if (!isYesterday && !hasPick(row)) return false;
+        if (isYesterday) { if (!isTrackedRow(row, tKeys)) return false; }
+        else if (!hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
