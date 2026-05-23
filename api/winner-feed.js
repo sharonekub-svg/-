@@ -16,27 +16,12 @@ const WINNER_FOOTBALL_ID = 240;
 const WINNER_BASKETBALL_ID = 227;
 const SCORES365_FOOTBALL_ID = 1;
 const SCORES365_BASKETBALL_ID = 2;
-// No hardcoded logo lists — logos are resolved dynamically via API search only.
-const TEAM_LOGO_ALIASES = new Map([
-  ["נורקופינג אף.קיי", "IFK Norrkoping"],
-  ["אוסטרס", "Osters IF"],
-  ["שיאולאי", "FA Siauliai"],
-  ["ריטריאיי", "FK Riteriai"],
-  ["לין 1896", "Lyn 1896 FK"],
-  ["סטרומן", "Strommen IF"],
-  ["נאנטר", "Nanterre 92"],
-  ["לה מאן", "Le Mans Sarthe Basket"],
-  ["בודוצ'נוסט פודגוריצה", "Buducnost Podgorica"],
-  ["בי.סי. דובאי", "Dubai Basketball"],
-  ["טים פוג", "Team FOG Naestved"],
-  ["באקן", "Bakken Bears"],
-  ["וולניגטון", "Wellington Saints"],
-  ["ביי הוקס", "Hawke's Bay Hawks"],
-  ["סאן אנטוניו ספרס", "San Antonio Spurs"],
-  ["אוקלהומה סיטי ת'אנדר", "Oklahoma City Thunder"],
-  ["סיאטל", "Seattle Storm"],
-  ["וושינגטון", "Washington Mystics"],
-]);
+const CACHE_TTL_MS = {
+  today: 5 * 60 * 1000,
+  tomorrow: 60 * 60 * 1000,
+  full: 5 * 60 * 1000,
+};
+const memoryCache = globalThis.__WINNER_FEED_CACHE__ || (globalThis.__WINNER_FEED_CACHE__ = new Map());
 
 function winnerHeaders(extra = {}) {
   return {
@@ -62,13 +47,34 @@ function winnerHeaders(extra = {}) {
   };
 }
 
-async function fetchJson(url, options = {}) {
-  const response = await fetch(url, options);
-  const text = await response.text();
-  if (!response.ok) {
-    throw new Error(`${response.status}: ${text.slice(0, 240)}`);
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withRetry(task, label, { attempts = 3, baseDelay = 2000 } = {}) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await task(attempt);
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attempts) break;
+      const jitter = Math.floor(Math.random() * 350);
+      await sleep(baseDelay * (2 ** (attempt - 1)) + jitter);
+    }
   }
-  return text ? JSON.parse(text) : null;
+  throw new Error(`${label} failed after ${attempts} attempts: ${lastError?.message || lastError}`);
+}
+
+async function fetchJson(url, options = {}) {
+  return withRetry(async () => {
+    const response = await fetch(url, options);
+    const text = await response.text();
+    if (!response.ok) {
+      throw new Error(`${response.status}: ${text.slice(0, 240)}`);
+    }
+    return text ? JSON.parse(text) : null;
+  }, `fetch ${url}`, { attempts: options.retryAttempts || 3, baseDelay: options.retryBaseDelay || 2000 });
 }
 
 function israelDate(offsetDays = 0) {
@@ -82,6 +88,66 @@ function israelDate(offsetDays = 0) {
   }).formatToParts(now);
   const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${map.year}-${map.month}-${map.day}`;
+}
+
+function israelNowParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jerusalem",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+}
+
+function cacheKeyForToday() {
+  const today = israelDate(0);
+  return `winner-feed:${today}`;
+}
+
+function isFreshCache(entry, maxAgeMs) {
+  return entry?.payload && Date.now() - Number(entry.cachedAt || 0) < maxAgeMs;
+}
+
+async function kvGet(key) {
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    const data = await fetchJson(`${process.env.KV_REST_API_URL}/get/${encodeURIComponent(key)}`, {
+      headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` },
+      retryAttempts: 1,
+    }).catch(() => null);
+    if (data?.result) {
+      try {
+        return typeof data.result === "string" ? JSON.parse(data.result) : data.result;
+      } catch {
+        return null;
+      }
+    }
+  }
+  return memoryCache.get(key) || null;
+}
+
+async function kvSet(key, value, ttlSeconds = 3600) {
+  memoryCache.set(key, value);
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    await fetchJson(`${process.env.KV_REST_API_URL}/set/${encodeURIComponent(key)}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(value),
+      retryAttempts: 1,
+    }).catch(() => null);
+    await fetchJson(`${process.env.KV_REST_API_URL}/expire/${encodeURIComponent(key)}/${ttlSeconds}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` },
+      retryAttempts: 1,
+    }).catch(() => null);
+  }
 }
 
 function winnerDateToIso(value) {
@@ -173,19 +239,63 @@ function initials(value) {
 }
 
 function fallbackLogo(name, kind) {
-  const label = initials(name) || "?";
-  const hue = kind === "league" ? "#55d6ff" : "#31d187";
-  const bg = kind === "league" ? "#111f2a" : "#102219";
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="${bg}"/><circle cx="48" cy="48" r="43" fill="none" stroke="${hue}" stroke-width="5"/><text x="48" y="57" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="800" fill="#f7f3ea">${label}</text></svg>`;
+  const label = initials(name).slice(0, 2) || "?";
+  const seed = [...cleanText(name)].reduce((total, char) => total + char.charCodeAt(0), 0);
+  const hueA = seed % 360;
+  const hueB = (hueA + 54) % 360;
+  const stroke = kind === "league" ? "#55d6ff" : "#ffc857";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="hsl(${hueA},78%,28%)"/><stop offset="1" stop-color="hsl(${hueB},82%,18%)"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#000" flood-opacity=".35"/></filter></defs><path d="M64 8 111 25v36c0 29-18 49-47 59-29-10-47-30-47-59V25L64 8Z" fill="url(#g)" stroke="${stroke}" stroke-width="5" filter="url(#s)"/><path d="M31 43h66" stroke="rgba(255,255,255,.18)" stroke-width="5"/><text x="64" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" font-weight="900" fill="#f7f3ea">${label}</text></svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function normalizeLogoName(value) {
+  return cleanText(value)
+    .toLowerCase()
+    .replace(/\b(מכבי|הפועל|בני|עירוני|ביתר|אף\.קיי|בי\.סי|פ\.ק|fc|f\.c|cf|bc|bk|club|women|basketball|basket)\b/gi, " ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function levenshtein(a, b) {
+  const left = normalizeLogoName(a);
+  const right = normalizeLogoName(b);
+  if (!left || !right) return Math.max(left.length, right.length);
+  const matrix = Array.from({ length: left.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= right.length; j += 1) matrix[0][j] = j;
+  for (let i = 1; i <= left.length; i += 1) {
+    for (let j = 1; j <= right.length; j += 1) {
+      const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j - 1] + cost);
+    }
+  }
+  return matrix[left.length][right.length];
+}
+
+function similarity(a, b) {
+  const left = normalizeLogoName(a);
+  const right = normalizeLogoName(b);
+  const max = Math.max(left.length, right.length);
+  if (!max) return 0;
+  return 1 - levenshtein(left, right) / max;
+}
+
+function bestAssetCandidate(term, rows) {
+  const candidates = (rows || [])
+    .map((row) => ({
+      ...row,
+      score: Math.max(similarity(term, row.name), similarity(term, row.name_he), similarity(term, row.slug)),
+    }))
+    .filter((row) => row.logo_url && row.score >= 0.8)
+    .sort((a, b) => b.score - a.score);
+  return candidates[0] || null;
 }
 
 function logoSearchTerms(name, kind) {
   const clean = cleanText(name);
-  const terms = [clean];
-  if (kind === "team" && TEAM_LOGO_ALIASES.has(clean)) terms.push(TEAM_LOGO_ALIASES.get(clean));
+  const terms = [clean, normalizeLogoName(clean)];
   const withoutSuffixes = clean
-    .replace(/\b(אף\.קיי|בי\.סי|פ\.ק|מועדון|כדורסל|נשים)\b/g, " ")
+    .replace(/\b(מכבי|הפועל|בני|עירוני|אף\.קיי|בי\.סי|פ\.ק|מועדון|כדורסל|נשים)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   if (withoutSuffixes && withoutSuffixes !== clean) terms.push(withoutSuffixes);
@@ -195,16 +305,17 @@ function logoSearchTerms(name, kind) {
 async function supabaseSearch(table, term) {
   const value = cleanText(term);
   if (!value || value.length < 2) return null;
-  const query = `${table}?select=id,name,name_he,logo_url,slug&or=(name_he.ilike.*${encodeURIComponent(value)}*,name.ilike.*${encodeURIComponent(value)}*)&limit=5`;
+  const query = `${table}?select=id,name,name_he,logo_url,slug&or=(name_he.ilike.*${encodeURIComponent(value)}*,name.ilike.*${encodeURIComponent(value)}*,slug.ilike.*${encodeURIComponent(value)}*)&limit=20`;
   const rows = await fetchJson(`${SUPABASE_URL}/rest/v1/${query}`, {
     headers: {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
+    retryAttempts: 1,
   }).catch(() => []);
   if (!Array.isArray(rows) || !rows.length) return null;
   const exact = rows.find((row) => cleanText(row.name_he) === value || cleanText(row.name) === value);
-  return exact || rows[0];
+  return exact || bestAssetCandidate(value, rows) || rows.find((row) => row.logo_url) || null;
 }
 
 async function sportsDbSearch(kind, term) {
@@ -215,7 +326,7 @@ async function sportsDbSearch(kind, term) {
   const url = `https://www.thesportsdb.com/api/v1/json/3/${endpoint}?${param}=${encodeURIComponent(value)}`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 1800);
-  const data = await fetchJson(url, { signal: controller.signal }).catch(() => null);
+  const data = await fetchJson(url, { signal: controller.signal, retryAttempts: 1 }).catch(() => null);
   clearTimeout(timeout);
   const rows = kind === "league" ? (data?.countries || data?.leagues) : data?.teams;
   if (!Array.isArray(rows) || !rows.length) return null;
@@ -241,6 +352,7 @@ async function wikipediaLogoSearch(name, kind) {
     const data = await fetchJson(url, {
       headers: { "User-Agent": "HapogeaLogoBot/1.0" },
       signal: controller.signal,
+      retryAttempts: 1,
     }).catch(() => null);
     clearTimeout(timeout);
     const logo = data?.thumbnail?.source || data?.originalimage?.source || "";
@@ -274,6 +386,7 @@ async function wikipediaSearchLogo(name, kind) {
     const data = await fetchJson(`https://${lang}.wikipedia.org/w/api.php?${params}`, {
       headers: { "User-Agent": "HapogeaLogoBot/1.0" },
       signal: controller.signal,
+      retryAttempts: 1,
     }).catch(() => null);
     clearTimeout(timeout);
     const page = Object.values(data?.query?.pages || {})[0];
@@ -298,6 +411,7 @@ async function wikidataLogoSearch(name, kind) {
   const search = await fetchJson(searchUrl, {
     headers: { "User-Agent": "HapogeaLogoBot/1.0" },
     signal: controller.signal,
+    retryAttempts: 1,
   }).catch(() => null);
   clearTimeout(timeout);
   const id = search?.search?.[0]?.id;
@@ -308,6 +422,7 @@ async function wikidataLogoSearch(name, kind) {
   const entity = await fetchJson(`https://www.wikidata.org/wiki/Special:EntityData/${id}.json`, {
     headers: { "User-Agent": "HapogeaLogoBot/1.0" },
     signal: entityController.signal,
+    retryAttempts: 1,
   }).catch(() => null);
   clearTimeout(entityTimeout);
   const claims = entity?.entities?.[id]?.claims || {};
@@ -368,12 +483,27 @@ async function enrichLogos(rows) {
       logoSource: row?.source || (row?.logo_url ? "win2go leagues" : "generated league badge"),
     };
   }
+  function withLeagueFallback(asset, leagueAssetValue, teamName) {
+    if (hasVerifiedLogo(asset)) return { ...asset, logoTier: 1 };
+    if (hasVerifiedLogo(leagueAssetValue)) {
+      return {
+        ...asset,
+        logo: leagueAssetValue.logo,
+        logoSource: `league fallback: ${leagueAssetValue.logoSource}`,
+        logoTier: 3,
+        fallbackFor: teamName,
+      };
+    }
+    return { ...asset, logo: fallbackLogo(teamName, "team"), logoSource: "dynamic generated shield", logoTier: 4 };
+  }
   return Promise.all(rows.map(async (row) => {
-    const [homeAsset, awayAsset, leagueAssetValue] = await Promise.all([
+    const leagueAssetValue = await leagueAsset(row.league);
+    const [homeRaw, awayRaw] = await Promise.all([
       teamAsset(row.home),
       teamAsset(row.away),
-      leagueAsset(row.league),
     ]);
+    const homeAsset = withLeagueFallback(homeRaw, leagueAssetValue, row.home);
+    const awayAsset = withLeagueFallback(awayRaw, leagueAssetValue, row.away);
     return { ...row, homeAsset, awayAsset, leagueAsset: leagueAssetValue };
   }));
 }
@@ -484,6 +614,16 @@ function marketCategory(title) {
   return "שוק נוסף";
 }
 
+function marketTier(title, sportId) {
+  const clean = cleanText(title);
+  if (sportId === WINNER_FOOTBALL_ID && clean.includes("1X2") && clean.includes("תוצאת סיום")) return "primary";
+  if (sportId === WINNER_BASKETBALL_ID && clean.includes("המנצח")) return "primary";
+  if (sportId === WINNER_BASKETBALL_ID && clean.includes("הימור יתרון")) return "spread";
+  if (clean.includes("סיכוי כפול")) return "alternative-double-chance";
+  if (clean.includes("מעל/מתחת")) return "alternative-total";
+  return "alternative";
+}
+
 function scoreAnyOutcome(market, outcome) {
   const odds = decimal(outcome.price);
   if (!odds) return null;
@@ -566,7 +706,10 @@ function allowedMarket(market) {
   if (title.includes("הזוכה")) return false;
   if (desc.includes("הזוכה")) return false;
   if (market.sId === 240) {
-    return title.includes("1X2") && title.includes("תוצאת סיום");
+    const primary = title.includes("1X2") && title.includes("תוצאת סיום");
+    const doubleChance = title.includes("סיכוי כפול") || title.includes("Double Chance");
+    const overUnder = title.includes("מעל/מתחת") && !title.includes("מחצית");
+    return primary || doubleChance || overUnder;
   }
   if (market.sId === 227) {
     const isWinner = title.includes("המנצח");
@@ -885,6 +1028,8 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
       away: teams.away,
       resultKey: resultKeyFor({ day: dateKey, sportId: market.sId, home: teams.home, away: teams.away }),
       market: cleanText(market.mp),
+      marketTier: marketTier(market.mp, market.sId),
+      isAlternativeMarket: marketTier(market.mp, market.sId).startsWith("alternative"),
       marketId: market.mId,
       outcomeId: scored.outcomeId,
       pick: scored.pick,
@@ -899,6 +1044,8 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
       normalizedProbability: scored.normalizedProbability,
       marketGap: scored.marketGap,
       overround: scored.overround,
+      globalAverageOdds: null,
+      valueIndicator: null,
       score: outsideRange ? 0 : scored.score,
       status: "ממתין",
       result: "",
@@ -1398,8 +1545,8 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     modelStats: {
       title: "מה עומד מאחורי הניחושים",
       factors: [
-        "שוק מנצח בלבד: 1X2 בכדורגל והמנצח/ת בכדורסל מכל הליגות שמופיעות ב-Winner.",
-        `${TARGET_PICKS_PER_SPORT} המלצות ביום לכל ספורט — יחס Winner אמיתי בטווח 1.40-1.90; שאר משחקי הלוח מוצגים בלי המלצה.`,
+        "שוקי בסיס: 1X2 בכדורגל, מנצחת/ליין יתרון בכדורסל מכל הליגות שמופיעות ב-Winner. בימים חלשים נכנסים שווקים חלופיים מסומנים בלבד.",
+        `${TARGET_PICKS_PER_SPORT} המלצות ביום — יחס Winner אמיתי בטווח 1.40-1.90; אם יחס יוצא מהטווח או השוק לא זמין, המשחק לא נכנס לטופ.`,
         "היחסים מומרים להסתברות, עוברים ניכוי מרווח בית, ואז מדורגים לפי הסתברות מנורמלת ופער מול היריבה הקרובה.",
         "בית/חוץ: פייבוריט בחוץ מקבל הסבר של פער איכות; פייבוריט בבית מקבל יתרון מגרש.",
         "לא מוצגים פציעות, הרכבים או חדשות אם הם לא חזרו ממקור מאומת.",
@@ -1419,8 +1566,8 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       "פירוט משחק",
     ],
     notes: [
-      `היום ומחר: עד ${TARGET_PICKS_PER_SPORT} המלצות לכל ספורט עם יחס Winner בטווח 1.40-1.90; כל שאר משחקי הלוח נשארים גלויים.`,
-      "אם בווינר יש פחות מ-20 משחקים בטווח, יוצג המספר האמיתי בלי להמציא נתונים.",
+      `אתמול/היום/מחר: עד ${TARGET_PICKS_PER_SPORT} המלצות ביום עם יחס Winner בטווח 1.40-1.90; כדורגל וכדורסל מופרדים בתצוגה.`,
+      "אם בווינר יש פחות מ-20 משחקי בסיס בטווח, האלגוריתם מוסיף סיכוי כפול או מעל/מתחת רק כשהיחס עדיין בטווח ומסמן זאת כשוק חלופי.",
       "אתמול הוא מסך סגירה ובדיקת פגיעה מול תוצאה רשמית, לא מסך הימור פתוח.",
       "לכל קבוצה וליגה מוצג לוגו ממקור חיצוני או תג גרפי כאשר אין לוגו רשמי זמין.",
     ],
@@ -1456,13 +1603,44 @@ function normalizeFallbackRows(payload) {
   return copy;
 }
 
+async function buildCachedWinnerFeedPayload({ force = false } = {}) {
+  const key = cacheKeyForToday();
+  const cached = await kvGet(key);
+  if (!force && isFreshCache(cached, CACHE_TTL_MS.full)) {
+    return {
+      ...cached.payload,
+      cache: { status: "hit", key, cachedAt: cached.cachedAt, ttlMs: CACHE_TTL_MS.full },
+    };
+  }
+  const payload = await buildWinnerFeedPayload({ withLogos: true });
+  const entry = { cachedAt: Date.now(), payload };
+  await kvSet(key, entry, 2 * 60 * 60);
+  return {
+    ...payload,
+    cache: { status: "refresh", key, cachedAt: entry.cachedAt, ttlMs: CACHE_TTL_MS.full },
+  };
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
   try {
-    const payload = await buildWinnerFeedPayload({ withLogos: true });
+    const force = String(req?.query?.force || "").toLowerCase() === "1";
+    const payload = await buildCachedWinnerFeedPayload({ force });
     res.status(200).json(payload);
   } catch (error) {
     try {
+      const cached = await kvGet(cacheKeyForToday());
+      if (cached?.payload) {
+        res.status(200).json({
+          ...cached.payload,
+          ok: true,
+          fallback: true,
+          fallbackReason: "טעינת Winner נכשלה, לכן נטען cache שרת אחרון.",
+          liveError: error.message,
+          cache: { status: "stale", key: cacheKeyForToday(), cachedAt: cached.cachedAt },
+        });
+        return;
+      }
       res.status(200).json({
         ...normalizeFallbackRows(SNAPSHOT),
         ok: true,
@@ -1482,4 +1660,5 @@ module.exports = async function handler(req, res) {
 };
 
 module.exports.buildWinnerFeedPayload = buildWinnerFeedPayload;
+module.exports.buildCachedWinnerFeedPayload = buildCachedWinnerFeedPayload;
 module.exports.TARGET_PICKS_PER_SPORT = TARGET_PICKS_PER_SPORT;

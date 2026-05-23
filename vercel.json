@@ -4,6 +4,12 @@
   "outputDirectory": "hapogea-preview",
   "framework": null,
   "installCommand": "echo skip",
+  "crons": [
+    { "path": "/api/winner-cron", "schedule": "*/5 * * * *" },
+    { "path": "/api/winner-cron-tomorrow", "schedule": "0 * * * *" },
+    { "path": "/api/winner-cron-midnight", "schedule": "0 21 * * *" },
+    { "path": "/api/winner-cron-midnight", "schedule": "0 22 * * *" }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }

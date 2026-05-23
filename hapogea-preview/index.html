@@ -2304,6 +2304,11 @@
       const pending = items.filter(item => item.status === "pending").length;
       const voided = items.filter(item => item.status === "void" || item.status === "unverified").length;
       const settled = hits + misses;
+      const roiUnits = items.reduce((total, item) => {
+        if (item.status === "hit") return total + Math.max(0, Number(item.odds || 0) - 1);
+        if (item.status === "miss") return total - 1;
+        return total;
+      }, 0);
       return {
         month,
         tracked: items.length,
@@ -2312,7 +2317,9 @@
         misses,
         pending,
         voided,
-        hitRate: settled ? Math.round((hits / settled) * 100) : 0
+        hitRate: settled ? Math.round((hits / settled) * 100) : 0,
+        roiUnits,
+        roiPercent: settled ? Math.round((roiUnits / settled) * 100) : 0
       };
     }
 
@@ -2350,9 +2357,20 @@
       const outcome = rowOutcome(row);
       const badges = [`<span class="badge ${match.cls}">${match.label}</span>`];
       if (row.recommended) badges.push(`<span class="badge ${outcome.cls === "hit" ? "badge-won" : outcome.cls === "miss" ? "badge-lost" : outcome.cls === "unverified" ? "badge-unverified" : "badge-pending"}">${outcome.label}</span>`);
+      if (row.isAlternativeMarket) badges.push('<span class="badge badge-odds-changed">שוק חלופי</span>');
+      if (row.marketTier === "spread") badges.push('<span class="badge badge-pending">ליין כדורסל</span>');
+      if (row.valueIndicator === "winner_higher") badges.push('<span class="badge badge-won">Value</span>');
       if (row.bettingStatus === "suspended") badges.push('<span class="badge badge-suspended">מושעה</span>');
       if (row.bettingStatus === "odds_changed") badges.push('<span class="badge badge-odds-changed">יחס השתנה</span>');
       return badges.join("");
+    }
+
+    function marketLabelText(row) {
+      if (row.marketTier === "alternative-double-chance") return "שוק חלופי: סיכוי כפול";
+      if (row.marketTier === "alternative-total") return "שוק חלופי: מעל/מתחת";
+      if (row.marketTier === "spread") return `כדורסל: ליין יתרון${Number.isFinite(Number(row.spread)) ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}` : ""}`;
+      if (row.sportId === 227) return "כדורסל: מנצחת משחק";
+      return "כדורגל: מנצחת / תיקו / חוץ";
     }
 
     function liveScoreMarkup(row) {
@@ -2445,7 +2463,7 @@
                      <div class="pick-summary-main">
                        <span>מה הימרנו</span>
                        <strong>${explicitPickText(row)}</strong>
-                       <span>${pickActionText(row)}</span>
+                       <span>${marketLabelText(row)} · ${pickActionText(row)}</span>
                      </div>
                      <div class="odds-box"><small>יחס</small>${row.odds ? formatOdds(row.odds) : "תוצאה"}</div>
                    </div>
@@ -2477,6 +2495,7 @@
       if (!items.length) { target.style.display = "none"; return; }
       target.style.display = "";
       const rateText = perf.settled ? `${perf.hitRate}% — ${perf.hits}/${perf.settled} משחקים מאומתים` : "אין משחקים מאומתים עדיין";
+      const roiText = perf.settled ? `${perf.roiUnits >= 0 ? "+" : ""}${perf.roiUnits.toFixed(2)} יחידות (${perf.roiPercent >= 0 ? "+" : ""}${perf.roiPercent}%)` : "אין ROI מחושב עדיין";
       target.innerHTML = `
         <div class="section-title">
           <div>
@@ -2486,6 +2505,7 @@
         </div>
         <div class="history-rate">
           <b>${rateText}</b>
+          <span style="color:var(--muted);font-size:13px">ROI ביחידת הימור קבועה: ${roiText}</span>
           <div class="history-counts">
             <span class="badge badge-won">תפס ${perf.hits}</span>
             <span class="badge badge-lost">נפל ${perf.misses}</span>
@@ -2559,6 +2579,30 @@
         if (!document.hidden) loadFeed();
         else scheduleRefresh(feed);
       }, nextRefreshMs(feed));
+    }
+
+    function israelDayString(date = new Date()) {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jerusalem",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(date);
+      const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      return `${map.year}-${map.month}-${map.day}`;
+    }
+
+    function scheduleMidnightShift() {
+      if (window._hapMidnightTimer) clearTimeout(window._hapMidnightTimer);
+      window._hapMidnightTimer = setTimeout(() => {
+        const currentIsraelDay = israelDayString();
+        const feedDay = activeTodayDate();
+        if (feedDay && currentIsraelDay !== feedDay) {
+          loadFeed().finally(scheduleMidnightShift);
+        } else {
+          scheduleMidnightShift();
+        }
+      }, 30 * 1000);
     }
 
     async function loadFeed() {
@@ -2638,6 +2682,7 @@
     });
 
     loadFeed();
+    scheduleMidnightShift();
   </script>
 </body>
 </html>
