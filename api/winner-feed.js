@@ -392,10 +392,13 @@ function resultPhase(event) {
   if (!event) return "scheduled";
   const status = cleanText(event.status || event.statusText || event.eventStatus || event.matchStatus || event.state);
   const hasScore = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
-  if (/halftime|half.?time|half_time|הפסקה|מחצית/i.test(status)) return "ht";
-  if (/live|in.?play|playing|חי|משוחק/i.test(status)) return "live";
+  // Check FINAL first — a game with a winner is always over, regardless of status text
   if (resultWinner(event)) return "final";
-  if (hasScore) return "live";
+  if (/halftime|half.?time|half_time|הפסקה|מחצית/i.test(status)) return "ht";
+  if (/final|ended|finished|over|הסתיים|נגמר/i.test(status)) return "final";
+  if (/live|in.?play|playing|חי|משוחק/i.test(status)) return "live";
+  // hasScore alone is NOT enough to call live — many cached/stale feeds have scores but are finished
+  // Only call live if statusGroup explicitly signals it (365Scores) or status says so
   return "scheduled";
 }
 
@@ -952,10 +955,14 @@ function buildResultRows(results, dateKey) {
       const actualWinnerRaw = cleanText((market.marketResults || [])[0]);
       const actualWinner = actualWinnerRaw.toLowerCase() === "x" ? "תיקו" : actualWinnerRaw;
       const teams = { home: cleanText(event.teamA), away: cleanText(event.teamB) };
+      const _resultScore = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
       return {
         id: `result-${event.eventid}`,
         eventId: String(event.eventid),
         source: "Winner Results",
+        verifiedAt: new Date().toISOString(),
+        bettingStatus: "closed",
+        resultVerified: !!actualWinner,
         day: dateKey,
         time: String(event.time || "").slice(0, 5),
         sport: SPORTS[Number(event.sportid)] || "ספורט",
@@ -974,9 +981,9 @@ function buildResultRows(results, dateKey) {
         probability: null,
         score: 0,
         status: "נסגר",
-        liveScore: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
-        matchPhase: resultPhase(event),
-        result: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
+        liveScore: _resultScore,
+        matchPhase: actualWinner ? "final" : resultPhase(event),
+        result: _resultScore,
         signals: ["תוצאה רשמית מווינר", "ארכיון לבדיקת פגיעה", "אין יחס עבר בממשק הציבורי"],
         allMarkets: (event.markets || []).map((item) => ({
           marketId: null,
@@ -1075,6 +1082,9 @@ function build365BasketballRows(results, dateKey) {
         eventId: String(event.eventid),
         eventId365: event.eventid365 || String(event.eventid).replace(/^365-/, ""),
         source: "365Scores Results",
+        verifiedAt: new Date().toISOString(),
+        bettingStatus: "closed",
+        resultVerified: !!actualWinner,
         day: dateKey,
         time: String(event.time || "").slice(0, 5),
         sport: SPORTS[WINNER_BASKETBALL_ID],
@@ -1094,7 +1104,7 @@ function build365BasketballRows(results, dateKey) {
         score: 0,
         status: "נסגר",
         liveScore: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
-        matchPhase: resultPhase(event),
+        matchPhase: actualWinner ? "final" : resultPhase(event),
         result: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
         signals: ["תוצאה מ-365Scores", "כיסוי כדורסל לכל הליגות", "משמש לסגירת תחזיות Winner"],
         allMarkets: [{

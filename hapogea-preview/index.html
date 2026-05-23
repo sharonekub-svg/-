@@ -1462,12 +1462,16 @@
 
     function resultMarkup(row) {
       const outcome = rowOutcome(row);
+      const isVerified = !!(row.resultVerified || row.actualWinner);
+      const verifiedTag = isVerified
+        ? `<span style="font-size:10px;color:var(--green);font-weight:900">✓ מאומת</span>`
+        : `<span style="font-size:10px;color:var(--gold);font-weight:900">לא אומת עדיין</span>`;
       return `
         <div class="result-line">
           <div>
-            <div><b>ניחוש:</b> ${outcome.guessed}</div>
-            <div><b>יחס לפני המשחק:</b> ${outcome.odds ? formatOdds(outcome.odds) : "לא נשמר"}</div>
-            <div><b>תוצאה בפועל:</b> ${outcome.actual || "ממתין לעדכון Winner"}</div>
+            <div><b>בחירה:</b> ${outcome.guessed}</div>
+            <div><b>יחס Winner:</b> ${outcome.odds ? formatOdds(outcome.odds) : "לא נשמר"}</div>
+            <div style="display:flex;align-items:center;gap:6px"><b>תוצאה:</b> ${outcome.actual || "ממתין לעדכון Winner"} ${verifiedTag}</div>
             <span class="verdict ${outcome.cls}">${outcome.label}</span>
           </div>
           <div class="result-score">${outcome.result}</div>
@@ -1655,13 +1659,15 @@
       else if (phase === "final") badges.push('<span class="badge badge-ft">FT</span>');
       else if (row.status === "נסגר" && !row.odds) badges.push('<span class="badge badge-ft">נסגר</span>');
 
-      // Betting/availability badge
+      // Betting/availability badge (only for open picks, not closed results)
       const bs = row.bettingStatus;
       if (bs === "suspended")    badges.push('<span class="badge badge-suspended">SUSPENDED</span>');
       else if (bs === "odds_changed") badges.push('<span class="badge badge-odds-changed">ODDS CHANGED</span>');
       else if (bs === "removed") badges.push('<span class="badge badge-removed">REMOVED</span>');
       else if (bs === "cancelled") badges.push('<span class="badge badge-cancelled">CANCELLED</span>');
       else if (bs === "postponed") badges.push('<span class="badge badge-postponed">POSTPONED</span>');
+      // Don't show SELECTED for closed result rows
+      if (bs === "closed") return badges.join("");
 
       // Prediction result badge
       if (row.recommended) {
@@ -1675,22 +1681,35 @@
     }
 
     function liveScoreMarkup(row) {
-      const phase = row.matchPhase || "scheduled";
       const score = row.liveScore || row.result || "";
       const minute = row.matchMinute || "";
+      // If there's an actualWinner or status is closed → always treat as final
+      let phase = row.matchPhase || "scheduled";
+      if (row.actualWinner || row.status === "נסגר") phase = "final";
 
       if (phase === "final") {
+        const srcLabel = row.source === "365Scores Results" ? "365Scores" : row.source === "Winner Results" ? "Winner" : "";
         return `<div class="card-live-area phase-final">
-          <span class="live-label">FT</span>
-          <span class="live-score-main">${score || "—"}</span>
+          <span class="live-label">FT${srcLabel ? ` · ${srcLabel}` : ""}</span>
+          <span class="live-score-main">${score || (row.actualWinner ? row.actualWinner : "—")}</span>
         </div>`;
       }
       if (phase === "live") {
+        // Safety: if this is a yesterday card, live is stale — don't show LIVE badge
+        const todayDate = activeTodayDate();
+        const isYesterdayCard = row.day && todayDate && row.day < todayDate;
+        if (isYesterdayCard) {
+          return `<div class="card-live-area phase-unavailable">
+            <span class="live-label">נתוני חי לא זמינים</span>
+            <span style="font-size:12px;color:var(--muted)">${score || "—"}</span>
+          </div>`;
+        }
         const minHtml = minute ? `<span class="live-minute">${minute}'</span>` : "";
         const scoreHtml = score
           ? `<span class="live-score-main">${score}</span>`
           : `<span style="font-size:12px;color:var(--muted)">נתוני חי לא זמינים</span>`;
         return `<div class="card-live-area">
+          <span class="badge badge-live" style="font-size:9px;padding:2px 6px">● LIVE</span>
           ${minHtml}${scoreHtml}
         </div>`;
       }
@@ -1737,8 +1756,17 @@
     }
 
     function cardVerifiedMarkup(row) {
+      // Closed result rows
+      if (row.status === "נסגר" || row.actualWinner || row.bettingStatus === "closed") {
+        if (row.resultVerified || row.actualWinner) {
+          const src = row.source === "365Scores Results" ? "365Scores" : "Winner";
+          return `<div class="card-verified"><span class="vdot"></span>✓ תוצאה אומתה מ-${src}</div>`;
+        }
+        return `<div class="card-verified" style="color:var(--gold)"><span class="vdot" style="background:var(--gold)"></span>ממתין לאימות תוצאה</div>`;
+      }
+      // Open picks — show last verified timestamp from Winner line
       const ts = row.verifiedAt || state.feed?.generatedAt;
-      if (!ts) return "";
+      if (!ts) return `<div class="card-verified" style="color:var(--gold)"><span class="vdot" style="background:var(--gold)"></span>לא אומת</div>`;
       try {
         const t = new Date(ts).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
         return `<div class="card-verified"><span class="vdot"></span>אומת מ-Winner: ${t}</div>`;
