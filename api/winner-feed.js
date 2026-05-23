@@ -1,5 +1,7 @@
-const crypto = require("crypto");
-const SNAPSHOT = require("./winner-snapshot.json");
+import crypto from "crypto";
+import { createRequire } from "module";
+const _require = createRequire(import.meta.url);
+const SNAPSHOT = _require("./winner-snapshot.json");
 
 const ODDS_MIN = 1.4;
 const ODDS_MAX = 1.9;
@@ -1310,7 +1312,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   };
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
   try {
     const payload = await buildWinnerFeedPayload({ withLogos: true });
@@ -1335,5 +1337,4 @@ module.exports = async function handler(req, res) {
   }
 };
 
-module.exports.buildWinnerFeedPayload = buildWinnerFeedPayload;
-module.exports.TARGET_PICKS_PER_SPORT = TARGET_PICKS_PER_SPORT;
+export { buildWinnerFeedPayload, TARGET_PICKS_PER_SPORT };

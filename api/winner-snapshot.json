@@ -1,0 +1,41 @@
+{
+  "ok": true,
+  "generatedAt": "2026-05-23T00:00:00.000Z",
+  "serverVersion": null,
+  "fallback": true,
+  "fallbackReason": "snapshot",
+  "oddsRange": { "min": 1.4, "max": 1.9 },
+  "targetPicksPerSport": 20,
+  "lineStats": {
+    "football": { "today": 0, "tomorrow": 0 },
+    "basketball": { "today": 0, "tomorrow": 0 }
+  },
+  "debugAudit": {
+    "today": { "football": [], "basketball": [] },
+    "tomorrow": { "football": [], "basketball": [] }
+  },
+  "tabs": {
+    "yesterday": { "label": "אתמול", "date": "", "sports": { "football": [], "basketball": [] } },
+    "today":     { "label": "היום",  "date": "", "sports": { "football": [], "basketball": [] } },
+    "tomorrow":  { "label": "מחר",   "date": "", "sports": { "football": [], "basketball": [] } }
+  },
+  "modelStats": {
+    "title": "מה עומד מאחורי הניחושים",
+    "factors": [
+      "שוק מנצח בלבד: 1X2 בכדורגל והמנצח בכדורסל.",
+      "יחס Winner אמיתי בטווח 1.40–1.90.",
+      "היחסים מומרים להסתברות ומדורגים לפי פגיעה ופער שוק."
+    ]
+  },
+  "win2goFeatures": [
+    "טאבים אתמול/היום/מחר",
+    "כדורגל וכדורסל",
+    "יחסי Winner בזמן אמת",
+    "לוגואים לקבוצות ולליגות",
+    "ציון ביטחון והסתברות שוק"
+  ],
+  "notes": [
+    "הנתונים החיים אינם זמינים כרגע — הדף יתרענן אוטומטית.",
+    "אם הבעיה נמשכת, לחץ על 'רענון נתוני Winner'."
+  ]
+}
