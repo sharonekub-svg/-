@@ -14,6 +14,7 @@ const SPORTS = {
 };
 const WINNER_FOOTBALL_ID = 240;
 const WINNER_BASKETBALL_ID = 227;
+const SCORES365_FOOTBALL_ID = 1;
 const SCORES365_BASKETBALL_ID = 2;
 // No hardcoded logo lists — logos are resolved dynamically via API search only.
 
@@ -1013,7 +1014,7 @@ function buildResultRows(results, dateKey) {
     .slice(0, 20);
 }
 
-async function get365BasketballResults(startDate, endDate) {
+async function get365Results(startDate, endDate, sportId365, winnerSportId, refererSport) {
   const dates = [startDate];
   if (endDate && endDate !== startDate) dates.push(endDate);
   const rows = [];
@@ -1025,7 +1026,7 @@ async function get365BasketballResults(startDate, endDate) {
       timezoneName: "Asia/Jerusalem",
       userCountryId: "6",
       appTypeId: "5",
-      sports: String(SCORES365_BASKETBALL_ID),
+      sports: String(sportId365),
       startDate: day,
       endDate: day,
     });
@@ -1033,7 +1034,7 @@ async function get365BasketballResults(startDate, endDate) {
       headers: {
         "User-Agent": "Mozilla/5.0",
         Origin: "https://www.365scores.com",
-        Referer: "https://www.365scores.com/he/basketball/match-results",
+        Referer: `https://www.365scores.com/he/${refererSport}/match-results`,
         Accept: "application/json",
       },
     }).catch(() => null);
@@ -1058,7 +1059,7 @@ async function get365BasketballResults(startDate, endDate) {
         time: start && !Number.isNaN(start.getTime())
           ? new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", hour: "2-digit", minute: "2-digit", hour12: false }).format(start)
           : "",
-        sportid: WINNER_BASKETBALL_ID,
+        sportid: winnerSportId,
         league: cleanText(game.competitionDisplayName),
         teamA: home,
         teamB: away,
@@ -1073,9 +1074,17 @@ async function get365BasketballResults(startDate, endDate) {
   return rows;
 }
 
-function build365BasketballRows(results, dateKey) {
+function get365FootballResults(startDate, endDate) {
+  return get365Results(startDate, endDate, SCORES365_FOOTBALL_ID, WINNER_FOOTBALL_ID, "football");
+}
+
+function get365BasketballResults(startDate, endDate) {
+  return get365Results(startDate, endDate, SCORES365_BASKETBALL_ID, WINNER_BASKETBALL_ID, "basketball");
+}
+
+function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signals) {
   return (results || [])
-    .filter((event) => String(event.sportid) === String(WINNER_BASKETBALL_ID) && event.date === dateKey)
+    .filter((event) => String(event.sportid) === String(winnerSportId) && event.date === dateKey)
     .map((event) => {
       const actualWinner = resultWinner(event);
       const teams = { home: cleanText(event.teamA), away: cleanText(event.teamB) };
@@ -1086,15 +1095,15 @@ function build365BasketballRows(results, dateKey) {
         source: "365Scores Results",
         day: dateKey,
         time: String(event.time || "").slice(0, 5),
-        sport: SPORTS[WINNER_BASKETBALL_ID],
-        sportId: WINNER_BASKETBALL_ID,
+        sport: SPORTS[winnerSportId],
+        sportId: winnerSportId,
         league: cleanText(event.league),
         country: "",
         match: `${teams.home} - ${teams.away}`,
         home: teams.home,
         away: teams.away,
-        resultKey: resultKeyFor({ day: dateKey, sportId: WINNER_BASKETBALL_ID, home: teams.home, away: teams.away }),
-        market: "המנצח",
+        resultKey: resultKeyFor({ day: dateKey, sportId: winnerSportId, home: teams.home, away: teams.away }),
+        market: marketTitle,
         pick: actualWinner,
         winnerPick: actualWinner,
         actualWinner,
@@ -1105,23 +1114,43 @@ function build365BasketballRows(results, dateKey) {
         liveScore: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
         matchPhase: resultPhase(event),
         result: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
-        signals: ["תוצאה מ-365Scores", "כיסוי כדורסל לכל הליגות", "משמש לסגירת תחזיות Winner"],
+        signals,
         allMarkets: [{
           marketId: null,
-          title: "המנצח",
-          category: marketCategory("המנצח"),
+          title: marketTitle,
+          category: marketCategory(marketTitle),
           bettable: false,
           best: null,
           outcomes: actualWinner ? [{ outcomeId: null, desc: actualWinner, price: null, spread: "", probability: null, score: null }] : [],
         }],
         explanation: [
-          "זהו משחק כדורסל מארכיון התוצאות של 365Scores.",
+          `זהו משחק ${SPORTS[winnerSportId] || "ספורט"} מארכיון התוצאות של 365Scores.`,
           `התוצאה הרשמית לפי 365Scores היא ${actualWinner || "לא זמינה"}.`,
           "היחסים והבחירה עדיין מגיעים מ-Winner; 365Scores משמש רק לסגירת התוצאה.",
         ],
       };
     })
     .slice(0, 60);
+}
+
+function build365FootballRows(results, dateKey) {
+  return build365ResultRows(
+    results,
+    dateKey,
+    WINNER_FOOTBALL_ID,
+    "1X2",
+    ["תוצאה מ-365Scores", "כיסוי כדורגל מ-365Scores", "משמש לסגירת תחזיות Winner"]
+  );
+}
+
+function build365BasketballRows(results, dateKey) {
+  return build365ResultRows(
+    results,
+    dateKey,
+    WINNER_BASKETBALL_ID,
+    "המנצח",
+    ["תוצאה מ-365Scores", "כיסוי כדורסל לכל הליגות", "משמש לסגירת תחזיות Winner"]
+  );
 }
 
 function splitBySport(rows) {
@@ -1235,20 +1264,26 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   const yesterday = israelDate(-1);
   const today = israelDate(0);
   const tomorrow = israelDate(1);
-  const [{ hashes, markets }, winnerResultEvents, scores365BasketballEvents] = await Promise.all([
+  const [{ hashes, markets }, winnerResultEvents, scores365Events] = await Promise.all([
     getWinnerLine(),
     getResults(yesterday, tomorrow),
     Promise.all([
+      get365FootballResults(yesterday, yesterday),
+      get365FootballResults(today, today),
+      get365FootballResults(tomorrow, tomorrow),
       get365BasketballResults(yesterday, yesterday),
       get365BasketballResults(today, today),
       get365BasketballResults(tomorrow, tomorrow),
     ]).then((items) => items.flat()),
   ]);
-  const resultEvents = [...winnerResultEvents, ...scores365BasketballEvents];
+  const resultEvents = [...winnerResultEvents, ...scores365Events];
   const resultsByEvent = resultIndex(resultEvents);
   const yesterdayMerged = mergeRows(
     buildResultRows(winnerResultEvents, yesterday),
-    build365BasketballRows(scores365BasketballEvents, yesterday)
+    [
+      ...build365FootballRows(scores365Events, yesterday),
+      ...build365BasketballRows(scores365Events, yesterday),
+    ]
   );
   const yesterdayRows = splitBySport(
     withLogos ? await enrichLogos(yesterdayMerged) : yesterdayMerged
