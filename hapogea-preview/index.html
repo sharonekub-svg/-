@@ -2416,12 +2416,17 @@
     function resultMarkup(row) {
       const outcome = rowOutcome(row);
       const verifyTime = outcome.resultVerifiedAt ? formatShortTime(outcome.resultVerifiedAt) : "";
+      const verifyLabel = outcome.key === "unverified" || outcome.key === "void"
+        ? "לא אומת מול מקור תוצאה רשמי"
+        : verifyTime
+          ? `מאומת · ${verifyTime}`
+          : "ממתין לתוצאה רשמית מאומתת";
       return `
         <div class="result-line">
           <div class="result-detail">
             <span>סטטוס תחזית</span>
             <b>${outcome.label}${outcome.actual ? ` · בפועל: ${outcome.actual}` : ""}</b>
-            <span>${verifyTime ? `אימות תוצאה: ${verifyTime}` : "ממתין לתוצאה רשמית מאומתת"}</span>
+            <span>${verifyLabel}</span>
           </div>
           <span class="verdict ${outcome.cls}">${outcome.label}</span>
         </div>

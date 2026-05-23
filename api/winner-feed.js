@@ -526,15 +526,30 @@ function resultIndex(results) {
 
 function resultWinner(event) {
   const markets = event?.markets || [];
-  const market = markets.find((m) => cleanText(m.title).includes("1X2")) ||
-    markets.find((m) => cleanText(m.title).includes("׳”׳׳ ׳¦׳—"));
+  const market = markets.find((m) => /1X2|winner/i.test(cleanText(m.title)) || cleanText(m.title).includes("המנצח") || cleanText(m.title).includes("׳”׳׳ ׳¦׳—"));
   const raw = cleanText((market?.marketResults || [])[0]);
-  return raw.toLowerCase() === "x" ? "׳×׳™׳§׳•" : raw;
+  if (raw) return raw.toLowerCase() === "x" ? "תיקו" : raw;
+  return isFinalResultEvent(event) ? scoreBasedWinner(event) : "";
 }
 
 function scoreNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function scoreBasedWinner(event) {
+  const homeScore = scoreNumber(event?.scoreA);
+  const awayScore = scoreNumber(event?.scoreB);
+  if (homeScore === null || awayScore === null) return "";
+  if (homeScore === awayScore) return "תיקו";
+  return homeScore > awayScore ? cleanText(event?.teamA) : cleanText(event?.teamB);
+}
+
+function isFinalResultEvent(event) {
+  const status = cleanText(event?.status || event?.statusText || event?.eventStatus || event?.matchStatus || event?.state);
+  return event?.isFinal === true ||
+    Number(event?.statusGroup) === 4 ||
+    /final|ended|finished|full.?time|after extra time|הסתיים|סיום|נגמר/i.test(status);
 }
 
 function spreadStatus(event, row) {
@@ -567,6 +582,7 @@ function resultPhase(event) {
   if (/postpone|postponed|delayed|נדחה|דחוי/i.test(status)) return "postponed";
   if (/halftime|half.?time|half_time|הפסקה|מחצית/i.test(status)) return "ht";
   if (/final|ended|finished|over|הסתיים|נגמר/i.test(status)) return "final";
+  if (isFinalResultEvent(event)) return "final";
   if (/live|in.?play|playing|חי|משוחק/i.test(status)) return "live";
   // hasScore alone is NOT enough to call live — many cached/stale feeds have scores but are finished
   // Only call live if statusGroup explicitly signals it (365Scores) or status says so
@@ -1139,6 +1155,7 @@ function buildResultRows(results, dateKey) {
   return (results || [])
     .filter((event) => ["240", "227"].includes(String(event.sportid)) && event.date === dateKey)
     .map((event) => {
+      const verifiedAt = new Date().toISOString();
       const markets = event.markets || [];
       const market = markets.find((m) => cleanText(m.title).includes("1X2")) ||
         markets.find((m) => cleanText(m.title).includes("המנצח"));
@@ -1151,7 +1168,7 @@ function buildResultRows(results, dateKey) {
         id: `result-${event.eventid}`,
         eventId: String(event.eventid),
         source: "Winner Results",
-        verifiedAt: new Date().toISOString(),
+        verifiedAt,
         bettingStatus: "closed",
         resultVerified: !!actualWinner,
         day: dateKey,
@@ -1175,6 +1192,7 @@ function buildResultRows(results, dateKey) {
         liveScore: _resultScore,
         matchPhase: actualWinner ? "final" : resultPhase(event),
         result: _resultScore,
+        resultVerifiedAt: actualWinner ? verifiedAt : "",
         signals: ["תוצאה רשמית מווינר", "ארכיון לבדיקת פגיעה", "אין יחס עבר בממשק הציבורי"],
         allMarkets: (event.markets || []).map((item) => ({
           marketId: null,
@@ -1253,6 +1271,8 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
         teamB: away,
         scoreA: hasScore ? String(homeScore) : "",
         scoreB: hasScore ? String(awayScore) : "",
+        statusGroup: game.statusGroup,
+        isFinal,
         statusText: cleanText(game.statusText),
         markets: actualWinner ? [{ title: "המנצח", marketResults: [actualWinner] }] : [],
         source: "365Scores",
@@ -1275,13 +1295,15 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
     .filter((event) => String(event.sportid) === String(winnerSportId) && event.date === dateKey)
     .map((event) => {
       const actualWinner = resultWinner(event);
+      const phase = resultPhase(event);
+      const verifiedAt = new Date().toISOString();
       const teams = { home: cleanText(event.teamA), away: cleanText(event.teamB) };
       return {
         id: `result-${event.eventid}`,
         eventId: String(event.eventid),
         eventId365: event.eventid365 || String(event.eventid).replace(/^365-/, ""),
         source: "365Scores Results",
-        verifiedAt: new Date().toISOString(),
+        verifiedAt,
         bettingStatus: "closed",
         resultVerified: !!actualWinner,
         day: dateKey,
@@ -1301,10 +1323,11 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
         odds: null,
         probability: null,
         score: 0,
-        status: "נסגר",
+        status: phase === "final" ? "נסגר" : phase === "cancelled" ? "בוטל" : phase === "postponed" ? "לא אומת" : "ממתין",
         liveScore: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
         matchPhase: actualWinner ? "final" : resultPhase(event),
         result: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
+        resultVerifiedAt: phase === "final" ? verifiedAt : "",
         signals,
         allMarkets: [{
           marketId: null,
