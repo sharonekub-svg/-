@@ -16,6 +16,7 @@ Vercel project:
 
 - Existing project name: `hit`
 - Production alias used by Codex: `https://hit-alpha.vercel.app`
+- Canonical GitHub repo: `https://github.com/sharonekub-svg/hapogea`
 - Do not create a new Vercel project.
 - Do not deploy a separate preview-only app as the source of truth.
 

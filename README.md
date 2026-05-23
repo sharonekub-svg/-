@@ -6,6 +6,10 @@ The live Vercel project is `hit`. The intended production URL is:
 
 - https://hit-alpha.vercel.app
 
+Canonical GitHub repo:
+
+- https://github.com/sharonekub-svg/hapogea
+
 Do not add a second app, mobile app, backend app, Vite shell, or Next.js app here. The UI is the static file in `hapogea-preview/index.html`, and the data API lives in `api/`.
 
 ## Project Structure
