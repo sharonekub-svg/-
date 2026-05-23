@@ -72,6 +72,40 @@ const LM = {
   TurSL:      { name:"סופר ליג טורקיה",      flag:"🇹🇷", c:"#E30A17" },
 };
 
+// ─── TEAM LOGOS ────────────────────────────────────────────────
+const TEAM_LOGOS_FOOTBALL = {
+  "ארסנל":"https://a.espncdn.com/i/teamlogos/soccer/500/359.png","מנצ'סטר סיטי":"https://a.espncdn.com/i/teamlogos/soccer/500/382.png","מנצ'סטר יונייטד":"https://a.espncdn.com/i/teamlogos/soccer/500/360.png","ליברפול":"https://a.espncdn.com/i/teamlogos/soccer/500/364.png","צ'לסי":"https://a.espncdn.com/i/teamlogos/soccer/500/363.png","טוטנהאם":"https://a.espncdn.com/i/teamlogos/soccer/500/367.png","אסטון וילה":"https://a.espncdn.com/i/teamlogos/soccer/500/362.png","ניוקאסל":"https://a.espncdn.com/i/teamlogos/soccer/500/361.png","ווסט האם":"https://a.espncdn.com/i/teamlogos/soccer/500/371.png","ברייטון":"https://a.espncdn.com/i/teamlogos/soccer/500/331.png","פולהאם":"https://a.espncdn.com/i/teamlogos/soccer/500/370.png","אברטון":"https://a.espncdn.com/i/teamlogos/soccer/500/368.png","בורנמות'":"https://a.espncdn.com/i/teamlogos/soccer/500/349.png","נוטינגהאם פורסט":"https://a.espncdn.com/i/teamlogos/soccer/500/393.png","ולברהמפטון":"https://a.espncdn.com/i/teamlogos/soccer/500/380.png","לסטר":"https://a.espncdn.com/i/teamlogos/soccer/500/375.png","ברנטפורד":"https://a.espncdn.com/i/teamlogos/soccer/500/337.png","קריסטל פאלאס":"https://a.espncdn.com/i/teamlogos/soccer/500/384.png",
+  "ריאל מדריד":"https://a.espncdn.com/i/teamlogos/soccer/500/86.png","ברצלונה":"https://a.espncdn.com/i/teamlogos/soccer/500/83.png","אטלטיקו מדריד":"https://a.espncdn.com/i/teamlogos/soccer/500/1068.png","ויאריאל":"https://a.espncdn.com/i/teamlogos/soccer/500/102.png","סוסיאדד":"https://a.espncdn.com/i/teamlogos/soccer/500/89.png","בטיס":"https://a.espncdn.com/i/teamlogos/soccer/500/88.png","ולנסיה":"https://a.espncdn.com/i/teamlogos/soccer/500/95.png","סביליה":"https://a.espncdn.com/i/teamlogos/soccer/500/243.png","ג'ירונה":"https://a.espncdn.com/i/teamlogos/soccer/500/9812.png","אוסאסונה":"https://a.espncdn.com/i/teamlogos/soccer/500/3842.png","אתלטיק":"https://a.espncdn.com/i/teamlogos/soccer/500/93.png",
+  "באיירן מינכן":"https://a.espncdn.com/i/teamlogos/soccer/500/132.png","בורוסיה דורטמונד":"https://a.espncdn.com/i/teamlogos/soccer/500/124.png","וולפסבורג":"https://a.espncdn.com/i/teamlogos/soccer/500/135.png","פאדרבורן":"https://a.espncdn.com/i/teamlogos/soccer/500/3827.png","לוורקוזן":"https://a.espncdn.com/i/teamlogos/soccer/500/125.png","פרייבורג":"https://a.espncdn.com/i/teamlogos/soccer/500/144.png","ליפציג":"https://a.espncdn.com/i/teamlogos/soccer/500/11420.png","שטוטגרט":"https://a.espncdn.com/i/teamlogos/soccer/500/140.png","פרנקפורט":"https://a.espncdn.com/i/teamlogos/soccer/500/126.png","הופנהיים":"https://a.espncdn.com/i/teamlogos/soccer/500/11899.png","מיינץ":"https://a.espncdn.com/i/teamlogos/soccer/500/128.png","גלדבאך":"https://a.espncdn.com/i/teamlogos/soccer/500/127.png",
+  "אינטר מילאן":"https://a.espncdn.com/i/teamlogos/soccer/500/110.png","יובנטוס":"https://a.espncdn.com/i/teamlogos/soccer/500/111.png","מילאן":"https://a.espncdn.com/i/teamlogos/soccer/500/103.png","נאפולי":"https://a.espncdn.com/i/teamlogos/soccer/500/114.png","רומא":"https://a.espncdn.com/i/teamlogos/soccer/500/113.png","לאציו":"https://a.espncdn.com/i/teamlogos/soccer/500/115.png","פיורנטינה":"https://a.espncdn.com/i/teamlogos/soccer/500/107.png","אטלנטה":"https://a.espncdn.com/i/teamlogos/soccer/500/105.png","טורינו":"https://a.espncdn.com/i/teamlogos/soccer/500/116.png",
+  "פריז":"https://a.espncdn.com/i/teamlogos/soccer/500/160.png","מרסיי":"https://a.espncdn.com/i/teamlogos/soccer/500/162.png","לאנס":"https://a.espncdn.com/i/teamlogos/soccer/500/3008.png","ניס":"https://a.espncdn.com/i/teamlogos/soccer/500/169.png","מונאקו":"https://a.espncdn.com/i/teamlogos/soccer/500/167.png","ליל":"https://a.espncdn.com/i/teamlogos/soccer/500/165.png","ליון":"https://a.espncdn.com/i/teamlogos/soccer/500/161.png","רן":"https://a.espncdn.com/i/teamlogos/soccer/500/3005.png",
+  "אייאקס":"https://a.espncdn.com/i/teamlogos/soccer/500/164.png","פאיינורד":"https://a.espncdn.com/i/teamlogos/soccer/500/167.png","PSV":"https://a.espncdn.com/i/teamlogos/soccer/500/166.png","חרונינגן":"https://a.espncdn.com/i/teamlogos/soccer/500/2049.png","טוונטה":"https://a.espncdn.com/i/teamlogos/soccer/500/2052.png","AZ אלקמאר":"https://a.espncdn.com/i/teamlogos/soccer/500/2048.png",
+  "יורגורדן":"https://a.espncdn.com/i/teamlogos/soccer/500/3597.png","ברומפויקרנה":"https://a.espncdn.com/i/teamlogos/soccer/500/3605.png","מאלמה":"https://a.espncdn.com/i/teamlogos/soccer/500/3599.png","IFK גיוטבורג":"https://a.espncdn.com/i/teamlogos/soccer/500/3602.png",
+  "קלאב ברוז'":"https://a.espncdn.com/i/teamlogos/soccer/500/1026.png","גנט":"https://a.espncdn.com/i/teamlogos/soccer/500/3026.png","אנדרלכט":"https://a.espncdn.com/i/teamlogos/soccer/500/1024.png","מכלן":"https://a.espncdn.com/i/teamlogos/soccer/500/3030.png","אוניון סן-ז'ילוואז":"https://a.espncdn.com/i/teamlogos/soccer/500/3028.png","סטאנדרד לייז":"https://a.espncdn.com/i/teamlogos/soccer/500/1027.png",
+  "אולימפיאקוס":"https://a.espncdn.com/i/teamlogos/soccer/500/583.png","פאנתיניאיקוס":"https://a.espncdn.com/i/teamlogos/soccer/500/581.png","AEK אתונה":"https://a.espncdn.com/i/teamlogos/soccer/500/585.png","PAOK":"https://a.espncdn.com/i/teamlogos/soccer/500/584.png","אטרומיטוס":"https://a.espncdn.com/i/teamlogos/soccer/500/3081.png","פאנתטולאיקוס":"https://a.espncdn.com/i/teamlogos/soccer/500/3083.png",
+  "פורטו":"https://a.espncdn.com/i/teamlogos/soccer/500/229.png","בנפיקה":"https://a.espncdn.com/i/teamlogos/soccer/500/228.png","ספורטינג לישבון":"https://a.espncdn.com/i/teamlogos/soccer/500/231.png","ברגה":"https://a.espncdn.com/i/teamlogos/soccer/500/2958.png",
+  "גלטסראי":"https://a.espncdn.com/i/teamlogos/soccer/500/2007.png","פנרבהצ'ה":"https://a.espncdn.com/i/teamlogos/soccer/500/2006.png","בשקטש":"https://a.espncdn.com/i/teamlogos/soccer/500/2011.png","טרבזונספור":"https://a.espncdn.com/i/teamlogos/soccer/500/2010.png",
+  "LA גלקסי":"https://a.espncdn.com/i/teamlogos/soccer/500/528.png","LAFC":"https://a.espncdn.com/i/teamlogos/soccer/500/14039.png","אינטר מיאמי":"https://a.espncdn.com/i/teamlogos/soccer/500/20232.png","אטלנטה יונייטד":"https://a.espncdn.com/i/teamlogos/soccer/500/18054.png",
+  "מכבי תל אביב":"https://a.espncdn.com/i/teamlogos/soccer/500/1856.png","הפועל תל אביב":"https://a.espncdn.com/i/teamlogos/soccer/500/1855.png","מכבי חיפה":"https://a.espncdn.com/i/teamlogos/soccer/500/1857.png","הפועל באר שבע":"https://a.espncdn.com/i/teamlogos/soccer/500/16116.png","בית\"ר ירושלים":"https://a.espncdn.com/i/teamlogos/soccer/500/1860.png",
+  "בוקה ג'וניורס":"https://a.espncdn.com/i/teamlogos/soccer/500/193.png","ריבר פלייט":"https://a.espncdn.com/i/teamlogos/soccer/500/194.png","פלמנגו":"https://a.espncdn.com/i/teamlogos/soccer/500/1966.png","גרמיו":"https://a.espncdn.com/i/teamlogos/soccer/500/1962.png","סאו פאולו":"https://a.espncdn.com/i/teamlogos/soccer/500/1963.png","פלמינגו":"https://a.espncdn.com/i/teamlogos/soccer/500/1966.png","אינטרנציונל":"https://a.espncdn.com/i/teamlogos/soccer/500/1964.png",
+  "לגיה וורשה":"https://a.espncdn.com/i/teamlogos/soccer/500/3524.png","לך פוזנן":"https://a.espncdn.com/i/teamlogos/soccer/500/3527.png",
+  "אוראווה רד דיימונדס":"https://a.espncdn.com/i/teamlogos/soccer/500/3407.png","מאצ'ידה זלביה":"https://a.espncdn.com/i/teamlogos/soccer/500/3420.png","קשימה אנטלרס":"https://a.espncdn.com/i/teamlogos/soccer/500/3408.png","גאמבה אוסקה":"https://a.espncdn.com/i/teamlogos/soccer/500/3406.png","יוקוהמה F מארינוס":"https://a.espncdn.com/i/teamlogos/soccer/500/3404.png",
+};
+
+const TEAM_LOGOS_BASKETBALL = {
+  "ניו יורק ניקס":"https://a.espncdn.com/i/teamlogos/nba/500/ny.png","ניקס":"https://a.espncdn.com/i/teamlogos/nba/500/ny.png","קליבלנד קאבלירס":"https://a.espncdn.com/i/teamlogos/nba/500/cle.png","קאבלירס":"https://a.espncdn.com/i/teamlogos/nba/500/cle.png","בוסטון סלטיקס":"https://a.espncdn.com/i/teamlogos/nba/500/bos.png","סלטיקס":"https://a.espncdn.com/i/teamlogos/nba/500/bos.png","אוקלהומה סיטי ת'אנדר":"https://a.espncdn.com/i/teamlogos/nba/500/okc.png","ת'אנדר":"https://a.espncdn.com/i/teamlogos/nba/500/okc.png","סן אנטוניו ספרס":"https://a.espncdn.com/i/teamlogos/nba/500/sa.png","ספרס":"https://a.espncdn.com/i/teamlogos/nba/500/sa.png","לוס אנג'לס לייקרס":"https://a.espncdn.com/i/teamlogos/nba/500/lal.png","לייקרס":"https://a.espncdn.com/i/teamlogos/nba/500/lal.png","לוס אנג'לס קליפרס":"https://a.espncdn.com/i/teamlogos/nba/500/lac.png","קליפרס":"https://a.espncdn.com/i/teamlogos/nba/500/lac.png","מיאמי הית":"https://a.espncdn.com/i/teamlogos/nba/500/mia.png","הית":"https://a.espncdn.com/i/teamlogos/nba/500/mia.png","גולדן סטייט וורריורס":"https://a.espncdn.com/i/teamlogos/nba/500/gs.png","וורריורס":"https://a.espncdn.com/i/teamlogos/nba/500/gs.png","מילווקי באקס":"https://a.espncdn.com/i/teamlogos/nba/500/mil.png","פילדלפיה סיקסרס":"https://a.espncdn.com/i/teamlogos/nba/500/phi.png","שיקגו בולס":"https://a.espncdn.com/i/teamlogos/nba/500/chi.png","דנבר נאגטס":"https://a.espncdn.com/i/teamlogos/nba/500/den.png","מינסוטה טימברוולבס":"https://a.espncdn.com/i/teamlogos/nba/500/min.png","דאלאס מאבריקס":"https://a.espncdn.com/i/teamlogos/nba/500/dal.png","אינדיאנה פייסרס":"https://a.espncdn.com/i/teamlogos/nba/500/ind.png","אורלנדו מג'יק":"https://a.espncdn.com/i/teamlogos/nba/500/orl.png",
+  "אולימפיאקוס":"https://www.euroleague.net/rs/live/images/teams/OLY_big.png","פנרבהצ'ה":"https://www.euroleague.net/rs/live/images/teams/FEN_big.png","ריאל מדריד":"https://www.euroleague.net/rs/live/images/teams/MAD_big.png","פרטיזן בלגרד":"https://www.euroleague.net/rs/live/images/teams/PAR_big.png","ולנסיה בסקט":"https://www.euroleague.net/rs/live/images/teams/VAL_big.png","מונקס וילנה":"https://www.euroleague.net/rs/live/images/teams/MCN_big.png","פנאתינאיקוס":"https://www.euroleague.net/rs/live/images/teams/PAN_big.png","אלבה ברלין":"https://www.euroleague.net/rs/live/images/teams/BER_big.png","זלגיריס":"https://www.euroleague.net/rs/live/images/teams/ZAL_big.png",
+  "ברסה בסקט":"https://www.euroleague.net/rs/live/images/teams/BAR_big.png","גראן קנריה":"https://www.euroleague.net/rs/live/images/teams/GRN_big.png",
+  "מכבי תל אביב":"https://www.euroleague.net/rs/live/images/teams/TEL_big.png","הפועל תל אביב":"https://a.espncdn.com/i/teamlogos/soccer/500/1855.png",
+  "אולימפיה מילאנו":"https://www.euroleague.net/rs/live/images/teams/MIL_big.png","ויירטוס בולוניה":"https://www.euroleague.net/rs/live/images/teams/VIR_big.png",
+};
+
+function getTeamLogo(name, sport) {
+  if (!name) return null;
+  if (sport === "basketball") return TEAM_LOGOS_BASKETBALL[name] || TEAM_LOGOS_FOOTBALL[name] || null;
+  return TEAM_LOGOS_FOOTBALL[name] || null;
+}
+
 const WC2026_GROUPS = [
   { id:"A", teams:[
     {name:"מקסיקו",flag:"🇲🇽",host:true,pts:0,w:0,d:0,l:0,gf:0,ga:0},
@@ -1199,6 +1233,25 @@ const LeagueBadge = ({lk}) => {
   );
 };
 
+const TeamLogo = ({ name, sport, size = 32 }) => {
+  const [err, setErr] = useState(false);
+  const url = getTeamLogo(name, sport);
+  const initials = (name||"").split(" ").map(w=>w[0]||"").join("").slice(0,2).toUpperCase();
+  if (!url || err) {
+    return (
+      <div style={{width:size,height:size,borderRadius:6,background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.35,fontWeight:900,color:"rgba(240,237,230,.5)",fontFamily:"'Heebo',sans-serif",flexShrink:0}}>
+        {initials}
+      </div>
+    );
+  }
+  return (
+    <img src={url} alt={name} width={size} height={size}
+      style={{objectFit:"contain",borderRadius:6,background:"rgba(255,255,255,.04)",flexShrink:0}}
+      onError={()=>setErr(true)}
+    />
+  );
+};
+
 // ─── POGUEA AI AGENT ───────────────────────────────────────────
 async function askPogueaAgent(messages) {
   if (!API_KEY) throw new Error("no_key");
@@ -1515,11 +1568,13 @@ const MatchCard = ({m, rank, onClick}) => {
 
       <div className="teams">
         <div className="team h">
+          <TeamLogo name={m.home} sport={m.sport} size={36}/>
           <div className="tname">{m.home}</div>
           <div className="tform">{(m.hForm||["W","D","W"]).map((r,i)=><FDot key={i} r={r}/>)}</div>
         </div>
         <div className="tvs">VS</div>
         <div className="team a">
+          <TeamLogo name={m.away} sport={m.sport} size={36}/>
           <div className="tname">{m.away}</div>
           <div className="tform">{(m.aForm||["W","L","D"]).map((r,i)=><FDot key={i} r={r}/>)}</div>
         </div>
@@ -1743,8 +1798,9 @@ For each match return:
 - Home/away teams (in Hebrew), current score (e.g. "2-1"), current minute (e.g. "67'")
 - League name (in Hebrew), current in-play odds (1X2 for football, ML for basketball)
 - Recent events: goals or cards in last 10 minutes (2-3 events max)
+Also include bestSide ("1" or "2") for which side the model considers the value pick.
 Return ONLY valid JSON:
-{"matches":[{"id":"l1","home":"מנצ'סטר סיטי","away":"ארסנל","score":"1-0","minute":"34'","league":"פרמיר ליג","leagueKey":"EPL","o1":"1.55","oX":"4.20","o2":"5.50","events":[{"min":"28'","text":"שער! האלנד 1-0"},{"min":"31'","text":"כרטיס צהוב — פרטי"}]}]}`;
+{"matches":[{"id":"l1","home":"מנצ'סטר סיטי","away":"ארסנל","score":"1-0","minute":"34'","league":"פרמיר ליג","leagueKey":"EPL","o1":"1.55","oX":"4.20","o2":"5.50","bestSide":"1","events":[{"min":"28'","text":"שער! האלנד 1-0"},{"min":"31'","text":"כרטיס צהוב — פרטי"}]}]}`;
   try {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
@@ -1761,18 +1817,36 @@ Return ONLY valid JSON:
 async function fetchFinishedMatches(sport) {
   if (!API_KEY) return [];
   const today = new Date().toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"});
-  const prompt = `You are a sports results database. Return exactly 8 ${sport==="football"?"football":"basketball"} matches that FINISHED today (${today}).
-For each match return:
-- Home/away teams (in Hebrew), final score, winning team, scorers with minutes
-- League name (in Hebrew), possession % (football only), shots on target
-- Whether any common bet (home win/away win) was correct
+  const prompt = `You are a sports results database. Return exactly 8 real ${sport==="football"?"football":"basketball"} matches that FINISHED today (${today}) from major leagues available on Winner.co.il.
+
+For each match:
+1. Return the actual final score and winner
+2. Determine the "favorite" side — the team with shorter odds (typically the home team if home win odds were 1.40–1.90, or the clearly stronger team)
+3. Set betCorrect=true if the favorite/lower-odds side WON, false if they lost or drew
+4. Set pickedSide to the team name the app would have picked (the pre-match favorite)
+5. Include possession and shots for football, scorers with minute
+
 Return ONLY valid JSON:
-{"matches":[{"id":"d1","home":"ברצלונה","away":"ריאל מדריד","score":"2-1","winner":"home","scorers":["לוויין 23'","פדרי 67'"],"leagueKey":"LaLiga","league":"לה ליגה","possession":{"home":58,"away":42},"shots":{"home":14,"away":9},"betCorrect":true}]}`;
+{"matches":[{
+  "id":"d1",
+  "sport":"${sport}",
+  "home":"ברצלונה",
+  "away":"ריאל מדריד",
+  "score":"2-1",
+  "winner":"home",
+  "scorers":["לוויין 23'","פדרי 67'"],
+  "leagueKey":"LaLiga",
+  "league":"לה ליגה",
+  "possession":{"home":58,"away":42},
+  "shots":{"home":14,"away":9},
+  "betCorrect":true,
+  "pickedSide":"ברצלונה"
+}]}`;
   try {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01"},
-      body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1800,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:2200,messages:[{role:"user",content:prompt}]})
     });
     const d = await resp.json();
     const txt = (d.content||[]).find(b=>b.type==="text")?.text||"";
@@ -1804,10 +1878,7 @@ For each candidate match, gather from your knowledge base:
 
 ## STEP 2 — ALGORITHM (apply for EACH match)
 
-**2a. Implied probability (remove bookmaker margin):**
-P_imp(side) = (1/odds_side) / (1/o1 + 1/oX + 1/o2)
-
-**2b. Statistical probability — Poisson/Elo hybrid:**
+**2a. Statistical probability — Poisson/Elo hybrid:**
 For football:
   λ_home = home_attack_strength × away_defense_weakness × league_avg_goals × 1.32
   λ_away = away_attack_strength × home_defense_weakness × league_avg_goals
@@ -1815,34 +1886,55 @@ For football:
   P_draw = Σ P(goals_home = goals_away)
   P_away = 1 − P_home − P_draw
   Injury adjustment: subtract 0.08 per missing key attacker, add 0.05 per missing opp key defender
-
 For basketball:
   Use Elo ratings + pace-adjusted efficiency differential
   Home court advantage: +3.5 points spread equivalent
 
-**2c. Ensemble probability:**
-P_real = 0.45 × P_imp + 0.35 × P_poisson + 0.20 × P_elo_form
+**2b. Ensemble probability:**
+P_real = 0.45 × P_poisson + 0.35 × P_elo_form + 0.20 × P_market_consensus
 (P_elo_form = weighted win% last 8 games, home/away split, decaying older games 0.7^n)
+(P_market_consensus = estimated true probability from sharp sportsbook consensus)
 
-**2d. Kelly Criterion:**
+**2c. ODDS CALIBRATION — Winner.co.il format (CRITICAL — apply carefully):**
+Winner.co.il uses European decimal odds with typically 5-7% bookmaker overround.
+Steps to derive correct odds from P_real:
+  1. Fair odds: fair_o1 = 1/P_home, fair_oX = 1/P_draw, fair_o2 = 1/P_away
+  2. Apply 6% margin: margin_factor = 1.06
+  3. Winner odds: o1 = fair_o1 / margin_factor, oX = fair_oX / margin_factor, o2 = fair_o2 / margin_factor
+  4. Round to 2 decimals
+  5. SELF-CHECK: 1/o1 + 1/oX + 1/o2 MUST equal 1.05–1.08. If not, recalculate.
+  6. Odds reality check for football:
+     - Strong favorite (P_home > 0.65): o1 = 1.40–1.60, oX = 3.80–5.00, o2 = 5.50–9.00
+     - Medium favorite (P_home 0.52-0.65): o1 = 1.62–1.90, oX = 3.20–3.90, o2 = 3.50–5.50
+     - Even match (P_home 0.40-0.52): o1 = 2.00–2.50, oX = 3.00–3.40, o2 = 2.50–3.50
+  7. Odds reality check for basketball (no draw):
+     - Strong favorite (P > 0.70): o1 = 1.20–1.45
+     - Medium favorite (P 0.58-0.70): o1 = 1.46–1.72
+     - Slight favorite (P 0.52-0.58): o1 = 1.73–1.90
+  8. ONLY output bestSide if its odds land in ${ODDS_MIN}–${ODDS_MAX}
+
+**2d. Implied probability (for EV calculation):**
+P_imp(side) = (1/odds_side) / (1/o1 + 1/oX + 1/o2)
+
+**2e. Kelly Criterion:**
 b = odds − 1
 Kelly_f = (P_real × b − (1 − P_real)) / b
 Full Kelly > 0.04 → strong value
 Full Kelly 0.02–0.04 → moderate value
 Full Kelly < 0.02 → skip
 
-**2e. EV and quality gate:**
+**2f. EV and quality gate:**
 EV = (P_real × odds) − 1
 Include ONLY if:
   - EV > 0.03 (minimum 3% edge)
-  - P_real > P_imp (we are smarter than the book)
+  - P_real > P_imp (our model beats the book)
   - Kelly_f > 0.02
-  - Odds in ${ODDS_MIN}–${ODDS_MAX} (preferred center: 1.52–1.78)
-  - sourcesMatch: odds within ±0.08 across Winner, 365scores, bet365
+  - Odds bestSide in ${ODDS_MIN}–${ODDS_MAX} (preferred center: 1.52–1.78)
+  - sourcesMatch: verify 1/o1+1/oX+1/o2 is within 1.05–1.08 (Winner's typical range)
   - No dead-rubber flag (match has competitive stakes)
   - winnerAvailable: league is in Winner.co.il
 
-**2f. Confidence score (0–100):**
+**2g. Confidence score (0–100):**
 conf = round(P_real × 100)
 Boost +4 if Kelly_f > 0.06
 Boost +3 if last 3 H2H favor this side
@@ -2405,7 +2497,11 @@ const BottomNav = ({ view, setView }) => {
 };
 
 // ─── LIVE MATCH CARD ───────────────────────────────────────────
-const LiveMatchCard = ({ m }) => (
+const LiveMatchCard = ({ m }) => {
+  const sport = m.sport || (m.oX && parseFloat(m.oX) > 10 ? "basketball" : "football");
+  const pick = m.bestSide === "1" ? m.home : m.bestSide === "2" ? m.away : "תיקו";
+  const pickOdds = m.bestSide === "1" ? m.o1 : m.bestSide === "2" ? m.o2 : m.oX;
+  return (
   <div className="live-card">
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
       <div className="live-badge">
@@ -2415,12 +2511,28 @@ const LiveMatchCard = ({ m }) => (
       <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:1}}>{m.league}</span>
     </div>
     <div className="live-score">
-      <div className="live-team" style={{textAlign:"right"}}>{m.home}</div>
-      <div style={{display:"flex",alignItems:"center",gap:4}}>
-        <div className="live-score-num">{m.score}</div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+        <TeamLogo name={m.home} sport={sport} size={28}/>
+        <div className="live-team" style={{textAlign:"right"}}>{m.home}</div>
       </div>
-      <div className="live-team" style={{textAlign:"left"}}>{m.away}</div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+        <div className="live-score-num">{m.score}</div>
+        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:"rgba(184,147,106,.4)",letterSpacing:1}}>תוצאה לייב</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4}}>
+        <TeamLogo name={m.away} sport={sport} size={28}/>
+        <div className="live-team" style={{textAlign:"left"}}>{m.away}</div>
+      </div>
     </div>
+    {/* AI Prediction status */}
+    {m.bestSide && (
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"rgba(250,204,21,.06)",border:"1px solid rgba(250,204,21,.2)",borderRadius:7,margin:"8px 0"}}>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:"rgba(184,147,106,.7)"}}>ניחוש AI:</span>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:12,fontWeight:700,color:"#facc15"}}>{pick}</span>
+        {pickOdds && <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:15,color:"white",marginRight:"auto"}}>@ {pickOdds}</span>}
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:800,letterSpacing:1,color:"#facc15",background:"rgba(250,204,21,.08)",border:"1px solid rgba(250,204,21,.25)",borderRadius:4,padding:"2px 7px"}}>ממתין</span>
+      </div>
+    )}
     {m.events && m.events.length > 0 && (
       <div className="live-events">
         {m.events.map((ev,i) => (
@@ -2433,16 +2545,17 @@ const LiveMatchCard = ({ m }) => (
     )}
     {m.o1 && (
       <div style={{display:"flex",gap:6,marginTop:10}}>
-        {[{l:"1",v:m.o1},{l:"X",v:m.oX},{l:"2",v:m.o2}].map((c,i) => (
-          <div key={i} style={{flex:1,textAlign:"center",background:"rgba(255,255,255,.04)",border:"1px solid rgba(61,26,10,.4)",borderRadius:7,padding:"5px 4px"}}>
-            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:"#B8936A",letterSpacing:1.5}}>{c.l}</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:19,color:"white"}}>{c.v}</div>
+        {[{l:"1",v:m.o1,b:m.bestSide==="1"},{l:"X",v:m.oX,b:m.bestSide==="X"},{l:"2",v:m.o2,b:m.bestSide==="2"}].map((c,i) => (
+          <div key={i} style={{flex:1,textAlign:"center",background:c.b?"rgba(250,204,21,.08)":"rgba(255,255,255,.04)",border:`1px solid ${c.b?"rgba(250,204,21,.35)":"rgba(61,26,10,.4)"}`,borderRadius:7,padding:"5px 4px"}}>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:c.b?"#facc15":"#B8936A",letterSpacing:1.5}}>{c.l}</div>
+            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:19,color:c.b?"#facc15":"white"}}>{c.v}</div>
           </div>
         ))}
       </div>
     )}
   </div>
-);
+  );
+};
 
 // ─── LIVE VIEW ─────────────────────────────────────────────────
 const LiveView = ({ sport }) => {
@@ -2458,10 +2571,10 @@ const LiveView = ({ sport }) => {
   }, [sport]);
 
   const LIVE_FALLBACK = [
-    {id:"lf1",home:"מנצ'סטר יונייטד",away:"צ'לסי",score:"1-0",minute:"54'",league:"פרמיר ליג",leagueKey:"EPL",o1:"1.55",oX:"3.80",o2:"6.00",events:[{min:"49'",text:"שער! בראשיק 1-0"},{min:"52'",text:"כרטיס צהוב — גלגלחא'"}]},
-    {id:"lf2",home:"ריאל מדריד",away:"ברצלונה",score:"0-0",minute:"28'",league:"לה ליגה",leagueKey:"LaLiga",o1:"1.80",oX:"3.60",o2:"4.20",events:[{min:"22'",text:"כרטיס צהוב — למין ימל"},{min:"26'",text:"ניסיון שער — ויניסיוס"}]},
-    {id:"lf3",home:"באיירן מינכן",away:"בורוסיה דורטמונד",score:"2-1",minute:"71'",league:"בונדסליגה",leagueKey:"Bundesliga",o1:"1.45",oX:"4.50",o2:"6.50",events:[{min:"62'",text:"שער! קיין 2-1"},{min:"68'",text:"כרטיס אדום — הוּמלס"}]},
-    {id:"lf4",home:"ניקס",away:"סלטיקס",score:"54-58",minute:"Q3",league:"NBA",leagueKey:"NBA",o1:"2.10",oX:"22.00",o2:"1.70",events:[{min:"Q3","text":"בראנסון 18 נקודות"},{min:"Q3",text:"ריבאונד גדול — הארטנשטיין"}]},
+    {id:"lf1",sport:"football",home:"מנצ'סטר יונייטד",away:"צ'לסי",score:"1-0",minute:"54'",league:"פרמיר ליג",leagueKey:"EPL",o1:"1.55",oX:"3.80",o2:"6.00",bestSide:"1",events:[{min:"49'",text:"שער! בראשיק 1-0"},{min:"52'",text:"כרטיס צהוב — גלגלחא'"}]},
+    {id:"lf2",sport:"football",home:"ריאל מדריד",away:"ברצלונה",score:"0-0",minute:"28'",league:"לה ליגה",leagueKey:"LaLiga",o1:"1.80",oX:"3.60",o2:"4.20",bestSide:"1",events:[{min:"22'",text:"כרטיס צהוב — למין ימל"},{min:"26'",text:"ניסיון שער — ויניסיוס"}]},
+    {id:"lf3",sport:"football",home:"באיירן מינכן",away:"בורוסיה דורטמונד",score:"2-1",minute:"71'",league:"בונדסליגה",leagueKey:"Bundesliga",o1:"1.45",oX:"4.50",o2:"6.50",bestSide:"1",events:[{min:"62'",text:"שער! קיין 2-1"},{min:"68'",text:"כרטיס אדום — הוּמלס"}]},
+    {id:"lf4",sport:"basketball",home:"ניקס",away:"סלטיקס",score:"54-58",minute:"Q3",league:"NBA",leagueKey:"NBA",o1:"2.10",oX:"22.00",o2:"1.70",bestSide:"2",events:[{min:"Q3",text:"בראנסון 18 נקודות"},{min:"Q3",text:"ריבאונד גדול — הארטנשטיין"}]},
   ];
 
   const items = liveMatches.length > 0 ? liveMatches : (!loading ? LIVE_FALLBACK : []);
@@ -2494,43 +2607,73 @@ const FinishedMatchCard = ({ m }) => {
   const lm = LM[m.leagueKey] || {};
   const homeWon = m.winner === "home";
   const awayWon = m.winner === "away";
+  const sport = m.sport || (m.leagueKey === "NBA" || m.leagueKey === "EL" || m.leagueKey === "BSL" || m.leagueKey === "ACB" || m.leagueKey === "LegaBK" ? "basketball" : "football");
+  const resultKnown = m.betCorrect != null;
   return (
-    <div className="fin-card">
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+    <div className="fin-card" style={{overflow:"hidden"}}>
+      {/* Result banner */}
+      {resultKnown && (
+        <div style={{
+          padding:"8px 14px",
+          background: m.betCorrect ? "rgba(74,222,128,.14)" : "rgba(248,113,113,.12)",
+          borderBottom: `2px solid ${m.betCorrect ? "#4ade80" : "#f87171"}`,
+          display:"flex",alignItems:"center",justifyContent:"center",gap:10,
+        }}>
+          <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,letterSpacing:2,color:m.betCorrect?"#4ade80":"#f87171"}}>
+            {m.betCorrect ? " תפס!" : " נפל"}
+          </span>
+          {m.pickedSide && (
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"rgba(240,237,230,.55)"}}>
+              ניחוש: {m.pickedSide}
+            </span>
+          )}
+          <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:15,color:"rgba(240,237,230,.4)",marginRight:"auto"}}>
+            תוצאה: {m.score}
+          </span>
+        </div>
+      )}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px 4px"}}>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,color:"#B8936A",letterSpacing:1,display:"flex",alignItems:"center",gap:4}}>
           {lm.flag||"🏆"} {m.league}
         </span>
-        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,letterSpacing:1,
-          color:m.betCorrect?"#4ade80":"#f87171",
-          background:m.betCorrect?"rgba(74,222,128,.08)":"rgba(248,113,113,.06)",
-          border:`1px solid ${m.betCorrect?"rgba(74,222,128,.25)":"rgba(248,113,113,.2)"}`,
-          borderRadius:4,padding:"2px 7px"}}>
-          {m.betCorrect!=null ? (m.betCorrect ? "✓ הימור נכון" : " הימור נפל") : " לא עקבנו"}
-        </span>
+        {!resultKnown && (
+          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:700,letterSpacing:1,color:"rgba(184,147,106,.6)",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",borderRadius:4,padding:"2px 7px"}}>
+            לא עקבנו
+          </span>
+        )}
       </div>
-      <div className="fin-teams">
-        <div className="fin-team-name" style={{color:homeWon?"#FFD166":"white",opacity:awayWon?.55:1}}>{m.home}</div>
-        <div className="fin-score">{m.score}</div>
-        <div className="fin-team-name" style={{textAlign:"left",color:awayWon?"#FFD166":"white",opacity:homeWon?.55:1}}>{m.away}</div>
+      <div className="fin-teams" style={{padding:"6px 12px 8px"}}>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+          <TeamLogo name={m.home} sport={sport} size={28}/>
+          <div className="fin-team-name" style={{color:homeWon?"#FFD166":"white",opacity:awayWon?.55:1}}>{m.home}</div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+          <div className="fin-score">{m.score}</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,color:"rgba(184,147,106,.4)",letterSpacing:1}}>סיים</div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4}}>
+          <TeamLogo name={m.away} sport={sport} size={28}/>
+          <div className="fin-team-name" style={{textAlign:"left",color:awayWon?"#FFD166":"white",opacity:homeWon?.55:1}}>{m.away}</div>
+        </div>
       </div>
       {m.possession && (
-        <>
+        <div style={{padding:"0 12px"}}>
           <div className="fin-stat-row"><span>כדור ביתי</span><span>כדור חוץ</span></div>
           <div className="poss-bar">
             <div className="poss-fill" style={{width:`${m.possession.home}%`}}/>
           </div>
           <div className="fin-stat-row"><span>{m.possession.home}%</span><span>{m.possession.away}%</span></div>
-        </>
+        </div>
       )}
       {m.scorers && m.scorers.length > 0 && (
-        <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:4}}>
+        <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:4,padding:"0 12px 8px"}}>
           {m.scorers.map((s,i)=>(
             <span key={i} style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#B8936A",background:"rgba(255,255,255,.04)",border:"1px solid rgba(61,26,10,.4)",borderRadius:4,padding:"2px 7px"}}> {s}</span>
           ))}
         </div>
       )}
       {m.shots && (
-        <div className="fin-stat-row" style={{marginTop:8}}>
+        <div className="fin-stat-row" style={{marginTop:4,padding:"0 12px 10px"}}>
           <span>יריות: {m.shots.home}</span>
           <span>{m.shots.away} :יריות</span>
         </div>
@@ -2553,10 +2696,10 @@ const FinishedView = ({ sport }) => {
   }, [sport]);
 
   const FIN_FALLBACK = [
-    {id:"ff1",home:"ליברפול",away:"טוטנהאם",score:"3-1",winner:"home",scorers:["סאלח 12'","נונז 44'","גאקפו 78'"],leagueKey:"EPL",league:"פרמיר ליג",possession:{home:62,away:38},shots:{home:18,away:7},betCorrect:true},
-    {id:"ff2",home:"אינטר מילאן",away:"יובנטוס",score:"0-0",winner:"draw",scorers:[],leagueKey:"SerieA",league:"סרי א",possession:{home:51,away:49},shots:{home:9,away:8},betCorrect:false},
-    {id:"ff3",home:"פריז",away:"מרסיי",score:"2-0",winner:"home",scorers:["דמבלה 33'","ב. סאקה 67'"],leagueKey:"Ligue1",league:"ליג 1",possession:{home:58,away:42},shots:{home:15,away:5},betCorrect:true},
-    {id:"ff4",home:"אתלטיקו מדריד",away:"ויאריאל",score:"1-0",winner:"home",scorers:["מוראטה 55'"],leagueKey:"LaLiga",league:"לה ליגה",possession:{home:44,away:56},shots:{home:10,away:14},betCorrect:true},
+    {id:"ff1",sport:"football",home:"ליברפול",away:"טוטנהאם",score:"3-1",winner:"home",scorers:["סאלח 12'","נונז 44'","גאקפו 78'"],leagueKey:"EPL",league:"פרמיר ליג",possession:{home:62,away:38},shots:{home:18,away:7},betCorrect:true,pickedSide:"ליברפול"},
+    {id:"ff2",sport:"football",home:"אינטר מילאן",away:"יובנטוס",score:"0-0",winner:"draw",scorers:[],leagueKey:"SerieA",league:"סרי א",possession:{home:51,away:49},shots:{home:9,away:8},betCorrect:false,pickedSide:"אינטר מילאן"},
+    {id:"ff3",sport:"football",home:"פריז",away:"מרסיי",score:"2-0",winner:"home",scorers:["דמבלה 33'","ב. סאקה 67'"],leagueKey:"Ligue1",league:"ליג 1",possession:{home:58,away:42},shots:{home:15,away:5},betCorrect:true,pickedSide:"פריז"},
+    {id:"ff4",sport:"football",home:"אתלטיקו מדריד",away:"ויאריאל",score:"1-0",winner:"home",scorers:["מוראטה 55'"],leagueKey:"LaLiga",league:"לה ליגה",possession:{home:44,away:56},shots:{home:10,away:14},betCorrect:true,pickedSide:"אתלטיקו מדריד"},
   ];
 
   const items = finMatches.length > 0 ? finMatches : (!loading ? FIN_FALLBACK : []);
