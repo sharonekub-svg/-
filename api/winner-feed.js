@@ -707,12 +707,51 @@ function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Ma
     }
   }
 
-  // Sort: in-range picks first (by score desc), then outside-range (by time)
+  // Sort: in-range picks first (by score desc), then outside-range (by time).
+  // Only the top 20 in-range rows are actual recommendations; the rest stay visible
+  // so the board shows all Winner games without pretending every game is a pick.
+  let recommendedCount = 0;
   return [...events.values()]
     .sort((a, b) => {
       if (!a.outsideRange && b.outsideRange) return -1;
       if (a.outsideRange && !b.outsideRange) return 1;
       return (b.score || 0) - (a.score || 0) || String(a.time).localeCompare(String(b.time));
+    })
+    .map((row) => {
+      if (row.outsideRange) {
+        return {
+          ...row,
+          recommended: false,
+          recommendationReason: row.recommendationReason || "odds-range",
+        };
+      }
+      recommendedCount += 1;
+      if (recommendedCount <= 20) {
+        return {
+          ...row,
+          recommended: true,
+          recommendationReason: "top-20",
+        };
+      }
+      return {
+        ...row,
+        recommended: false,
+        recommendationReason: "rank",
+        outsideRange: true,
+        oddsRaw: row.oddsRaw || row.odds,
+        odds: null,
+        probability: null,
+        signals: [
+          `יחס Winner ${(row.oddsRaw || row.odds || 0).toFixed(2)} בטווח, אבל לא נכנס לטופ 20`,
+          `ציון מודל ${row.score || 0}`,
+          "המשחק מוצג ללא בחירה",
+        ],
+        explanation: [
+          "המשחק מופיע בווינר-ליין והיחס שלו בטווח, אך הוא לא נכנס ל-20 ההמלצות החזקות לפי הציון.",
+          "אין כאן המלצה. המשחק נשאר בלוח כדי שתוכל לראות את כל משחקי Winner, אבל בלי סימון הימור.",
+          "רק 20 המשחקים הראשונים בכל ענף ויום מקבלים סימון הימרנו.",
+        ],
+      };
     })
     .slice(0, limit);
 }
