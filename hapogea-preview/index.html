@@ -1292,7 +1292,7 @@
       const side = pickSide(row);
       const spread = Number(row.spread);
       if (side === "draw") return "הבחירה שלנו: תיקו בסיום המשחק";
-      if (row.sportId === 227 && Number.isFinite(spread)) {
+      if (row.sportId === 227 && row.spread != null && Number.isFinite(spread)) {
         const abs = Math.abs(spread);
         if (spread > 0) return `הבחירה שלנו: ${team} עם יתרון +${abs}`;
         return `הבחירה שלנו: ${team} לנצח ביותר מ-${abs} נקודות`;
@@ -1358,7 +1358,7 @@
     function teamOddMarkup(row, side, label) {
       const item = oddsForSide(row, side);
       if (!item?.odds) return "";
-      const spread = Number.isFinite(Number(item.spread)) ? ` ${Number(item.spread) > 0 ? "+" : ""}${item.spread}` : "";
+      const spread = item.spread != null && Number.isFinite(Number(item.spread)) ? ` ${Number(item.spread) > 0 ? "+" : ""}${item.spread}` : "";
       return `<div class="team-odd"><small>${label}${spread}</small>${formatOdds(item.odds)}</div>`;
     }
 
@@ -2337,7 +2337,7 @@
     function marketLabelText(row) {
       if (row.marketTier === "alternative-double-chance") return "שוק חלופי: סיכוי כפול";
       if (row.marketTier === "alternative-total") return "שוק חלופי: מעל/מתחת";
-      if (row.marketTier === "spread") return `כדורסל: ליין יתרון${Number.isFinite(Number(row.spread)) ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}` : ""}`;
+      if (row.marketTier === "spread") return `כדורסל: ליין יתרון${row.spread != null && Number.isFinite(Number(row.spread)) ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}` : ""}`;
       if (row.sportId === 227) return "כדורסל: מנצחת משחק";
       return "כדורגל: מנצחת / תיקו / חוץ";
     }
