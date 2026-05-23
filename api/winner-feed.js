@@ -22,6 +22,8 @@ const CACHE_TTL_MS = {
   full: 5 * 60 * 1000,
 };
 const memoryCache = globalThis.__WINNER_FEED_CACHE__ || (globalThis.__WINNER_FEED_CACHE__ = new Map());
+// Persists across warm Lambda invocations — avoids re-fetching logos for the same teams
+const globalLogoCache = globalThis.__LOGO_CACHE__ || (globalThis.__LOGO_CACHE__ = new Map());
 
 function winnerHeaders(extra = {}) {
   return {
@@ -436,24 +438,41 @@ async function wikidataLogoSearch(name, kind) {
   };
 }
 
+async function resolveLogoRow(table, kind, name) {
+  const key = `${kind}:${cleanText(name)}`;
+  if (globalLogoCache.has(key)) return globalLogoCache.get(key);
+  // Deduplicate concurrent requests for the same key
+  if (globalLogoCache.has(`${key}:pending`)) {
+    await globalLogoCache.get(`${key}:pending`);
+    return globalLogoCache.get(key) || null;
+  }
+  let resolve;
+  const pending = new Promise(r => { resolve = r; });
+  globalLogoCache.set(`${key}:pending`, pending);
+  let row = null;
+  for (const term of logoSearchTerms(cleanText(name), kind)) {
+    row = await supabaseSearch(table, term);
+    if (row?.logo_url) break;
+    // Race all slower sources in parallel instead of sequential waterfall
+    const results = await Promise.allSettled([
+      sportsDbSearch(kind, term),
+      wikipediaLogoSearch(term, kind),
+      wikipediaSearchLogo(term, kind),
+      wikidataLogoSearch(term, kind),
+    ]);
+    row = results.find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
+    if (row?.logo_url) break;
+  }
+  globalLogoCache.set(key, row);
+  globalLogoCache.delete(`${key}:pending`);
+  resolve();
+  return row;
+}
+
 async function enrichLogos(rows) {
-  const teamCache = new Map();
-  const leagueCache = new Map();
   async function teamAsset(name) {
     const key = cleanText(name);
-    if (!teamCache.has(key)) {
-      let row = null;
-      for (const term of logoSearchTerms(key, "team")) {
-        row = await supabaseSearch("teams", term) ||
-          await sportsDbSearch("team", term) ||
-          await wikipediaLogoSearch(term, "team") ||
-          await wikipediaSearchLogo(term, "team") ||
-          await wikidataLogoSearch(term, "team");
-        if (row?.logo_url) break;
-      }
-      teamCache.set(key, row);
-    }
-    const row = teamCache.get(key);
+    const row = await resolveLogoRow("teams", "team", key);
     return {
       name: key,
       logo: row?.logo_url || fallbackLogo(key, "team"),
@@ -463,19 +482,7 @@ async function enrichLogos(rows) {
   }
   async function leagueAsset(name) {
     const key = cleanText(name);
-    if (!leagueCache.has(key)) {
-      let row = null;
-      for (const term of logoSearchTerms(key, "league")) {
-        row = await supabaseSearch("leagues", term) ||
-          await sportsDbSearch("league", term) ||
-          await wikipediaLogoSearch(term, "league") ||
-          await wikipediaSearchLogo(term, "league") ||
-          await wikidataLogoSearch(term, "league");
-        if (row?.logo_url) break;
-      }
-      leagueCache.set(key, row);
-    }
-    const row = leagueCache.get(key);
+    const row = await resolveLogoRow("leagues", "league", key);
     return {
       name: key,
       logo: row?.logo_url || fallbackLogo(key, "league"),
@@ -497,8 +504,9 @@ async function enrichLogos(rows) {
     return { ...asset, logo: fallbackLogo(teamName, "team"), logoSource: "dynamic generated shield", logoTier: 4 };
   }
   return Promise.all(rows.map(async (row) => {
-    const leagueAssetValue = await leagueAsset(row.league);
-    const [homeRaw, awayRaw] = await Promise.all([
+    // league + home + away all in parallel (was: league first, then home+away)
+    const [leagueAssetValue, homeRaw, awayRaw] = await Promise.all([
+      leagueAsset(row.league),
       teamAsset(row.home),
       teamAsset(row.away),
     ]);
@@ -1527,21 +1535,26 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       ...build365BasketballRows(scores365Events, yesterday),
     ]
   );
-  const yesterdayEnrichedRows = withLogos ? await enrichLogos(yesterdayMerged) : yesterdayMerged;
-  const yesterdayFinalRows = withLogos ? finalResultRowsByDay(yesterdayEnrichedRows) : yesterdayEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
-  const yesterdayRows = splitBySport(yesterdayFinalRows);
   const todayCurrentRows = [
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
-  const todayEnrichedRows = withLogos ? await enrichLogos(todayCurrentRows) : todayCurrentRows;
-  const todayFinalRows = withLogos ? finalOpenRowsByDay(todayEnrichedRows) : todayEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
-  const todayRows = splitBySport(todayFinalRows);
   const tomorrowCurrentRows = [
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
-  const tomorrowEnrichedRows = withLogos ? await enrichLogos(tomorrowCurrentRows) : tomorrowCurrentRows;
+  // Enrich all three days in parallel — was sequential (3x slower)
+  const [yesterdayEnrichedRows, todayEnrichedRows, tomorrowEnrichedRows] = withLogos
+    ? await Promise.all([
+        enrichLogos(yesterdayMerged),
+        enrichLogos(todayCurrentRows),
+        enrichLogos(tomorrowCurrentRows),
+      ])
+    : [yesterdayMerged, todayCurrentRows, tomorrowCurrentRows];
+  const yesterdayFinalRows = withLogos ? finalResultRowsByDay(yesterdayEnrichedRows) : yesterdayEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
+  const yesterdayRows = splitBySport(yesterdayFinalRows);
+  const todayFinalRows = withLogos ? finalOpenRowsByDay(todayEnrichedRows) : todayEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
+  const todayRows = splitBySport(todayFinalRows);
   const tomorrowFinalRows = withLogos ? finalOpenRowsByDay(tomorrowEnrichedRows) : tomorrowEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
   const tomorrowRows = splitBySport(tomorrowFinalRows);
   const lineStats = {
