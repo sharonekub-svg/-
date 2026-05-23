@@ -928,11 +928,51 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+// ─── DYNAMIC LOGO RESOLVER ─────────────────────────────────────
+const LOGO_CACHE = new Map();
+
+async function resolveLogos(teamName, leagueName) {
+  const key = `${teamName}|${leagueName}`;
+  if (LOGO_CACHE.has(key)) return LOGO_CACHE.get(key);
+  const result = { team: null, league: null };
+  try {
+    const [tr, lr] = await Promise.all([
+      fetch(`https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`).then(r=>r.json()),
+      fetch(`https://www.thesportsdb.com/api/v1/json/3/search_all_leagues.php?l=${encodeURIComponent(leagueName)}`).then(r=>r.json()),
+    ]);
+    result.team   = tr.teams?.[0]?.strTeamBadge ?? null;
+    result.league = lr.leagues?.[0]?.strBadge ?? lr.leagues?.[0]?.strLogo ?? null;
+  } catch {}
+  // Wikipedia fallback for team
+  if (!result.team && teamName) {
+    try {
+      const wr = await fetch(
+        `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(teamName+" F.C.")}&prop=pageimages&format=json&pithumbsize=80&origin=*`
+      ).then(r=>r.json());
+      const pages = Object.values(wr.query?.pages || {});
+      result.team = pages[0]?.thumbnail?.source ?? null;
+    } catch {}
+  }
+  LOGO_CACHE.set(key, result);
+  return result;
+}
+
+function useLogos(teamName, leagueName, shouldFetch) {
+  const [logos, setLogos] = useState({ team: null, league: null });
+  useEffect(() => {
+    if (!shouldFetch || !teamName) return;
+    resolveLogos(teamName, leagueName).then(setLogos);
+  }, [teamName, leagueName, shouldFetch]);
+  return logos;
+}
+
 // ─── TIP CARD ──────────────────────────────────────────────────
 const TipCard = ({ tip, isAdmin, onStatusChange }) => {
   const lm = LM[tip.leagueKey] || {};
   const st = TIP_STATUS[tip.status] || TIP_STATUS.pending;
   const oddsMoved = tip.currentOdds && tip.currentOdds !== tip.odds;
+  const isGoodPick = parseFloat(tip.odds) >= 1.4 && parseFloat(tip.odds) <= 1.9;
+  const logos = useLogos(tip.home, lm.name || tip.league, isGoodPick);
   return (
     <div className="tip-card" style={{ border:`1px solid ${st.border}` }}>
       <div className="tip-stripe" style={{
@@ -964,12 +1004,18 @@ const TipCard = ({ tip, isAdmin, onStatusChange }) => {
         </div>
       )}
       <div className="tip-league-row">
-        <span style={{fontSize:15}}>{lm.flag||"🏆"}</span>
+        {logos.league
+          ? <img src={logos.league} alt="" style={{width:20,height:20,objectFit:"contain",borderRadius:3}} />
+          : <span style={{fontSize:15}}>{lm.flag||"🏆"}</span>
+        }
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#B8936A"}}>{lm.name||tip.league}</span>
         <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"rgba(184,147,106,.45)"}}>{tip.sport==="football"?"כדורגל":"כדורסל"}</span>
         <span style={{marginRight:"auto",fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,color:"#FF6200"}}>{getDateLabel(tip.addedAt)} · {fmtTime(tip.addedAt)}</span>
       </div>
       <div className="tip-teams">
+        {logos.team && (
+          <img src={logos.team} alt={tip.home} style={{width:28,height:28,objectFit:"contain",borderRadius:4,marginLeft:6,flexShrink:0}} />
+        )}
         <span className="tip-home">{tip.home}</span>
         <span className="tip-vs">VS</span>
         <span className="tip-home">{tip.away}</span>
