@@ -901,7 +901,7 @@
   </div>
 
   <script>
-    const TRACK_KEY = "hapogea_prediction_tracker_v1";
+    const TRACK_KEY = "hapogea_prediction_tracker_today_v1";
     const state = {
       feed: null,
       day: "today",
@@ -1043,6 +1043,10 @@
       return state.feed?.tabs?.[day]?.sports?.[sportTab] || [];
     }
 
+    function activeTodayDate(feed = state.feed) {
+      return feed?.tabs?.today?.date || "";
+    }
+
     function normalizePick(value) {
       return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
     }
@@ -1056,33 +1060,32 @@
 
     function rememberOpenPredictions(feed) {
       if (!feed?.tabs) return;
+      const todayDate = activeTodayDate(feed);
       const tracker = readTracker();
       const byKey = new Map(tracker.map(item => [item.key, item]));
-      ["today", "tomorrow"].forEach(day => {
-        ["football", "basketball"].forEach(sport => {
-          (feed.tabs[day]?.sports?.[sport] || []).forEach(row => {
-            if (!row.odds || row.outsideRange) return;
-            const key = predictionKey(row);
-            if (byKey.has(key)) return;
-            byKey.set(key, {
-              key,
-              eventId: row.eventId,
-              resultKey: row.resultKey,
-              marketId: row.marketId,
-              outcomeId: row.outcomeId,
-              sport,
-              pick: pickLabel(row),
-              match: row.match,
-              league: row.league,
-              odds: row.odds,
-              predictedDay: row.day,
-              month: String(row.day || "").slice(0, 7),
-              status: "pending"
-            });
+      ["football", "basketball"].forEach(sport => {
+        (feed.tabs.today?.sports?.[sport] || []).forEach(row => {
+          if (!row.odds || row.outsideRange || row.day !== todayDate) return;
+          const key = predictionKey(row);
+          if (byKey.has(key)) return;
+          byKey.set(key, {
+            key,
+            eventId: row.eventId,
+            resultKey: row.resultKey,
+            marketId: row.marketId,
+            outcomeId: row.outcomeId,
+            sport,
+            pick: pickLabel(row),
+            match: row.match,
+            league: row.league,
+            odds: row.odds,
+            predictedDay: row.day,
+            month: String(row.day || "").slice(0, 7),
+            status: "pending"
           });
         });
       });
-      writeTracker([...byKey.values()]);
+      writeTracker([...byKey.values()].filter(item => item.predictedDay === todayDate));
     }
 
     function settleTrackedPredictions(feed) {
@@ -1113,7 +1116,11 @@
 
     function monthlyPerformance() {
       const month = new Date().toISOString().slice(0, 7);
-      const items = readTracker().filter(item => (item.month || item.settledMonth) === month);
+      const todayDate = activeTodayDate();
+      const items = readTracker().filter(item =>
+        item.predictedDay === todayDate &&
+        (item.month || item.settledMonth) === month
+      );
       const settled = items.filter(item => item.status === "hit" || item.status === "miss");
       const hits = settled.filter(item => item.status === "hit").length;
       const pending = items.filter(item => item.status === "pending").length;
@@ -1264,7 +1271,7 @@
       document.getElementById("stats").innerHTML = [
         [state.day === "yesterday" ? "נסגרו" : "פתוחים", rows.length],
         ["ליגות", leagues],
-        ["פגיעה חודשית", performance.settled ? `${performance.hitRate}%` : "חדש"],
+        ["פגיעה היום", performance.settled ? `${performance.hitRate}%` : "חדש"],
         ["במעקב", performance.tracked]
       ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
     }
@@ -1366,8 +1373,8 @@
       const features = state.feed?.win2goFeatures || [];
       const performanceMarkup = `
         <div class="daily-head">
-          <h3>אחוז פגיעה חודשי</h3>
-          <span class="pill">${performance.month}</span>
+          <h3>אחוז פגיעה היום</h3>
+          <span class="pill">${activeTodayDate() || performance.month}</span>
         </div>
         <div class="metric-grid">
           <div class="metric"><b>${performance.settled ? `${performance.hitRate}%` : "חדש"}</b><span>פגיעה</span></div>
