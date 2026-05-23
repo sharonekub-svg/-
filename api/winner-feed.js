@@ -383,15 +383,17 @@ function spreadStatus(event, row) {
       ? awayScore + spread - homeScore
       : null;
   if (adjusted === null) return "";
-  if (adjusted > 0) return "נתפס";
-  if (adjusted < 0) return "לא נתפס";
-  return "החזר";
+  if (adjusted > 0) return "תפס";
+  if (adjusted < 0) return "נפל";
+  return "לא אומת";
 }
 
 function resultPhase(event) {
   if (!event) return "scheduled";
   const status = cleanText(event.status || event.statusText || event.eventStatus || event.matchStatus || event.state);
   const hasScore = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
+  if (/cancel|cancelled|canceled|abandon|void|בוטל|מבוטל/i.test(status)) return "cancelled";
+  if (/postpone|postponed|delayed|נדחה|דחוי/i.test(status)) return "postponed";
   if (/halftime|half.?time|half_time|הפסקה|מחצית/i.test(status)) return "ht";
   if (/live|in.?play|playing|חי|משוחק/i.test(status)) return "live";
   if (resultWinner(event)) return "final";
@@ -405,15 +407,22 @@ function applyResult(row, event) {
   const result = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
   const phase = resultPhase(event);
   const calculatedSpreadStatus = phase === "final" ? spreadStatus(event, row) : "";
+  const finalStatus = phase === "cancelled"
+    ? "בוטל"
+    : phase === "postponed"
+      ? "לא אומת"
+      : phase === "final"
+        ? calculatedSpreadStatus || resultStatus({ markets: event.markets || [] }, row.winnerPick || row.pick)
+        : "ממתין";
   return {
     ...row,
     liveScore: result || row.liveScore || "",
     result: result || row.result || "",
     actualWinner: actualWinner || row.actualWinner || "",
     matchPhase: phase,
-    status: phase === "final"
-      ? calculatedSpreadStatus || resultStatus({ markets: event.markets || [] }, row.winnerPick || row.pick)
-      : "׳׳׳×׳™׳",
+    bettingStatus: phase === "cancelled" ? "cancelled" : phase === "postponed" ? "postponed" : row.bettingStatus,
+    resultVerifiedAt: phase === "final" || phase === "cancelled" || phase === "postponed" ? new Date().toISOString() : row.resultVerifiedAt,
+    status: finalStatus,
   };
 }
 
@@ -937,8 +946,8 @@ function resultStatus(event, pick) {
   if (!results.length) return "ממתין";
   const cleanPick = cleanText(pick);
   return results.some((result) => result === cleanPick || result.includes(cleanPick) || cleanPick.includes(result))
-    ? "נתפס"
-    : "לא נתפס";
+    ? "תפס"
+    : "נפל";
 }
 
 function buildResultRows(results, dateKey) {
@@ -1316,6 +1325,35 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   };
 }
 
+function normalizePredictionStatus(status) {
+  const value = cleanText(status);
+  if (value === "נתפס" || value === "תפס") return "תפס";
+  if (value === "לא נתפס" || value === "נפל") return "נפל";
+  if (value === "החזר" || value === "לא אומת") return "לא אומת";
+  if (value === "בוטל") return "בוטל";
+  return value || "ממתין";
+}
+
+function normalizeFallbackRows(payload) {
+  const verifiedAt = payload.generatedAt || new Date().toISOString();
+  const copy = JSON.parse(JSON.stringify(payload));
+  for (const tab of Object.values(copy.tabs || {})) {
+    for (const rows of Object.values(tab.sports || {})) {
+      for (const row of rows || []) {
+        row.verifiedAt = row.verifiedAt || verifiedAt;
+        row.bettingStatus = row.bettingStatus || "available";
+        row.status = normalizePredictionStatus(row.status);
+        if (row.result && !row.resultVerifiedAt && (row.matchPhase === "final" || row.actualWinner)) {
+          row.resultVerifiedAt = verifiedAt;
+        }
+        const sc = row.recommendationScore || row.score || 0;
+        row.riskLevel = row.riskLevel || (sc >= 70 ? "נמוך" : sc >= 50 ? "בינוני" : "גבוה");
+      }
+    }
+  }
+  return copy;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
   try {
@@ -1324,7 +1362,7 @@ module.exports = async function handler(req, res) {
   } catch (error) {
     try {
       res.status(200).json({
-        ...SNAPSHOT,
+        ...normalizeFallbackRows(SNAPSHOT),
         ok: true,
         fallback: true,
         fallbackReason: "חיבור חי ל-Winner נחסם מסביבת השרת, לכן נטען snapshot מאומת שנמשך מ-Winner.",
