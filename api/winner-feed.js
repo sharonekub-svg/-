@@ -1612,7 +1612,18 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
       cache: { status: "hit", key, cachedAt: cached.cachedAt, ttlMs: CACHE_TTL_MS.full },
     };
   }
-  const payload = await buildWinnerFeedPayload({ withLogos: true });
+  let payload;
+  try {
+    payload = await buildWinnerFeedPayload({ withLogos: true });
+  } catch (error) {
+    payload = {
+      ...normalizeFallbackRows(SNAPSHOT),
+      ok: true,
+      fallback: true,
+      fallbackReason: "טעינת Winner נכשלה, לכן נשמר snapshot מאומת כ-cache שרת.",
+      liveError: error.message,
+    };
+  }
   const entry = { cachedAt: Date.now(), payload };
   await kvSet(key, entry, 2 * 60 * 60);
   return {
