@@ -119,6 +119,15 @@ function scoreText(a, b, fallback = "") {
   return cleanText(fallback);
 }
 
+function parseSpread(value) {
+  const match = cleanText(value).match(/\(([+-]?\d+(?:\.\d+)?)\)/);
+  return match ? Number(match[1]) : null;
+}
+
+function outcomeTeam(value) {
+  return cleanText(value).replace(/\s*\([+-]?\d+(?:\.\d+)?\)\s*$/, "").trim();
+}
+
 function splitTeams(match) {
   const [home, away] = cleanText(match).split(" - ").map(cleanText);
   return { home: home || cleanText(match), away: away || "" };
@@ -317,6 +326,31 @@ function resultWinner(event) {
   return raw.toLowerCase() === "x" ? "׳×׳™׳§׳•" : raw;
 }
 
+function scoreNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function spreadStatus(event, row) {
+  const spread = Number(row?.spread);
+  if (!Number.isFinite(spread)) return "";
+  const homeScore = scoreNumber(event?.scoreA);
+  const awayScore = scoreNumber(event?.scoreB);
+  if (homeScore === null || awayScore === null) return "";
+  const pick = cleanText(row.pickTeam || row.winnerPick || row.pick);
+  const home = cleanText(row.home);
+  const away = cleanText(row.away);
+  const adjusted = pick === home
+    ? homeScore + spread - awayScore
+    : pick === away
+      ? awayScore + spread - homeScore
+      : null;
+  if (adjusted === null) return "";
+  if (adjusted > 0) return "תפס";
+  if (adjusted < 0) return "נפל";
+  return "החזר";
+}
+
 function resultPhase(event) {
   if (!event) return "scheduled";
   const status = cleanText(event.status || event.statusText || event.eventStatus || event.matchStatus || event.state);
@@ -332,6 +366,7 @@ function applyResult(row, event) {
   const actualWinner = resultWinner(event);
   const result = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
   const phase = resultPhase(event);
+  const calculatedSpreadStatus = phase === "final" ? spreadStatus(event, row) : "";
   return {
     ...row,
     liveScore: result || row.liveScore || "",
@@ -339,7 +374,7 @@ function applyResult(row, event) {
     actualWinner: actualWinner || row.actualWinner || "",
     matchPhase: phase,
     status: phase === "final"
-      ? resultStatus({ markets: event.markets || [] }, row.winnerPick || row.pick)
+      ? calculatedSpreadStatus || resultStatus({ markets: event.markets || [] }, row.winnerPick || row.pick)
       : "׳׳׳×׳™׳",
   };
 }
@@ -374,8 +409,9 @@ function scoreAnyOutcome(market, outcome) {
   return {
     outcomeId: outcome.outcomeId,
     desc: cleanText(outcome.desc),
+    team: outcomeTeam(outcome.desc),
     price: odds,
-    spread: cleanText(outcome.spread),
+    spread: cleanText(outcome.spread) || parseSpread(outcome.desc),
     probability: hitProbability,
     score,
   };
@@ -386,6 +422,8 @@ function marketOddsBook(market) {
   const rawOutcomes = (market.outcomes || [])
     .map((outcome) => ({
       desc: cleanText(outcome.desc),
+      team: outcomeTeam(outcome.desc),
+      spread: parseSpread(outcome.desc),
       odds: decimal(outcome.price),
     }))
     .filter((outcome) => outcome.desc && outcome.odds);
@@ -397,7 +435,7 @@ function marketOddsBook(market) {
   }));
   const findBySide = (side) => {
     const target = side === "home" ? teams.home : teams.away;
-    return withProbability.find((outcome) => cleanText(outcome.desc) === cleanText(target));
+    return withProbability.find((outcome) => cleanText(outcome.team || outcome.desc) === cleanText(target));
   };
   const draw = withProbability.find((outcome) => cleanText(outcome.desc).toLowerCase() === "x");
   return {
@@ -444,7 +482,11 @@ function allowedMarket(market) {
     return title.includes("1X2") && title.includes("תוצאת סיום");
   }
   if (market.sId === 227) {
-    return title.includes("המנצח");
+    const isWinner = title.includes("המנצח");
+    const isFullGameSpread =
+      title.includes("הימור יתרון") &&
+      (title.includes("כולל הארכות") || title.includes("ללא הארכות"));
+    return isWinner || isFullGameSpread;
   }
   return false;
 }
@@ -455,6 +497,8 @@ function scoreOutcome(market, outcome) {
   const oddsBook = marketOddsBook(market);
   const reliability = marketReliability(market.mp, market.sId);
   const implied = 1 / odds;
+  const pickTeam = outcomeTeam(outcome.desc);
+  const spread = parseSpread(outcome.desc);
   const current = oddsBook.outcomes.find((item) => item.desc === cleanText(outcome.desc) && item.odds === odds);
   const normalizedProbability = current?.noVigProbability || implied;
   const competitors = oddsBook.outcomes
@@ -476,6 +520,8 @@ function scoreOutcome(market, outcome) {
   return {
     outcomeId: outcome.outcomeId,
     pick: cleanText(outcome.desc),
+    pickTeam,
+    spread,
     odds,
     implied,
     normalizedProbability,
@@ -505,9 +551,10 @@ function describeWinnerPick(market, scored, teams) {
     .map((outcome) => `${outcome.desc} ${outcome.odds.toFixed(2)}`)
     .join(", ");
   const pickText = cleanText(scored.pick).toLowerCase() === "x" ? "תיקו" : scored.pick;
+  const pickedTeam = cleanText(scored.pickTeam || scored.pick);
   const side =
-    cleanText(scored.pick) === cleanText(teams.home) ? "home" :
-    cleanText(scored.pick) === cleanText(teams.away) ? "away" :
+    pickedTeam === cleanText(teams.home) ? "home" :
+    pickedTeam === cleanText(teams.away) ? "away" :
     cleanText(scored.pick).toLowerCase() === "x" ? "draw" : "team";
   const venueReason =
     side === "home" ? `${pickText} משחקת בבית, ולכן הבחירה מקבלת גם יתרון מגרש.` :
@@ -554,6 +601,8 @@ function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Ma
         marketId: market.mId,
         outcomeId: scored.outcomeId,
         pick: scored.pick,
+        pickTeam: scored.pickTeam,
+        spread: scored.spread,
         winnerPick: cleanText(scored.pick).toLowerCase() === "x" ? "תיקו" : scored.pick,
         odds: scored.odds,
         oddsBook: scored.oddsBook,

@@ -874,6 +874,7 @@
     const statusClass = {
       "תפס": "hit",
       "נפל": "miss",
+      "החזר": "wait",
       "ממתין": "wait",
       "נסגר": "wait"
     };
@@ -906,13 +907,14 @@
     }
 
     function oddsForSide(row, side) {
-      const item = row.oddsBook?.[side];
-      return item?.odds ? formatOdds(item.odds) : "";
+      return row.oddsBook?.[side] || null;
     }
 
     function teamOddMarkup(row, side, label) {
-      const odds = oddsForSide(row, side);
-      return odds ? `<div class="team-odd"><small>${label}</small>${odds}</div>` : "";
+      const item = oddsForSide(row, side);
+      if (!item?.odds) return "";
+      const spread = Number.isFinite(Number(item.spread)) ? ` ${Number(item.spread) > 0 ? "+" : ""}${item.spread}` : "";
+      return `<div class="team-odd"><small>${label}${spread}</small>${formatOdds(item.odds)}</div>`;
     }
 
     function teamsMarkup(row) {
