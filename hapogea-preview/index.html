@@ -1589,8 +1589,9 @@
       const tab = state.feed?.tabs?.[state.day];
       if (!tab) return [];
       const query = state.search.trim().toLowerCase();
+      const isYesterday = state.day === "yesterday";
       let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
-        if (!hasPick(row)) return false;
+        if (!isYesterday && !hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
@@ -1611,8 +1612,9 @@
 
     function currentRowsBySport() {
       const query = state.search.trim().toLowerCase();
+      const isYesterday = state.day === "yesterday";
       const filterRows = rows => (rows || []).filter(row => {
-        if (!hasPick(row)) return false;
+        if (!isYesterday && !hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
@@ -2637,6 +2639,7 @@
     }
 
     function nextRefreshMs(feed = state.feed) {
+      if (feed?.fallback) return 45 * 1000;
       return pendingRowsNeedingResultCheck(feed).length ? 60 * 1000 : 5 * 60 * 1000;
     }
 
