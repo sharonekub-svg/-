@@ -1559,11 +1559,16 @@
         .flatMap(tab => Object.values(tab.sports || {}).flatMap(rows => rows || []));
     }
 
+    function hasPick(row) {
+      return row.recommended === true || (!!row.odds && !row.outsideRange);
+    }
+
     function currentRows() {
       const tab = state.feed?.tabs?.[state.day];
       if (!tab) return [];
       const query = state.search.trim().toLowerCase();
       let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
+        if (!hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
@@ -1585,6 +1590,7 @@
     function currentRowsBySport() {
       const query = state.search.trim().toLowerCase();
       const filterRows = rows => (rows || []).filter(row => {
+        if (!hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
@@ -2073,16 +2079,9 @@
       const rows = currentRows();
       const sourceMode = state.feed?.fallback ? "מצב snapshot מאומת" : "מצב חי";
       const totalRows = daySportRows(state.day, state.sportTab).length;
-      const withPick = rows.filter(r => r.recommended || (!!r.odds && !r.outsideRange)).length;
-      const withoutPick = Math.max(0, rows.length - withPick);
-      const rankNoPick = rows.filter(r => r.recommendationReason === "rank").length;
-      const oddsNoPick = rows.filter(r => r.recommendationReason === "odds-range").length;
-      const withoutPickText = rankNoPick || oddsNoPick
-        ? `${withoutPick} ללא המלצה (${rankNoPick} לא בטופ 20, ${oddsNoPick} מחוץ לטווח)`
-        : `${withoutPick} ללא המלצה`;
       meta.textContent = isOpenDay()
-        ? `${rows.length}/20 משחקי Winner הכי חזקים · ${withPick} עם המלצה${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}.`
-        : `${rows.length} תוצאות רשמיות מתוך ${totalRows}. המסך הזה סוגר תחזיות שנשמרו קודם. ${sourceMode}.`;
+        ? `${rows.length} בחירות Winner היום · ${sourceMode}`
+        : `${rows.length} בחירות סגורות. ${sourceMode}.`;
       if (state.sportTab === "all") {
         const bySport = currentRowsBySport();
         const sections = [
