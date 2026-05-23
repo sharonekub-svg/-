@@ -408,8 +408,17 @@
       letter-spacing: 0.5px;
     }
     .picked-bet strong {
-      font-size: 20px;
+      font-size: 22px;
       line-height: 1.15;
+    }
+    .pick-action {
+      grid-column: 1 / -1;
+      color: #bff8dc;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.35;
+      border-top: 1px solid rgba(49,209,135,.22);
+      padding-top: 8px;
     }
     .pick-help {
       grid-column: 2 / -1;
@@ -993,6 +1002,20 @@
       return `${pick}${spread && !String(pick).includes(String(row.spread)) ? spread : ""}`;
     }
 
+    function pickActionText(row) {
+      const team = row.pickTeam || pickLabel(row);
+      const side = pickSide(row);
+      const spread = Number(row.spread);
+      if (side === "draw") return "הבחירה שלנו: תיקו בסיום המשחק";
+      if (row.sportId === 227 && Number.isFinite(spread)) {
+        const abs = Math.abs(spread);
+        if (spread > 0) return `הבחירה שלנו: ${team} עם יתרון +${abs}`;
+        return `הבחירה שלנו: ${team} לנצח ביותר מ-${abs} נקודות`;
+      }
+      if (row.sportId === 227) return `הבחירה שלנו: ${team} מנצחת את המשחק`;
+      return `הבחירה שלנו: ${team} לניצחון`;
+    }
+
     function pickHelpText(row) {
       const spread = Number(row.spread);
       const team = row.pickTeam || pickLabel(row);
@@ -1431,6 +1454,7 @@
           <div>
             <div class="micro">${tip.sport} · ${tip.league} · ${tip.time}</div>
             <strong>${tip.match}</strong>
+            <div class="micro" style="margin-top:6px;color:var(--green);font-weight:900">${pickActionText(tip)}</div>
             <div class="micro" style="margin-top:6px">${explicitPickText(tip)} · יחס Winner ${formatOdds(tip.odds)}</div>
             <div class="micro" style="margin-top:6px">${pickHelpText(tip)}</div>
           </div>
@@ -1482,6 +1506,7 @@
                 : `<span class="label">הימרנו</span>
                    <strong>${explicitPickText(row)}</strong>
                    <span class="picked-odds">${row.odds ? formatOdds(row.odds) : "תוצאה"}</span>
+                   <span class="pick-action">${pickActionText(row)}</span>
                    <span class="pick-help">${pickHelpText(row)}</span>`
               }
             </div>

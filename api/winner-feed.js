@@ -648,10 +648,89 @@ function describeWinnerPick(market, scored, teams) {
   return `${pickText} נבחרת כי היא עדיין בחירת מנצח פתוחה ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זו בחירה מסוכנת יותר.` : ""}`.replace(/\s+/g, " ").trim();
 }
 
-const BOARD_PICK_LIMIT = TARGET_PICKS_PER_SPORT;
+const BOARD_PICK_LIMIT = 200;
+const CENTRAL_LEAGUE_PATTERNS = [
+  "ליגת Winner",
+  "פרמייר ליג",
+  "אנגלית ראשונה",
+  "ספרדית ראשונה",
+  "איטלקית ראשונה",
+  "גרמנית ראשונה",
+  "NBA",
+  "יורוליג",
+];
+const HIGH_PROFILE_TEAM_PATTERNS = [
+  "בית\"ר ירושלים",
+  "הפועל תל אביב",
+  "מכבי תל אביב",
+  "מכבי חיפה",
+  "הפועל באר שבע",
+  "ריאל מדריד",
+  "ברצלונה",
+  "ליברפול",
+  "מנצ'סטר",
+  "ארסנל",
+  "צ'לסי",
+  "טוטנהאם",
+  "יובנטוס",
+  "מילאן",
+  "אינטר",
+  "נאפולי",
+  "באיירן",
+  "דורטמונד",
+  "קליבלנד",
+  "ניו יורק ניקס",
+];
 
 function countRecommendedPicks(rows) {
   return (rows || []).filter((row) => row.recommended && row.odds && row.status === "ממתין").length;
+}
+
+function includesPattern(value, patterns) {
+  const text = cleanText(value);
+  return patterns.some((pattern) => text.includes(cleanText(pattern)));
+}
+
+function isCentralEvent(row) {
+  return includesPattern(row.league, CENTRAL_LEAGUE_PATTERNS) ||
+    includesPattern(`${row.home} ${row.away}`, HIGH_PROFILE_TEAM_PATTERNS);
+}
+
+function hasVerifiedLogo(asset) {
+  const source = String(asset?.logoSource || "");
+  const logo = String(asset?.logo || "");
+  return Boolean(asset?.logo) && !source.includes("generated") && !logo.startsWith("data:image/svg");
+}
+
+function hasVerifiedTeamLogos(row) {
+  return hasVerifiedLogo(row.homeAsset) &&
+    hasVerifiedLogo(row.awayAsset) &&
+    row.homeAsset.logo !== row.awayAsset.logo;
+}
+
+function favoriteInfo(row) {
+  const outcomes = (row.oddsBook?.outcomes || [])
+    .filter((item) => Number(item.odds))
+    .sort((a, b) => a.odds - b.odds);
+  const favorite = outcomes[0] || null;
+  const second = outcomes[1] || null;
+  const pick = cleanText(row.pickTeam || row.winnerPick || row.pick);
+  const favoriteTeam = cleanText(favorite?.team || favorite?.desc);
+  return {
+    favorite,
+    second,
+    isFavorite: Boolean(favorite && pick && (pick === favoriteTeam || favoriteTeam.includes(pick) || pick.includes(favoriteTeam))),
+    oddsGap: favorite && second ? second.odds - favorite.odds : 0,
+  };
+}
+
+function hasSingleClearFavorite(row) {
+  const info = favoriteInfo(row);
+  return info.isFavorite && (
+    Number(row.marketGap || 0) >= 0.025 ||
+    Number(info.oddsGap || 0) >= 0.15 ||
+    Number(row.normalizedProbability || 0) >= 0.5
+  );
 }
 
 function recommendationRank(row) {
@@ -663,12 +742,16 @@ function recommendationRank(row) {
   const marketGap = Number(row.marketGap || 0);
   const reliability = Number(row.reliability || 0);
   const overroundPenalty = Math.min(0.16, Number(row.overround || 0)) * 30;
+  const nicheBonus = isCentralEvent(row) ? -22 : 16;
+  const favoriteBonus = hasSingleClearFavorite(row) ? 18 : -30;
   return Math.round(
     hit * 72 +
       marketGap * 34 +
       oddsQuality * 18 +
       reliability * 10 -
-      overroundPenalty
+      overroundPenalty +
+      nicheBonus +
+      favoriteBonus
   );
 }
 
@@ -810,9 +893,11 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
   return [...events.values()]
     .filter((row) => row.status === "ממתין")
     .filter((row) => !row.outsideRange && row.odds)
+    .filter((row) => hasSingleClearFavorite(row))
     .map((row) => ({
       ...row,
       recommendationScore: recommendationRank(row),
+      nichePick: !isCentralEvent(row),
     }))
     .sort((a, b) => {
       return (b.recommendationScore || 0) - (a.recommendationScore || 0)
@@ -1046,6 +1131,19 @@ function mergeRows(primary, secondary) {
   return [...byEvent.values()];
 }
 
+function finalOpenRows(rows) {
+  return (rows || [])
+    .filter((row) => row.recommended && row.odds && hasVerifiedTeamLogos(row))
+    .filter((row) => !isCentralEvent(row))
+    .sort((a, b) => {
+      return (b.recommendationScore || 0) - (a.recommendationScore || 0)
+        || (b.probability || 0) - (a.probability || 0)
+        || (b.odds || 0) - (a.odds || 0)
+        || String(a.time).localeCompare(String(b.time));
+    })
+    .slice(0, TARGET_PICKS_PER_SPORT);
+}
+
 async function getWinnerLine() {
   const hashMessage = JSON.stringify({ prevCurrentVersion: null, reason: "Initiated" });
   const hashes = await fetchJson("https://api.winner.co.il/v2/publicapi/GetCMobileHashes", {
@@ -1105,14 +1203,14 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
-  const todayRows = splitBySport(withLogos ? await enrichLogos(todayCurrentRows) : todayCurrentRows);
+  const todayEnrichedRows = withLogos ? await enrichLogos(todayCurrentRows) : todayCurrentRows;
+  const todayRows = splitBySport(withLogos ? finalOpenRows(todayEnrichedRows) : todayEnrichedRows);
   const tomorrowCurrentRows = [
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
-  const tomorrowRows = splitBySport(
-    withLogos ? await enrichLogos(tomorrowCurrentRows) : tomorrowCurrentRows
-  );
+  const tomorrowEnrichedRows = withLogos ? await enrichLogos(tomorrowCurrentRows) : tomorrowCurrentRows;
+  const tomorrowRows = splitBySport(withLogos ? finalOpenRows(tomorrowEnrichedRows) : tomorrowEnrichedRows);
   const lineStats = {
     football: {
       today: countRecommendedPicks(todayRows.football),
