@@ -1,0 +1,1821 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>הפוגע | Winner Odds Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Heebo:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090b;
+      --panel: #10151a;
+      --panel-soft: #151b20;
+      --line: rgba(255,255,255,.09);
+      --line-strong: rgba(255,255,255,.16);
+      --text: #f7f3ea;
+      --muted: #aeb8bd;
+      --soft: #78848a;
+      --green: #31d187;
+      --red: #ef5350;
+      --gold: #ffc857;
+      --cyan: #55d6ff;
+      --orange: #ff7a45;
+      --shadow: 0 24px 80px rgba(0,0,0,.36);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(85,214,255,.10), transparent 28rem),
+        radial-gradient(circle at 90% 12%, rgba(255,122,69,.10), transparent 25rem),
+        linear-gradient(180deg, #07090b 0%, #0d1216 48%, #07090b 100%);
+      color: var(--text);
+      font-family: Assistant, Heebo, Arial, sans-serif;
+      letter-spacing: 0;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(7,9,11,.88);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner, .shell, .footer {
+      max-width: 1420px;
+      margin: 0 auto;
+      padding-inline: 18px;
+    }
+    .topbar-inner {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 240px; }
+    .mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--orange), var(--red));
+      color: white;
+      font-weight: 900;
+      box-shadow: 0 10px 30px rgba(255,122,69,.22);
+    }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    .brand h1 { margin: 0; font: 900 27px/1 Heebo, Assistant, sans-serif; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .nav { display: flex; gap: 6px; margin-inline-start: auto; overflow-x: auto; padding-bottom: 2px; }
+    .tab {
+      border: 1px solid transparent;
+      color: var(--muted);
+      background: transparent;
+      border-radius: 7px;
+      padding: 9px 13px;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+    .tab.active { color: #06100c; background: var(--green); border-color: rgba(49,209,135,.65); }
+    .tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.06); }
+    .shell { padding-top: 18px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(350px, .75fr);
+      gap: 18px;
+    }
+    .panel, .hero-main, .hero-side, .card {
+      background: rgba(16,21,26,.84);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+    }
+    .hero-main {
+      min-height: 360px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-main:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(49,209,135,.16), transparent 48%),
+        linear-gradient(225deg, rgba(255,122,69,.12), transparent 44%);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; display: grid; gap: 18px; }
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      border: 1px solid rgba(49,209,135,.3);
+      background: rgba(49,209,135,.08);
+      color: #bff8dc;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .hero h2 {
+      max-width: 860px;
+      margin-bottom: 0;
+      font: 900 clamp(34px, 6vw, 72px)/.98 Heebo, Assistant, sans-serif;
+    }
+    .hero-copy { max-width: 780px; color: var(--muted); font-size: 18px; line-height: 1.55; margin-bottom: 0; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .stat { border: 1px solid var(--line); background: rgba(255,255,255,.04); border-radius: 8px; padding: 12px; min-height: 82px; }
+    .stat b { display: block; font-size: 25px; color: #fff; }
+    .stat span { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .hero-side { padding: 18px; display: grid; align-content: start; gap: 14px; }
+    .daily-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .daily-head h3 { margin: 0; font-size: 22px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: rgba(255,200,87,.10);
+      border: 1px solid rgba(255,200,87,.24);
+      color: #ffe3a0;
+      font-weight: 800;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .pickbox {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(49,209,135,.27);
+      background: rgba(49,209,135,.08);
+      border-radius: 8px;
+      padding: 13px;
+    }
+    .micro { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .pickbox strong { display: block; margin-top: 4px; font-size: 18px; }
+    .odds { font: 900 33px/1 Heebo, Assistant, sans-serif; color: var(--green); }
+    .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.035);
+      padding: 10px;
+      min-height: 66px;
+    }
+    .metric b { display: block; font-size: 21px; color: #fff; }
+    .metric span { color: var(--muted); font-size: 11px; font-weight: 800; }
+    .feature-list { display: flex; gap: 6px; flex-wrap: wrap; }
+    .feature-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 7px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .status {
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 19px;
+      font-weight: 900;
+      border: 2px solid var(--line-strong);
+      color: var(--muted);
+      min-width: 90px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.18);
+    }
+    .status.hit { color: #06100c; border-color: rgba(49,209,135,.95); background: var(--green); box-shadow: 0 0 0 4px rgba(49,209,135,.18), 0 12px 32px rgba(49,209,135,.28); }
+    .status.miss { color: #fff; border-color: rgba(239,83,80,.85); background: var(--red); box-shadow: 0 0 0 4px rgba(239,83,80,.18), 0 12px 32px rgba(239,83,80,.28); }
+    .status.wait { color: #06131a; border-color: rgba(85,214,255,.85); background: var(--cyan); box-shadow: 0 0 0 4px rgba(85,214,255,.18), 0 12px 32px rgba(85,214,255,.22); }
+    .status.closed { color: #211600; border-color: rgba(255,200,87,.95); background: var(--gold); box-shadow: 0 0 0 4px rgba(255,200,87,.18), 0 12px 32px rgba(255,200,87,.24); }
+    .toolbar {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 180px auto;
+      gap: 10px;
+      align-items: end;
+      padding: 16px;
+    }
+    .field { display: grid; gap: 6px; }
+    .field label { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 11px 12px;
+      outline: none;
+    }
+    .btn {
+      min-height: 43px;
+      border-radius: 7px;
+      border: 1px solid rgba(49,209,135,.65);
+      background: var(--green);
+      color: #06100c;
+      font-weight: 900;
+      padding: 0 14px;
+      white-space: nowrap;
+    }
+    .content {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+    .panel { padding: 16px; }
+    .panel h3 { margin-bottom: 12px; font-size: 18px; }
+    .plan-list, .method-list { display: grid; gap: 10px; }
+    .plan-item, .method {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px;
+      background: rgba(255,255,255,.025);
+    }
+    .plan-item b, .method b { display: block; margin-bottom: 4px; }
+    .plan-item p, .method p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .section-title { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .section-title h3 { margin: 0; font-size: 22px; }
+    .section-title p { margin: 4px 0 0; color: var(--muted); }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+    .card { overflow: hidden; transition: .18s ease; }
+    .card:hover { border-color: rgba(85,214,255,.34); transform: translateY(-2px); }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+    }
+    .league { font-weight: 900; }
+    .time { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .card-body { padding: 10px; display: grid; gap: 8px; }
+    .teams-line {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      min-height: 76px;
+      direction: ltr;
+    }
+    .team-side {
+      display: grid;
+      justify-items: center;
+      gap: 7px;
+      min-width: 0;
+      direction: rtl;
+      position: relative;
+    }
+    .logo-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.05);
+      overflow: hidden;
+      color: var(--text);
+      font-weight: 900;
+    }
+    .logo-wrap.small {
+      width: 24px;
+      height: 24px;
+      font-size: 11px;
+    }
+    .logo-wrap img {
+      max-width: 82%;
+      max-height: 82%;
+      object-fit: contain;
+    }
+    .team-side.selected .logo-wrap,
+    .versus.selected {
+      border-color: rgba(49,209,135,.95);
+      box-shadow: 0 0 0 4px rgba(49,209,135,.16), 0 0 28px rgba(49,209,135,.22);
+      background: rgba(49,209,135,.10);
+    }
+    .team-side.selected .team-name,
+    .versus.selected {
+      color: #bff8dc;
+    }
+    .team-side.selected:after,
+    .versus.selected:after {
+      content: "הבחירה";
+      position: absolute;
+      top: -10px;
+      inset-inline-end: calc(50% - 44px);
+      min-width: 60px;
+      text-align: center;
+      border-radius: 999px;
+      border: 2px solid rgba(49,209,135,.95);
+      background: var(--green);
+      color: #06100c;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 7px;
+      z-index: 2;
+      box-shadow: 0 10px 28px rgba(49,209,135,.26);
+    }
+    .team-name {
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 800;
+      text-align: center;
+    }
+    .team-odd {
+      min-height: 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 7px;
+      color: var(--gold);
+      background: rgba(255,200,87,.08);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .team-odd small { color: var(--muted); font-size: 10px; font-weight: 800; }
+    .team-side.selected .team-odd,
+    .versus.selected .team-odd {
+      color: #06100c;
+      background: var(--green);
+      border-color: rgba(49,209,135,.65);
+    }
+    .team-side.selected .team-odd small,
+    .versus.selected .team-odd small {
+      color: rgba(6,16,12,.72);
+    }
+    .versus {
+      position: relative;
+      width: 70px;
+      min-height: 66px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      display: grid;
+      place-items: center;
+      gap: 3px;
+      font-weight: 900;
+      color: var(--soft);
+      letter-spacing: 0;
+    }
+    .versus-main {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.035);
+    }
+    .versus.selected .versus-main {
+      border-color: rgba(49,209,135,.95);
+      background: rgba(49,209,135,.14);
+      color: #bff8dc;
+      box-shadow: 0 0 0 4px rgba(49,209,135,.16), 0 0 28px rgba(49,209,135,.22);
+    }
+    .picked-bet {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 7px;
+      border: 2px solid rgba(49,209,135,.75);
+      border-radius: 10px;
+      padding: 10px 11px;
+      background: rgba(49,209,135,.13);
+      color: var(--text);
+      box-shadow: 0 0 0 1px rgba(49,209,135,.15), 0 8px 28px rgba(49,209,135,.12);
+    }
+    .picked-bet .label {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+    .picked-bet strong {
+      font-size: 18px;
+      line-height: 1.15;
+    }
+    .pick-action {
+      grid-column: 1 / -1;
+      color: #bff8dc;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.35;
+      border-top: 1px solid rgba(49,209,135,.22);
+      padding-top: 6px;
+    }
+    .pick-help {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .picked-bet .picked-odds {
+      color: #06100c;
+      background: var(--green);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 900;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .market-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(49,209,135,.35);
+      background: rgba(49,209,135,.07);
+      border-radius: 7px;
+      padding: 7px;
+    }
+    .market-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .market-row .price { font-weight: 900; color: var(--gold); }
+    .result-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px;
+      background: rgba(255,255,255,.025);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .result-line b { color: var(--text); }
+    .result-score {
+      font: 900 20px/1 Heebo, Assistant, sans-serif;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+    .verdict {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 20px;
+      font-weight: 900;
+      border: 2px solid var(--line-strong);
+      color: var(--muted);
+      width: fit-content;
+      margin-top: 7px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.18);
+    }
+    .verdict.hit { color: #06100c; border-color: rgba(49,209,135,.95); background: var(--green); box-shadow: 0 0 0 4px rgba(49,209,135,.18), 0 12px 32px rgba(49,209,135,.28); }
+    .verdict.miss { color: #fff; border-color: rgba(239,83,80,.85); background: var(--red); box-shadow: 0 0 0 4px rgba(239,83,80,.18), 0 12px 32px rgba(239,83,80,.28); }
+    .verdict.wait { color: #06131a; border-color: rgba(85,214,255,.85); background: var(--cyan); box-shadow: 0 0 0 4px rgba(85,214,255,.18), 0 12px 32px rgba(85,214,255,.22); }
+    .verdict.closed { color: #211600; border-color: rgba(255,200,87,.95); background: var(--gold); box-shadow: 0 0 0 4px rgba(255,200,87,.18), 0 12px 32px rgba(255,200,87,.24); }
+    .score-row { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .meter { height: 7px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); }
+    .signals { display: flex; gap: 6px; flex-wrap: wrap; }
+    .signal { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 7px; }
+    .details { border-top: 1px solid var(--line); padding-top: 10px; color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .open-game {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      min-height: 40px;
+      border-radius: 7px;
+      font-weight: 900;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(0,0,0,.82);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      overflow: auto;
+      padding: 18px 12px;
+    }
+    .modal.open { display: flex; }
+    .modal-card {
+      width: min(980px, 100%);
+      background: #10151a;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .modal-head {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+      display: grid;
+      gap: 14px;
+    }
+    .modal-close {
+      justify-self: start;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      border-radius: 7px;
+      min-height: 36px;
+      padding: 0 12px;
+      font-weight: 900;
+    }
+    .modal-body { padding: 18px; display: grid; gap: 14px; }
+    .explain-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .explain-box, .market-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+      padding: 12px;
+    }
+    .explain-box b, .market-box b { display: block; margin-bottom: 6px; }
+    .explain-box p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+    .outcome-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .outcome-row strong { color: var(--gold); }
+    .empty, .error {
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      padding: 34px 18px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255,255,255,.025);
+      grid-column: 1 / -1;
+    }
+    .error { color: #ffc5c3; border-color: rgba(239,83,80,.36); }
+    .wc-strip {
+      margin-top: 18px;
+      padding: 0;
+      overflow: hidden;
+      display: grid;
+      gap: 0;
+    }
+    .wc-banner {
+      min-height: 210px;
+      border: 0;
+      background:
+        radial-gradient(circle at 86% 16%, rgba(255,255,255,.16), transparent 0 78px, transparent 79px),
+        radial-gradient(circle at 82% 18%, #d80a14 0 198px, transparent 199px),
+        radial-gradient(circle at 96% 38%, #a6ff00 0 150px, transparent 151px),
+        linear-gradient(120deg, #210047 0%, #4b00c9 50%, #180033 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 22px;
+      cursor: pointer;
+    }
+    .wc-banner-copy {
+      display: grid;
+      gap: 10px;
+      max-width: 600px;
+    }
+    .wc-banner-copy h3 { margin: 0; font-size: clamp(26px, 4vw, 44px); line-height: 1.05; }
+    .wc-banner-copy p { margin: 0; color: rgba(247,243,234,.86); font-size: 14px; line-height: 1.55; max-width: 560px; }
+    .wc-enter {
+      width: fit-content;
+      border: 1px solid rgba(255,255,255,.24);
+      background: rgba(7,9,11,.66);
+      color: white;
+      border-radius: 999px;
+      min-height: 36px;
+      padding: 0 14px;
+      font-weight: 900;
+    }
+    .wc-mark {
+      min-width: 210px;
+      text-align: center;
+      color: white;
+      font: 900 92px/.8 Heebo, Assistant, sans-serif;
+      letter-spacing: 0;
+    }
+    .wc-mark span { display: block; font-size: 23px; margin-top: 8px; letter-spacing: 2px; }
+    .wc-body {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+    .wc-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .wc-head h3 { margin: 0; font-size: 22px; }
+    .wc-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .wc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+    }
+    .wc-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.03);
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+    }
+    .wc-card.compact { cursor: pointer; }
+    .wc-card strong { font-size: 15px; }
+    .wc-score {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .wc-score b {
+      color: var(--gold);
+      font-size: 18px;
+      white-space: nowrap;
+    }
+    .wc-meta { color: var(--soft); font-size: 12px; line-height: 1.45; }
+    .wc-match-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 12px;
+    }
+    .wc-match {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.03);
+      padding: 13px;
+      display: grid;
+      gap: 12px;
+    }
+    .wc-teams {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 9px;
+      align-items: center;
+      direction: ltr;
+    }
+    .wc-team {
+      direction: rtl;
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .wc-flag {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.05);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .wc-flag img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .wc-team b {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    .wc-prediction {
+      display: grid;
+      place-items: center;
+      min-width: 74px;
+      gap: 4px;
+    }
+    .wc-prediction b {
+      color: var(--gold);
+      font-size: 22px;
+      line-height: 1;
+    }
+    .wc-prediction span {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .wc-odds {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+    .wc-odd {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .wc-odd.selected {
+      color: #bff8dc;
+      border-color: rgba(49,209,135,.62);
+      background: rgba(49,209,135,.10);
+    }
+    .wc-odd b { display: block; color: var(--text); font-size: 16px; margin-top: 2px; }
+    .wc-why {
+      border: 1px solid rgba(255,200,87,.22);
+      background: rgba(255,200,87,.06);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .wc-factors {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .footer { padding-top: 18px; padding-bottom: 24px; color: var(--soft); font-size: 12px; line-height: 1.6; }
+    .score-breakdown {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 7px;
+    }
+    .score-chip {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px;
+      background: rgba(255,255,255,.025);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+    .score-chip b {
+      display: block;
+      color: var(--text);
+      font-size: 15px;
+    }
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border: 1px solid rgba(49,209,135,.45);
+      border-radius: 999px;
+      padding: 4px 9px;
+      color: #bff8dc;
+      background: rgba(49,209,135,.08);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .debug-panel {
+      display: none;
+      gap: 12px;
+    }
+    body.debug-mode .hero,
+    body.debug-mode #worldCupSection,
+    body.debug-mode .toolbar,
+    body.debug-mode .content {
+      display: none;
+    }
+    body.debug-mode .debug-panel {
+      display: grid;
+    }
+    .debug-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .debug-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 100px 1.2fr;
+      gap: 8px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255,255,255,.025);
+      font-size: 12px;
+    }
+    .debug-row.accepted { border-color: rgba(49,209,135,.42); }
+    .debug-row.rejected { border-color: rgba(239,83,80,.28); }
+    .debug-reasons { color: var(--muted); line-height: 1.45; }
+    @media (max-width: 1020px) {
+      .hero, .content { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .topbar-inner, .shell, .footer { padding-inline: 12px; }
+      .brand { min-width: 0; }
+      .nav { width: 100%; margin-inline-start: 0; }
+      .hero-main { padding: 20px; min-height: auto; }
+      .stats, .toolbar { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .explain-grid { grid-template-columns: 1fr; }
+      .wc-grid { grid-template-columns: 1fr; }
+      .wc-banner { min-height: 180px; align-items: start; }
+      .wc-mark { min-width: 92px; font-size: 48px; }
+      .wc-mark span { font-size: 14px; }
+      .wc-match-grid { grid-template-columns: 1fr; }
+      .teams-line { gap: 8px; }
+      .debug-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="mark">1.7</div>
+        <div>
+          <h1>הפוגע</h1>
+          <p>מנוע יחסים מבוסס Winner</p>
+        </div>
+      </div>
+      <nav class="nav" id="dayTabs">
+        <button class="tab" data-day="yesterday">אתמול</button>
+        <button class="tab active" data-day="today">היום</button>
+        <button class="tab" data-day="tomorrow">מחר</button>
+      </nav>
+      <nav class="nav" id="sportTabs">
+        <button class="tab active" data-sport-tab="football">כדורגל</button>
+        <button class="tab" data-sport-tab="basketball">כדורסל</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-main">
+        <div class="hero-content">
+          <span class="eyebrow">Plan Mode: אימות מקור, חישוב, הצגה, בדיקה</span>
+          <h2>אתמול, היום ומחר. כדורגל וכדורסל. תחזיות Winner עם מעקב פגיעה חודשי.</h2>
+          <p class="hero-copy">
+            היום ומחר מציגים רק בחירות מנצח פתוחות להימור עם יחס Winner פעיל. אתמול סוגר תחזיות מול תוצאה רשמית,
+            והסטטיסטיקה החודשית מתעדכנת לפי הבחירות שהמערכת שמרה.
+          </p>
+          <div class="stats" id="stats"></div>
+        </div>
+      </div>
+      <aside class="hero-side" id="dailyTip"></aside>
+    </section>
+
+    <section class="panel wc-strip" id="worldCupSection">
+      <div class="wc-banner" id="wcToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="wc-banner-copy">
+          <h3>מונדיאל 2026: כל המשחקים והתחזיות</h3>
+          <p>לחץ כאן כדי להיכנס למשחקים. כל משחק מקבל דגלים, יחס משוער, תוצאה צפויה והסבר אלגוריתמי לפי איכות, שוק, ביתיות, עומק סגל, כושר והפרש שערים צפוי.</p>
+          <button class="wc-enter" type="button">כניסה למשחקים</button>
+        </div>
+        <div class="wc-mark">26<span>FIFA</span></div>
+      </div>
+      <div class="wc-body" id="wc2026"></div>
+    </section>
+
+    <section class="toolbar panel">
+      <div class="field">
+        <label for="search">חיפוש קבוצה, ליגה או שוק</label>
+        <input id="search" type="search" placeholder="לדוגמה: ליגת Winner סל, פולנית, NBA" />
+      </div>
+      <div class="field">
+        <label for="sort">מיון</label>
+        <select id="sort">
+          <option value="score">ציון פגיעה</option>
+          <option value="odds">יחס גבוה</option>
+          <option value="probability">הסתברות</option>
+          <option value="time">שעה</option>
+        </select>
+      </div>
+      <button class="btn" id="refresh">רענון נתוני Winner</button>
+    </section>
+
+    <section class="content">
+      <aside class="panel">
+        <h3>תוכנית עבודה</h3>
+        <div class="plan-list">
+          <div class="plan-item">
+            <b>1. מקור אמת</b>
+            <p>כל משחק שמוצג נטען מווינר-ליין ויש לו יחס פעיל להימור.</p>
+          </div>
+          <div class="plan-item">
+            <b>2. סינון קשיח</b>
+            <p>היום ומחר: רק שוקי מנצח ביחס 1.40 עד 1.90. אתמול: תוצאות לסגירת תחזיות.</p>
+          </div>
+          <div class="plan-item">
+            <b>3. לוגואים</b>
+            <p>לוגו רשמי מוצג כשנמצא; אם לא נמצא, מוצג תג גרפי אחיד כדי שלא יישאר כרטיס בלי לוגו.</p>
+          </div>
+        </div>
+
+        <div class="method-list" style="margin-top:12px">
+          <div class="method">
+            <b>שיטת ניקוד</b>
+            <p>הסתברות שוק, אמינות שוק ועומק נתונים. אין שימוש בשם משחק או ביחס שלא הגיע מווינר.</p>
+          </div>
+          <div class="method">
+            <b>הסבר בחירה</b>
+            <p>הטקסט מסביר למה הבחירה צפויה לנצח: פייבוריטית, בית/חוץ ופער מול היריבה, לא רק למה היחס מתאים.</p>
+          </div>
+          <div class="method">
+            <b>פיצ׳רי Win2Go</b>
+            <p>טאבים לפי ימים, קטגוריות ספורט, לוגואים, יחס אמיתי, ציון ביטחון, פירוט משחק, חיפוש, מיון ומעקב פגיעה.</p>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div class="section-title">
+          <div>
+            <h3 id="listTitle">טיפים מחושבים</h3>
+            <p id="resultMeta">טוען נתונים מווינר</p>
+          </div>
+          <span class="pill">מקור: Winner</span>
+        </div>
+        <div class="cards" id="cards">
+          <div class="empty">טוען נתונים חיים מווינר.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel debug-panel" id="debugPanel">
+      <div class="section-title">
+        <div>
+          <h3>Debug Audit</h3>
+          <p id="debugMeta">Accepted and rejected Winner candidates with exact reasons.</p>
+        </div>
+        <span class="pill">/debug</span>
+      </div>
+      <div class="debug-grid" id="debugRows"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    הדמו מיועד להצגת מוצר ושיטת דירוג. הוא אינו המלצת הימור ואינו מבטיח תוצאה. כאשר ממשק ציבורי אינו מחזיר נתון, הדמו מציין זאת ואינו משלים נתונים באופן מלאכותי.
+  </footer>
+
+  <div class="modal" id="gameModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <button class="modal-close" id="closeModal">סגירה</button>
+        <div id="modalTitle"></div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const TRACK_KEY = "hapogea_prediction_tracker_today_v1";
+    const state = {
+      feed: null,
+      day: "today",
+      sportTab: "football",
+      sort: "score",
+      search: "",
+      loading: true,
+      error: "",
+      selectedId: null,
+      wcOpen: false,
+      debugMode: location.pathname.includes("debug")
+    };
+    document.body.classList.toggle("debug-mode", state.debugMode);
+
+    const WC2026_PREDICTIONS = [
+      { stage: "בית", home: "ארצות הברית", away: "קנדה", hc: "us", ac: "ca", score: "2:1", pick: "home", odds: { home: 1.92, draw: 3.30, away: 3.75 }, confidence: 63, tempo: 74, xg: "1.8-1.1", note: "יתרון ביתיות, עומק התקפי ומדד יצירת מצבים גבוה יותר" },
+      { stage: "בית", home: "מקסיקו", away: "אקוודור", hc: "mx", ac: "ec", score: "1:1", pick: "draw", odds: { home: 2.45, draw: 3.05, away: 2.85 }, confidence: 56, tempo: 68, xg: "1.2-1.2", note: "פער איכות קטן, לחץ טורניר גבוה וצפי למשחק שקול" },
+      { stage: "בית", home: "ארגנטינה", away: "יפן", hc: "ar", ac: "jp", score: "2:0", pick: "home", odds: { home: 1.58, draw: 3.85, away: 5.40 }, confidence: 69, tempo: 77, xg: "2.0-0.8", note: "עליונות באיכות הסגל, ניסיון נוק-אאוט ויתרון באיום לשער" },
+      { stage: "בית", home: "ברזיל", away: "מרוקו", hc: "br", ac: "ma", score: "2:1", pick: "home", odds: { home: 1.72, draw: 3.55, away: 4.40 }, confidence: 64, tempo: 79, xg: "1.9-1.0", note: "יתרון איכות קדמית מול יריבה מאורגנת שמסוגלת להבקיע" },
+      { stage: "בית", home: "ספרד", away: "קרואטיה", hc: "es", ac: "hr", score: "1:0", pick: "home", odds: { home: 1.86, draw: 3.20, away: 4.10 }, confidence: 61, tempo: 73, xg: "1.5-0.9", note: "שליטה בכדור, לחץ גבוה ויכולת להוריד סיכון בלי להאט את המשחק" },
+      { stage: "בית", home: "צרפת", away: "גאנה", hc: "fr", ac: "gh", score: "3:1", pick: "home", odds: { home: 1.50, draw: 4.10, away: 6.20 }, confidence: 71, tempo: 82, xg: "2.4-0.9", note: "פער עומק, מהירות התקפה וסיכוי שערים גבוה" },
+      { stage: "בית", home: "אנגליה", away: "הולנד", hc: "gb-eng", ac: "nl", score: "1:1", pick: "draw", odds: { home: 2.28, draw: 3.10, away: 2.95 }, confidence: 54, tempo: 76, xg: "1.3-1.3", note: "שתי נבחרות מאוזנות, איכות דומה וסיכוי גבוה לחלוקת נקודות" },
+      { stage: "בית", home: "פורטוגל", away: "אורוגוואי", hc: "pt", ac: "uy", score: "2:1", pick: "home", odds: { home: 1.94, draw: 3.18, away: 3.70 }, confidence: 60, tempo: 75, xg: "1.7-1.1", note: "יתרון יצירת מצבים מול יריבה פיזית ומנוסה" }
+    ];
+
+    const WC2026_FIXTURES = [
+      { date: "2026-06-11", stage: "בית A", home: "מקסיקו", away: "דרום אפריקה", hc: "mx", ac: "za", venue: "Mexico City Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-11", stage: "בית A", home: "קוריאה הדרומית", away: "צ'כיה", hc: "kr", ac: "cz", venue: "Estadio Guadalajara", source: "FIFA", odds: null },
+      { date: "2026-06-12", stage: "בית B", home: "קנדה", away: "בוסניה והרצגובינה", hc: "ca", ac: "ba", venue: "Toronto Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-12", stage: "בית D", home: "ארצות הברית", away: "פרגוואי", hc: "us", ac: "py", venue: "Los Angeles Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-13", stage: "בית C", home: "האיטי", away: "סקוטלנד", hc: "ht", ac: "gb-sct", venue: "Boston Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-13", stage: "בית D", home: "אוסטרליה", away: "טורקיה", hc: "au", ac: "tr", venue: "BC Place Vancouver", source: "FIFA", odds: null },
+      { date: "2026-06-13", stage: "בית C", home: "ברזיל", away: "מרוקו", hc: "br", ac: "ma", venue: "New York New Jersey Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-13", stage: "בית B", home: "קטאר", away: "שווייץ", hc: "qa", ac: "ch", venue: "San Francisco Bay Area Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-14", stage: "בית E", home: "חוף השנהב", away: "אקוודור", hc: "ci", ac: "ec", venue: "Philadelphia Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-14", stage: "בית E", home: "גרמניה", away: "קוראסאו", hc: "de", ac: "cw", venue: "Houston Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-14", stage: "בית F", home: "הולנד", away: "יפן", hc: "nl", ac: "jp", venue: "Dallas Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-14", stage: "בית F", home: "שבדיה", away: "תוניסיה", hc: "se", ac: "tn", venue: "Estadio Monterrey", source: "FIFA", odds: null },
+      { date: "2026-06-15", stage: "בית H", home: "ערב הסעודית", away: "אורוגוואי", hc: "sa", ac: "uy", venue: "Miami Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-15", stage: "בית H", home: "ספרד", away: "כף ורדה", hc: "es", ac: "cv", venue: "Atlanta Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-15", stage: "בית G", home: "איראן", away: "ניו זילנד", hc: "ir", ac: "nz", venue: "Los Angeles Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-15", stage: "בית G", home: "בלגיה", away: "מצרים", hc: "be", ac: "eg", venue: "Seattle Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-16", stage: "בית I", home: "צרפת", away: "סנגל", hc: "fr", ac: "sn", venue: "New York New Jersey Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-16", stage: "בית I", home: "עיראק", away: "נורווגיה", hc: "iq", ac: "no", venue: "Boston Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-16", stage: "בית J", home: "ארגנטינה", away: "אלג'יריה", hc: "ar", ac: "dz", venue: "Kansas City Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-16", stage: "בית J", home: "אוסטריה", away: "ירדן", hc: "at", ac: "jo", venue: "San Francisco Bay Area Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-17", stage: "בית L", home: "גאנה", away: "פנמה", hc: "gh", ac: "pa", venue: "Toronto Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-17", stage: "בית L", home: "אנגליה", away: "קרואטיה", hc: "gb-eng", ac: "hr", venue: "Dallas Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-17", stage: "בית K", home: "פורטוגל", away: "הרפובליקה הדמוקרטית של קונגו", hc: "pt", ac: "cd", venue: "Houston Stadium", source: "FIFA", odds: null },
+      { date: "2026-06-17", stage: "בית K", home: "אוזבקיסטן", away: "קולומביה", hc: "uz", ac: "co", venue: "Mexico City Stadium", source: "FIFA", odds: null }
+    ];
+
+    const statusClass = {
+      "תפס": "hit",
+      "נתפס": "hit",
+      "נפל": "miss",
+      "לא נתפס": "miss",
+      "החזר": "wait",
+      "ממתין": "wait",
+      "נסגר": "closed"
+    };
+
+    function statusLabel(value) {
+      if (value === "תפס" || value === "נתפס") return "נתפס";
+      if (value === "נפל" || value === "לא נתפס") return "לא נתפס";
+      return value || "ממתין";
+    }
+
+    function formatOdds(value) {
+      return Number.isFinite(Number(value)) ? Number(value).toFixed(2) : "לא זמין";
+    }
+
+    function formatPercent(value) {
+      return Number.isFinite(value) ? `${Math.round(value * 100)} אחוז` : "לא זמין";
+    }
+
+    function formatGap(value) {
+      return Number.isFinite(value) ? `${Math.round(value * 100)} אחוז` : "לא זמין";
+    }
+
+    function pickLabel(row) {
+      return row.winnerPick || row.pick || "לא זמין";
+    }
+
+    function explicitPickText(row) {
+      const side = pickSide(row);
+      const pick = pickLabel(row);
+      const spread = Number.isFinite(Number(row.spread))
+        ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}`
+        : "";
+      if (side === "draw") return "תיקו";
+      if (row.pickTeam && row.pickTeam !== pick) return `${row.pickTeam}${spread}`;
+      return `${pick}${spread && !String(pick).includes(String(row.spread)) ? spread : ""}`;
+    }
+
+    function pickActionText(row) {
+      const team = row.pickTeam || pickLabel(row);
+      const side = pickSide(row);
+      const spread = Number(row.spread);
+      if (side === "draw") return "הבחירה שלנו: תיקו בסיום המשחק";
+      if (row.sportId === 227 && Number.isFinite(spread)) {
+        const abs = Math.abs(spread);
+        if (spread > 0) return `הבחירה שלנו: ${team} עם יתרון +${abs}`;
+        return `הבחירה שלנו: ${team} לנצח ביותר מ-${abs} נקודות`;
+      }
+      if (row.sportId === 227) return `הבחירה שלנו: ${team} מנצחת את המשחק`;
+      return `הבחירה שלנו: ${team} לניצחון`;
+    }
+
+    function scoreBreakdownMarkup(row) {
+      const breakdown = row.scoreBreakdown;
+      if (!breakdown) return "";
+      const labels = breakdown.labels || {};
+      const keys = ["hitProbability", "oddsValue", "marketGap", "niche", "clearFavorite", "overroundPenalty"];
+      return `<div class="score-breakdown">
+        ${keys.map(key => `<span class="score-chip"><b>${Number(breakdown[key] || 0) > 0 ? "+" : ""}${breakdown[key] || 0}</b>${labels[key] || key}</span>`).join("")}
+      </div>`;
+    }
+
+    function pickHelpText(row) {
+      const spread = Number(row.spread);
+      const team = row.pickTeam || pickLabel(row);
+      const market = row.market || "";
+      if (row.sportId === 227 && Number.isFinite(spread)) {
+        const abs = Math.abs(spread);
+        if (spread > 0) {
+          return `כדורסל - הימור יתרון: בחרנו ${team} +${abs}. ההימור תופס אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+        }
+        return `כדורסל - הימור יתרון: בחרנו ${team} ${spread}. ההימור תופס רק אם ${team} מנצחת ביותר מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+      }
+      if (row.sportId === 227 && market.includes("המנצח")) {
+        return `כדורסל - מנצחת המשחק: בחרנו ${team} לניצחון במשחק${market.includes("כולל הארכות") ? " כולל הארכות" : ""}.`;
+      }
+      if (pickSide(row) === "draw") return "כדורגל - בחרנו תיקו בתוצאת הסיום.";
+      return `בחרנו ${team} בשוק ${market || "המנצח"}.`;
+    }
+
+    function pickSide(row) {
+      const pick = normalizePick(pickLabel(row));
+      const home = normalizePick(row.home);
+      const away = normalizePick(row.away);
+      if (!pick) return "";
+      if (pick === "x" || pick === "תיקו" || pick.includes("תיקו")) return "draw";
+      if (home && (pick === home || pick.includes(home) || home.includes(pick))) return "home";
+      if (away && (pick === away || pick.includes(away) || away.includes(pick))) return "away";
+      return "";
+    }
+
+    function oddsForSide(row, side) {
+      return row.oddsBook?.[side] || null;
+    }
+
+    function teamOddMarkup(row, side, label) {
+      const item = oddsForSide(row, side);
+      if (!item?.odds) return "";
+      const spread = Number.isFinite(Number(item.spread)) ? ` ${Number(item.spread) > 0 ? "+" : ""}${item.spread}` : "";
+      return `<div class="team-odd"><small>${label}${spread}</small>${formatOdds(item.odds)}</div>`;
+    }
+
+    function teamsMarkup(row) {
+      const side = pickSide(row);
+      return `
+        <div class="team-side ${side === "home" ? "selected" : ""}">${logoMarkup(row.homeAsset)}<div class="team-name">${row.home || ""}</div>${teamOddMarkup(row, "home", "1")}</div>
+        <div class="versus ${side === "draw" ? "selected" : ""}"><span class="versus-main">${side === "draw" ? "תיקו" : "VS"}</span>${teamOddMarkup(row, "draw", "X")}</div>
+        <div class="team-side ${side === "away" ? "selected" : ""}">${logoMarkup(row.awayAsset)}<div class="team-name">${row.away || ""}</div>${teamOddMarkup(row, "away", "2")}</div>
+      `;
+    }
+
+    function readTracker() {
+      try {
+        const value = JSON.parse(localStorage.getItem(TRACK_KEY) || "[]");
+        return Array.isArray(value) ? value : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function writeTracker(items) {
+      localStorage.setItem(TRACK_KEY, JSON.stringify(items.slice(-400)));
+    }
+
+    function predictionKey(row) {
+      return `${row.resultKey || row.eventId}:${row.marketId || row.market}:${row.outcomeId || row.pick}`;
+    }
+
+    function isOpenDay(day = state.day) {
+      return day === "today" || day === "tomorrow";
+    }
+
+    function daySportRows(day, sportTab) {
+      return state.feed?.tabs?.[day]?.sports?.[sportTab] || [];
+    }
+
+    function activeTodayDate(feed = state.feed) {
+      return feed?.tabs?.today?.date || "";
+    }
+
+    function normalizePick(value) {
+      return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+    }
+
+    function samePick(a, b) {
+      const left = normalizePick(a);
+      const right = normalizePick(b);
+      if (!left || !right) return false;
+      return left === right || left.includes(right) || right.includes(left);
+    }
+
+    function rememberOpenPredictions(feed) {
+      if (!feed?.tabs) return;
+      const todayDate = activeTodayDate(feed);
+      const tracker = readTracker();
+      const byKey = new Map(tracker.map(item => [item.key, item]));
+      ["football", "basketball"].forEach(sport => {
+        (feed.tabs.today?.sports?.[sport] || []).forEach(row => {
+          if (!row.odds || row.outsideRange || row.day !== todayDate) return;
+          const key = predictionKey(row);
+          if (byKey.has(key)) return;
+          byKey.set(key, {
+            key,
+            eventId: row.eventId,
+            resultKey: row.resultKey,
+            marketId: row.marketId,
+            outcomeId: row.outcomeId,
+            sport,
+            pick: pickLabel(row),
+            match: row.match,
+            league: row.league,
+            odds: row.odds,
+            predictedDay: row.day,
+            month: String(row.day || "").slice(0, 7),
+            status: "pending"
+          });
+        });
+      });
+      writeTracker([...byKey.values()].filter(item => item.predictedDay === todayDate));
+    }
+
+    function settleTrackedPredictions(feed) {
+      if (!feed?.tabs?.yesterday) return;
+      const results = ["yesterday", "today"].flatMap(day =>
+        Object.values(feed.tabs?.[day]?.sports || {}).flatMap(rows => rows || [])
+      )
+        .filter(row => row.actualWinner);
+      if (!results.length) return;
+      const resultByEvent = new Map(results.map(row => [String(row.eventId), row]));
+      const resultByKey = new Map(results.filter(row => row.resultKey).map(row => [String(row.resultKey), row]));
+      const tracker = readTracker().map(item => {
+        if (item.status !== "pending") return item;
+        const result = resultByEvent.get(String(item.eventId)) || resultByKey.get(String(item.resultKey || ""));
+        if (!result) return item;
+        const hit = samePick(item.pick, result.actualWinner);
+        return {
+          ...item,
+          status: hit ? "hit" : "miss",
+          actualWinner: result.actualWinner,
+          result: result.result,
+          settledDay: result.day,
+          settledMonth: String(result.day || "").slice(0, 7)
+        };
+      });
+      writeTracker(tracker);
+    }
+
+    function monthlyPerformance() {
+      const month = new Date().toISOString().slice(0, 7);
+      const todayDate = activeTodayDate();
+      const items = readTracker().filter(item =>
+        item.predictedDay === todayDate &&
+        (item.month || item.settledMonth) === month
+      );
+      const settled = items.filter(item => item.status === "hit" || item.status === "miss");
+      const hits = settled.filter(item => item.status === "hit").length;
+      const pending = items.filter(item => item.status === "pending").length;
+      return {
+        month,
+        tracked: items.length,
+        settled: settled.length,
+        hits,
+        misses: settled.length - hits,
+        pending,
+        hitRate: settled.length ? Math.round((hits / settled.length) * 100) : 0
+      };
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function assetInitials(value) {
+      return String(value || "?")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join("")
+        .toUpperCase() || "?";
+    }
+
+    function fallbackBadge(name, kind = "team") {
+      const label = assetInitials(name);
+      const stroke = kind === "flag" ? "#ffc857" : kind === "league" ? "#55d6ff" : "#31d187";
+      const bg = kind === "flag" ? "#211b10" : kind === "league" ? "#111f2a" : "#102219";
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="${bg}"/><circle cx="48" cy="48" r="43" fill="none" stroke="${stroke}" stroke-width="5"/><text x="48" y="57" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="800" fill="#f7f3ea">${escapeHtml(label)}</text></svg>`;
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
+    function imageWithFallback(src, name, kind) {
+      const fallback = fallbackBadge(name, kind);
+      return `<img src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${fallback}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
+    }
+
+    function logoMarkup(asset, size = "") {
+      if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
+      if (asset.logo) {
+        return `<div class="logo-wrap ${size}">${imageWithFallback(asset.logo, asset.name || "", size === "small" ? "league" : "team")}</div>`;
+      }
+      return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team")}</div>`;
+    }
+
+    function allRows() {
+      if (!state.feed) return [];
+      return Object.values(state.feed.tabs)
+        .flatMap(tab => Object.values(tab.sports || {}).flatMap(rows => rows || []));
+    }
+
+    function currentRows() {
+      const tab = state.feed?.tabs?.[state.day];
+      if (!tab) return [];
+      const query = state.search.trim().toLowerCase();
+      let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
+        const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
+        return !query || text.includes(query);
+      });
+      rows.sort((a, b) => {
+        // In-range picks first, then outside-range
+        if (!a.outsideRange && b.outsideRange) return -1;
+        if (a.outsideRange && !b.outsideRange) return 1;
+        if (state.sort === "odds") return (b.oddsRaw || b.odds || 0) - (a.oddsRaw || a.odds || 0);
+        if (state.sort === "probability") return (b.probability || 0) - (a.probability || 0);
+        if (state.sort === "time") return String(a.time).localeCompare(String(b.time));
+        return (b.recommendationScore || b.score || 0) - (a.recommendationScore || a.score || 0)
+          || (b.probability || 0) - (a.probability || 0)
+          || (b.odds || 0) - (a.odds || 0)
+          || String(a.time).localeCompare(String(b.time));
+      });
+      return rows;
+    }
+
+    function bestTip() {
+      const rows = daySportRows("today", state.sportTab).filter(row => row.status === "ממתין" && row.odds);
+      return rows.sort((a, b) => (b.score || 0) - (a.score || 0) || (b.odds || 0) - (a.odds || 0))[0];
+    }
+
+    function trackerForRow(row) {
+      const items = readTracker();
+      return items.find(item =>
+        String(item.eventId) === String(row.eventId) &&
+        (!row.marketId || !item.marketId || String(item.marketId) === String(row.marketId))
+      ) || items.find(item => String(item.eventId) === String(row.eventId));
+    }
+
+    function rowOutcome(row) {
+      const tracked = trackerForRow(row);
+      const guessed = tracked?.pick || row.winnerPick || row.pick || "לא נשמר";
+      const result = row.liveScore || row.result || "";
+      const actual = row.actualWinner || "";
+      let status = tracked?.status || "";
+      const isClosedArchive = row.status === "נסגר" && !tracked && !row.odds;
+      if ((!status || status === "pending") && actual && guessed !== "לא נשמר") {
+        status = samePick(guessed, actual) ? "hit" : "miss";
+      }
+      if (isClosedArchive) status = "closed";
+      if (!status || status === "נסגר") status = actual || result ? "closed" : "pending";
+      const cls = status === "hit" || status === "תפס" || status === "נתפס"
+        ? "hit"
+        : status === "miss" || status === "נפל" || status === "לא נתפס"
+          ? "miss"
+          : status === "closed"
+            ? "closed"
+            : "wait";
+      const label = cls === "hit" ? "נתפס" : cls === "miss" ? "לא נתפס" : cls === "closed" ? "נסגר" : "ממתין";
+      return {
+        result: result || (row.matchPhase === "scheduled" ? "טרם התחיל" : "אין תוצאה"),
+        guessed,
+        actual,
+        odds: tracked?.odds || row.odds || null,
+        cls,
+        label,
+      };
+    }
+
+    function resultMarkup(row) {
+      const outcome = rowOutcome(row);
+      return `
+        <div class="result-line">
+          <div>
+            <div><b>ניחוש:</b> ${outcome.guessed}</div>
+            <div><b>יחס לפני המשחק:</b> ${outcome.odds ? formatOdds(outcome.odds) : "לא נשמר"}</div>
+            <div><b>תוצאה בפועל:</b> ${outcome.actual || "ממתין לעדכון Winner"}</div>
+            <span class="verdict ${outcome.cls}">${outcome.label}</span>
+          </div>
+          <div class="result-score">${outcome.result}</div>
+        </div>
+      `;
+    }
+
+    function renderTabs() {
+      document.querySelectorAll("#dayTabs .tab").forEach(button => {
+        button.classList.toggle("active", button.dataset.day === state.day);
+      });
+      document.querySelectorAll("#sportTabs .tab").forEach(button => {
+        button.classList.toggle("active", button.dataset.sportTab === state.sportTab);
+      });
+    }
+
+    function renderStats() {
+      const rows = currentRows();
+      const performance = monthlyPerformance();
+      const leagues = new Set(rows.map(row => row.league)).size;
+      document.getElementById("stats").innerHTML = [
+        [state.day === "yesterday" ? "נסגרו" : "פתוחים", rows.length],
+        ["ליגות", leagues],
+        ["פגיעה היום", performance.settled ? `${performance.hitRate}%` : "חדש"],
+        ["במעקב", performance.tracked]
+      ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
+    }
+
+    function flagImg(code, name) {
+      return `<span class="wc-flag">${imageWithFallback(`https://flagcdn.com/w160/${code}.png`, `דגל ${name}`, "flag")}</span>`;
+    }
+
+    function wcPickLabel(item) {
+      if (!item.pick) return "אין בחירה";
+      if (item.pick === "draw") return "תיקו";
+      return item.pick === "home" ? item.home : item.away;
+    }
+
+    function wcFixtureOdds(item) {
+      if (!item.odds) return `<div class="wc-meta">אין יחס Winner פתוח כרגע. לא מוצגת תחזית לפני שיש שוק אמיתי; בדיקת AI מלאה נפתחת 48 שעות לפני המשחק עם פציעות, סגלים, מאמנים וכושר.</div>`;
+      const selected = item.pick || "";
+      return `
+        <div class="wc-odds">
+          <div class="wc-odd ${selected === "home" ? "selected" : ""}">1<br><b>${item.odds.home.toFixed(2)}</b></div>
+          <div class="wc-odd ${selected === "draw" ? "selected" : ""}">X<br><b>${item.odds.draw.toFixed(2)}</b></div>
+          <div class="wc-odd ${selected === "away" ? "selected" : ""}">2<br><b>${item.odds.away.toFixed(2)}</b></div>
+        </div>
+      `;
+    }
+
+    function wcImportance() {
+      return `
+        <div class="wc-why">
+          <b>למה זה חשוב:</b>
+          במונדיאל לא מנחשים תוצאה חודשים מראש. ההמלצה נפתחת רק כשיש יחס Winner אמיתי, וב-48 השעות שלפני המשחק היא משקללת פציעות, סגלים, מאמנים, כושר, עומס מסעות, לחץ משחקים, קצב אפקטיבי ויצירת מצבים.
+        </div>
+      `;
+    }
+
+    function renderWorldCup() {
+      const target = document.getElementById("wc2026");
+      if (!target) return;
+      document.getElementById("wcToggle").setAttribute("aria-expanded", String(state.wcOpen));
+      if (!state.wcOpen) {
+        target.innerHTML = `
+          <div class="wc-head">
+            <div>
+              <h3>תצוגה מהירה</h3>
+              <p>לחיצה על הבאנר פותחת את כל המשחקים עם דגלים, יחסים, הסברים ואלגוריתם מלא.</p>
+            </div>
+            <span class="pill">${WC2026_FIXTURES.length} משחקים</span>
+          </div>
+          <div class="wc-grid">
+            ${WC2026_FIXTURES.slice(0, 4).map(item => `
+              <article class="wc-card compact" data-wc-open="true">
+                <strong>${item.home} נגד ${item.away}</strong>
+                <div class="wc-score"><span>${item.stage}</span><b>${item.date.slice(5)}</b></div>
+                <div class="wc-meta">${item.venue}. ${item.odds ? `יחס ${item.odds[item.pick].toFixed(2)}` : "תחזית תיפתח 48 שעות לפני המשחק כשיש יחס Winner אמיתי"}.</div>
+              </article>
+            `).join("")}
+          </div>
+        `;
+        return;
+      }
+      target.innerHTML = `
+        <div class="wc-head">
+          <div>
+            <h3>משחקי מונדיאל 2026</h3>
+            <p>האלגוריתם משקלל יחס שוק, הסתברות נגזרת, איכות סגל, ביתיות, כושר, קצב אפקטיבי ו-xG צפוי. הוא לא נותן בונוס לאיטיות.</p>
+          </div>
+          <button class="wc-enter" type="button" data-wc-close="true">חזרה לתצוגה קצרה</button>
+        </div>
+        ${wcImportance()}
+        <div class="wc-match-grid">
+          ${WC2026_FIXTURES.map(item => `
+            <article class="wc-match">
+              <div class="wc-teams">
+                <div class="wc-team">${flagImg(item.hc, item.home)}<b>${item.home}</b></div>
+                <div class="wc-prediction"><span>${item.stage}</span><b>${item.date.slice(5)}</b><span>${item.venue}</span></div>
+                <div class="wc-team">${flagImg(item.ac, item.away)}<b>${item.away}</b></div>
+              </div>
+              ${wcFixtureOdds(item)}
+              <div class="wc-why">
+                <b>${item.source} · ${item.date}</b><br>
+                אין סימון הימור ואין תוצאת תחזית כרגע. 48 שעות לפני המשחק, ורק כשיש יחס Winner אמיתי, ה-AI Advisor יחשב פציעות, סגלים, מאמנים, כושר ונבחרת חזקה יותר לפני המלצה.
+              </div>
+              <div class="wc-factors">
+                <span class="signal">שוק 1X2</span>
+                <span class="signal">לוח FIFA</span>
+                <span class="signal">ללא יחס מומצא</span>
+                <span class="signal">עומק סגל</span>
+                <span class="signal">חלון 48 שעות</span>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderDaily() {
+      const tip = bestTip();
+      const box = document.getElementById("dailyTip");
+      const performance = monthlyPerformance();
+      const features = state.feed?.win2goFeatures || [];
+      const performanceMarkup = `
+        <div class="daily-head">
+          <h3>אחוז פגיעה היום</h3>
+          <span class="pill">${activeTodayDate() || performance.month}</span>
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><b>${performance.settled ? `${performance.hitRate}%` : "חדש"}</b><span>פגיעה</span></div>
+          <div class="metric"><b>${performance.hits}/${performance.settled}</b><span>תפסו</span></div>
+          <div class="metric"><b>${performance.pending}</b><span>ממתינים</span></div>
+          <div class="metric"><b>${performance.tracked}</b><span>נשמרו</span></div>
+        </div>
+      `;
+      const featuresMarkup = `
+        <div>
+          <div class="daily-head" style="margin-bottom:8px"><h3>Win2Go</h3><span class="pill">פיצ׳רים</span></div>
+          <div class="feature-list">${features.map(feature => `<span class="feature-chip">${feature}</span>`).join("")}</div>
+        </div>
+      `;
+      if (!tip) {
+        box.innerHTML = `
+          <div class="daily-head"><h3>הטיפ המוביל</h3><span class="pill">אין בחירה פתוחה</span></div>
+          <p class="hero-copy" style="font-size:14px">לא נמצאה כרגע בחירה פתוחה בקטגוריה הזו עם יחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
+          ${performanceMarkup}
+          ${featuresMarkup}
+        `;
+        return;
+      }
+      box.innerHTML = `
+        <div class="daily-head">
+          <h3>הטיפ המוביל</h3>
+          <span class="pill">ציון ${tip.score}/100</span>
+        </div>
+        <div class="pickbox">
+          <div>
+            <div class="micro">${tip.sport} · ${tip.league} · ${tip.time}</div>
+            <strong>${tip.match}</strong>
+            <div class="micro" style="margin-top:6px;color:var(--green);font-weight:900">${pickActionText(tip)}</div>
+            <div class="micro" style="margin-top:6px">${explicitPickText(tip)} · יחס Winner ${formatOdds(tip.odds)}</div>
+            <div class="micro" style="margin-top:6px">${pickHelpText(tip)}</div>
+          </div>
+          <div class="odds">${formatOdds(tip.odds)}</div>
+        </div>
+        <p class="hero-copy" style="font-size:14px">
+          למה: ${(tip.explanation || [])[1] || "הבחירה היא פייבוריטית בשוק המנצח של Winner."}
+        </p>
+        ${performanceMarkup}
+        ${featuresMarkup}
+      `;
+    }
+
+    function rowCard(row) {
+      const cls = statusClass[row.status] || "wait";
+      const isSettled = row.status === "תפס" || row.status === "נתפס" || row.status === "נפל" || row.status === "לא נתפס";
+      const hasRecommendation = row.recommended || (!!row.odds && !row.outsideRange);
+      const noPickLabel = row.recommendationReason === "rank"
+        ? "לא בטופ 20"
+        : row.recommendationReason === "odds-range"
+          ? "מחוץ לטווח"
+          : "ללא הימור";
+      const noPickText = row.oddsRaw || row.odds
+        ? `${explicitPickText(row)} — יחס ${formatOdds(row.oddsRaw || row.odds)}`
+        : explicitPickText(row);
+      const settledBanner = isSettled
+        ? `<div style="text-align:center;padding:6px 0 2px"><span class="status ${cls}" style="font-size:26px;padding:12px 28px;display:inline-block">${cls === "hit" ? "✓ נתפס" : "✗ לא נתפס"}</span></div>`
+        : "";
+      // For handicap rows, explicitPickText already includes the spread line
+      return `
+        <article class="card" data-id="${row.id}">
+          <div class="card-head">
+            <div>
+              <div class="league" style="display:flex;align-items:center;gap:7px">${logoMarkup(row.leagueAsset, "small")}<span>${row.league || "ליגה לא זמינה"}</span></div>
+              <div class="micro">${row.sport} · ${row.source}</div>
+            </div>
+            <div class="time">${row.day} · ${row.time}</div>
+          </div>
+          <div class="card-body">
+            ${settledBanner}
+            <div class="teams-line">
+              ${teamsMarkup(row)}
+            </div>
+            <div class="${hasRecommendation ? 'picked-bet' : 'picked-bet outside-range'}">
+              ${!hasRecommendation
+                ? `<span class="label" style="color:var(--soft)">ללא המלצה</span>
+                   <strong style="color:var(--muted);font-size:15px">${noPickText}</strong>
+                   <span class="picked-odds" style="background:var(--panel-soft);color:var(--muted)">${noPickLabel}</span>`
+                : `<span class="label">הימרנו</span>
+                   <strong>${explicitPickText(row)}</strong>
+                   <span class="picked-odds">${row.odds ? formatOdds(row.odds) : "תוצאה"}</span>
+                   <span class="pick-action">${pickActionText(row)}</span>
+                   <span class="pick-help">${pickHelpText(row)}</span>`
+              }
+            </div>
+            <div class="market-row">
+              <span class="name">${row.market || "שוק מנצח"}</span>
+              <span class="price">${row.odds ? formatOdds(row.odds) : row.actualWinner ? "תוצאה" : "נסגר"}</span>
+              <span class="status ${cls}">${statusLabel(row.status)}</span>
+            </div>
+            ${resultMarkup(row)}
+            <button class="open-game" data-open="${row.id}">פירוט משחק</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function findRow(id) {
+      return allRows().find(row => row.id === id);
+    }
+
+    function renderModal(row) {
+      if (!row) return;
+      const modal = document.getElementById("gameModal");
+      const outcome = rowOutcome(row);
+      document.getElementById("modalTitle").innerHTML = `
+        <div class="teams-line" style="min-height:86px">
+          ${teamsMarkup(row)}
+        </div>
+        <div class="micro" style="text-align:center">${row.league} · ${row.day} · ${row.time} · תוצאה ${outcome.result} · מזהה Winner ${row.eventId}</div>
+      `;
+      const explanation = row.explanation || [];
+      document.getElementById("modalBody").innerHTML = `
+        <div class="explain-grid">
+          <div class="explain-box">
+            <b>מי מנצח</b>
+            <p>ניחוש: ${outcome.guessed}. יחס לפני המשחק: ${outcome.odds ? formatOdds(outcome.odds) : "לא נשמר"}. תוצאה: ${outcome.result}. סטטוס: ${outcome.label}. ${row.odds ? `הסתברות מנוכת מרווח ${formatPercent(row.normalizedProbability || row.probability)}. פער שוק ${formatGap(row.marketGap)}.` : ""}</p>
+          </div>
+          <div class="explain-box">
+            <b>למה</b>
+            <p>${explanation[1] || "הסימון דורג לפי הסתברות שוק, אמינות סוג השוק ואיכות היחס."}</p>
+          </div>
+          <div class="explain-box">
+            <b>אימות מקור</b>
+            <p>${explanation[2] || "פציעות, מאמנים והרכבים מוצגים רק אם קיימים במקור נתונים מאומת. בדמו זה אין השלמה מלאכותית."}</p>
+          </div>
+        </div>
+      `;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("gameModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      state.selectedId = null;
+    }
+
+    function renderCards() {
+      const cards = document.getElementById("cards");
+      const title = document.getElementById("listTitle");
+      const meta = document.getElementById("resultMeta");
+      const tab = state.feed?.tabs?.[state.day];
+      title.textContent = `${tab?.label || ""} · ${tab?.date || ""}`;
+      if (state.error) {
+        cards.innerHTML = `<div class="error">${state.error}</div>`;
+        meta.textContent = "טעינת הנתונים נכשלה";
+        return;
+      }
+      const rows = currentRows();
+      const sourceMode = state.feed?.fallback ? "מצב snapshot מאומת" : "מצב חי";
+      const totalRows = daySportRows(state.day, state.sportTab).length;
+      const withPick = rows.filter(r => r.recommended || (!!r.odds && !r.outsideRange)).length;
+      const withoutPick = Math.max(0, rows.length - withPick);
+      const rankNoPick = rows.filter(r => r.recommendationReason === "rank").length;
+      const oddsNoPick = rows.filter(r => r.recommendationReason === "odds-range").length;
+      const withoutPickText = rankNoPick || oddsNoPick
+        ? `${withoutPick} ללא המלצה (${rankNoPick} לא בטופ 20, ${oddsNoPick} מחוץ לטווח)`
+        : `${withoutPick} ללא המלצה`;
+      meta.textContent = isOpenDay()
+        ? `${rows.length} משחקי Winner הכי חזקים · ${withPick} עם המלצה${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}.`
+        : `${rows.length} תוצאות רשמיות מתוך ${totalRows}. המסך הזה סוגר תחזיות שנשמרו קודם. ${sourceMode}.`;
+      cards.innerHTML = rows.length
+        ? rows.map(rowCard).join("")
+        : `<div class="empty">${isOpenDay() ? "לא נמצאו משחקים ב-Winner לקטגוריה הזו." : "אין תוצאות סגורות בקטגוריה הזו."}</div>`;
+    }
+
+    function debugRows() {
+      const audit = state.feed?.debugAudit?.[state.day]?.[state.sportTab] || [];
+      const query = state.search.trim().toLowerCase();
+      return audit.filter(row => {
+        const text = `${row.match} ${row.league} ${row.pick} ${(row.reasons || []).join(" ")}`.toLowerCase();
+        return !query || text.includes(query);
+      });
+    }
+
+    function renderDebug() {
+      const target = document.getElementById("debugRows");
+      const meta = document.getElementById("debugMeta");
+      if (!target || !meta) return;
+      if (!state.debugMode) {
+        target.innerHTML = "";
+        return;
+      }
+      if (state.error) {
+        target.innerHTML = `<div class="error">${state.error}</div>`;
+        meta.textContent = "Debug data failed to load";
+        return;
+      }
+      const rows = debugRows();
+      const accepted = rows.filter(row => row.accepted).length;
+      meta.textContent = `${rows.length} candidates · ${accepted} accepted · ${rows.length - accepted} rejected`;
+      target.innerHTML = rows.length ? rows.map(row => `
+        <article class="debug-row ${row.accepted ? "accepted" : "rejected"}">
+          <b>${row.accepted ? "ACCEPT" : "REJECT"}</b>
+          <div>
+            <strong>${row.match}</strong>
+            <div class="micro">${row.league} · ${row.sport} · pick ${row.pick || "none"} · odds ${row.odds ? formatOdds(row.odds) : "none"}</div>
+          </div>
+          <div>score ${row.recommendationScore || 0}</div>
+          <div class="debug-reasons">${(row.reasons || []).join(" · ")}<br>logos: ${row.homeLogoSource} / ${row.awayLogoSource}</div>
+        </article>
+      `).join("") : `<div class="empty">No debug rows for this tab.</div>`;
+    }
+
+    function render() {
+      renderTabs();
+      renderStats();
+      renderWorldCup();
+      renderDaily();
+      renderCards();
+      renderDebug();
+    }
+
+    async function loadFeed() {
+      state.loading = true;
+      state.error = "";
+      document.getElementById("cards").innerHTML = `<div class="empty">טוען נתונים חיים מווינר.</div>`;
+      try {
+        const response = await fetch(`/api/winner-feed?ts=${Date.now()}`);
+        const feed = await response.json();
+        if (!response.ok || !feed.ok) throw new Error(feed.detail || feed.error || "טעינת Winner נכשלה");
+        state.feed = feed;
+        rememberOpenPredictions(feed);
+        settleTrackedPredictions(feed);
+      } catch (error) {
+        state.error = `שגיאה: ${error.message}`;
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    document.querySelectorAll("#dayTabs .tab").forEach(button => {
+      button.addEventListener("click", () => {
+        state.day = button.dataset.day;
+        render();
+      });
+    });
+    document.querySelectorAll("#sportTabs .tab").forEach(button => {
+      button.addEventListener("click", () => {
+        state.sportTab = button.dataset.sportTab;
+        render();
+      });
+    });
+    document.getElementById("search").addEventListener("input", event => {
+      state.search = event.target.value;
+      renderCards();
+    });
+    document.getElementById("sort").addEventListener("change", event => {
+      state.sort = event.target.value;
+      renderCards();
+    });
+    document.getElementById("refresh").addEventListener("click", loadFeed);
+    document.getElementById("worldCupSection").addEventListener("click", event => {
+      if (event.target.closest("[data-wc-close]")) {
+        state.wcOpen = false;
+        renderWorldCup();
+        return;
+      }
+      if (event.target.closest("#wcToggle") || event.target.closest("[data-wc-open]")) {
+        state.wcOpen = true;
+        renderWorldCup();
+        document.getElementById("worldCupSection").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+    document.getElementById("wcToggle").addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      state.wcOpen = true;
+      renderWorldCup();
+      document.getElementById("worldCupSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    document.getElementById("cards").addEventListener("click", event => {
+      const button = event.target.closest("[data-open]");
+      if (!button) return;
+      state.selectedId = button.dataset.open;
+      renderModal(findRow(state.selectedId));
+    });
+    document.getElementById("closeModal").addEventListener("click", closeModal);
+    document.getElementById("gameModal").addEventListener("click", event => {
+      if (event.target.id === "gameModal") closeModal();
+    });
+
+    loadFeed();
+  </script>
+</body>
+</html>

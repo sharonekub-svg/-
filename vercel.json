@@ -1,11 +1,11 @@
 {
-  "buildCommand": "vite build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "crons": [
-    {
-      "path": "/api/update-odds",
-      "schedule": "0 9 * * *"
-    }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "echo Static Hapogea demo ready",
+  "outputDirectory": "hapogea-preview",
+  "framework": null,
+  "installCommand": "echo skip",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
