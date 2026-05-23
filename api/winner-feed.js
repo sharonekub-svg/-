@@ -638,8 +638,8 @@ function applyResult(row, event) {
 
 function marketReliability(title, sportId) {
   const text = cleanText(title);
-  if (sportId === 240 && text.includes("1X2") && text.includes("תוצאת סיום")) return 0.98;
-  if (sportId === 227 && text.includes("המנצח")) return 0.97;
+  if (Number(sportId) === WINNER_FOOTBALL_ID && text.includes("1X2") && text.includes("תוצאת סיום")) return 0.98;
+  if (Number(sportId) === WINNER_BASKETBALL_ID && (text.includes("המנצח") || text.includes("מנצח") || text.includes("מנצחת"))) return 0.97;
   if (text.includes("מעל/מתחת")) return 0.91;
   if (text.includes("הימור יתרון")) return 0.88;
   return 0.72;
@@ -657,9 +657,9 @@ function marketCategory(title) {
 
 function marketTier(title, sportId) {
   const clean = cleanText(title);
-  if (sportId === WINNER_FOOTBALL_ID && clean.includes("1X2") && clean.includes("תוצאת סיום")) return "primary";
-  if (sportId === WINNER_BASKETBALL_ID && clean.includes("המנצח")) return "primary";
-  if (sportId === WINNER_BASKETBALL_ID && clean.includes("הימור יתרון")) return "spread";
+  if (Number(sportId) === WINNER_FOOTBALL_ID && clean.includes("1X2") && clean.includes("תוצאת סיום")) return "primary";
+  if (Number(sportId) === WINNER_BASKETBALL_ID && (clean.includes("המנצח") || clean.includes("מנצח") || clean.includes("מנצחת"))) return "primary";
+  if (Number(sportId) === WINNER_BASKETBALL_ID && clean.includes("הימור יתרון")) return "spread";
   if (clean.includes("סיכוי כפול")) return "alternative-double-chance";
   if (clean.includes("מעל/מתחת")) return "alternative-total";
   return "alternative";
@@ -746,18 +746,20 @@ function allowedMarket(market) {
   if (title.includes("קרנות")) return false;
   if (title.includes("הזוכה")) return false;
   if (desc.includes("הזוכה")) return false;
-  if (market.sId === 240) {
+  if (Number(market.sId) === WINNER_FOOTBALL_ID) {
     const primary = title.includes("1X2") && title.includes("תוצאת סיום");
     const doubleChance = title.includes("סיכוי כפול") || title.includes("Double Chance");
     const overUnder = title.includes("מעל/מתחת") && !title.includes("מחצית");
     return primary || doubleChance || overUnder;
   }
-  if (market.sId === 227) {
-    const isWinner = title.includes("המנצח");
+  if (Number(market.sId) === WINNER_BASKETBALL_ID) {
+    // Accept any "winner / moneyline" style basketball market
+    const isWinner = title.includes("המנצח") || title.includes("מנצח") || title.includes("מנצחת");
     const isFullGameSpread =
       title.includes("הימור יתרון") &&
       (title.includes("כולל הארכות") || title.includes("ללא הארכות"));
-    return isWinner || isFullGameSpread;
+    const isMoneyline = title.includes("1X2") && !title.includes("מחצית");
+    return isWinner || isFullGameSpread || isMoneyline;
   }
   return false;
 }
@@ -975,7 +977,7 @@ function scoreBreakdown(row) {
   const clearFavorite = hasSingleClearFavorite(row);
   const central = isCentralEvent(row);
   const spread = Number(row.spread);
-  const extremeSpreadPenalty = row.sportId === WINNER_BASKETBALL_ID && Number.isFinite(spread) && Math.abs(spread) > 12
+  const extremeSpreadPenalty = Number(row.sportId) === WINNER_BASKETBALL_ID && Number.isFinite(spread) && Math.abs(spread) > 12
     ? 18
     : 0;
   const tooLowOddsPenalty = odds <= 1.42 && marketGap < 0.08 ? 10 : 0;
@@ -1220,7 +1222,7 @@ function buildResultRows(results, dateKey) {
       const verifiedAt = new Date().toISOString();
       const markets = event.markets || [];
       const market = markets.find((m) => cleanText(m.title).includes("1X2")) ||
-        markets.find((m) => cleanText(m.title).includes("המנצח"));
+        markets.find((m) => cleanText(m.title).includes("המנצח") || cleanText(m.title).includes("מנצח") || cleanText(m.title).includes("מנצחת"));
       if (!market) return null;
       const actualWinnerRaw = cleanText((market.marketResults || [])[0]);
       const actualWinner = actualWinnerRaw.toLowerCase() === "x" ? "תיקו" : actualWinnerRaw;
@@ -1431,8 +1433,8 @@ function build365BasketballRows(results, dateKey) {
 
 function splitBySport(rows) {
   return {
-    football: rows.filter((row) => row.sportId === 240),
-    basketball: rows.filter((row) => row.sportId === 227),
+    football:   rows.filter((row) => Number(row.sportId) === WINNER_FOOTBALL_ID),
+    basketball: rows.filter((row) => Number(row.sportId) === WINNER_BASKETBALL_ID),
   };
 }
 
@@ -1483,26 +1485,38 @@ function finalOpenRows(rows) {
 }
 
 function finalOpenRowsByDay(rows) {
-  return finalOpenRows(rows || []);
+  // Process each sport separately so basketball isn't crowded out by football
+  const football   = (rows || []).filter((r) => Number(r.sportId) === WINNER_FOOTBALL_ID);
+  const basketball = (rows || []).filter((r) => Number(r.sportId) === WINNER_BASKETBALL_ID);
+  return [
+    ...finalOpenRows(football),
+    ...finalOpenRows(basketball),
+  ];
 }
 
 function finalResultRowsByDay(rows) {
-  const sorted = (rows || [])
-    .sort((a, b) => {
-      const sourceA = a.source === "Winner Results" ? 1 : 0;
-      const sourceB = b.source === "Winner Results" ? 1 : 0;
-      return sourceB - sourceA ||
-        String(b.time || "").localeCompare(String(a.time || "")) ||
-        String(a.match || "").localeCompare(String(b.match || ""));
-    });
-  const strict = sorted.filter((row) => hasVerifiedTeamLogos(row));
-  const strictIds = new Set(strict.map((row) => row.id));
-  return [...strict, ...sorted.filter((row) => !strictIds.has(row.id))]
-    .slice(0, TARGET_PICKS_PER_SPORT)
-    .map((row) => ({
-      ...row,
-      logoVerified: hasVerifiedTeamLogos(row),
-    }));
+  // Process each sport separately so basketball gets its own quota
+  function resultRowsForSport(sportRows) {
+    const sorted = (sportRows || [])
+      .sort((a, b) => {
+        const sourceA = a.source === "Winner Results" ? 1 : 0;
+        const sourceB = b.source === "Winner Results" ? 1 : 0;
+        return sourceB - sourceA ||
+          String(b.time || "").localeCompare(String(a.time || "")) ||
+          String(a.match || "").localeCompare(String(b.match || ""));
+      });
+    const strict = sorted.filter((row) => hasVerifiedTeamLogos(row));
+    const strictIds = new Set(strict.map((row) => row.id));
+    return [...strict, ...sorted.filter((row) => !strictIds.has(row.id))]
+      .slice(0, TARGET_PICKS_PER_SPORT)
+      .map((row) => ({ ...row, logoVerified: hasVerifiedTeamLogos(row) }));
+  }
+  const football   = (rows || []).filter((r) => Number(r.sportId) === WINNER_FOOTBALL_ID);
+  const basketball = (rows || []).filter((r) => Number(r.sportId) === WINNER_BASKETBALL_ID);
+  return [
+    ...resultRowsForSport(football),
+    ...resultRowsForSport(basketball),
+  ];
 }
 
 function auditOpenRows(rows, acceptedRows) {

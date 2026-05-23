@@ -560,6 +560,95 @@
       grid-column: 1 / -1;
     }
     .error { color: #ffc5c3; border-color: rgba(239,83,80,.36); }
+
+    /* ── Loading overlay (first-load only) ── */
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(85,214,255,.12), transparent 30rem),
+        radial-gradient(circle at 80% 5%, rgba(255,122,69,.10), transparent 22rem),
+        #07090b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      transition: opacity .35s ease, visibility .35s ease;
+    }
+    #loadingOverlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .loading-logo {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--orange), var(--red));
+      display: grid; place-items: center;
+      font-size: 28px;
+      animation: pulse-logo 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse-logo {
+      0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,122,69,.4); }
+      50%      { transform: scale(1.06); box-shadow: 0 0 0 12px rgba(255,122,69,0); }
+    }
+    .loading-title {
+      font-family: Heebo, Assistant, Arial, sans-serif;
+      font-weight: 900;
+      font-size: 26px;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .loading-sub {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: -20px;
+    }
+    .progress-track {
+      width: min(340px, 80vw);
+      height: 4px;
+      border-radius: 4px;
+      background: var(--line-strong);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--cyan), var(--orange));
+      width: 0%;
+      transition: width .4s ease;
+    }
+    .loading-step {
+      font-size: 13px;
+      color: var(--soft);
+      min-height: 18px;
+    }
+
+    /* ── Slim top refresh bar ── */
+    #refreshBar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      z-index: 1000;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    #refreshBar.active { opacity: 1; }
+    #refreshBar::after {
+      content: "";
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--orange), var(--cyan));
+      background-size: 200% 100%;
+      animation: slide-bar 1.4s linear infinite;
+    }
+    @keyframes slide-bar {
+      0%   { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
     .wc-strip {
       margin-top: 18px;
       padding: 0;
@@ -1058,6 +1147,20 @@
   </style>
 </head>
 <body>
+
+  <!-- Slim refresh bar (background refresh indicator) -->
+  <div id="refreshBar"></div>
+
+  <!-- Full-screen loading overlay (first load only) -->
+  <div id="loadingOverlay">
+    <div class="loading-logo">⚡</div>
+    <div class="loading-title">הפוגע</div>
+    <div class="loading-sub">מחפש משחקים ב-Winner...</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="loading-step" id="loadingStep">מתחבר ל-Winner</div>
+  </div>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -1135,7 +1238,7 @@
           <span class="pill">מקור: Winner</span>
         </div>
         <div class="cards" id="cards">
-          <div class="empty">טוען נתונים חיים מווינר.</div>
+          <div class="empty" style="visibility:hidden">טוען...</div>
         </div>
       </section>
     </section>
@@ -2614,9 +2717,54 @@
       }, 30 * 1000);
     }
 
+    // ── Progress bar helpers ──────────────────────────────────────────────
+    const overlay    = document.getElementById("loadingOverlay");
+    const progressFill = document.getElementById("progressFill");
+    const loadingStep  = document.getElementById("loadingStep");
+    const refreshBar   = document.getElementById("refreshBar");
+
+    let _progressTimer = null;
+    function setProgress(pct, step) {
+      progressFill.style.width = pct + "%";
+      if (step) loadingStep.textContent = step;
+    }
+    function startFakeProgress() {
+      // Animate from 0 → 85% over ~8s to give the illusion of work
+      const steps = [
+        [8,   "מתחבר ל-Winner"],
+        [22,  "מושך שווקים ויחסים"],
+        [40,  "מנתח הסתברויות"],
+        [60,  "בונה קלפים"],
+        [75,  "מעשיר לוגואים"],
+        [85,  "כמעט סיים..."],
+      ];
+      let i = 0;
+      setProgress(0, steps[0][1]);
+      _progressTimer = setInterval(() => {
+        if (i < steps.length) {
+          setProgress(steps[i][0], steps[i][1]);
+          i++;
+        } else {
+          clearInterval(_progressTimer);
+        }
+      }, 1300);
+    }
+    function finishProgress() {
+      clearInterval(_progressTimer);
+      setProgress(100, "טוען...");
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+      }, 350);
+    }
+    function showRefreshBar(on) {
+      refreshBar.classList.toggle("active", on);
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     async function loadFeed() {
       // Show cached data immediately — user sees something right away
-      if (!state.feed) {
+      const isFirstLoad = !state.feed;
+      if (isFirstLoad) {
         const local = loadFeedLocally();
         if (local) {
           state.feed = local.feed;
@@ -2625,8 +2773,18 @@
           rememberOpenPredictions(local.feed);
           settleTrackedPredictions(local.feed);
           render();
+          // Already have data — hide overlay immediately, show slim bar
+          finishProgress();
+          showRefreshBar(true);
+        } else {
+          // Truly first visit — show full overlay with progress bar
+          startFakeProgress();
         }
+      } else {
+        // Background refresh — just show slim top bar
+        showRefreshBar(true);
       }
+
       state.loading = true;
       state.error = "";
       // Only blank the page if there's truly nothing to show
@@ -2648,6 +2806,8 @@
         if (!state.feed) state.error = `שגיאה: ${error.message}`;
       } finally {
         state.loading = false;
+        finishProgress();
+        showRefreshBar(false);
         render();
         scheduleRefresh(state.feed);
       }
