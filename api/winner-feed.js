@@ -3,6 +3,8 @@ const SNAPSHOT = require("./winner-snapshot.json");
 
 const ODDS_MIN = 1.4;
 const ODDS_MAX = 1.9;
+/** Open Winner picks shown per sport on today / tomorrow (verified line + odds in range). */
+const TARGET_PICKS_PER_SPORT = 20;
 const SUPABASE_URL = "https://jgcmtrlviuivbtimtqjq.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnY210cmx2aXVpdmJ0aW10cWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTc5NzYsImV4cCI6MjA5MTY5Mzk3Nn0.LxaX1xDcvLFPtF4Q5QnUlV4zeHQBeDwlcJq3nao3mqk";
@@ -572,7 +574,13 @@ function describeWinnerPick(market, scored, teams) {
   return `${pickText} נבחרת כי היא עדיין בחירת מנצח פתוחה ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זו בחירה מסוכנת יותר.` : ""}`.replace(/\s+/g, " ").trim();
 }
 
-function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Map(), sportIdFilter = null) {
+const BOARD_PICK_LIMIT = 200;
+
+function countRecommendedPicks(rows) {
+  return (rows || []).filter((row) => row.recommended && row.odds && row.status === "ממתין").length;
+}
+
+function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, resultsByEvent = new Map(), sportIdFilter = null) {
   const events = new Map();
 
   // First pass: collect all events that have an allowed market on this date
@@ -708,10 +716,10 @@ function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Ma
   }
 
   // Sort: in-range picks first (by score desc), then outside-range (by time).
-  // Only the top 20 in-range rows are actual recommendations; the rest stay visible
-  // so the board shows all Winner games without pretending every game is a pick.
+  // Only the top TARGET_PICKS_PER_SPORT in-range open rows are recommendations.
   let recommendedCount = 0;
   return [...events.values()]
+    .filter((row) => row.status === "ממתין")
     .sort((a, b) => {
       if (!a.outsideRange && b.outsideRange) return -1;
       if (a.outsideRange && !b.outsideRange) return 1;
@@ -726,7 +734,7 @@ function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Ma
         };
       }
       recommendedCount += 1;
-      if (recommendedCount <= 20) {
+      if (recommendedCount <= TARGET_PICKS_PER_SPORT) {
         return {
           ...row,
           recommended: true,
@@ -742,14 +750,14 @@ function buildCurrentPicks(markets, dateKey, limit = 20, resultsByEvent = new Ma
         odds: null,
         probability: null,
         signals: [
-          `יחס Winner ${(row.oddsRaw || row.odds || 0).toFixed(2)} בטווח, אבל לא נכנס לטופ 20`,
+          `יחס Winner ${(row.oddsRaw || row.odds || 0).toFixed(2)} בטווח, אבל לא נכנס לטופ ${TARGET_PICKS_PER_SPORT}`,
           `ציון מודל ${row.score || 0}`,
           "המשחק מוצג ללא בחירה",
         ],
         explanation: [
-          "המשחק מופיע בווינר-ליין והיחס שלו בטווח, אך הוא לא נכנס ל-20 ההמלצות החזקות לפי הציון.",
+          `המשחק מופיע בווינר-ליין והיחס שלו בטווח, אך הוא לא נכנס ל-${TARGET_PICKS_PER_SPORT} ההמלצות החזקות לפי הציון.`,
           "אין כאן המלצה. המשחק נשאר בלוח כדי שתוכל לראות את כל משחקי Winner, אבל בלי סימון הימור.",
-          "רק 20 המשחקים הראשונים בכל ענף ויום מקבלים סימון הימרנו.",
+          `רק ${TARGET_PICKS_PER_SPORT} המשחקים הראשונים בכל ענף ויום מקבלים סימון הימרנו.`,
         ],
       };
     })
@@ -1000,77 +1008,102 @@ async function getResults(startDate, endDate) {
   return data?.results?.events || [];
 }
 
+async function buildWinnerFeedPayload({ withLogos = true } = {}) {
+  const yesterday = israelDate(-1);
+  const today = israelDate(0);
+  const tomorrow = israelDate(1);
+  const [{ hashes, markets }, winnerResultEvents, scores365BasketballEvents] = await Promise.all([
+    getWinnerLine(),
+    getResults(yesterday, tomorrow),
+    Promise.all([
+      get365BasketballResults(yesterday, yesterday),
+      get365BasketballResults(today, today),
+      get365BasketballResults(tomorrow, tomorrow),
+    ]).then((items) => items.flat()),
+  ]);
+  const resultEvents = [...winnerResultEvents, ...scores365BasketballEvents];
+  const resultsByEvent = resultIndex(resultEvents);
+  const yesterdayMerged = mergeRows(
+    buildResultRows(winnerResultEvents, yesterday),
+    build365BasketballRows(scores365BasketballEvents, yesterday)
+  );
+  const yesterdayRows = splitBySport(
+    withLogos ? await enrichLogos(yesterdayMerged) : yesterdayMerged
+  );
+  const todayCurrentRows = [
+    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
+    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
+  ];
+  const todayResultRows = mergeRows(
+    buildResultRows(winnerResultEvents, today),
+    build365BasketballRows(scores365BasketballEvents, today)
+  );
+  const todayMerged = mergeRows(todayCurrentRows, todayResultRows);
+  const todayRows = splitBySport(withLogos ? await enrichLogos(todayMerged) : todayMerged);
+  const tomorrowCurrentRows = [
+    ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
+    ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
+  ];
+  const tomorrowRows = splitBySport(
+    withLogos ? await enrichLogos(tomorrowCurrentRows) : tomorrowCurrentRows
+  );
+  const lineStats = {
+    football: {
+      today: countRecommendedPicks(todayRows.football),
+      tomorrow: countRecommendedPicks(tomorrowRows.football),
+    },
+    basketball: {
+      today: countRecommendedPicks(todayRows.basketball),
+      tomorrow: countRecommendedPicks(tomorrowRows.basketball),
+    },
+  };
+  return {
+    ok: true,
+    generatedAt: new Date().toISOString(),
+    serverVersion: hashes.currentVersion,
+    oddsRange: { min: ODDS_MIN, max: ODDS_MAX },
+    targetPicksPerSport: TARGET_PICKS_PER_SPORT,
+    lineStats,
+    tabs: {
+      yesterday: { label: "אתמול", date: yesterday, sports: yesterdayRows },
+      today: { label: "היום", date: today, sports: todayRows },
+      tomorrow: { label: "מחר", date: tomorrow, sports: tomorrowRows },
+    },
+    modelStats: {
+      title: "מה עומד מאחורי הניחושים",
+      factors: [
+        "שוק מנצח בלבד: 1X2 בכדורגל והמנצח/ת בכדורסל מכל הליגות שמופיעות ב-Winner.",
+        `${TARGET_PICKS_PER_SPORT} המלצות ביום לכל ספורט — יחס Winner אמיתי בטווח 1.40-1.90; שאר משחקי הלוח מוצגים בלי המלצה.`,
+        "היחסים מומרים להסתברות, עוברים ניכוי מרווח בית, ואז מדורגים לפי הסתברות מנורמלת ופער מול היריבה הקרובה.",
+        "בית/חוץ: פייבוריט בחוץ מקבל הסבר של פער איכות; פייבוריט בבית מקבל יתרון מגרש.",
+        "לא מוצגים פציעות, הרכבים או חדשות אם הם לא חזרו ממקור מאומת.",
+      ],
+    },
+    win2goFeatures: [
+      "טאבים אתמול/היום/מחר",
+      "קטגוריות כדורגל וכדורסל",
+      "יחסי Winner בזמן אמת או snapshot מאומת",
+      "לוגואים לקבוצות ולליגות",
+      "אחוז פגיעה חודשי לפי תחזיות שנשמרו",
+      "ציון ביטחון והסתברות שוק",
+      "הסבר למה הבחירה צפויה לנצח",
+      "חיפוש ומיון",
+      "פירוט משחק",
+    ],
+    notes: [
+      `היום ומחר: עד ${TARGET_PICKS_PER_SPORT} המלצות לכל ספורט עם יחס Winner בטווח 1.40-1.90; כל שאר משחקי הלוח נשארים גלויים.`,
+      "אם בווינר יש פחות מ-20 משחקים בטווח, יוצג המספר האמיתי בלי להמציא נתונים.",
+      "אתמול הוא מסך סגירה ובדיקת פגיעה מול תוצאה רשמית, לא מסך הימור פתוח.",
+      "לכל קבוצה וליגה מוצג לוגו ממקור חיצוני או תג גרפי כאשר אין לוגו רשמי זמין.",
+    ],
+  };
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
   try {
-    const yesterday = israelDate(-1);
-    const today = israelDate(0);
-    const tomorrow = israelDate(1);
-    const [{ hashes, markets }, winnerResultEvents, scores365BasketballEvents] = await Promise.all([
-      getWinnerLine(),
-      getResults(yesterday, tomorrow),
-      Promise.all([
-        get365BasketballResults(yesterday, yesterday),
-        get365BasketballResults(today, today),
-        get365BasketballResults(tomorrow, tomorrow),
-      ]).then((items) => items.flat()),
-    ]);
-    const resultEvents = [...winnerResultEvents, ...scores365BasketballEvents];
-    const resultsByEvent = resultIndex(resultEvents);
-    const yesterdayRows = splitBySport(await enrichLogos(mergeRows(
-      buildResultRows(winnerResultEvents, yesterday),
-      build365BasketballRows(scores365BasketballEvents, yesterday)
-    )));
-    const todayCurrentRows = [
-      ...buildCurrentPicks(markets, today, 200, resultsByEvent, WINNER_FOOTBALL_ID),
-      ...buildCurrentPicks(markets, today, 200, resultsByEvent, WINNER_BASKETBALL_ID),
-    ];
-    const todayResultRows = mergeRows(
-      buildResultRows(winnerResultEvents, today),
-      build365BasketballRows(scores365BasketballEvents, today)
-    );
-    const todayRows = splitBySport(await enrichLogos(mergeRows(todayCurrentRows, todayResultRows)));
-    const tomorrowRows = splitBySport(await enrichLogos([
-      ...buildCurrentPicks(markets, tomorrow, 200, resultsByEvent, WINNER_FOOTBALL_ID),
-      ...buildCurrentPicks(markets, tomorrow, 200, resultsByEvent, WINNER_BASKETBALL_ID),
-    ]));
-    res.status(200).json({
-      ok: true,
-      generatedAt: new Date().toISOString(),
-      serverVersion: hashes.currentVersion,
-      oddsRange: { min: ODDS_MIN, max: ODDS_MAX },
-      tabs: {
-        yesterday: { label: "אתמול", date: yesterday, sports: yesterdayRows },
-        today: { label: "היום", date: today, sports: todayRows },
-        tomorrow: { label: "מחר", date: tomorrow, sports: tomorrowRows },
-      },
-      modelStats: {
-        title: "מה עומד מאחורי הניחושים",
-        factors: [
-          "שוק מנצח בלבד: 1X2 בכדורגל והמנצח/ת בכדורסל מכל הליגות שמופיעות ב-Winner.",
-          "יחס Winner אמיתי לפני המשחק בטווח 1.40-1.90 עבור משחקים שעדיין פתוחים להימור.",
-          "היחסים מומרים להסתברות, עוברים ניכוי מרווח בית, ואז מדורגים לפי הסתברות מנורמלת ופער מול היריבה הקרובה.",
-          "בית/חוץ: פייבוריט בחוץ מקבל הסבר של פער איכות; פייבוריט בבית מקבל יתרון מגרש.",
-          "לא מוצגים פציעות, הרכבים או חדשות אם הם לא חזרו ממקור מאומת.",
-        ],
-      },
-      win2goFeatures: [
-        "טאבים אתמול/היום/מחר",
-        "קטגוריות כדורגל וכדורסל",
-        "יחסי Winner בזמן אמת או snapshot מאומת",
-        "לוגואים לקבוצות ולליגות",
-        "אחוז פגיעה חודשי לפי תחזיות שנשמרו",
-        "ציון ביטחון והסתברות שוק",
-        "הסבר למה הבחירה צפויה לנצח",
-        "חיפוש ומיון",
-        "פירוט משחק",
-      ],
-      notes: [
-        "היום ומחר מציגים רק משחקים פתוחים להימור בווינר-ליין.",
-        "אתמול הוא מסך סגירה ובדיקת פגיעה מול תוצאה רשמית, לא מסך הימור פתוח.",
-        "לכל קבוצה וליגה מוצג לוגו ממקור חיצוני או תג גרפי כאשר אין לוגו רשמי זמין.",
-      ],
-    });
+    const payload = await buildWinnerFeedPayload({ withLogos: true });
+    res.status(200).json(payload);
   } catch (error) {
     try {
       res.status(200).json({
@@ -1090,3 +1123,6 @@ module.exports = async function handler(req, res) {
     }
   }
 };
+
+module.exports.buildWinnerFeedPayload = buildWinnerFeedPayload;
+module.exports.TARGET_PICKS_PER_SPORT = TARGET_PICKS_PER_SPORT;
