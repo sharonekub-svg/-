@@ -1190,7 +1190,10 @@
         if (state.sort === "odds") return (b.oddsRaw || b.odds || 0) - (a.oddsRaw || a.odds || 0);
         if (state.sort === "probability") return (b.probability || 0) - (a.probability || 0);
         if (state.sort === "time") return String(a.time).localeCompare(String(b.time));
-        return (b.score || 0) - (a.score || 0) || String(a.time).localeCompare(String(b.time));
+        return (b.recommendationScore || b.score || 0) - (a.recommendationScore || a.score || 0)
+          || (b.probability || 0) - (a.probability || 0)
+          || (b.odds || 0) - (a.odds || 0)
+          || String(a.time).localeCompare(String(b.time));
       });
       return rows;
     }
@@ -1535,7 +1538,7 @@
         ? `${withoutPick} ללא המלצה (${rankNoPick} לא בטופ 20, ${oddsNoPick} מחוץ לטווח)`
         : `${withoutPick} ללא המלצה`;
       meta.textContent = isOpenDay()
-        ? `${rows.length} משחקי Winner · ${withPick} עם המלצה · ${withoutPickText}. ${sourceMode}.`
+        ? `${rows.length} משחקי Winner הכי חזקים · ${withPick} עם המלצה${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}.`
         : `${rows.length} תוצאות רשמיות מתוך ${totalRows}. המסך הזה סוגר תחזיות שנשמרו קודם. ${sourceMode}.`;
       cards.innerHTML = rows.length
         ? rows.map(rowCard).join("")

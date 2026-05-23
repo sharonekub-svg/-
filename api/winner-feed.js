@@ -574,10 +574,28 @@ function describeWinnerPick(market, scored, teams) {
   return `${pickText} נבחרת כי היא עדיין בחירת מנצח פתוחה ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זו בחירה מסוכנת יותר.` : ""}`.replace(/\s+/g, " ").trim();
 }
 
-const BOARD_PICK_LIMIT = 200;
+const BOARD_PICK_LIMIT = TARGET_PICKS_PER_SPORT;
 
 function countRecommendedPicks(rows) {
   return (rows || []).filter((row) => row.recommended && row.odds && row.status === "ממתין").length;
+}
+
+function recommendationRank(row) {
+  const odds = Number(row.odds || row.oddsRaw || 0);
+  const oddsQuality = odds
+    ? Math.max(0, Math.min(1, (odds - ODDS_MIN) / (ODDS_MAX - ODDS_MIN)))
+    : 0;
+  const hit = Number(row.probability || row.normalizedProbability || 0);
+  const marketGap = Number(row.marketGap || 0);
+  const reliability = Number(row.reliability || 0);
+  const overroundPenalty = Math.min(0.16, Number(row.overround || 0)) * 30;
+  return Math.round(
+    hit * 72 +
+      marketGap * 34 +
+      oddsQuality * 18 +
+      reliability * 10 -
+      overroundPenalty
+  );
 }
 
 function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, resultsByEvent = new Map(), sportIdFilter = null) {
@@ -715,53 +733,32 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
     }
   }
 
-  // Sort: in-range picks first (by score desc), then outside-range (by time).
-  // Only the top TARGET_PICKS_PER_SPORT in-range open rows are recommendations.
-  let recommendedCount = 0;
   return [...events.values()]
     .filter((row) => row.status === "ממתין")
+    .filter((row) => !row.outsideRange && row.odds)
+    .map((row) => ({
+      ...row,
+      recommendationScore: recommendationRank(row),
+    }))
     .sort((a, b) => {
-      if (!a.outsideRange && b.outsideRange) return -1;
-      if (a.outsideRange && !b.outsideRange) return 1;
-      return (b.score || 0) - (a.score || 0) || String(a.time).localeCompare(String(b.time));
+      return (b.recommendationScore || 0) - (a.recommendationScore || 0)
+        || (b.probability || 0) - (a.probability || 0)
+        || (b.odds || 0) - (a.odds || 0)
+        || String(a.time).localeCompare(String(b.time));
     })
+    .slice(0, limit)
     .map((row) => {
-      if (row.outsideRange) {
-        return {
-          ...row,
-          recommended: false,
-          recommendationReason: row.recommendationReason || "odds-range",
-        };
-      }
-      recommendedCount += 1;
-      if (recommendedCount <= TARGET_PICKS_PER_SPORT) {
-        return {
-          ...row,
-          recommended: true,
-          recommendationReason: "top-20",
-        };
-      }
       return {
         ...row,
-        recommended: false,
-        recommendationReason: "rank",
-        outsideRange: true,
-        oddsRaw: row.oddsRaw || row.odds,
-        odds: null,
-        probability: null,
+        recommended: true,
+        recommendationReason: "top-20",
         signals: [
-          `יחס Winner ${(row.oddsRaw || row.odds || 0).toFixed(2)} בטווח, אבל לא נכנס לטופ ${TARGET_PICKS_PER_SPORT}`,
-          `ציון מודל ${row.score || 0}`,
-          "המשחק מוצג ללא בחירה",
-        ],
-        explanation: [
-          `המשחק מופיע בווינר-ליין והיחס שלו בטווח, אך הוא לא נכנס ל-${TARGET_PICKS_PER_SPORT} ההמלצות החזקות לפי הציון.`,
-          "אין כאן המלצה. המשחק נשאר בלוח כדי שתוכל לראות את כל משחקי Winner, אבל בלי סימון הימור.",
-          `רק ${TARGET_PICKS_PER_SPORT} המשחקים הראשונים בכל ענף ויום מקבלים סימון הימרנו.`,
+          `סבירות פגיעה ${Math.round((row.probability || 0) * 100)} אחוז`,
+          `יחס Winner ${Number(row.odds).toFixed(2)}`,
+          `ציון משולב ${row.recommendationScore || row.score || 0}`,
         ],
       };
-    })
-    .slice(0, limit);
+    });
 }
 
 function resultStatus(event, pick) {
@@ -1034,12 +1031,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
   ];
-  const todayResultRows = mergeRows(
-    buildResultRows(winnerResultEvents, today),
-    build365BasketballRows(scores365BasketballEvents, today)
-  );
-  const todayMerged = mergeRows(todayCurrentRows, todayResultRows);
-  const todayRows = splitBySport(withLogos ? await enrichLogos(todayMerged) : todayMerged);
+  const todayRows = splitBySport(withLogos ? await enrichLogos(todayCurrentRows) : todayCurrentRows);
   const tomorrowCurrentRows = [
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
