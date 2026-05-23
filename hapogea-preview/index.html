@@ -227,23 +227,9 @@
       white-space: nowrap;
     }
     .content {
-      display: grid;
-      grid-template-columns: 300px minmax(0, 1fr);
-      gap: 18px;
+      display: block;
       margin-top: 18px;
-      align-items: start;
     }
-    .panel { padding: 16px; }
-    .panel h3 { margin-bottom: 12px; font-size: 18px; }
-    .plan-list, .method-list { display: grid; gap: 10px; }
-    .plan-item, .method {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 11px;
-      background: rgba(255,255,255,.025);
-    }
-    .plan-item b, .method b { display: block; margin-bottom: 4px; }
-    .plan-item p, .method p { margin: 0; color: var(--muted); line-height: 1.45; font-size: 13px; }
     .section-title { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
     .section-title h3 { margin: 0; font-size: 22px; }
     .section-title p { margin: 4px 0 0; color: var(--muted); }
@@ -1140,39 +1126,6 @@
     </section>
 
     <section class="content">
-      <aside class="panel">
-        <h3>תוכנית עבודה</h3>
-        <div class="plan-list">
-          <div class="plan-item">
-            <b>1. מקור אמת</b>
-            <p>כל משחק שמוצג נטען מווינר-ליין ויש לו יחס פעיל להימור.</p>
-          </div>
-          <div class="plan-item">
-            <b>2. סינון קשיח</b>
-            <p>היום ומחר: רק שוקי מנצח ביחס 1.40 עד 1.90. אתמול: תוצאות לסגירת תחזיות.</p>
-          </div>
-          <div class="plan-item">
-            <b>3. לוגואים</b>
-            <p>לוגו רשמי מוצג כשנמצא; אם לא נמצא, מוצג תג גרפי אחיד כדי שלא יישאר כרטיס בלי לוגו.</p>
-          </div>
-        </div>
-
-        <div class="method-list" style="margin-top:12px">
-          <div class="method">
-            <b>שיטת ניקוד</b>
-            <p>הסתברות שוק, אמינות שוק ועומק נתונים. אין שימוש בשם משחק או ביחס שלא הגיע מווינר.</p>
-          </div>
-          <div class="method">
-            <b>הסבר בחירה</b>
-            <p>הטקסט מסביר למה הבחירה צפויה לנצח: פייבוריטית, בית/חוץ ופער מול היריבה, לא רק למה היחס מתאים.</p>
-          </div>
-          <div class="method">
-            <b>פיצ׳רי Win2Go</b>
-            <p>טאבים לפי ימים, קטגוריות ספורט, לוגואים, יחס אמיתי, ציון ביטחון, פירוט משחק, חיפוש, מיון ומעקב פגיעה.</p>
-          </div>
-        </div>
-      </aside>
-
       <section>
         <div class="section-title">
           <div>
@@ -1225,6 +1178,8 @@
       search: "",
       loading: true,
       error: "",
+      fromLocalCache: false,
+      localCachedAt: null,
       selectedId: null,
       wcOpen: false,
       debugMode: location.pathname.includes("debug")
@@ -1305,23 +1260,41 @@
       return row.winnerPick || row.pick || "לא זמין";
     }
 
+    function overUnderParts(row) {
+      const raw = String(row.pickTeam || row.winnerPick || row.pick || "");
+      const lineMatch = raw.match(/(\d+(?:\.\d+)?)/);
+      const dir = raw.replace(/\s*\d+(?:\.\d+)?$/, "").trim()
+        || (raw.includes("מתחת") ? "מתחת" : "מעל");
+      const line = row.spread != null ? Number(row.spread)
+        : (lineMatch ? Number(lineMatch[1]) : null);
+      return { dir, line };
+    }
+
     function explicitPickText(row) {
       const side = pickSide(row);
+      if (side === "draw") return "תיקו";
+      if (row.marketTier === "alternative-total") {
+        const { dir, line } = overUnderParts(row);
+        return line != null ? `${dir} ${line} גולים` : dir;
+      }
       const pick = pickLabel(row);
-      const spread = Number.isFinite(Number(row.spread))
+      const spread = row.spread != null && Number.isFinite(Number(row.spread))
         ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}`
         : "";
-      if (side === "draw") return "תיקו";
       if (row.pickTeam && row.pickTeam !== pick) return `${row.pickTeam}${spread}`;
       return `${pick}${spread && !String(pick).includes(String(row.spread)) ? spread : ""}`;
     }
 
     function pickActionText(row) {
+      if (row.marketTier === "alternative-total") {
+        const { dir, line } = overUnderParts(row);
+        return line != null ? `הבחירה שלנו: ${dir} ${line} גולים` : `הבחירה שלנו: ${dir} גולים`;
+      }
       const team = row.pickTeam || pickLabel(row);
       const side = pickSide(row);
       const spread = Number(row.spread);
       if (side === "draw") return "הבחירה שלנו: תיקו בסיום המשחק";
-      if (row.sportId === 227 && Number.isFinite(spread)) {
+      if (row.sportId === 227 && row.spread != null && Number.isFinite(spread)) {
         const abs = Math.abs(spread);
         if (spread > 0) return `הבחירה שלנו: ${team} עם יתרון +${abs}`;
         return `הבחירה שלנו: ${team} לנצח ביותר מ-${abs} נקודות`;
@@ -1345,10 +1318,17 @@
     }
 
     function pickHelpText(row) {
+      if (row.marketTier === "alternative-total") {
+        const { dir, line } = overUnderParts(row);
+        const lineText = line != null ? `${line} גולים` : "גולים";
+        const impliedPct = row.normalizedProbability ? Math.round(row.normalizedProbability * 100) : null;
+        const pctText = impliedPct ? ` — הסתברות שוק ${impliedPct}%` : "";
+        return `כדורגל מעל/מתחת: בחרנו ${dir} ${lineText}${pctText}. האלגוריתם מבוסס על ניתוח יחסי Winner בשוק הגולים לאחר ניכוי מרווח הבית.`;
+      }
       const spread = Number(row.spread);
       const team = row.pickTeam || pickLabel(row);
       const market = row.market || "";
-      if (row.sportId === 227 && Number.isFinite(spread)) {
+      if (row.sportId === 227 && Number.isFinite(spread) && row.spread != null) {
         const abs = Math.abs(spread);
         if (spread > 0) {
           return `כדורסל - הימור יתרון: בחרנו ${team} +${abs}. ההימור תופס אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
@@ -1380,7 +1360,7 @@
     function teamOddMarkup(row, side, label) {
       const item = oddsForSide(row, side);
       if (!item?.odds) return "";
-      const spread = Number.isFinite(Number(item.spread)) ? ` ${Number(item.spread) > 0 ? "+" : ""}${item.spread}` : "";
+      const spread = item.spread != null && Number.isFinite(Number(item.spread)) ? ` ${Number(item.spread) > 0 ? "+" : ""}${item.spread}` : "";
       return `<div class="team-odd"><small>${label}${spread}</small>${formatOdds(item.odds)}</div>`;
     }
 
@@ -1404,6 +1384,25 @@
 
     function writeTracker(items) {
       localStorage.setItem(TRACK_KEY, JSON.stringify(items.slice(-400)));
+    }
+
+    const FEED_LS_KEY = "hapogea_feed_v3";
+    const FEED_LS_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+    function saveFeedLocally(feed) {
+      try {
+        localStorage.setItem(FEED_LS_KEY, JSON.stringify({ feed, at: Date.now() }));
+      } catch (_) {}
+    }
+
+    function loadFeedLocally() {
+      try {
+        const raw = localStorage.getItem(FEED_LS_KEY);
+        if (!raw) return null;
+        const { feed, at } = JSON.parse(raw);
+        if (!feed?.ok || Date.now() - at > FEED_LS_MAX_AGE_MS) return null;
+        return { feed, at };
+      } catch (_) { return null; }
     }
 
     function predictionKey(row) {
@@ -1435,68 +1434,10 @@
       return left === right || left.includes(right) || right.includes(left);
     }
 
-    function rememberOpenPredictions(feed) {
-      if (!feed?.tabs) return;
-      const todayDate = activeTodayDate(feed);
-      const tracker = readTracker();
-      const byKey = new Map(tracker.map(item => [item.key, item]));
-      ["football", "basketball"].forEach(sport => {
-        (feed.tabs.today?.sports?.[sport] || []).forEach(row => {
-          if (!row.odds || row.outsideRange || row.day !== todayDate) return;
-          const key = predictionKey(row);
-          if (byKey.has(key)) return;
-          byKey.set(key, {
-            key,
-            eventId: row.eventId,
-            resultKey: row.resultKey,
-            marketId: row.marketId,
-            outcomeId: row.outcomeId,
-            sport,
-            pick: pickLabel(row),
-            match: row.match,
-            league: row.league,
-            odds: row.odds,
-            predictedDay: row.day,
-            month: String(row.day || "").slice(0, 7),
-            status: "pending"
-          });
-        });
-      });
-      writeTracker([...byKey.values()].filter(item => item.predictedDay === todayDate));
-    }
-
-    function settleTrackedPredictions(feed) {
-      if (!feed?.tabs?.yesterday) return;
-      const results = ["yesterday", "today"].flatMap(day =>
-        Object.values(feed.tabs?.[day]?.sports || {}).flatMap(rows => rows || [])
-      )
-        .filter(row => row.actualWinner);
-      if (!results.length) return;
-      const resultByEvent = new Map(results.map(row => [String(row.eventId), row]));
-      const resultByKey = new Map(results.filter(row => row.resultKey).map(row => [String(row.resultKey), row]));
-      const tracker = readTracker().map(item => {
-        if (item.status !== "pending") return item;
-        const result = resultByEvent.get(String(item.eventId)) || resultByKey.get(String(item.resultKey || ""));
-        if (!result) return item;
-        const hit = samePick(item.pick, result.actualWinner);
-        return {
-          ...item,
-          status: hit ? "hit" : "miss",
-          actualWinner: result.actualWinner,
-          result: result.result,
-          settledDay: result.day,
-          settledMonth: String(result.day || "").slice(0, 7)
-        };
-      });
-      writeTracker(tracker);
-    }
-
     function monthlyPerformance() {
       const month = new Date().toISOString().slice(0, 7);
-      const todayDate = activeTodayDate();
       const items = readTracker().filter(item =>
-        item.predictedDay === todayDate &&
-        (item.month || item.settledMonth) === month
+        (item.settledMonth || item.month || String(item.predictedDay || "").slice(0, 7)) === month
       );
       const settled = items.filter(item => item.status === "hit" || item.status === "miss");
       const hits = settled.filter(item => item.status === "hit").length;
@@ -1563,12 +1504,28 @@
       return row.recommended === true || (!!row.odds && !row.outsideRange);
     }
 
+    function trackedResultKeys() {
+      const items = readTracker();
+      return {
+        byResultKey: new Set(items.map(i => String(i.resultKey || "")).filter(Boolean)),
+        byEventId: new Set(items.map(i => String(i.eventId || "")).filter(Boolean)),
+      };
+    }
+
+    function isTrackedRow(row, keys) {
+      return keys.byResultKey.has(String(row.resultKey || ""))
+        || keys.byEventId.has(String(row.eventId || ""));
+    }
+
     function currentRows() {
       const tab = state.feed?.tabs?.[state.day];
       if (!tab) return [];
       const query = state.search.trim().toLowerCase();
+      const isYesterday = state.day === "yesterday";
+      const tKeys = isYesterday ? trackedResultKeys() : null;
       let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
-        if (!hasPick(row)) return false;
+        if (isYesterday) { if (!isTrackedRow(row, tKeys)) return false; }
+        else if (!hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
@@ -1589,8 +1546,11 @@
 
     function currentRowsBySport() {
       const query = state.search.trim().toLowerCase();
+      const isYesterday = state.day === "yesterday";
+      const tKeys = isYesterday ? trackedResultKeys() : null;
       const filterRows = rows => (rows || []).filter(row => {
-        if (!hasPick(row)) return false;
+        if (isYesterday) { if (!isTrackedRow(row, tKeys)) return false; }
+        else if (!hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
@@ -2077,11 +2037,14 @@
         return;
       }
       const rows = currentRows();
-      const sourceMode = state.feed?.fallback ? "מצב snapshot מאומת" : "מצב חי";
+      const isRefreshing = state.loading && state.feed;
+      const sourceMode = state.fromLocalCache
+        ? "מתעדכן..."
+        : (state.feed?.fallback || state.feed?.stale) ? "snapshot מאומת" : "נתונים חיים";
       const totalRows = daySportRows(state.day, state.sportTab).length;
       meta.textContent = isOpenDay()
-        ? `${rows.length} בחירות Winner היום · ${sourceMode}`
-        : `${rows.length} בחירות סגורות. ${sourceMode}.`;
+        ? `${rows.length} בחירות Winner${isRefreshing ? " · מתעדכן..." : " · " + sourceMode}`
+        : `${rows.length} בחירות סגורות · ${sourceMode}${isRefreshing ? " · מתעדכן..." : ""}`;
       if (state.sportTab === "all") {
         const bySport = currentRowsBySport();
         const sections = [
@@ -2398,7 +2361,7 @@
     function marketLabelText(row) {
       if (row.marketTier === "alternative-double-chance") return "שוק חלופי: סיכוי כפול";
       if (row.marketTier === "alternative-total") return "שוק חלופי: מעל/מתחת";
-      if (row.marketTier === "spread") return `כדורסל: ליין יתרון${Number.isFinite(Number(row.spread)) ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}` : ""}`;
+      if (row.marketTier === "spread") return `כדורסל: ליין יתרון${row.spread != null && Number.isFinite(Number(row.spread)) ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}` : ""}`;
       if (row.sportId === 227) return "כדורסל: מנצחת משחק";
       return "כדורגל: מנצחת / תיקו / חוץ";
     }
@@ -2615,6 +2578,7 @@
     }
 
     function nextRefreshMs(feed = state.feed) {
+      if (feed?.fallback) return 45 * 1000;
       return pendingRowsNeedingResultCheck(feed).length ? 60 * 1000 : 5 * 60 * 1000;
     }
 
@@ -2651,18 +2615,37 @@
     }
 
     async function loadFeed() {
+      // Show cached data immediately — user sees something right away
+      if (!state.feed) {
+        const local = loadFeedLocally();
+        if (local) {
+          state.feed = local.feed;
+          state.fromLocalCache = true;
+          state.localCachedAt = local.at;
+          rememberOpenPredictions(local.feed);
+          settleTrackedPredictions(local.feed);
+          render();
+        }
+      }
       state.loading = true;
       state.error = "";
-      document.getElementById("cards").innerHTML = `<div class="empty">טוען נתונים חיים מווינר.</div>`;
+      // Only blank the page if there's truly nothing to show
+      if (!state.feed) {
+        document.getElementById("cards").innerHTML = `<div class="empty">טוען נתונים מ-Winner...</div>`;
+      }
       try {
         const response = await fetch(`/api/winner-feed?ts=${Date.now()}`);
         const feed = await response.json();
         if (!response.ok || !feed.ok) throw new Error(feed.detail || feed.error || "טעינת Winner נכשלה");
         state.feed = feed;
+        state.fromLocalCache = false;
+        state.localCachedAt = null;
+        saveFeedLocally(feed);
         rememberOpenPredictions(feed);
         settleTrackedPredictions(feed);
       } catch (error) {
-        state.error = `שגיאה: ${error.message}`;
+        // Keep showing cached data if available — don't clear it on error
+        if (!state.feed) state.error = `שגיאה: ${error.message}`;
       } finally {
         state.loading = false;
         render();

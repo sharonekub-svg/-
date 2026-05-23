@@ -180,6 +180,12 @@ function parseSpread(value) {
   return match ? Number(match[1]) : null;
 }
 
+function parseOverUnderLine(desc) {
+  const clean = cleanText(desc);
+  const m = clean.match(/(?:מעל|מתחת)\s+([+-]?\d+(?:\.\d+)?)/);
+  return m ? Number(m[1]) : parseSpread(clean);
+}
+
 function outcomeTeam(value) {
   return cleanText(value).replace(/\s*\([+-]?\d+(?:\.\d+)?\)\s*$/, "").trim();
 }
@@ -441,31 +447,39 @@ async function wikidataLogoSearch(name, kind) {
 async function resolveLogoRow(table, kind, name) {
   const key = `${kind}:${cleanText(name)}`;
   if (globalLogoCache.has(key)) return globalLogoCache.get(key);
-  // Deduplicate concurrent requests for the same key
   if (globalLogoCache.has(`${key}:pending`)) {
     await globalLogoCache.get(`${key}:pending`);
     return globalLogoCache.get(key) || null;
   }
-  let resolve;
-  const pending = new Promise(r => { resolve = r; });
+  let resolvePending;
+  const pending = new Promise(r => { resolvePending = r; });
   globalLogoCache.set(`${key}:pending`, pending);
   let row = null;
-  for (const term of logoSearchTerms(cleanText(name), kind)) {
-    row = await supabaseSearch(table, term);
-    if (row?.logo_url) break;
-    // Race all slower sources in parallel instead of sequential waterfall
-    const results = await Promise.allSettled([
-      sportsDbSearch(kind, term),
-      wikipediaLogoSearch(term, kind),
-      wikipediaSearchLogo(term, kind),
-      wikidataLogoSearch(term, kind),
+  try {
+    row = await Promise.race([
+      (async () => {
+        for (const term of logoSearchTerms(cleanText(name), kind)) {
+          const supabaseRow = await supabaseSearch(table, term);
+          if (supabaseRow?.logo_url) return supabaseRow;
+          const results = await Promise.allSettled([
+            sportsDbSearch(kind, term),
+            wikipediaLogoSearch(term, kind),
+            wikipediaSearchLogo(term, kind),
+            wikidataLogoSearch(term, kind),
+          ]);
+          const found = results.find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
+          if (found?.logo_url) return found;
+        }
+        return null;
+      })(),
+      new Promise(resolve => setTimeout(() => resolve(null), 6000)),
     ]);
-    row = results.find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
-    if (row?.logo_url) break;
+  } catch (_) {
+    row = null;
   }
   globalLogoCache.set(key, row);
   globalLogoCache.delete(`${key}:pending`);
-  resolve();
+  resolvePending();
   return row;
 }
 
@@ -754,8 +768,12 @@ function scoreOutcome(market, outcome) {
   const oddsBook = marketOddsBook(market);
   const reliability = marketReliability(market.mp, market.sId);
   const implied = 1 / odds;
-  const pickTeam = outcomeTeam(outcome.desc);
-  const spread = parseSpread(outcome.desc);
+  const desc = cleanText(outcome.desc);
+  const isOverUnder = cleanText(market.mp).includes("מעל/מתחת");
+  const pickTeam = isOverUnder
+    ? (desc.includes("מעל") ? "מעל" : desc.includes("מתחת") ? "מתחת" : outcomeTeam(desc))
+    : outcomeTeam(desc);
+  const spread = isOverUnder ? parseOverUnderLine(desc) : parseSpread(desc);
   const current = oddsBook.outcomes.find((item) => item.desc === cleanText(outcome.desc) && item.odds === odds);
   const normalizedProbability = current?.noVigProbability || implied;
   const competitors = oddsBook.outcomes
@@ -791,7 +809,39 @@ function scoreOutcome(market, outcome) {
   };
 }
 
+function describeOverUnderPick(market, scored) {
+  const dir = scored.pickTeam || (cleanText(scored.pick).includes("מעל") ? "מעל" : "מתחת");
+  const opposite = dir === "מעל" ? "מתחת" : "מעל";
+  const line = scored.spread;
+  const lineText = line != null ? `${line} גולים` : "גולים";
+  const impliedPct = Math.round((scored.normalizedProbability || 0) * 100);
+  const odds = scored.odds ? scored.odds.toFixed(2) : "?";
+  const opponentOutcome = scored.oddsBook?.outcomes?.find((o) => {
+    const d = cleanText(o.team || o.desc);
+    return dir === "מעל" ? d.includes("מתחת") : d.includes("מעל");
+  });
+  const oppOdds = opponentOutcome?.odds;
+  const oppPct = opponentOutcome?.noVigProbability ? Math.round(opponentOutcome.noVigProbability * 100) : null;
+  let parts = [
+    `שוק מעל/מתחת ${lineText}: Winner מתמחר "${dir}" ב-${odds} — הסתברות מנוכת מרווח של ${impliedPct}%.`,
+  ];
+  if (oppOdds && oppPct) {
+    const gap = impliedPct - oppPct;
+    parts.push(`"${opposite}" מתומחר ב-${oppOdds.toFixed(2)} (${oppPct}%) — האלגוריתם בחר "${dir}" בפער של ${gap} נקודות אחוז.`);
+  }
+  if (line != null) {
+    if (line <= 2.5) {
+      parts.push(`קו ${line} גולים הוא נפוץ בכדורגל אירופאי (ממוצע הלשכות ~2.6 גולים למשחק). ${dir === "מעל" ? "הבחירה מניחה שהמשחק יהיה פתוח." : "הבחירה מניחה שהמשחק יהיה כבד הגנתית."}`);
+    } else {
+      parts.push(`קו ${line} גולים — קו גבוה, מתאים למשחקים התקפיים. ${dir === "מעל" ? "הבחירה מניחה לפחות " + Math.ceil(line) + " גולים." : "הבחירה מניחה משחק צמוד ומועט גולים."}`);
+    }
+  }
+  parts.push(`האלגוריתם מבוסס על סיגנל שוק Winner: כשהצד "${dir}" מתומחר בטווח 1.40–1.90 ומשקף הסתברות גבוהה לאחר ניכוי מרווח הבית, הוא נכנס להמלצה.`);
+  return parts.join(" ");
+}
+
 function describeWinnerPick(market, scored, teams) {
+  if (cleanText(market.mp).includes("מעל/מתחת")) return describeOverUnderPick(market, scored);
   const outcomes = (market.outcomes || [])
     .map((outcome) => ({
       desc: cleanText(outcome.desc),
@@ -1010,8 +1060,12 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
       if (allOutcomes.length) {
         const best = allOutcomes[0];
         const odds = best.odds;
-        const pickTeam = outcomeTeam(best.outcome.desc);
-        const spread = parseSpread(best.outcome.desc);
+        const bestDesc = cleanText(best.outcome.desc);
+        const isOverUnderFallback = cleanText(market.mp).includes("מעל/מתחת");
+        const pickTeam = isOverUnderFallback
+          ? (bestDesc.includes("מעל") ? "מעל" : bestDesc.includes("מתחת") ? "מתחת" : outcomeTeam(bestDesc))
+          : outcomeTeam(bestDesc);
+        const spread = isOverUnderFallback ? parseOverUnderLine(bestDesc) : parseSpread(bestDesc);
         const normalizedProbability = oddsBook.outcomes.find(
           (item) => item.desc === cleanText(best.outcome.desc)
         )?.noVigProbability || (1 / odds);
@@ -1652,12 +1706,24 @@ function normalizeFallbackRows(payload) {
 async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   const key = cacheKeyForToday();
   const cached = await kvGet(key);
+  // Fresh hit — serve immediately
   if (!force && isFreshCache(cached, CACHE_TTL_MS.full)) {
     return {
       ...cached.payload,
       cache: { status: "hit", key, cachedAt: cached.cachedAt, ttlMs: CACHE_TTL_MS.full },
     };
   }
+  // Stale but recent (< 20 min): serve immediately, let CDN stale-while-revalidate
+  // trigger the background rebuild on the next CDN revalidation cycle.
+  const staleAgeMs = cached?.cachedAt ? Date.now() - Number(cached.cachedAt) : Infinity;
+  if (!force && cached?.payload && staleAgeMs < 20 * 60 * 1000) {
+    return {
+      ...cached.payload,
+      stale: true,
+      cache: { status: "stale-recent", key, cachedAt: cached.cachedAt, staleAgeMs },
+    };
+  }
+  // Cache missing or very stale: full rebuild
   let payload;
   try {
     payload = await buildWinnerFeedPayload({ withLogos: true });
@@ -1679,7 +1745,7 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+  res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=86400");
   try {
     const force = String(req?.query?.force || "").toLowerCase() === "1";
     const payload = await buildCachedWinnerFeedPayload({ force });
