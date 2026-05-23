@@ -434,7 +434,8 @@ function marketOddsBook(market) {
     noVigProbability: impliedTotal ? (1 / outcome.odds) / impliedTotal : null,
   }));
   const findBySide = (side) => {
-    const target = side === "home" ? teams.home : teams.away;
+    const raw = side === "home" ? teams.home : teams.away;
+    const target = outcomeTeam(raw); // strip spread e.g. "(+6.5)" from desc-derived name
     return withProbability.find((outcome) => cleanText(outcome.team || outcome.desc) === cleanText(target));
   };
   const draw = withProbability.find((outcome) => cleanText(outcome.desc).toLowerCase() === "x");

@@ -183,18 +183,19 @@
     }
     .status {
       border-radius: 999px;
-      padding: 8px 13px;
-      font-size: 15px;
+      padding: 10px 18px;
+      font-size: 19px;
       font-weight: 900;
-      border: 1px solid var(--line-strong);
+      border: 2px solid var(--line-strong);
       color: var(--muted);
-      min-width: 78px;
+      min-width: 90px;
       text-align: center;
+      letter-spacing: 0.5px;
       box-shadow: 0 10px 26px rgba(0,0,0,.18);
     }
-    .status.hit { color: #06100c; border-color: rgba(49,209,135,.82); background: var(--green); }
-    .status.miss { color: #fff; border-color: rgba(239,83,80,.72); background: var(--red); }
-    .status.wait { color: #06131a; border-color: rgba(85,214,255,.72); background: var(--cyan); }
+    .status.hit { color: #06100c; border-color: rgba(49,209,135,.95); background: var(--green); box-shadow: 0 0 0 4px rgba(49,209,135,.18), 0 12px 32px rgba(49,209,135,.28); }
+    .status.miss { color: #fff; border-color: rgba(239,83,80,.85); background: var(--red); box-shadow: 0 0 0 4px rgba(239,83,80,.18), 0 12px 32px rgba(239,83,80,.28); }
+    .status.wait { color: #06131a; border-color: rgba(85,214,255,.85); background: var(--cyan); box-shadow: 0 0 0 4px rgba(85,214,255,.18), 0 12px 32px rgba(85,214,255,.22); }
     .toolbar {
       margin-top: 18px;
       display: grid;
@@ -392,28 +393,31 @@
       grid-template-columns: auto 1fr auto;
       align-items: center;
       gap: 9px;
-      border: 2px solid rgba(49,209,135,.55);
-      border-radius: 8px;
-      padding: 10px 12px;
-      background: rgba(49,209,135,.10);
+      border: 2px solid rgba(49,209,135,.75);
+      border-radius: 10px;
+      padding: 13px 14px;
+      background: rgba(49,209,135,.13);
       color: var(--text);
+      box-shadow: 0 0 0 1px rgba(49,209,135,.15), 0 8px 28px rgba(49,209,135,.12);
     }
     .picked-bet .label {
-      color: #bff8dc;
-      font-size: 12px;
+      color: var(--green);
+      font-size: 14px;
       font-weight: 900;
       white-space: nowrap;
+      letter-spacing: 0.5px;
     }
     .picked-bet strong {
-      font-size: 18px;
+      font-size: 20px;
       line-height: 1.15;
     }
     .picked-bet .picked-odds {
       color: #06100c;
       background: var(--green);
       border-radius: 999px;
-      padding: 7px 11px;
+      padding: 8px 13px;
       font-weight: 900;
+      font-size: 16px;
       white-space: nowrap;
     }
     .market-row {
@@ -451,18 +455,19 @@
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 16px;
+      padding: 10px 18px;
+      font-size: 20px;
       font-weight: 900;
-      border: 1px solid var(--line-strong);
+      border: 2px solid var(--line-strong);
       color: var(--muted);
       width: fit-content;
       margin-top: 7px;
+      letter-spacing: 0.5px;
       box-shadow: 0 10px 26px rgba(0,0,0,.18);
     }
-    .verdict.hit { color: #06100c; border-color: rgba(49,209,135,.82); background: var(--green); }
-    .verdict.miss { color: #fff; border-color: rgba(239,83,80,.72); background: var(--red); }
-    .verdict.wait { color: #06131a; border-color: rgba(85,214,255,.72); background: var(--cyan); }
+    .verdict.hit { color: #06100c; border-color: rgba(49,209,135,.95); background: var(--green); box-shadow: 0 0 0 4px rgba(49,209,135,.18), 0 12px 32px rgba(49,209,135,.28); }
+    .verdict.miss { color: #fff; border-color: rgba(239,83,80,.85); background: var(--red); box-shadow: 0 0 0 4px rgba(239,83,80,.18), 0 12px 32px rgba(239,83,80,.28); }
+    .verdict.wait { color: #06131a; border-color: rgba(85,214,255,.85); background: var(--cyan); box-shadow: 0 0 0 4px rgba(85,214,255,.18), 0 12px 32px rgba(85,214,255,.22); }
     .score-row { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; color: var(--muted); font-size: 12px; font-weight: 800; }
     .meter { height: 7px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
     .meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); }
@@ -1368,6 +1373,11 @@
 
     function rowCard(row) {
       const cls = statusClass[row.status] || "wait";
+      const isSettled = row.status === "תפס" || row.status === "נפל";
+      const settledBanner = isSettled
+        ? `<div style="text-align:center;padding:6px 0 2px"><span class="status ${cls}" style="font-size:26px;padding:12px 28px;display:inline-block">${row.status === "תפס" ? "✓ תפס!" : "✗ נפל"}</span></div>`
+        : "";
+      // For handicap rows, explicitPickText already includes the spread line
       return `
         <article class="card" data-id="${row.id}">
           <div class="card-head">
@@ -1378,6 +1388,7 @@
             <div class="time">${row.day} · ${row.time}</div>
           </div>
           <div class="card-body">
+            ${settledBanner}
             <div class="teams-line">
               ${teamsMarkup(row)}
             </div>
