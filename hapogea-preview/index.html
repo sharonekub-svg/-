@@ -860,6 +860,162 @@
     .history-item.hit  { border-color: rgba(49,209,135,.28); background: rgba(49,209,135,.05); }
     .history-item.miss { border-color: rgba(239,83,80,.25);  background: rgba(239,83,80,.04); }
     .h-pick { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    /* Cleaner prediction cards */
+    .cards { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+    .card {
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      border-color: rgba(255,255,255,.10);
+    }
+    .card:hover { transform: translateY(-1px); }
+    .card-head {
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 12px 10px;
+      border-bottom-color: rgba(255,255,255,.075);
+    }
+    .card-body { padding: 12px; gap: 10px; }
+    .card-topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .card-meta-stack { display: grid; gap: 4px; min-width: 0; }
+    .card-time-box {
+      display: grid;
+      gap: 2px;
+      justify-items: end;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .card-time-box b { color: var(--text); font-size: 14px; }
+    .card-section {
+      border: 1px solid rgba(255,255,255,.075);
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+      padding: 10px;
+    }
+    .teams-line {
+      border: 0;
+      background: transparent;
+      min-height: 92px;
+      padding: 2px 0;
+    }
+    .card-live-area {
+      justify-content: space-between;
+      min-height: 40px;
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+    .card-live-area .live-label { color: var(--muted); }
+    .pick-summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+    }
+    .pick-summary-main { display: grid; gap: 4px; min-width: 0; }
+    .pick-summary-main span,
+    .result-detail span {
+      color: var(--soft);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .pick-summary-main strong {
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.2;
+    }
+    .odds-box {
+      display: grid;
+      gap: 2px;
+      place-items: center;
+      min-width: 64px;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: rgba(49,209,135,.10);
+      border: 1px solid rgba(49,209,135,.28);
+      color: #bff8dc;
+      font-weight: 900;
+    }
+    .odds-box small { color: var(--muted); font-size: 10px; }
+    .why-line {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 7px;
+    }
+    .result-line {
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      align-items: center;
+    }
+    .result-detail { display: grid; gap: 4px; min-width: 0; }
+    .result-detail b { color: var(--text); font-size: 13px; }
+    .result-score { font-size: 18px; min-width: 58px; text-align: center; }
+    .verdict, .badge { letter-spacing: 0; text-transform: none; }
+    .verdict {
+      min-width: 74px;
+      justify-content: center;
+      box-shadow: none !important;
+    }
+    .verdict.unverified { color: #211600; border-color: rgba(255,200,87,.95); background: var(--gold); }
+    .badge-unverified { color: #211600; background: var(--gold); }
+    .badge-cancelled-he { color: #ffc5c3; background: rgba(239,83,80,.18); border: 1px solid rgba(239,83,80,.35); }
+    .card-verified {
+      justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding-top: 8px;
+      margin-top: 0;
+    }
+    .score-breakdown, .card-confidence { display: none; }
+    .history-rate { justify-content: space-between; flex-wrap: wrap; }
+    .history-counts {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .sport-section {
+      display: grid;
+      gap: 10px;
+      grid-column: 1 / -1;
+    }
+    .sport-section + .sport-section { margin-top: 8px; }
+    .sport-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 2px;
+      color: var(--text);
+      font-weight: 900;
+      font-size: 16px;
+    }
+    .sport-section-title span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .sport-section-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 620px) {
+      .cards { grid-template-columns: 1fr; }
+      .card-head, .card-body { padding: 10px; }
+      .pick-summary, .result-line { grid-template-columns: 1fr; }
+      .odds-box, .result-score { width: 100%; }
+      .card-topline { flex-direction: column; }
+      .card-time-box { justify-items: start; }
+    }
     .debug-panel {
       display: none;
       gap: 12px;
@@ -929,7 +1085,8 @@
         <button class="tab" data-day="tomorrow">מחר</button>
       </nav>
       <nav class="nav" id="sportTabs">
-        <button class="tab active" data-sport-tab="football">כדורגל</button>
+        <button class="tab active" data-sport-tab="all">הכל</button>
+        <button class="tab" data-sport-tab="football">כדורגל</button>
         <button class="tab" data-sport-tab="basketball">כדורסל</button>
       </nav>
     </div>
@@ -1061,7 +1218,7 @@
     const state = {
       feed: null,
       day: "today",
-      sportTab: "football",
+      sportTab: "all",
       sort: "score",
       search: "",
       loading: true,
@@ -1115,14 +1272,18 @@
       "נתפס": "hit",
       "נפל": "miss",
       "לא נתפס": "miss",
-      "החזר": "wait",
+      "החזר": "unverified",
+      "בוטל": "unverified",
+      "לא אומת": "unverified",
       "ממתין": "wait",
       "נסגר": "closed"
     };
 
     function statusLabel(value) {
-      if (value === "תפס" || value === "נתפס") return "נתפס";
-      if (value === "נפל" || value === "לא נתפס") return "לא נתפס";
+      if (value === "hit" || value === "תפס" || value === "נתפס") return "תפס";
+      if (value === "miss" || value === "נפל" || value === "לא נתפס") return "נפל";
+      if (value === "void" || value === "cancelled" || value === "בוטל") return "בוטל";
+      if (value === "unverified" || value === "לא אומת" || value === "החזר") return "לא אומת";
       return value || "ממתין";
     }
 
@@ -1252,7 +1413,9 @@
     }
 
     function daySportRows(day, sportTab) {
-      return state.feed?.tabs?.[day]?.sports?.[sportTab] || [];
+      const sports = state.feed?.tabs?.[day]?.sports || {};
+      if (sportTab === "all") return [...(sports.football || []), ...(sports.basketball || [])];
+      return sports?.[sportTab] || [];
     }
 
     function activeTodayDate(feed = state.feed) {
@@ -1415,6 +1578,32 @@
           || String(a.time).localeCompare(String(b.time));
       });
       return rows;
+    }
+
+    function currentRowsBySport() {
+      const query = state.search.trim().toLowerCase();
+      const filterRows = rows => (rows || []).filter(row => {
+        const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
+        return !query || text.includes(query);
+      });
+      return {
+        football: sortRows(filterRows(daySportRows(state.day, "football"))),
+        basketball: sortRows(filterRows(daySportRows(state.day, "basketball"))),
+      };
+    }
+
+    function sortRows(rows) {
+      return [...rows].sort((a, b) => {
+        if (!a.outsideRange && b.outsideRange) return -1;
+        if (a.outsideRange && !b.outsideRange) return 1;
+        if (state.sort === "odds") return (b.oddsRaw || b.odds || 0) - (a.oddsRaw || a.odds || 0);
+        if (state.sort === "probability") return (b.probability || 0) - (a.probability || 0);
+        if (state.sort === "time") return String(a.time).localeCompare(String(b.time));
+        return (b.recommendationScore || b.score || 0) - (a.recommendationScore || a.score || 0)
+          || (b.probability || 0) - (a.probability || 0)
+          || (b.odds || 0) - (a.odds || 0)
+          || String(a.time).localeCompare(String(b.time));
+      });
     }
 
     function bestTip() {
@@ -1890,15 +2079,36 @@
         ? `${withoutPick} ללא המלצה (${rankNoPick} לא בטופ 20, ${oddsNoPick} מחוץ לטווח)`
         : `${withoutPick} ללא המלצה`;
       meta.textContent = isOpenDay()
-        ? `${rows.length} משחקי Winner הכי חזקים · ${withPick} עם המלצה${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}.`
+        ? `${rows.length}/20 משחקי Winner הכי חזקים · ${withPick} עם המלצה${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}.`
         : `${rows.length} תוצאות רשמיות מתוך ${totalRows}. המסך הזה סוגר תחזיות שנשמרו קודם. ${sourceMode}.`;
+      if (state.sportTab === "all") {
+        const bySport = currentRowsBySport();
+        const sections = [
+          ["football", "כדורגל", bySport.football],
+          ["basketball", "כדורסל", bySport.basketball],
+        ].filter(([, , sportRows]) => sportRows.length);
+        cards.innerHTML = sections.length
+          ? sections.map(([, label, sportRows]) => `
+              <section class="sport-section">
+                <div class="sport-section-title">${label}<span>${sportRows.length} משחקים</span></div>
+                <div class="sport-section-grid">${sportRows.map(rowCard).join("")}</div>
+              </section>
+            `).join("")
+          : `<div class="empty">${isOpenDay() ? "לא נמצאו 20 משחקי Winner אמיתיים בטווח 1.40-1.90." : "אין תוצאות סגורות עם לוגואים מאומתים."}</div>`;
+        return;
+      }
       cards.innerHTML = rows.length
         ? rows.map(rowCard).join("")
         : `<div class="empty">${isOpenDay() ? "לא נמצאו משחקים ב-Winner לקטגוריה הזו." : "אין תוצאות סגורות בקטגוריה הזו."}</div>`;
     }
 
     function debugRows() {
-      const audit = state.feed?.debugAudit?.[state.day]?.[state.sportTab] || [];
+      const audit = state.sportTab === "all"
+        ? [
+            ...(state.feed?.debugAudit?.[state.day]?.football || []),
+            ...(state.feed?.debugAudit?.[state.day]?.basketball || []),
+          ]
+        : state.feed?.debugAudit?.[state.day]?.[state.sportTab] || [];
       const query = state.search.trim().toLowerCase();
       return audit.filter(row => {
         const text = `${row.match} ${row.league} ${row.pick} ${(row.reasons || []).join(" ")}`.toLowerCase();
@@ -1994,6 +2204,362 @@
       `;
     }
 
+    function predictionStatusInfo(value) {
+      const raw = String(value || "").trim();
+      if (raw === "hit" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "תפס", cls: "hit" };
+      if (raw === "miss" || raw === "נפל" || raw === "לא נתפס") return { key: "miss", label: "נפל", cls: "miss" };
+      if (raw === "void" || raw === "cancelled" || raw === "בוטל") return { key: "void", label: "בוטל", cls: "unverified" };
+      if (raw === "unverified" || raw === "לא אומת" || raw === "החזר") return { key: "unverified", label: "לא אומת", cls: "unverified" };
+      return { key: "pending", label: "ממתין", cls: "wait" };
+    }
+
+    function matchStatusInfo(row) {
+      const phase = row.matchPhase || "";
+      const betting = row.bettingStatus || "";
+      const rawStatus = String(row.status || "");
+      if (betting === "cancelled" || rawStatus.includes("בוטל")) return { label: "בוטל", cls: "badge-cancelled-he" };
+      if (betting === "postponed" || rawStatus.includes("נדחה")) return { label: "נדחה", cls: "badge-postponed" };
+      if (phase === "final") return { label: "FT", cls: "badge-ft" };
+      if (phase === "live") return { label: "LIVE", cls: "badge-live" };
+      if (phase === "ht") return { label: "HT", cls: "badge-ht" };
+      return { label: "טרם התחיל", cls: "badge-pending" };
+    }
+
+    function isVoidLikeRow(row) {
+      const status = String(row.status || "");
+      const betting = String(row.bettingStatus || "");
+      return betting === "cancelled" || betting === "postponed" || betting === "void" ||
+        status.includes("בוטל") || status.includes("נדחה") || status.includes("החזר") || status.includes("לא אומת");
+    }
+
+    function rememberOpenPredictions(feed) {
+      if (!feed?.tabs) return;
+      const tracker = readTracker();
+      const byKey = new Map(tracker.map(item => [item.key, item]));
+      ["today", "tomorrow"].forEach(dayName => {
+        ["football", "basketball"].forEach(sport => {
+          (feed.tabs?.[dayName]?.sports?.[sport] || []).forEach(row => {
+            if (!row.recommended || !row.odds || row.outsideRange) return;
+            const key = predictionKey(row);
+            const previous = byKey.get(key) || {};
+            byKey.set(key, {
+              ...previous,
+              key,
+              eventId: row.eventId,
+              resultKey: row.resultKey,
+              marketId: row.marketId,
+              outcomeId: row.outcomeId,
+              sport,
+              sportId: row.sportId,
+              home: row.home,
+              away: row.away,
+              league: row.league,
+              kickoffTime: row.time,
+              pick: pickLabel(row),
+              pickTeam: row.pickTeam,
+              match: row.match,
+              odds: row.odds,
+              oddsVerifiedAt: row.verifiedAt || feed.generatedAt || previous.oddsVerifiedAt || "",
+              predictedDay: row.day,
+              month: String(row.day || "").slice(0, 7),
+              status: previous.status && previous.status !== "pending" ? previous.status : "pending"
+            });
+          });
+        });
+      });
+      writeTracker([...byKey.values()]);
+    }
+
+    function settleTrackedPredictions(feed) {
+      if (!feed?.tabs) return;
+      const rows = Object.values(feed.tabs)
+        .flatMap(tab => Object.values(tab.sports || {}).flatMap(items => items || []));
+      const results = rows.filter(row =>
+        row.actualWinner || row.matchPhase === "final" || isVoidLikeRow(row)
+      );
+      const resultByEvent = new Map(results.map(row => [String(row.eventId), row]));
+      const resultByKey = new Map(results.filter(row => row.resultKey).map(row => [String(row.resultKey), row]));
+      const verifiedAt = feed.generatedAt || new Date().toISOString();
+      const tracker = readTracker().map(item => {
+        if (item.status && item.status !== "pending") return item;
+        const result = resultByEvent.get(String(item.eventId)) || resultByKey.get(String(item.resultKey || ""));
+        if (!result) {
+          console.warn("Result match failed", {
+            eventId: item.eventId,
+            resultKey: item.resultKey,
+            sportId: item.sportId,
+            league: item.league,
+            match: item.match,
+            day: item.predictedDay,
+            time: item.kickoffTime
+          });
+          return item;
+        }
+        if (isVoidLikeRow(result)) {
+          return {
+            ...item,
+            status: result.status && String(result.status).includes("בוטל") ? "void" : "unverified",
+            actualWinner: "",
+            result: result.result || result.liveScore || "",
+            settledDay: result.day,
+            settledMonth: String(result.day || item.predictedDay || "").slice(0, 7),
+            resultVerifiedAt: verifiedAt
+          };
+        }
+        if (result.matchPhase !== "final" || !result.actualWinner) return item;
+        const hit = samePick(item.pickTeam || item.pick, result.actualWinner);
+        return {
+          ...item,
+          status: hit ? "hit" : "miss",
+          actualWinner: result.actualWinner,
+          result: result.result || result.liveScore || "",
+          settledDay: result.day,
+          settledMonth: String(result.day || item.predictedDay || "").slice(0, 7),
+          finishedAt: result.finishedAt || verifiedAt,
+          resultVerifiedAt: verifiedAt
+        };
+      });
+      writeTracker(tracker);
+    }
+
+    function monthlyPerformance() {
+      const month = (activeTodayDate() || new Date().toISOString()).slice(0, 7);
+      const items = readTracker().filter(item =>
+        (item.settledMonth || item.month || String(item.predictedDay || "").slice(0, 7)) === month
+      );
+      const hits = items.filter(item => item.status === "hit").length;
+      const misses = items.filter(item => item.status === "miss").length;
+      const pending = items.filter(item => item.status === "pending").length;
+      const voided = items.filter(item => item.status === "void" || item.status === "unverified").length;
+      const settled = hits + misses;
+      const roiUnits = items.reduce((total, item) => {
+        if (item.status === "hit") return total + Math.max(0, Number(item.odds || 0) - 1);
+        if (item.status === "miss") return total - 1;
+        return total;
+      }, 0);
+      return {
+        month,
+        tracked: items.length,
+        settled,
+        hits,
+        misses,
+        pending,
+        voided,
+        hitRate: settled ? Math.round((hits / settled) * 100) : 0,
+        roiUnits,
+        roiPercent: settled ? Math.round((roiUnits / settled) * 100) : 0
+      };
+    }
+
+    function rowOutcome(row) {
+      const tracked = trackerForRow(row);
+      const hasSavedPick = !!tracked || !!row.recommended || (!!row.odds && !row.outsideRange);
+      const guessed = hasSavedPick
+        ? (tracked?.pickTeam || tracked?.pick || row.pickTeam || row.winnerPick || row.pick || "לא נשמר")
+        : "לא נשמר";
+      const result = row.liveScore || row.result || tracked?.result || "";
+      const actual = row.actualWinner || tracked?.actualWinner || "";
+      let status = tracked?.status || "";
+      if (!status || status === "pending") {
+        if (isVoidLikeRow(row)) status = row.status && String(row.status).includes("בוטל") ? "void" : "unverified";
+        else if (!hasSavedPick && (row.matchPhase === "final" || actual)) status = "unverified";
+        else if (row.matchPhase === "final" && actual && guessed !== "לא נשמר") status = samePick(guessed, actual) ? "hit" : "miss";
+        else status = "pending";
+      }
+      const info = predictionStatusInfo(status);
+      return {
+        result: result || (row.matchPhase === "scheduled" ? "טרם התחיל" : "אין תוצאה מאומתת"),
+        guessed,
+        actual,
+        odds: tracked?.odds || row.odds || row.oddsRaw || null,
+        cls: info.cls,
+        key: info.key,
+        label: info.label,
+        resultVerifiedAt: tracked?.resultVerifiedAt || row.resultVerifiedAt || "",
+        oddsVerifiedAt: tracked?.oddsVerifiedAt || row.verifiedAt || state.feed?.generatedAt || ""
+      };
+    }
+
+    function matchBadges(row) {
+      const match = matchStatusInfo(row);
+      const outcome = rowOutcome(row);
+      const badges = [`<span class="badge ${match.cls}">${match.label}</span>`];
+      if (row.recommended) badges.push(`<span class="badge ${outcome.cls === "hit" ? "badge-won" : outcome.cls === "miss" ? "badge-lost" : outcome.cls === "unverified" ? "badge-unverified" : "badge-pending"}">${outcome.label}</span>`);
+      if (row.isAlternativeMarket) badges.push('<span class="badge badge-odds-changed">שוק חלופי</span>');
+      if (row.marketTier === "spread") badges.push('<span class="badge badge-pending">ליין כדורסל</span>');
+      if (row.valueIndicator === "winner_higher") badges.push('<span class="badge badge-won">Value</span>');
+      if (row.bettingStatus === "suspended") badges.push('<span class="badge badge-suspended">מושעה</span>');
+      if (row.bettingStatus === "odds_changed") badges.push('<span class="badge badge-odds-changed">יחס השתנה</span>');
+      return badges.join("");
+    }
+
+    function marketLabelText(row) {
+      if (row.marketTier === "alternative-double-chance") return "שוק חלופי: סיכוי כפול";
+      if (row.marketTier === "alternative-total") return "שוק חלופי: מעל/מתחת";
+      if (row.marketTier === "spread") return `כדורסל: ליין יתרון${Number.isFinite(Number(row.spread)) ? ` ${Number(row.spread) > 0 ? "+" : ""}${row.spread}` : ""}`;
+      if (row.sportId === 227) return "כדורסל: מנצחת משחק";
+      return "כדורגל: מנצחת / תיקו / חוץ";
+    }
+
+    function liveScoreMarkup(row) {
+      const match = matchStatusInfo(row);
+      const score = row.liveScore || row.result || "";
+      const minute = row.matchMinute ? `${row.matchMinute}'` : "";
+      const phaseClass = row.matchPhase === "final" ? "phase-final" : row.matchPhase === "ht" ? "phase-ht" : row.matchPhase === "live" ? "" : "phase-scheduled";
+      const scoreText = score || (row.matchPhase === "final" ? "אין תוצאה מאומתת" : row.matchPhase === "live" ? "נתוני חי לא זמינים" : row.time || "טרם התחיל");
+      return `<div class="card-live-area ${phaseClass}">
+        <span class="live-label">${match.label}${minute ? ` · ${minute}` : ""}</span>
+        <span class="live-score-main">${scoreText}</span>
+      </div>`;
+    }
+
+    function resultMarkup(row) {
+      const outcome = rowOutcome(row);
+      const verifyTime = outcome.resultVerifiedAt ? formatShortTime(outcome.resultVerifiedAt) : "";
+      return `
+        <div class="result-line">
+          <div class="result-detail">
+            <span>סטטוס תחזית</span>
+            <b>${outcome.label}${outcome.actual ? ` · בפועל: ${outcome.actual}` : ""}</b>
+            <span>${verifyTime ? `אימות תוצאה: ${verifyTime}` : "ממתין לתוצאה רשמית מאומתת"}</span>
+          </div>
+          <span class="verdict ${outcome.cls}">${outcome.label}</span>
+        </div>
+      `;
+    }
+
+    function formatShortTime(value) {
+      if (!value) return "";
+      try {
+        return new Date(value).toLocaleString("he-IL", {
+          timeZone: "Asia/Jerusalem",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      } catch {
+        return "";
+      }
+    }
+
+    function cardVerifiedMarkup(row) {
+      const outcome = rowOutcome(row);
+      const oddsTime = formatShortTime(outcome.oddsVerifiedAt);
+      const resultTime = formatShortTime(outcome.resultVerifiedAt);
+      if (!oddsTime && !resultTime) return "";
+      return `<div class="card-verified">
+        <span><span class="vdot"></span>יחס Winner: ${oddsTime || "לא זמין"}</span>
+        <span>תוצאה: ${resultTime || "טרם אומתה"}</span>
+      </div>`;
+    }
+
+    function rowCard(row) {
+      const hasRecommendation = row.recommended || (!!row.odds && !row.outsideRange);
+      const noPickLabel = row.recommendationReason === "rank"
+        ? "לא בטופ 20"
+        : row.recommendationReason === "odds-range"
+          ? "מחוץ לטווח 1.40-1.90"
+          : "ללא המלצה";
+      const why = (row.explanation || [])[1] || (row.signals || []).slice(0, 2).join(" · ");
+      return `
+        <article class="card" data-id="${row.id}">
+          <div class="card-head">
+            <div class="card-topline" style="width:100%">
+              <div class="card-meta-stack">
+                <div class="league" style="display:flex;align-items:center;gap:6px">
+                  ${logoMarkup(row.leagueAsset, "small")}
+                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.league || "ליגה לא זמינה"}</span>
+                </div>
+                <div class="card-badge-row">${matchBadges(row)}</div>
+              </div>
+              <div class="card-time-box">
+                <span>${row.day || ""}</span>
+                <b>${row.time || ""}</b>
+                <span>${row.sport || ""}</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            ${liveScoreMarkup(row)}
+            <div class="card-section">
+              <div class="teams-line">${teamsMarkup(row)}</div>
+            </div>
+            <div class="card-section">
+              ${hasRecommendation
+                ? `<div class="pick-summary">
+                     <div class="pick-summary-main">
+                       <span>מה הימרנו</span>
+                       <strong>${explicitPickText(row)}</strong>
+                       <span>${marketLabelText(row)} · ${pickActionText(row)}</span>
+                     </div>
+                     <div class="odds-box"><small>יחס</small>${row.odds ? formatOdds(row.odds) : "תוצאה"}</div>
+                   </div>
+                   ${why ? `<div class="why-line">${why}</div>` : ""}`
+                : `<div class="pick-summary" style="opacity:.72">
+                     <div class="pick-summary-main">
+                       <span>ללא המלצה</span>
+                       <strong>${explicitPickText(row)}${row.oddsRaw ? ` · ${formatOdds(row.oddsRaw)}` : ""}</strong>
+                       <span>${noPickLabel}</span>
+                     </div>
+                   </div>`}
+            </div>
+            ${resultMarkup(row)}
+            ${cardVerifiedMarkup(row)}
+            <button class="open-game" data-open="${row.id}">פירוט משחק ←</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderHistory() {
+      const target = document.getElementById("historySection");
+      if (!target) return;
+      const perf = monthlyPerformance();
+      const tracker = readTracker();
+      const items = tracker
+        .filter(item => (item.settledMonth || item.month || String(item.predictedDay || "").slice(0, 7)) === perf.month)
+        .sort((a, b) => String(b.resultVerifiedAt || b.settledDay || b.predictedDay || "").localeCompare(String(a.resultVerifiedAt || a.settledDay || a.predictedDay || "")));
+      if (!items.length) { target.style.display = "none"; return; }
+      target.style.display = "";
+      const rateText = perf.settled ? `${perf.hitRate}% — ${perf.hits}/${perf.settled} משחקים מאומתים` : "אין משחקים מאומתים עדיין";
+      const roiText = perf.settled ? `${perf.roiUnits >= 0 ? "+" : ""}${perf.roiUnits.toFixed(2)} יחידות (${perf.roiPercent >= 0 ? "+" : ""}${perf.roiPercent}%)` : "אין ROI מחושב עדיין";
+      target.innerHTML = `
+        <div class="section-title">
+          <div>
+            <h3>היסטוריית תוצאות</h3>
+            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">נוסחה: תפס / (תפס + נפל). ממתין, בוטל ולא אומת לא נספרים באחוז.</p>
+          </div>
+        </div>
+        <div class="history-rate">
+          <b>${rateText}</b>
+          <span style="color:var(--muted);font-size:13px">ROI ביחידת הימור קבועה: ${roiText}</span>
+          <div class="history-counts">
+            <span class="badge badge-won">תפס ${perf.hits}</span>
+            <span class="badge badge-lost">נפל ${perf.misses}</span>
+            <span class="badge badge-pending">ממתין ${perf.pending}</span>
+            <span class="badge badge-unverified">בוטל/לא אומת ${perf.voided}</span>
+          </div>
+        </div>
+        <div class="history-grid">
+          ${items.map(item => {
+            const info = predictionStatusInfo(item.status);
+            const badgeClass = info.cls === "hit" ? "badge-won" : info.cls === "miss" ? "badge-lost" : info.cls === "unverified" ? "badge-unverified" : "badge-pending";
+            return `
+              <div class="history-item ${info.cls === "hit" ? "hit" : info.cls === "miss" ? "miss" : ""}">
+                <span class="badge ${badgeClass}">${info.label}</span>
+                <div>
+                  <div style="font-weight:800;font-size:12px">${escapeHtml(item.match || "")}</div>
+                  <div class="h-pick">בחירה: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
+                  <div class="h-pick">תוצאה: ${escapeHtml(item.result || item.actualWinner || "ממתין לאימות")}</div>
+                </div>
+                <div style="font-size:10px;color:var(--soft)">${item.settledDay || item.predictedDay || ""}</div>
+              </div>`;
+          }).join("")}
+        </div>
+      `;
+    }
+
     function render() {
       renderTabs();
       renderStats();
@@ -2002,6 +2568,69 @@
       renderCards();
       renderHistory();
       renderDebug();
+    }
+
+    function parseKickoffMs(day, time) {
+      if (!day || !time) return NaN;
+      const match = String(time).match(/(\d{1,2}):(\d{2})/);
+      if (!match) return NaN;
+      return new Date(`${day}T${match[1].padStart(2, "0")}:${match[2]}:00+03:00`).getTime();
+    }
+
+    function pendingRowsNeedingResultCheck(feed = state.feed) {
+      if (!feed?.tabs) return [];
+      const tracked = readTracker().filter(item => item.status === "pending");
+      const trackedKeys = new Set(tracked.flatMap(item => [String(item.eventId || ""), String(item.resultKey || "")]));
+      const now = Date.now();
+      return Object.values(feed.tabs)
+        .flatMap(tab => Object.values(tab.sports || {}).flatMap(rows => rows || []))
+        .filter(row => {
+          const keyHit = trackedKeys.has(String(row.eventId || "")) || trackedKeys.has(String(row.resultKey || ""));
+          const isTrackedPick = keyHit || row.recommended || (!!row.odds && !row.outsideRange);
+          if (!isTrackedPick) return false;
+          const outcome = rowOutcome(row);
+          if (outcome.key !== "pending") return false;
+          if (row.matchPhase === "live" || row.matchPhase === "ht") return true;
+          if (row.matchPhase === "final" || row.actualWinner) return true;
+          const kickoff = parseKickoffMs(row.day, row.time);
+          return Number.isFinite(kickoff) && now >= kickoff;
+        });
+    }
+
+    function nextRefreshMs(feed = state.feed) {
+      return pendingRowsNeedingResultCheck(feed).length ? 60 * 1000 : 5 * 60 * 1000;
+    }
+
+    function scheduleRefresh(feed = state.feed) {
+      if (window._hapRefreshTimer) clearTimeout(window._hapRefreshTimer);
+      window._hapRefreshTimer = setTimeout(() => {
+        if (!document.hidden) loadFeed();
+        else scheduleRefresh(feed);
+      }, nextRefreshMs(feed));
+    }
+
+    function israelDayString(date = new Date()) {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jerusalem",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(date);
+      const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      return `${map.year}-${map.month}-${map.day}`;
+    }
+
+    function scheduleMidnightShift() {
+      if (window._hapMidnightTimer) clearTimeout(window._hapMidnightTimer);
+      window._hapMidnightTimer = setTimeout(() => {
+        const currentIsraelDay = israelDayString();
+        const feedDay = activeTodayDate();
+        if (feedDay && currentIsraelDay !== feedDay) {
+          loadFeed().finally(scheduleMidnightShift);
+        } else {
+          scheduleMidnightShift();
+        }
+      }, 30 * 1000);
     }
 
     async function loadFeed() {
@@ -2020,15 +2649,14 @@
       } finally {
         state.loading = false;
         render();
+        scheduleRefresh(state.feed);
       }
     }
 
-    // Auto-refresh every 30 minutes (only when tab is visible)
-    if (!window._hapRefreshTimer) {
-      window._hapRefreshTimer = setInterval(() => {
-        if (!document.hidden) loadFeed();
-      }, 30 * 60 * 1000);
-    }
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) loadFeed();
+    });
+    window.addEventListener("focus", () => loadFeed());
 
     document.querySelectorAll("#dayTabs .tab").forEach(button => {
       button.addEventListener("click", () => {
@@ -2082,6 +2710,7 @@
     });
 
     loadFeed();
+    scheduleMidnightShift();
   </script>
 </body>
 </html>
