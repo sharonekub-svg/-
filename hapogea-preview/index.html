@@ -1138,6 +1138,8 @@
       background: rgba(85,214,255,.055);
       color: var(--muted);
     }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .typing-dot { animation: blink 1.2s step-end infinite; }
     .history-rate { justify-content: space-between; flex-wrap: wrap; }
     .history-counts {
       display: flex;
@@ -1423,6 +1425,7 @@
       selectedId: null,
       wcOpen: false,
       reubenMessages: [],
+      reubenLoading: false,
       debugMode: location.pathname.includes("debug")
     };
     let lastLoadTime = 0;
@@ -2213,20 +2216,24 @@
     function renderReubenAI() {
       const messages = state.reubenMessages.length
         ? state.reubenMessages
-        : [{ role: "ai", text: "Ask me about a football or basketball bet. If the match is loaded from Winner, I will use the available Winner odds and markets in the answer." }];
+        : [{ role: "ai", text: "שלום! אני ראובן AI.\n\nאמור לי על איזה משחק אתה חושב להמר — כתוב שם הקבוצות ואני אמשוך את האודס האמיתי מ-Winner ואנתח עבורך.\n\nדוגמה: \"ברצלונה נגד ריאל מדריד, היום\"" }];
+      const loading = state.reubenLoading;
       return `
         <section class="reuben-panel">
           <div class="section-title" style="margin:0">
             <div>
-              <h3>Reuven AI</h3>
-              <p>Separate chat advisor for football and basketball bets: strengths, weaknesses, implied probability, EV, rating and alternatives. It uses the loaded Winner feed and does not invent missing data.</p>
+              <h3 style="display:flex;align-items:center;gap:8px">ראובן AI <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:rgba(85,214,255,.15);color:var(--cyan)">BETA</span></h3>
+              <p>יועץ הימורי חכם — מושך אודס אמיתי מ-Winner ומנתח כל משחק שתבקש.</p>
             </div>
-            <span class="pill">Bet advisor</span>
+            <span class="pill">Winner · AI</span>
           </div>
-          <textarea id="reubenInput" placeholder="Write a bet to analyze: match, market, Winner odds, spread if relevant. Example: Real Madrid vs Barcelona, Over 2.5 @ 1.80"></textarea>
-          <button class="open-game" type="button" id="reubenAnalyze">Send to Reuven</button>
           <div class="chat-log" id="reubenOutput">
-            ${messages.map(message => `<div class="chat-message ${message.role === "user" ? "user" : "ai"}">${escapeHtml(message.text)}</div>`).join("")}
+            ${messages.map(m => `<div class="chat-message ${m.role === "user" ? "user" : "ai"}" style="white-space:pre-wrap">${escapeHtml(m.text)}</div>`).join("")}
+            ${loading ? `<div class="chat-message ai" style="opacity:.6">ראובן מנתח<span class="typing-dot">...</span></div>` : ""}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:4px">
+            <textarea id="reubenInput" placeholder="כתוב משחק: קבוצה א' נגד קבוצה ב', היום / מחר" style="min-height:72px;resize:vertical" ${loading ? "disabled" : ""}></textarea>
+            <button class="open-game" type="button" id="reubenAnalyze" style="align-self:end;min-width:80px" ${loading ? "disabled style='opacity:.5'" : ""}>${loading ? "⏳" : "שלח ←"}</button>
           </div>
         </section>
       `;
@@ -3041,14 +3048,33 @@
       }
       if (event.target.closest("#reubenAnalyze")) {
         const input = document.getElementById("reubenInput");
-        const question = input?.value || "";
-        const answer = analyzeReubenBet(question);
-        if (question.trim()) state.reubenMessages.push({ role: "user", text: question.trim() });
-        state.reubenMessages.push({ role: "ai", text: answer });
+        const question = (input?.value || "").trim();
+        if (!question || state.reubenLoading) return;
+        state.reubenMessages.push({ role: "user", text: question });
         if (input) input.value = "";
+        state.reubenLoading = true;
         renderCards();
         const output = document.getElementById("reubenOutput");
         if (output) output.scrollTop = output.scrollHeight;
+        (async () => {
+          try {
+            const res = await fetch("/api/reuven", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query: question, history: state.reubenMessages.slice(-8) }),
+              signal: AbortSignal.timeout(35000),
+            });
+            const data = await res.json();
+            state.reubenMessages.push({ role: "ai", text: data.answer || "לא קיבלתי תגובה." });
+          } catch (err) {
+            state.reubenMessages.push({ role: "ai", text: `שגיאה: ${err.message}` });
+          } finally {
+            state.reubenLoading = false;
+            renderCards();
+            const out = document.getElementById("reubenOutput");
+            if (out) out.scrollTop = out.scrollHeight;
+          }
+        })();
         return;
       }
       const button = event.target.closest("[data-open]");
@@ -3059,6 +3085,17 @@
     document.getElementById("closeModal").addEventListener("click", closeModal);
     document.getElementById("gameModal").addEventListener("click", event => {
       if (event.target.id === "gameModal") closeModal();
+    });
+
+    // Ctrl+Enter or Shift+Enter sends Reuven query
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        const focused = document.activeElement;
+        if (focused && focused.id === "reubenInput") {
+          document.getElementById("reubenAnalyze")?.click();
+          e.preventDefault();
+        }
+      }
     });
 
     loadFeed();
