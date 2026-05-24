@@ -250,14 +250,23 @@ function initials(value) {
     .toUpperCase();
 }
 
-function fallbackLogo(name, kind) {
-  const label = initials(name).slice(0, 2) || "?";
-  const seed = [...cleanText(name)].reduce((total, char) => total + char.charCodeAt(0), 0);
-  const hueA = seed % 360;
-  const hueB = (hueA + 54) % 360;
-  const stroke = kind === "league" ? "#55d6ff" : "#ffc857";
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="hsl(${hueA},78%,28%)"/><stop offset="1" stop-color="hsl(${hueB},82%,18%)"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#000" flood-opacity=".35"/></filter></defs><path d="M64 8 111 25v36c0 29-18 49-47 59-29-10-47-30-47-59V25L64 8Z" fill="url(#g)" stroke="${stroke}" stroke-width="5" filter="url(#s)"/><path d="M31 43h66" stroke="rgba(255,255,255,.18)" stroke-width="5"/><text x="64" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" font-weight="900" fill="#f7f3ea">${label}</text></svg>`;
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+function fallbackLogo(name, type = "team") {
+  const text = cleanText(name);
+  const abbr = text.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "?";
+  // deterministic color from name hash
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) & 0xffffffff;
+  const hue = Math.abs(hash) % 360;
+  const sat = 55 + (Math.abs(hash >> 4) % 25);
+  const lit = 38 + (Math.abs(hash >> 8) % 18);
+  const color = `hsl(${hue},${sat}%,${lit}%)`;
+  const light = `hsl(${hue},${sat}%,${lit + 28}%)`;
+  if (type === "league") {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="21" fill="${color}"/><circle cx="22" cy="22" r="15" fill="none" stroke="${light}" stroke-width="2"/><text x="22" y="27" text-anchor="middle" font-size="13" font-family="Arial,sans-serif" font-weight="700" fill="white">${abbr}</text></svg>`;
+    return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 50"><path d="M22 2 L40 10 L40 28 Q40 42 22 48 Q4 42 4 28 L4 10 Z" fill="${color}"/><path d="M22 6 L37 13 L37 28 Q37 40 22 45 Q7 40 7 28 L7 13 Z" fill="none" stroke="${light}" stroke-width="1.5"/><text x="22" y="31" text-anchor="middle" font-size="14" font-family="Arial,sans-serif" font-weight="800" fill="white">${abbr}</text></svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
 function normalizeLogoName(value) {
@@ -338,7 +347,7 @@ async function sportsDbSearch(kind, term) {
   const param = kind === "league" ? "l" : "t";
   const url = `https://www.thesportsdb.com/api/v1/json/3/${endpoint}?${param}=${encodeURIComponent(value)}`;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 900);
+  const timeout = setTimeout(() => controller.abort(), 1500);
   const data = await fetchJson(url, { signal: controller.signal, retryAttempts: 1 }).catch(() => null);
   clearTimeout(timeout);
   const rows = kind === "league" ? (data?.countries || data?.leagues) : data?.teams;
@@ -353,6 +362,44 @@ async function sportsDbSearch(kind, term) {
     logo_url: row.strBadge || row.strLogo || row.strFanart1 || "",
     source: "TheSportsDB",
   };
+}
+
+async function sofascoreLogoSearch(name, kind) {
+  const value = cleanText(name);
+  if (!value || value.length < 2) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1500);
+  try {
+    const url = `https://api.sofascore.com/api/v1/search/all?q=${encodeURIComponent(value)}&page=0`;
+    const data = await fetchJson(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        Accept: "application/json",
+        Referer: "https://www.sofascore.com/",
+      },
+      signal: controller.signal,
+      retryAttempts: 0,
+    }).catch(() => null);
+    clearTimeout(timeout);
+    if (!data) return null;
+    const type = kind === "league" ? "uniqueTournament" : "team";
+    const results = (data.results || []).filter(r => r.type === type);
+    if (!results.length) return null;
+    const hit = results[0];
+    const id = hit.entity?.id;
+    if (!id) return null;
+    const imgPath = kind === "league"
+      ? `https://api.sofascore.com/api/v1/unique-tournament/${id}/image`
+      : `https://api.sofascore.com/api/v1/team/${id}/image`;
+    return {
+      name: cleanText(hit.entity?.name || value),
+      logo_url: imgPath,
+      source: `SofaScore ${kind}`,
+    };
+  } catch (_) {
+    clearTimeout(timeout);
+    return null;
+  }
 }
 
 async function wikipediaLogoSearch(name, kind) {
@@ -438,13 +485,21 @@ async function wikidataLogoSearch(name, kind) {
     retryAttempts: 1,
   }).catch(() => null);
   clearTimeout(entityTimeout);
-  const claims = entity?.entities?.[id]?.claims || {};
+  const entityData = entity?.entities?.[id] || {};
+  const claims = entityData.claims || {};
+  const labels = entityData.labels || {};
+  // P154 = logo image, P18 = image (fallback)
   const image = claims.P154?.[0]?.mainsnak?.datavalue?.value ||
     claims.P18?.[0]?.mainsnak?.datavalue?.value;
-  if (!image) return null;
+  // Return English label so callers can use it for TheSportsDB
+  const englishName = labels?.en?.value || null;
+  if (!image && !englishName) return null;
   return {
     name: value,
-    logo_url: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(image)}?width=160`,
+    logo_url: image
+      ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(image)}?width=160`
+      : null,
+    englishName,
     source: `Wikidata ${kind}`,
   };
 }
@@ -464,20 +519,36 @@ async function resolveLogoRow(table, kind, name) {
     row = await Promise.race([
       (async () => {
         for (const term of logoSearchTerms(cleanText(name), kind)) {
+          // 1. Supabase cache (fastest, has both Hebrew and English names)
           const supabaseRow = await supabaseSearch(table, term);
           if (supabaseRow?.logo_url) return supabaseRow;
-          const results = await Promise.allSettled([
-            sportsDbSearch(kind, term),
-            wikipediaLogoSearch(term, kind),
-            wikipediaSearchLogo(term, kind),
+
+          // 2. Run SofaScore + Wikidata in parallel — both accept Hebrew natively.
+          //    SofaScore has direct CDN logos; Wikidata returns logo + English label.
+          const [sofaRes, wdRes] = await Promise.allSettled([
+            sofascoreLogoSearch(term, kind),
             wikidataLogoSearch(term, kind),
           ]);
-          const found = results.find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
+          if (sofaRes.status === "fulfilled" && sofaRes.value?.logo_url) return sofaRes.value;
+          if (wdRes.status === "fulfilled" && wdRes.value?.logo_url) return wdRes.value;
+
+          // 3. If Wikidata gave us the English name, use it for TheSportsDB + Wikipedia.
+          //    Otherwise fall back to the raw term (works when it's already Latin).
+          const englishName = (wdRes.status === "fulfilled" && wdRes.value?.englishName) || null;
+          const lookupTerm = englishName || term;
+
+          const [sdbRes, wpRes, wsRes] = await Promise.allSettled([
+            sportsDbSearch(kind, lookupTerm),
+            wikipediaLogoSearch(lookupTerm, kind),
+            wikipediaSearchLogo(lookupTerm, kind),
+          ]);
+          const found = [sdbRes, wpRes, wsRes]
+            .find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
           if (found?.logo_url) return found;
         }
         return null;
       })(),
-      new Promise(resolve => setTimeout(() => resolve(null), 2200)),
+      new Promise(resolve => setTimeout(() => resolve(null), 5000)),
     ]);
   } catch (_) {
     row = null;
@@ -488,9 +559,21 @@ async function resolveLogoRow(table, kind, name) {
   return row;
 }
 
+function asset365(name, logoUrl, kind) {
+  return {
+    name: cleanText(name),
+    logo: logoUrl,
+    initials: initials(name),
+    logoSource: "365Scores",
+    logoTier: 1,
+  };
+}
+
 async function enrichLogos(rows) {
-  async function teamAsset(name) {
+  async function teamAsset(name, directUrl) {
     const key = cleanText(name);
+    // If we already have a 365Scores URL, use it directly — no lookup needed
+    if (directUrl) return asset365(key, directUrl, "team");
     const row = await resolveLogoRow("teams", "team", key);
     return {
       name: key,
@@ -499,8 +582,9 @@ async function enrichLogos(rows) {
       logoSource: row?.source || (row?.logo_url ? "win2go teams" : "generated team badge"),
     };
   }
-  async function leagueAsset(name) {
+  async function leagueAsset(name, directUrl) {
     const key = cleanText(name);
+    if (directUrl) return asset365(key, directUrl, "league");
     const row = await resolveLogoRow("leagues", "league", key);
     return {
       name: key,
@@ -510,7 +594,7 @@ async function enrichLogos(rows) {
     };
   }
   function withLeagueFallback(asset, leagueAssetValue, teamName) {
-    if (hasVerifiedLogo(asset)) return { ...asset, logoTier: 1 };
+    if (hasVerifiedLogo(asset)) return { ...asset, logoTier: asset.logoTier || 1 };
     if (hasVerifiedLogo(leagueAssetValue)) {
       return {
         ...asset,
@@ -523,11 +607,10 @@ async function enrichLogos(rows) {
     return { ...asset, logo: fallbackLogo(teamName, "team"), logoSource: "dynamic generated shield", logoTier: 4 };
   }
   return Promise.all(rows.map(async (row) => {
-    // league + home + away all in parallel (was: league first, then home+away)
     const [leagueAssetValue, homeRaw, awayRaw] = await Promise.all([
-      leagueAsset(row.league),
-      teamAsset(row.home),
-      teamAsset(row.away),
+      leagueAsset(row.league, row.leagueLogoUrl),
+      teamAsset(row.home, row.homeLogoUrl),
+      teamAsset(row.away, row.awayLogoUrl),
     ]);
     const homeAsset = withLeagueFallback(homeRaw, leagueAssetValue, row.home);
     const awayAsset = withLeagueFallback(awayRaw, leagueAssetValue, row.away);
@@ -891,10 +974,22 @@ const CENTRAL_LEAGUE_PATTERNS = [
   "פרמייר ליג",
   "אנגלית ראשונה",
   "ספרדית ראשונה",
+  "לה ליגה",
   "איטלקית ראשונה",
+  "סרייה א",
   "גרמנית ראשונה",
+  "בונדסליגה",
   "NBA",
   "יורוליג",
+  "ליגת אלופות",
+  "Champions League",
+  "Europa League",
+  "ליגת האלופות",
+  "ליגת אירופה",
+  "ליגה הלאומית",
+  "Ligue 1",
+  "Eredivisie",
+  "מחצית ראשונה",
 ];
 const HIGH_PROFILE_TEAM_PATTERNS = [
   "בית\"ר ירושלים",
@@ -990,7 +1085,7 @@ function scoreBreakdown(row) {
     oddsValue: Math.round(oddsQuality * 18),
     marketGap: Math.round(marketGap * 34),
     reliability: Math.round(reliability * 10),
-    niche: central ? 0 : -8,
+    niche: central ? -40 : 32,
     clearFavorite: clearFavorite ? 18 : -30,
     proximity: proximityBonus,
     overroundPenalty: -Math.round(overroundPenalty),
@@ -1345,6 +1440,18 @@ function buildResultRows(results, dateKey) {
     .slice(0, 20);
 }
 
+function seed365Logo(kind, name, id, folder) {
+  if (!name || !id) return;
+  const key = `${kind}:${name}`;
+  if (!globalLogoCache.has(key)) {
+    globalLogoCache.set(key, {
+      name,
+      logo_url: `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/${folder}/${id}`,
+      source: "365Scores",
+    });
+  }
+}
+
 async function get365Results(startDate, endDate, sportId365, winnerSportId, refererSport) {
   const dates = [startDate];
   if (endDate && endDate !== startDate) dates.push(endDate);
@@ -1373,6 +1480,10 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
       const home = cleanText(game.homeCompetitor?.name);
       const away = cleanText(game.awayCompetitor?.name);
       if (!home || !away) continue;
+      // Seed globalLogoCache so enrichLogos finds logos without extra lookups
+      seed365Logo("team", home, game.homeCompetitor?.id, "Teams");
+      seed365Logo("team", away, game.awayCompetitor?.id, "Teams");
+      seed365Logo("league", cleanText(game.competitionDisplayName), game.competition?.id || game.competitionId, "Competitions");
       const homeScore = Number(game.homeCompetitor?.score);
       const awayScore = Number(game.awayCompetitor?.score);
       const hasScore = Number.isFinite(homeScore) && Number.isFinite(awayScore) && homeScore >= 0 && awayScore >= 0;
@@ -1383,6 +1494,10 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
           : homeScore > awayScore ? home : away
         : "";
       const start = game.startTime ? new Date(game.startTime) : null;
+      // Store 365Scores IDs — used to build direct CDN logo URLs
+      const homeId = game.homeCompetitor?.id;
+      const awayId = game.awayCompetitor?.id;
+      const competitionId = game.competition?.id || game.competitionId;
       rows.push({
         eventid: `365-${game.id}`,
         eventid365: String(game.id),
@@ -1401,6 +1516,10 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
         statusText: cleanText(game.statusText),
         markets: actualWinner ? [{ title: "המנצח", marketResults: [actualWinner] }] : [],
         source: "365Scores",
+        // Direct logo CDN paths — no lookup needed for matches we already got from 365
+        homeLogoUrl: homeId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Teams/${homeId}` : null,
+        awayLogoUrl: awayId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Teams/${awayId}` : null,
+        leagueLogoUrl: competitionId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitions/${competitionId}` : null,
       });
     }
   }
@@ -1442,6 +1561,10 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
         match: `${teams.home} - ${teams.away}`,
         home: teams.home,
         away: teams.away,
+        // Carry 365Scores CDN logo URLs so enrichLogos can skip the lookup
+        homeLogoUrl: event.homeLogoUrl || null,
+        awayLogoUrl: event.awayLogoUrl || null,
+        leagueLogoUrl: event.leagueLogoUrl || null,
         resultKey: resultKeyFor({ day: dateKey, sportId: winnerSportId, home: teams.home, away: teams.away }),
         market: marketTitle,
         pick: actualWinner,
