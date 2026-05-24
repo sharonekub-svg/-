@@ -567,8 +567,8 @@ function spreadStatus(event, row) {
       ? awayScore + spread - homeScore
       : null;
   if (adjusted === null) return "";
-  if (adjusted > 0) return "תפס";
-  if (adjusted < 0) return "נפל";
+  if (adjusted > 0) return "הצליח";
+  if (adjusted < 0) return "לא הצליח";
   return "לא אומת";
 }
 
@@ -1085,7 +1085,7 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
         ? [
             "המשחק מופיע בווינר-ליין אך הפייבוריט מחוץ לטווח ההמלצה.",
             `יחס הפייבוריט הוא ${scored.odds.toFixed(2)} — ${scored.odds < 1.4 ? "נמוך מדי (פערים ברורים מדי, סיכון גבוה להפתעה)" : "גבוה מדי (שוק פתוח מדי, אין יתרון ברור)"}. אין כאן המלצה.`,
-            "האלגוריתם מציג את המשחק כדי שתוכל לראות את כל הלוח — אך לא ממליץ על הימור.",
+            "האלגוריתם מציג את המשחק כדי שתוכל לראות את כל הלוח — אך אין תחזית פעילה.",
           ]
         : [
             "המשחק מופיע בווינר-ליין ולכן ניתן להמר עליו בזמן משיכת הנתונים.",
@@ -1147,8 +1147,8 @@ function resultStatus(event, pick) {
   if (!results.length) return "ממתין";
   const cleanPick = cleanText(pick);
   return results.some((result) => result === cleanPick || result.includes(cleanPick) || cleanPick.includes(result))
-    ? "תפס"
-    : "נפל";
+    ? "הצליח"
+    : "לא הצליח";
 }
 
 function buildResultRows(results, dateKey) {
@@ -1590,10 +1590,10 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       "קטגוריות כדורגל וכדורסל",
       "יחסי Winner בזמן אמת או snapshot מאומת",
       "לוגואים לקבוצות ולליגות",
-      "אחוז פגיעה חודשי לפי תחזיות שנשמרו",
+      "אחוז הצלחה חודשי לפי תחזיות שנשמרו",
       "ציון ביטחון והסתברות שוק",
       "הסבר למה הבחירה צפויה לנצח",
-      "AI Advisor למנוי: ניתוח הימור ידני, סיכון, חלופה מומלצת וסטטיסטיקות רלוונטיות",
+      "AI Advisor למנוי: ניתוח תחזית ידני, סיכון, חלופה מומלצת וסטטיסטיקות רלוונטיות",
       "מונדיאל: המלצות רק בחלון 48 שעות לפני משחק עם פציעות, סגלים, מאמנים וכושר",
       "חיפוש ומיון",
       "פירוט משחק",
@@ -1601,7 +1601,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     notes: [
       `אתמול/היום/מחר: עד ${TARGET_PICKS_PER_SPORT} המלצות ביום עם יחס Winner בטווח 1.40-1.90; כדורגל וכדורסל מופרדים בתצוגה.`,
       "אם בווינר יש פחות מ-20 משחקי בסיס בטווח, האלגוריתם מוסיף סיכוי כפול או מעל/מתחת רק כשהיחס עדיין בטווח ומסמן זאת כשוק חלופי.",
-      "אתמול הוא מסך סגירה ובדיקת פגיעה מול תוצאה רשמית, לא מסך הימור פתוח.",
+      "אתמול הוא מסך סגירה ובדיקת הצלחה מול תוצאה רשמית, לא מסך תחזית פתוחה.",
       "לכל קבוצה וליגה מוצג לוגו ממקור חיצוני או תג גרפי כאשר אין לוגו רשמי זמין.",
     ],
   };
@@ -1609,8 +1609,8 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
 
 function normalizePredictionStatus(status) {
   const value = cleanText(status);
-  if (value === "נתפס" || value === "תפס") return "תפס";
-  if (value === "לא נתפס" || value === "נפל") return "נפל";
+  if (value === "נתפס" || value === "תפס" || value === "הצליח") return "הצליח";
+  if (value === "לא נתפס" || value === "נפל" || value === "לא הצליח") return "לא הצליח";
   if (value === "החזר" || value === "לא אומת") return "לא אומת";
   if (value === "בוטל") return "בוטל";
   return value || "ממתין";

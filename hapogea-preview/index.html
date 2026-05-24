@@ -1099,9 +1099,9 @@
       <div class="hero-main">
         <div class="hero-content">
           <span class="eyebrow">Plan Mode: אימות מקור, חישוב, הצגה, בדיקה</span>
-          <h2>אתמול, היום ומחר. כדורגל וכדורסל. תחזיות Winner עם מעקב פגיעה חודשי.</h2>
+          <h2>אתמול, היום ומחר. כדורגל וכדורסל. תחזיות Winner עם מעקב הצלחה חודשי.</h2>
           <p class="hero-copy">
-            היום ומחר מציגים רק בחירות מנצח פתוחות להימור עם יחס Winner פעיל. אתמול סוגר תחזיות מול תוצאה רשמית,
+            היום ומחר מציגים רק בחירות מנצח פתוחות עם יחס Winner פעיל. אתמול סוגר תחזיות מול תוצאה רשמית,
             והסטטיסטיקה החודשית מתעדכנת לפי הבחירות שהמערכת שמרה.
           </p>
           <div class="stats" id="stats"></div>
@@ -1130,7 +1130,7 @@
       <div class="field">
         <label for="sort">מיון</label>
         <select id="sort">
-          <option value="score">ציון פגיעה</option>
+          <option value="score">ציון הצלחה</option>
           <option value="odds">יחס גבוה</option>
           <option value="probability">הסתברות</option>
           <option value="time">שעה</option>
@@ -1168,7 +1168,7 @@
           </div>
           <div class="method">
             <b>פיצ׳רי Win2Go</b>
-            <p>טאבים לפי ימים, קטגוריות ספורט, לוגואים, יחס אמיתי, ציון ביטחון, פירוט משחק, חיפוש, מיון ומעקב פגיעה.</p>
+            <p>טאבים לפי ימים, קטגוריות ספורט, לוגואים, יחס אמיתי, ציון ביטחון, פירוט משחק, חיפוש, מיון ומעקב הצלחה.</p>
           </div>
         </div>
       </aside>
@@ -1176,7 +1176,7 @@
       <section>
         <div class="section-title">
           <div>
-            <h3 id="listTitle">טיפים מחושבים</h3>
+            <h3 id="listTitle">תחזיות מחושבות</h3>
             <p id="resultMeta">טוען נתונים מווינר</p>
           </div>
           <span class="pill">מקור: Winner</span>
@@ -1202,7 +1202,7 @@
   </main>
 
   <footer class="footer">
-    הדמו מיועד להצגת מוצר ושיטת דירוג. הוא אינו המלצת הימור ואינו מבטיח תוצאה. כאשר ממשק ציבורי אינו מחזיר נתון, הדמו מציין זאת ואינו משלים נתונים באופן מלאכותי.
+    הדמו מיועד להצגת מוצר ושיטת דירוג. הוא אינו המלצה ואינו מבטיח תוצאה. כאשר ממשק ציבורי אינו מחזיר נתון, הדמו מציין זאת ואינו משלים נתונים באופן מלאכותי.
   </footer>
 
   <div class="modal" id="gameModal" aria-hidden="true">
@@ -1270,8 +1270,10 @@
     ];
 
     const statusClass = {
+      "הצליח": "hit",
       "תפס": "hit",
       "נתפס": "hit",
+      "לא הצליח": "miss",
       "נפל": "miss",
       "לא נתפס": "miss",
       "החזר": "unverified",
@@ -1282,8 +1284,8 @@
     };
 
     function statusLabel(value) {
-      if (value === "hit" || value === "תפס" || value === "נתפס") return "תפס";
-      if (value === "miss" || value === "נפל" || value === "לא נתפס") return "נפל";
+      if (value === "hit" || value === "הצליח" || value === "תפס" || value === "נתפס") return "הצליח";
+      if (value === "miss" || value === "לא הצליח" || value === "נפל" || value === "לא נתפס") return "לא הצליח";
       if (value === "void" || value === "cancelled" || value === "בוטל") return "בוטל";
       if (value === "unverified" || value === "לא אומת" || value === "החזר") return "לא אומת";
       return value || "ממתין";
@@ -1351,9 +1353,9 @@
       if (row.sportId === 227 && Number.isFinite(spread)) {
         const abs = Math.abs(spread);
         if (spread > 0) {
-          return `כדורסל - הימור יתרון: בחרנו ${team} +${abs}. ההימור תופס אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+          return `כדורסל - יתרון: התחזית על ${team} +${abs}. התחזית מצליחה אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
         }
-        return `כדורסל - הימור יתרון: בחרנו ${team} ${spread}. ההימור תופס רק אם ${team} מנצחת ביותר מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+        return `כדורסל - יתרון: התחזית על ${team} ${spread}. התחזית מצליחה רק אם ${team} מנצחת ביותר מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
       }
       if (row.sportId === 227 && market.includes("המנצח")) {
         return `כדורסל - מנצחת המשחק: בחרנו ${team} לניצחון במשחק${market.includes("כולל הארכות") ? " כולל הארכות" : ""}.`;
@@ -1656,14 +1658,14 @@
       }
       if (isClosedArchive) status = "closed";
       if (!status || status === "נסגר") status = actual || result ? "closed" : "pending";
-      const cls = status === "hit" || status === "תפס" || status === "נתפס"
+      const cls = status === "hit" || status === "הצליח" || status === "תפס" || status === "נתפס"
         ? "hit"
-        : status === "miss" || status === "נפל" || status === "לא נתפס"
+        : status === "miss" || status === "לא הצליח" || status === "נפל" || status === "לא נתפס"
           ? "miss"
           : status === "closed"
             ? "closed"
             : "wait";
-      const label = cls === "hit" ? "נתפס" : cls === "miss" ? "לא נתפס" : cls === "closed" ? "נסגר" : "ממתין";
+      const label = cls === "hit" ? "הצליח" : cls === "miss" ? "לא הצליח" : cls === "closed" ? "נסגר" : "ממתין";
       return {
         result: result || (row.matchPhase === "scheduled" ? "טרם התחיל" : "אין תוצאה"),
         guessed,
@@ -1709,7 +1711,7 @@
       document.getElementById("stats").innerHTML = [
         [state.day === "yesterday" ? "נסגרו" : "פתוחים", rows.length],
         ["ליגות", leagues],
-        ["פגיעה היום", performance.settled ? `${performance.hitRate}%` : "חדש"],
+        ["הצלחה היום", performance.settled ? `${performance.hitRate}%` : "חדש"],
         ["במעקב", performance.tracked]
       ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
     }
@@ -1790,7 +1792,7 @@
               ${wcFixtureOdds(item)}
               <div class="wc-why">
                 <b>${item.source} · ${item.date}</b><br>
-                אין סימון הימור ואין תוצאת תחזית כרגע. 48 שעות לפני המשחק, ורק כשיש יחס Winner אמיתי, ה-AI Advisor יחשב פציעות, סגלים, מאמנים, כושר ונבחרת חזקה יותר לפני המלצה.
+                אין תחזית פעילה כרגע. 48 שעות לפני המשחק, ורק כשיש יחס Winner אמיתי, ה-AI Advisor יחשב פציעות, סגלים, מאמנים, כושר ונבחרת חזקה יותר לפני תחזית.
               </div>
               <div class="wc-factors">
                 <span class="signal">שוק 1X2</span>
@@ -1812,12 +1814,12 @@
       const features = state.feed?.win2goFeatures || [];
       const performanceMarkup = `
         <div class="daily-head">
-          <h3>אחוז פגיעה היום</h3>
+          <h3>אחוז הצלחה היום</h3>
           <span class="pill">${activeTodayDate() || performance.month}</span>
         </div>
         <div class="metric-grid">
-          <div class="metric"><b>${performance.settled ? `${performance.hitRate}%` : "חדש"}</b><span>פגיעה</span></div>
-          <div class="metric"><b>${performance.hits}/${performance.settled}</b><span>תפסו</span></div>
+          <div class="metric"><b>${performance.settled ? `${performance.hitRate}%` : "חדש"}</b><span>הצלחה</span></div>
+          <div class="metric"><b>${performance.hits}/${performance.settled}</b><span>הצליחו</span></div>
           <div class="metric"><b>${performance.pending}</b><span>ממתינים</span></div>
           <div class="metric"><b>${performance.tracked}</b><span>נשמרו</span></div>
         </div>
@@ -1830,7 +1832,7 @@
       `;
       if (!tip) {
         box.innerHTML = `
-          <div class="daily-head"><h3>הטיפ המוביל</h3><span class="pill">אין בחירה פתוחה</span></div>
+          <div class="daily-head"><h3>התחזית המובילה</h3><span class="pill">אין בחירה פתוחה</span></div>
           <p class="hero-copy" style="font-size:14px">לא נמצאה כרגע בחירה פתוחה בקטגוריה הזו עם יחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
           ${performanceMarkup}
           ${featuresMarkup}
@@ -1839,7 +1841,7 @@
       }
       box.innerHTML = `
         <div class="daily-head">
-          <h3>הטיפ המוביל</h3>
+          <h3>התחזית המובילה</h3>
           <span class="pill">ציון ${tip.score}/100</span>
         </div>
         <div class="pickbox">
@@ -1868,27 +1870,27 @@
       const badges = [];
 
       // Match phase badge
-      if (phase === "live")      badges.push('<span class="badge badge-live">● LIVE</span>');
-      else if (phase === "ht")   badges.push('<span class="badge badge-ht">HT</span>');
-      else if (phase === "final") badges.push('<span class="badge badge-ft">FT</span>');
+      if (phase === "live")      badges.push('<span class="badge badge-live">● המשחק בלייב</span>');
+      else if (phase === "ht")   badges.push('<span class="badge badge-ht">הפסקה</span>');
+      else if (phase === "final") badges.push('<span class="badge badge-ft">נגמר</span>');
       else if (row.status === "נסגר" && !row.odds) badges.push('<span class="badge badge-ft">נסגר</span>');
 
-      // Betting/availability badge (only for open picks, not closed results)
+      // Status badge (only for open picks, not closed results)
       const bs = row.bettingStatus;
-      if (bs === "suspended")    badges.push('<span class="badge badge-suspended">SUSPENDED</span>');
-      else if (bs === "odds_changed") badges.push('<span class="badge badge-odds-changed">ODDS CHANGED</span>');
-      else if (bs === "removed") badges.push('<span class="badge badge-removed">REMOVED</span>');
-      else if (bs === "cancelled") badges.push('<span class="badge badge-cancelled">CANCELLED</span>');
-      else if (bs === "postponed") badges.push('<span class="badge badge-postponed">POSTPONED</span>');
+      if (bs === "suspended")    badges.push('<span class="badge badge-suspended">מושהה</span>');
+      else if (bs === "odds_changed") badges.push('<span class="badge badge-odds-changed">יחס עודכן</span>');
+      else if (bs === "removed") badges.push('<span class="badge badge-removed">הוסר</span>');
+      else if (bs === "cancelled") badges.push('<span class="badge badge-cancelled">בוטל</span>');
+      else if (bs === "postponed") badges.push('<span class="badge badge-postponed">נדחה</span>');
       // Don't show SELECTED for closed result rows
       if (bs === "closed") return badges.join("");
 
       // Prediction result badge
       if (row.recommended) {
-        if (outcome.cls === "hit")  badges.push('<span class="badge badge-won">✓ WON</span>');
-        else if (outcome.cls === "miss") badges.push('<span class="badge badge-lost">✗ LOST</span>');
-        else if (outcome.cls === "closed") badges.push('<span class="badge badge-void">VOID</span>');
-        else badges.push('<span class="badge badge-selected">SELECTED</span>');
+        if (outcome.cls === "hit")  badges.push('<span class="badge badge-won" title="הסטטוס מתייחס להתאמה בין התחזית הסטטיסטית לבין תוצאת המשחק, ולא להמלצת הימור.">✓ הצליח</span>');
+        else if (outcome.cls === "miss") badges.push('<span class="badge badge-lost" title="הסטטוס מתייחס להתאמה בין התחזית הסטטיסטית לבין תוצאת המשחק, ולא להמלצת הימור.">✗ לא הצליח</span>');
+        else if (outcome.cls === "closed") badges.push('<span class="badge badge-void">נסגר</span>');
+        else badges.push('<span class="badge badge-selected">נבחר</span>');
       }
 
       return badges.join("");
@@ -2186,20 +2188,20 @@
         <div class="section-title">
           <div>
             <h3>היסטוריית תוצאות היום</h3>
-            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">בסיס: משחקים סגורים ומאומתים בלבד · ${perf.tracked} במעקב · ${perf.pending} ממתינות · אין ערבות לניצחון</p>
+            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">בסיס: משחקים סגורים ומאומתים בלבד · ${perf.tracked} במעקב · ${perf.pending} ממתינות · אין ערבות לתוצאה</p>
           </div>
         </div>
         <div class="history-rate">
           <b>${rateText}</b>
           <div>
-            <span style="display:block;font-size:13px;color:var(--text)">אחוז פגיעה — ${hits.length} פגיעות · ${misses.length} החטאות</span>
+            <span style="display:block;font-size:13px;color:var(--text)">אחוז הצלחה — ${hits.length} הצליחו · ${misses.length} לא הצליחו</span>
             <span>רק משחקים שנסגרו ומאומתים נספרים</span>
           </div>
         </div>
         <div class="history-grid">
           ${settled.map(item => `
             <div class="history-item ${item.status}">
-              <span class="${item.status === "hit" ? "badge badge-won" : "badge badge-lost"}">${item.status === "hit" ? "✓ WON" : "✗ LOST"}</span>
+              <span class="${item.status === "hit" ? "badge badge-won" : "badge badge-lost"}" title="הסטטוס מתייחס להתאמה בין התחזית הסטטיסטית לבין תוצאת המשחק, ולא להמלצת הימור.">${item.status === "hit" ? "✓ הצליח" : "✗ לא הצליח"}</span>
               <div>
                 <div style="font-weight:800;font-size:12px">${escapeHtml(item.match || "")}</div>
                 <div class="h-pick">בחירה: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
@@ -2210,7 +2212,7 @@
           `).join("") || `<div class="empty" style="grid-column:1/-1">אין תוצאות סגורות עדיין — המשחקים ייסגרו לאחר סיומם.</div>`}
           ${pending.map(item => `
             <div class="history-item" style="opacity:.6">
-              <span class="badge badge-pending">PENDING</span>
+              <span class="badge badge-pending">ממתין</span>
               <div>
                 <div style="font-weight:800;font-size:12px">${escapeHtml(item.match || "")}</div>
                 <div class="h-pick">בחירה: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
@@ -2224,8 +2226,8 @@
 
     function predictionStatusInfo(value) {
       const raw = String(value || "").trim();
-      if (raw === "hit" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "תפס", cls: "hit" };
-      if (raw === "miss" || raw === "נפל" || raw === "לא נתפס") return { key: "miss", label: "נפל", cls: "miss" };
+      if (raw === "hit" || raw === "הצליח" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "הצליח", cls: "hit" };
+      if (raw === "miss" || raw === "לא הצליח" || raw === "נפל" || raw === "לא נתפס") return { key: "miss", label: "לא הצליח", cls: "miss" };
       if (raw === "void" || raw === "cancelled" || raw === "בוטל") return { key: "void", label: "בוטל", cls: "unverified" };
       if (raw === "unverified" || raw === "לא אומת" || raw === "החזר") return { key: "unverified", label: "לא אומת", cls: "unverified" };
       if (raw === "closed" || raw === "נסגר") return { key: "closed", label: "נסגר", cls: "closed" };
@@ -2238,9 +2240,9 @@
       const rawStatus = String(row.status || "");
       if (betting === "cancelled" || rawStatus.includes("בוטל")) return { label: "בוטל", cls: "badge-cancelled-he" };
       if (betting === "postponed" || rawStatus.includes("נדחה")) return { label: "נדחה", cls: "badge-postponed" };
-      if (phase === "final") return { label: "FT", cls: "badge-ft" };
-      if (phase === "live") return { label: "LIVE", cls: "badge-live" };
-      if (phase === "ht") return { label: "HT", cls: "badge-ht" };
+      if (phase === "final") return { label: "נגמר", cls: "badge-ft" };
+      if (phase === "live") return { label: "בלייב", cls: "badge-live" };
+      if (phase === "ht") return { label: "הפסקה", cls: "badge-ht" };
       return { label: "טרם התחיל", cls: "badge-pending" };
     }
 
@@ -2562,15 +2564,15 @@
         <div class="section-title">
           <div>
             <h3>היסטוריית תוצאות</h3>
-            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">נוסחה: תפס / (תפס + נפל). ממתין, בוטל ולא אומת לא נספרים באחוז.</p>
+            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">נוסחה: הצליח / (הצליח + לא הצליח). ממתין, בוטל ולא אומת לא נספרים באחוז.</p>
           </div>
         </div>
         <div class="history-rate">
           <b>${rateText}</b>
-          <span style="color:var(--muted);font-size:13px">ROI ביחידת הימור קבועה: ${roiText}</span>
+          <span style="color:var(--muted);font-size:13px">ROI ליחידת ניתוח קבועה: ${roiText}</span>
           <div class="history-counts">
-            <span class="badge badge-won">תפס ${perf.hits}</span>
-            <span class="badge badge-lost">נפל ${perf.misses}</span>
+            <span class="badge badge-won" title="הסטטוס מתייחס להתאמה בין התחזית הסטטיסטית לבין תוצאת המשחק, ולא להמלצת הימור.">הצליח ${perf.hits}</span>
+            <span class="badge badge-lost" title="הסטטוס מתייחס להתאמה בין התחזית הסטטיסטית לבין תוצאת המשחק, ולא להמלצת הימור.">לא הצליח ${perf.misses}</span>
             <span class="badge badge-pending">ממתין ${perf.pending}</span>
             <span class="badge badge-unverified">בוטל/לא אומת ${perf.voided}</span>
           </div>
@@ -2581,7 +2583,7 @@
             const badgeClass = info.cls === "hit" ? "badge-won" : info.cls === "miss" ? "badge-lost" : info.cls === "unverified" ? "badge-unverified" : "badge-pending";
             return `
               <div class="history-item ${info.cls === "hit" ? "hit" : info.cls === "miss" ? "miss" : ""}">
-                <span class="badge ${badgeClass}">${info.label}</span>
+                <span class="badge ${badgeClass}" title="הסטטוס מתייחס להתאמה בין התחזית הסטטיסטית לבין תוצאת המשחק, ולא להמלצת הימור.">${info.label}</span>
                 <div>
                   <div style="font-weight:800;font-size:12px">${escapeHtml(item.match || "")}</div>
                   <div class="h-pick">בחירה: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
