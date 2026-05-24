@@ -2739,8 +2739,6 @@
                      <div class="odds-box"><small>יחס</small>${row.odds ? formatOdds(row.odds) : "תוצאה"}</div>
                    </div>
                    ${why ? `<div class="why-line">${why}</div>` : ""}
-                   ${confidenceMarkup(row)}
-                   ${scoreBreakdownMarkup(row)}
                    ${oddsMovementMarkup(row)}`
                 : `<div class="pick-summary" style="opacity:.72">
                      <div class="pick-summary-main">
