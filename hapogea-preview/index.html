@@ -1162,6 +1162,31 @@
       background: rgba(85,214,255,.055);
       color: var(--muted);
     }
+    .edge-chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+    .edge-value  { background: rgba(49,209,135,.15); border: 1px solid rgba(49,209,135,.45); color: #86f7c8; }
+    .edge-low    { background: rgba(255,200,87,.10); border: 1px solid rgba(255,200,87,.35); color: #ffe3a0; }
+    .edge-avoid  { background: rgba(239,83,80,.10);  border: 1px solid rgba(239,83,80,.30);  color: #ffa5a3; }
+    .btn-ask-reuven {
+      padding: 7px 12px;
+      border-radius: 7px;
+      border: 1px solid rgba(85,214,255,.35);
+      background: rgba(85,214,255,.08);
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-ask-reuven:hover { background: rgba(85,214,255,.18); }
     .history-rate { justify-content: space-between; flex-wrap: wrap; }
     .history-counts {
       display: flex;
@@ -1447,6 +1472,7 @@
       selectedId: null,
       wcOpen: false,
       reubenMessages: [],
+      reubenPrefill: "",
       debugMode: location.pathname.includes("debug")
     };
     let lastLoadTime = 0;
@@ -2158,97 +2184,186 @@
       state.selectedId = null;
     }
 
-    function analyzeReubenBet(text) {
+    function analyzeReubenBet(text, prefillRow) {
       const value = String(text || "").trim();
       if (!value) {
-        return "Enter a bet to analyze, for example: Real Madrid win @ 1.65, Over 2.5 goals @ 1.80, or Maccabi -4.5 @ 1.75.";
+        return "\u05e9\u05dc\u05d5\u05dd! \u05ea\u05d0\u05e8 \u05d4\u05d9\u05de\u05d5\u05e8 \u05dc\u05e0\u05d9\u05ea\u05d5\u05d7, \u05dc\u05de\u05e9\u05dc:\n\u05e8\u05d9\u05d0\u05dc \u05de\u05d3\u05e8\u05d9\u05d3 \u05e0\u05d9\u05e6\u05d7\u05d5\u05df @ 1.65\n\u05de\u05e2\u05dc 2.5 \u05d2\u05d5\u05dc\u05d9\u05dd @ 1.80\n\u05de\u05db\u05d1\u05d9 \u05ea\u05dc \u05d0\u05d1\u05d9\u05d1 -4.5 @ 1.88";
       }
 
-      const oddsMatch = value.match(/(?:odds|@)?\s*(\d+(?:[.,]\d+)?)/i);
+      // --- Parse bet components ---
+      const lower = value.toLowerCase();
+      const oddsMatch = value.match(/[@]?\s*(1\.[3-9]\d*|2\.[0-9]\d*)/);
       const odds = oddsMatch ? Number(oddsMatch[1].replace(",", ".")) : null;
       const implied = odds && odds > 1 ? (1 / odds) * 100 : null;
-      const lower = value.toLowerCase();
-      const isBasketball = /basketball|nba|euroleague|maccabi/i.test(value);
-      const isSpread = /[-+]\d+(?:[.,]\d+)?|spread|handicap|line/i.test(value);
-      const isOver = /over|\bo\s*\d/i.test(lower);
-      const isUnder = /under|\bu\s*\d/i.test(lower);
-      const isBtts = /btts|both teams/i.test(lower);
       const isShortOddsRange = odds && odds >= 1.4 && odds <= 1.9;
-      const marketName = isSpread ? "spread / handicap" : isOver ? "over" : isUnder ? "under" : isBtts ? "BTTS" : "win / moneyline";
-      const sportName = isBasketball ? "basketball" : "football";
-      const terms = lower.split(/[^a-z0-9\u0590-\u05ff]+/i).filter(term => term.length >= 3);
-      const winnerMatches = allRows()
-        .filter(row => {
-          const haystack = `${row.match || ""} ${row.home || ""} ${row.away || ""} ${row.league || ""} ${row.market || ""}`.toLowerCase();
-          return terms.some(term => haystack.includes(term));
-        })
-        .slice(0, 5);
+
+      // Sport detection
+      const isBasketball = /basketball|nba|euro.?league|\u05db\u05d3\u05d5\u05e8\u05e1\u05dc|\u05de\u05db\u05d1\u05d9|\u05d4\u05e4\u05d5\u05e2\u05dc \u05ea|\u05d1\u05e0\u05d9|bnei|hapoel/i.test(value);
+      const sportName = isBasketball ? "\u05db\u05d3\u05d5\u05e8\u05e1\u05dc" : "\u05db\u05d3\u05d5\u05e8\u05d2\u05dc";
+
+      // Market detection
+      const isOver   = /over|\u05de\u05e2\u05dc/i.test(lower);
+      const isUnder  = /under|\u05de\u05ea\u05d7\u05ea/i.test(lower);
+      const isBtts   = /btts|both.?teams|\u05e9\u05e0\u05d9.*\u05d1\u05e7\u05d9\u05e2/i.test(lower);
+      const isSpread = /spread|handicap|\u05dc\u05d9\u05d9\u05df|\u05d9\u05ea\u05e8\u05d5\u05df|[-+]\d+[.,]?\d*\s*(?:pts?|\u05e0\u05e7)/i.test(lower);
+      const isDC     = /double.?chance|\u05e1\u05d9\u05db\u05d5\u05d9.?\u05db\u05e4\u05d5\u05dc/i.test(lower);
+      const isAH     = /asian|ah\b|\b0[.,][025]\b/i.test(lower);
+      const isOver15 = /(?:over|\u05de\u05e2\u05dc)\s*1[.,]5/i.test(value);
+      const isOver25 = /(?:over|\u05de\u05e2\u05dc)\s*2[.,]5/i.test(value);
+      const isWin    = !isOver && !isUnder && !isBtts && !isSpread && !isDC && !isAH;
+
+      const marketName = isSpread ? "\u05dc\u05d9\u05d9\u05df \u05d9\u05ea\u05e8\u05d5\u05df (Spread)"
+        : isOver ? (isOver15 ? "\u05de\u05e2\u05dc 1.5" : isOver25 ? "\u05de\u05e2\u05dc 2.5" : "\u05de\u05e2\u05dc")
+        : isUnder ? "\u05de\u05ea\u05d7\u05ea"
+        : isBtts ? "\u05e9\u05e0\u05d9 \u05d4\u05e7\u05d1\u05d5\u05e6\u05d5\u05ea \u05de\u05d1\u05e7\u05d9\u05e2\u05d5\u05ea (BTTS)"
+        : isDC ? "\u05e1\u05d9\u05db\u05d5\u05d9 \u05db\u05e4\u05d5\u05dc"
+        : isAH ? "\u05d4\u05e0\u05d3\u05d9\u05e7\u05d0\u05e4 \u05d0\u05e1\u05d9\u05d9\u05ea\u05d9 (AH)"
+        : "\u05e0\u05d9\u05e6\u05d7\u05d5\u05df \u05d9\u05e9\u05d9\u05e8";
+
+      // --- Find matching Winner feed rows ---
+      const terms = lower.split(/[^a-z0-9\u0590-\u05ff]+/i).filter(t => t.length >= 3);
+      const winnerMatches = (prefillRow ? [prefillRow] : [])
+        .concat(allRows().filter(row => {
+          if (prefillRow && String(row.id) === String(prefillRow.id)) return false;
+          const hay = `${row.match || ""} ${row.home || ""} ${row.away || ""} ${row.league || ""}`.toLowerCase();
+          return terms.some(t => hay.includes(t));
+        }))
+        .slice(0, 4);
       const winnerContext = winnerMatches.length
-        ? winnerMatches.map(row => `- ${row.sport} | ${row.league} | ${row.match} | ${explicitPickText(row)} | Winner ${row.odds ? formatOdds(row.odds) : "no odds"} | ${row.day} ${row.time || ""}`).join("\n")
-        : "I did not find a matching loaded Winner card yet. I can still analyze the bet, but add team names and exact Winner odds for a sharper answer.";
+        ? winnerMatches.map(row => {
+            const mkt = (row.allMarkets || []).slice(0, 2)
+              .map(m => `${m.title}: ${(m.outcomes || []).map(o => `${o.desc} ${o.price ? formatOdds(Number(o.price)) : ""}`).join(", ")}`)
+              .join(" | ");
+            return `\u2022 ${row.sport} | ${row.league} | ${row.match} | \u05d1\u05d7\u05d9\u05e8\u05d4: ${explicitPickText(row)} @ ${row.odds ? formatOdds(row.odds) : "\u2014"} | ${row.day} ${row.time || ""}${mkt ? `\n  \u05e9\u05d5\u05d5\u05e7\u05d9\u05dd: ${mkt}` : ""}`;
+          }).join("\n")
+        : "\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d4 \u05d4\u05ea\u05d0\u05de\u05d4 \u05d1-Winner Feed. \u05d4\u05d5\u05e1\u05e3 \u05e9\u05dd \u05e7\u05d1\u05d5\u05e6\u05d5\u05ea \u05d5\u05d9\u05d7\u05e1 Winner \u05dc\u05e0\u05d9\u05ea\u05d5\u05d7 \u05d7\u05d3 \u05d9\u05d5\u05ea\u05e8.";
 
-      let estimated = odds ? Math.round(Math.max(38, Math.min(78, implied + 2))) : 55;
-      if (isSpread) estimated -= 4;
-      if (isOver && isShortOddsRange) estimated -= 3;
-      if (isBtts) estimated -= 1;
-      estimated = Math.max(35, Math.min(78, estimated));
-      const ev = odds ? (estimated / 100) * odds - 1 : null;
-
-      let recommendation = "Neutral";
-      if (ev !== null && ev >= 0.08 && estimated >= (implied || 0) + 5) recommendation = "Strongly Favor";
-      else if (ev !== null && ev >= 0.025) recommendation = "Slightly Favor";
-      else if (ev !== null && ev <= -0.08) recommendation = "Strongly Against";
-      else if (ev !== null && ev < 0) recommendation = "Slightly Against";
-      if (isShortOddsRange && (isOver || marketName === "win / moneyline") && recommendation === "Strongly Favor") {
-        recommendation = "Slightly Favor";
+      // --- Research-based probability estimate ---
+      let estimated = implied ? Math.round(implied + 2) : 55;
+      if (isShortOddsRange) {
+        if (isWin && !isBasketball) estimated -= 5;   // football straight win at short price often over-valued
+        if (isOver25)              estimated -= 6;    // Over 2.5 requires open game
+        if (isOver15)              estimated += 2;    // Over 1.5 is much safer
+        if (isBtts)                estimated -= 2;    // BTTS depends on both defences
+        if (isDC)                  estimated += 4;    // double chance adds safety
+        if (isAH)                  estimated += 2;    // AH reduces draw risk
+        if (isSpread && isBasketball) estimated -= 3; // spread sensitive to rotation
       }
+      if (isSpread && !isShortOddsRange) estimated -= 4;
+      if (isOver25 && !isShortOddsRange) estimated -= 3;
+      estimated = Math.max(32, Math.min(80, estimated));
+      const ev = odds ? ((estimated / 100) * odds - 1) : null;
 
+      // --- Sport-specific research line ---
+      const researchLine = isBasketball
+        ? (isSpread
+            ? "\u05db\u05d3\u05d5\u05e8\u05e1\u05dc \u05e1\u05e4\u05e8\u05d3: \u05e9\u05ea\u05d9 \u05d4\u05e6\u05d3\u05d3\u05d9\u05dd \u05e7\u05e8\u05d5\u05d1\u05d9\u05dd \u05dc-50/50 \u05d0\u05d7\u05e8\u05d9 \u05d4\u05d4\u05e0\u05d3\u05d9\u05e7\u05d0\u05e4. \u05d4\u05e6\u05d3 \u05d4\u05e0\u05d1\u05d7\u05e8 \u05e6\u05e8\u05d9\u05da \u05e7\u05e6\u05d1 (pace) \u05d2\u05d1\u05d5\u05d4 \u05d5\u05d9\u05e2\u05d9\u05dc\u05d5\u05ea \u05d4\u05d2\u05e0\u05ea\u05d9\u05ea. \u05e9\u05d9\u05dd \u05dc\u05d1 \u05dc\u05e8\u05d5\u05d8\u05e6\u05d9\u05d4 \u05d5\u05dc\u05de\u05e0\u05d5\u05d7\u05d4 \u05d1\u05d9\u05df \u05de\u05e9\u05d7\u05e7\u05d9\u05dd."
+            : "\u05db\u05d3\u05d5\u05e8\u05e1\u05dc \u05de\u05e0\u05e6\u05d7: \u05d1-NBA/EuroLeague \u05d4\u05e4\u05d9\u05d9\u05d1\u05d5\u05e8\u05d9\u05d8\u05d9\u05dd \u05e0\u05d9\u05e6\u05d7\u05d9\u05dd ~65% \u05de\u05d4\u05de\u05e9\u05d7\u05e7\u05d9\u05dd. \u05d1\u05d3\u05d5\u05e7 PPG + defensive rating \u05d5\u05dc\u05d0 \u05e8\u05e7 \u05e9\u05dd \u05d4\u05e7\u05d1\u05d5\u05e6\u05d4.")
+        : (isOver25
+            ? "\u05db\u05d3\u05d5\u05e8\u05d2\u05dc \u05de\u05e2\u05dc 2.5: xG \u05de\u05de\u05d5\u05e6\u05e2 \u05d1\u05dc\u05d9\u05d2\u05d5\u05ea \u05d0\u05d9\u05e8\u05d5\u05e4\u05d0\u05d9\u05d5\u05ea ~2.6 \u05d2\u05d5\u05dc\u05d9\u05dd \u2014 \u05db\u05dc\u05d5\u05de\u05e8 \u05db-52% \u05de\u05d4\u05de\u05e9\u05d7\u05e7\u05d9\u05dd \u05e2\u05d5\u05d1\u05e8\u05d9\u05dd 2.5. \u05d1\u05d8\u05d5\u05d5\u05d7 1.40-1.90 \u05d4\u05e9\u05d5\u05e7 \u05db\u05d1\u05e8 \u05de\u05de\u05d7\u05d9\u05e8 \u05de\u05e9\u05d7\u05e7 \u05e4\u05ea\u05d5\u05d7, \u05e0\u05d3\u05e8\u05e9\u05ea \u05e2\u05e7\u05d1\u05d9\u05d5\u05ea \u05d4\u05ea\u05e7\u05e4\u05d9\u05ea \u05de\u05e9\u05e0\u05d9 \u05d4\u05e6\u05d3\u05d3\u05d9\u05dd."
+            : isOver15
+              ? "\u05db\u05d3\u05d5\u05e8\u05d2\u05dc \u05de\u05e2\u05dc 1.5: ~75-80% \u05de\u05d4\u05de\u05e9\u05d7\u05e7\u05d9\u05dd \u05d1\u05dc\u05d9\u05d2\u05d5\u05ea \u05de\u05d5\u05d1\u05d9\u05dc\u05d5\u05ea \u05e2\u05d5\u05d1\u05e8\u05d9\u05dd 1.5. \u05e9\u05d5\u05e7 \u05d1\u05d8\u05d5\u05d7 \u05d9\u05d7\u05e1\u05d9\u05ea \u2014 \u05e2\u05d3\u05d9\u05e3 \u05e2\u05dc \u05de\u05e2\u05dc 2.5 \u05d1\u05d8\u05d5\u05d5\u05d7 1.40-1.90."
+              : isBtts
+                ? "BTTS: \u05ea\u05dc\u05d5\u05d9 \u05d1-2 \u05d4\u05e6\u05d3\u05d3\u05d9\u05dd. \u05d1\u05d3\u05d5\u05e7 \u05d0\u05d7\u05d5\u05d6 \u05d4\u05d1\u05e7\u05e2\u05d4 \u05d1-5 \u05d4\u05de\u05e9\u05d7\u05e7\u05d9\u05dd \u05d4\u05d0\u05d7\u05e8\u05d5\u05e0\u05d9\u05dd \u05dc\u05db\u05dc \u05e7\u05d1\u05d5\u05e6\u05d4. \u05d4\u05d2\u05e0\u05d5\u05ea \u05de\u05d0\u05d5\u05d3 \u05d7\u05d6\u05e7\u05d5\u05ea = \u05e1\u05d9\u05db\u05d5\u05df."
+                : isDC
+                  ? "\u05e1\u05d9\u05db\u05d5\u05d9 \u05db\u05e4\u05d5\u05dc: \u05de\u05db\u05e1\u05d4 2 \u05ea\u05e8\u05d7\u05d9\u05e9\u05d9\u05dd \u05de\u05ea\u05d5\u05da 3, \u05de\u05d5\u05e8\u05d9\u05d3 \u05e1\u05d9\u05db\u05d5\u05df \u05d0\u05d1\u05dc \u05d2\u05dd EV. \u05e2\u05d3\u05d9\u05e3 \u05e2\u05dc \u05e0\u05d9\u05e6\u05d7\u05d5\u05df \u05d9\u05e9\u05d9\u05e8 \u05db\u05e9\u05d4\u05e4\u05d9\u05d9\u05d1\u05d5\u05e8\u05d9\u05d8 \u05dc\u05d0 \u05d1\u05e8\u05d5\u05e8."
+                  : "\u05e0\u05d9\u05e6\u05d7\u05d5\u05df \u05d9\u05e9\u05d9\u05e8 \u05d1\u05db\u05d3\u05d5\u05e8\u05d2\u05dc: \u05d1\u05d8\u05d5\u05d5\u05d7 1.40-1.90 \u05d4\u05e9\u05d5\u05e7 \u05db\u05d1\u05e8 \u05de\u05de\u05d7\u05d9\u05e8 \u05d0\u05ea \u05d4\u05e4\u05d9\u05d9\u05d1\u05d5\u05e8\u05d9\u05d8. \u05d5\u05d3\u05d0 \u05d9\u05ea\u05e8\u05d5\u05df \u05de\u05d2\u05e8\u05e9, \u05d4\u05e8\u05db\u05d1 \u05de\u05dc\u05d0, \u05d5\u05e8\u05e6\u05e3 \u05e0\u05d9\u05e6\u05d7\u05d5\u05e0\u05d5\u05ea.");
+
+      // --- Strengths ---
+      const strengths = [];
+      if (isShortOddsRange) strengths.push("\u05d4\u05d9\u05d7\u05e1 \u05d1\u05d8\u05d5\u05d5\u05d7 1.40-1.90 \u2014 Winner \u05de\u05ea\u05de\u05d7\u05e8 \u05e4\u05d9\u05d9\u05d1\u05d5\u05e8\u05d9\u05d8 \u05d1\u05e8\u05d5\u05e8 \u05d9\u05d7\u05e1\u05d9\u05ea.");
+      if (isOver15) strengths.push("\u05de\u05e2\u05dc 1.5 \u05d2\u05d5\u05dc\u05d9\u05dd \u2014 \u05d0\u05d7\u05d5\u05d6 \u05e4\u05d2\u05d9\u05e2\u05d4 \u05d2\u05d1\u05d5\u05d4 (~78%) \u05d1\u05dc\u05d9\u05d2\u05d5\u05ea \u05de\u05d5\u05d1\u05d9\u05dc\u05d5\u05ea.");
+      if (isBtts && isShortOddsRange) strengths.push("BTTS \u05d9\u05db\u05d5\u05dc \u05dc\u05ea\u05ea \u05e2\u05e8\u05da \u05db\u05e9\u05e9\u05ea\u05d9 \u05d4\u05e7\u05d1\u05d5\u05e6\u05d5\u05ea \u05d1\u05e6\u05d5\u05e8\u05d4 \u05d4\u05ea\u05e7\u05e4\u05d9\u05ea.");
+      if (isDC) strengths.push("\u05e1\u05d9\u05db\u05d5\u05d9 \u05db\u05e4\u05d5\u05dc \u05de\u05db\u05e1\u05d4 2 \u05ea\u05e8\u05d7\u05d9\u05e9\u05d9\u05dd \u2014 \u05e9\u05d9\u05e2\u05d5\u05e8 \u05e4\u05d2\u05d9\u05e2\u05d4 \u05d2\u05d1\u05d5\u05d4 \u05de\u05d5\u05d1\u05e0\u05d4.");
+      if (isAH) strengths.push("\u05d4\u05e0\u05d3\u05d9\u05e7\u05d0\u05e4 \u05d0\u05e1\u05d9\u05d9\u05ea\u05d9 \u05de\u05d1\u05d8\u05dc \u05ea\u05d9\u05e7\u05d5 \u05d5\u05de\u05d5\u05e8\u05d9\u05d3 \u05e1\u05d9\u05db\u05d5\u05df \u2014 \u05e2\u05d3\u05d9\u05e3 \u05e2\u05dc \u05e0\u05d9\u05e6\u05d7\u05d5\u05df \u05d9\u05e9\u05d9\u05e8.");
+      if (winnerMatches.length) strengths.push("\u05e0\u05de\u05e6\u05d0 \u05de\u05e9\u05d7\u05e7 \u05ea\u05d5\u05d0\u05dd \u05d1-Winner Feed \u2014 \u05e0\u05d9\u05ea\u05df \u05dc\u05d4\u05e9\u05d5\u05d5\u05ea \u05dc\u05d4\u05e1\u05ea\u05d1\u05e8\u05d5\u05ea \u05e9\u05d5\u05e7 \u05d0\u05de\u05d9\u05ea\u05d9.");
+      if (!strengths.length) strengths.push("\u05d4\u05d5\u05e1\u05e3 \u05e9\u05dd \u05e7\u05d1\u05d5\u05e6\u05d5\u05ea, \u05e9\u05d5\u05e7 \u05d5\u05d9\u05d7\u05e1 Winner \u05dc\u05e0\u05d9\u05ea\u05d5\u05d7 \u05d7\u05d3 \u05d9\u05d5\u05ea\u05e8.");
+
+      // --- Weaknesses ---
+      const weaknesses = [];
+      if (isShortOddsRange && isWin && !isBasketball) weaknesses.push("\u05e0\u05d9\u05e6\u05d7\u05d5\u05df \u05d9\u05e9\u05d9\u05e8 \u05d1\u05db\u05d3\u05d5\u05e8\u05d2\u05dc \u05d1\u05d8\u05d5\u05d5\u05d7 1.40-1.90 \u2014 \u05d4\u05e9\u05d5\u05e7 \u05de\u05de\u05d7\u05d9\u05e8 \u05d6\u05d0\u05ea. \u05e7\u05e9\u05d4 \u05dc\u05de\u05e6\u05d5\u05d0 \u05e2\u05e8\u05da \u05d0\u05de\u05d9\u05ea\u05d9 \u05dc\u05dc\u05d0 \u05e0\u05ea\u05d5\u05e0\u05d9 \u05d4\u05e8\u05db\u05d1.");
+      if (isOver25) weaknesses.push("\u05de\u05e2\u05dc 2.5 \u05d1\u05d8\u05d5\u05d5\u05d7 1.40-1.90 \u2014 \u05db-48% \u05de\u05d4\u05de\u05e9\u05d7\u05e7\u05d9\u05dd \u05de\u05e1\u05ea\u05d9\u05d9\u05de\u05d9\u05dd \u05d1-2 \u05d2\u05d5\u05dc\u05d9\u05dd \u05d0\u05d5 \u05e4\u05d7\u05d5\u05ea. \u05d4\u05d9\u05de\u05d5\u05e8 \u05d6\u05d4 \u05d3\u05d5\u05e8\u05e9 \u05de\u05e9\u05d7\u05e7 \u05e4\u05ea\u05d5\u05d7 \u05de\u05d0\u05d5\u05d3.");
+      if (isSpread && isBasketball) weaknesses.push("\u05dc\u05d9\u05d9\u05df \u05db\u05d3\u05d5\u05e8\u05e1\u05dc \u05e8\u05d2\u05d9\u05e9 \u05dc\u05e8\u05d5\u05d8\u05e6\u05d9\u05d4, garbage time \u05d5\u05e9\u05d9\u05e0\u05d5\u05d9\u05d9 \u05d4\u05e8\u05db\u05d1 \u05d1\u05e8\u05d2\u05e2 \u05d4\u05d0\u05d7\u05e8\u05d5\u05df.");
+      weaknesses.push("\u05e8\u05d0\u05d5\u05d1\u05df AI \u05d0\u05d9\u05e0\u05d5 \u05de\u05e7\u05d1\u05dc \u05db\u05e8\u05d2\u05e2 \u05e4\u05e6\u05d9\u05e2\u05d5\u05ea, \u05d4\u05e8\u05db\u05d1\u05d9\u05dd \u05de\u05d0\u05d5\u05e9\u05e8\u05d9\u05dd, \u05ea\u05e0\u05d5\u05e2\u05ea \u05e9\u05d5\u05e7 \u05d1\u05d6\u05de\u05df \u05d0\u05de\u05ea, \u05d0\u05d5 \u05de\u05d6\u05d2 \u05d0\u05d5\u05d5\u05d9\u05e8.");
+      if (isShortOddsRange) weaknesses.push("\u05d1\u05d8\u05d5\u05d5\u05d7 1.40-1.90 \u05d2\u05d1\u05d5\u05dc \u05d4-EV \u05d3\u05e7 \u2014 \u05e4\u05d9\u05d9\u05d1\u05d5\u05e8\u05d9\u05d8 \u05d1\u05e8\u05d5\u05e8 \u05e2\u05d3\u05d9\u05d9\u05df \u05d9\u05db\u05d5\u05dc \u05dc\u05d4\u05e4\u05e1\u05d9\u05d3.");
+
+      // --- Recommendation ---
+      let recLabel = "\u05e0\u05d9\u05d8\u05e8\u05dc\u05d9", recEn = "Neutral";
+      if      (ev !== null && ev >= 0.07 && estimated >= (implied || 0) + 5) { recLabel = "\u05de\u05de\u05dc\u05d9\u05e5 \u05d1\u05d7\u05d5\u05dd";       recEn = "Strongly Favor"; }
+      else if (ev !== null && ev >= 0.025)                                   { recLabel = "\u05de\u05de\u05dc\u05d9\u05e5 \u05d1\u05de\u05ea\u05d9\u05e0\u05d5\u05ea";   recEn = "Slightly Favor"; }
+      else if (ev !== null && ev <= -0.07)                                   { recLabel = "\u05dc\u05d0 \u05de\u05de\u05dc\u05d9\u05e5 \u05d1\u05d7\u05d5\u05dd";   recEn = "Strongly Against"; }
+      else if (ev !== null && ev < 0)                                        { recLabel = "\u05dc\u05d0 \u05de\u05de\u05dc\u05d9\u05e5";        recEn = "Slightly Against"; }
+      if (isShortOddsRange && (isOver25 || (isWin && !isBasketball)) && recEn === "Strongly Favor") {
+        recLabel = "\u05de\u05de\u05dc\u05d9\u05e5 \u05d1\u05de\u05ea\u05d9\u05e0\u05d5\u05ea"; recEn = "Slightly Favor";
+      }
+      const recCall = recEn.includes("Favor")
+        ? "\u05e9\u05e7\u05d5\u05dc \u05dc\u05d4\u05de\u05e8 \u05e8\u05e7 \u05d0\u05d7\u05e8\u05d9 \u05d0\u05d9\u05e9\u05d5\u05e8 \u05d4\u05e8\u05db\u05d1, \u05e4\u05e6\u05d9\u05e2\u05d5\u05ea, \u05d5\u05d9\u05d7\u05e1 Winner \u05e2\u05d3\u05db\u05e0\u05d9."
+        : "\u05dc\u05d0 \u05d4\u05d9\u05d9\u05ea\u05d9 \u05de\u05d0\u05dc\u05e5 \u05d4\u05d9\u05de\u05d5\u05e8 \u05d6\u05d4 \u05d0\u05dc\u05d0 \u05d0\u05dd \u05de\u05d2\u05d9\u05e2 \u05de\u05d9\u05d3\u05e2 \u05d7\u05d3\u05e9 \u05e9\u05de\u05e9\u05e4\u05e8 \u05d0\u05ea \u05d4\u05e4\u05e2\u05e8.";
+
+      // --- Rating ---
       let rating = 5;
       if (ev !== null) rating = Math.round(5 + ev * 35 + (estimated - (implied || estimated)) / 5);
-      if (isShortOddsRange && (isOver || marketName === "win / moneyline")) rating -= 1;
-      if (isSpread) rating -= 1;
+      if (isShortOddsRange && (isOver25 || (isWin && !isBasketball))) rating -= 1;
+      if (isSpread && isBasketball) rating -= 1;
+      if (isOver15 || isDC || isAH) rating += 1;
       rating = Math.max(1, Math.min(10, rating));
+      const ratingLabel = rating >= 9 ? "\u05de\u05e6\u05d5\u05d9\u05df" : rating >= 7 ? "\u05d8\u05d5\u05d1" : rating >= 5 ? "\u05de\u05de\u05d5\u05e6\u05e2" : rating >= 3 ? "\u05d7\u05dc\u05e9" : "\u05d2\u05e8\u05d5\u05e2";
 
+      // --- Alternatives ---
+      const alts = [];
+      if (isOver25) alts.push("\u05de\u05e2\u05dc 1.5 \u05d2\u05d5\u05dc\u05d9\u05dd \u2014 \u05d9\u05d7\u05e1 \u05e0\u05de\u05d5\u05da \u05d9\u05d5\u05ea\u05e8 \u05d0\u05da \u05d0\u05d7\u05d5\u05d6 \u05e4\u05d2\u05d9\u05e2\u05d4 \u05d2\u05d1\u05d5\u05d4 \u05d1\u05d4\u05e8\u05d1\u05d4 (~78%).");
+      if (isWin && !isBasketball) alts.push("\u05e1\u05d9\u05db\u05d5\u05d9 \u05db\u05e4\u05d5\u05dc (X2 / 1X) \u2014 \u05de\u05d5\u05e1\u05d9\u05e3 \u05d1\u05d9\u05d8\u05d5\u05d7 \u05d1\u05dc\u05d9 \u05dc\u05e4\u05d2\u05d5\u05e2 \u05de\u05d3\u05d9 \u05d1-EV.");
+      if (isWin && !isBasketball && !isAH) alts.push("\u05d4\u05e0\u05d3\u05d9\u05e7\u05d0\u05e4 \u05d0\u05e1\u05d9\u05d9\u05ea\u05d9 0.0 \u2014 \u05de\u05d2\u05df \u05de\u05e4\u05e0\u05d9 \u05ea\u05d9\u05e7\u05d5 \u05d5\u05de\u05e9\u05d0\u05d9\u05e8 \u05db\u05d9\u05e1\u05d5\u05d9 \u05d8\u05d5\u05d1.");
+      if (isBasketball && isWin) alts.push("\u05dc\u05d9\u05d9\u05df \u05d9\u05ea\u05e8\u05d5\u05df \u05db\u05d3\u05d5\u05e8\u05e1\u05dc (spread) \u2014 \u05db\u05e9\u05d4\u05e4\u05d9\u05d9\u05d1\u05d5\u05e8\u05d9\u05d8 \u05d1\u05e8\u05d5\u05e8 \u05de\u05d0\u05d5\u05d3, spread \u05e0\u05d5\u05ea\u05df \u05e2\u05e8\u05da \u05d8\u05d5\u05d1 \u05d9\u05d5\u05ea\u05e8.");
+      if (isSpread && isBasketball) alts.push("\u05e0\u05d9\u05e6\u05d7\u05d5\u05df \u05d9\u05e9\u05d9\u05e8 (moneyline) \u2014 \u05d0\u05dd \u05d4\u05e4\u05d9\u05d9\u05d1\u05d5\u05e8\u05d9\u05d8 \u05d1\u05e8\u05d5\u05e8, ML \u05e0\u05d5\u05ea\u05df \u05d9\u05d7\u05e1 \u05e0\u05e7\u05d9 \u05d1\u05dc\u05d9 \u05e1\u05d9\u05db\u05d5\u05df \u05d4\u05e0\u05d3\u05d9\u05e7\u05d0\u05e4.");
+      if (!alts.length) alts.push("\u05e0\u05e1\u05d4 Over 1.5 \u05d2\u05d5\u05dc\u05d9\u05dd / BTTS (\u05db\u05d3\u05d5\u05e8\u05d2\u05dc) \u05d0\u05d5 moneyline \u05db\u05e9\u05d4\u05e4\u05d9\u05d9\u05d1\u05d5\u05e8\u05d9\u05d8 \u05d1\u05e8\u05d5\u05e8 (\u05db\u05d3\u05d5\u05e8\u05e1\u05dc).");
+
+      // --- Build response ---
       const oddsLine = odds
-        ? "Odds: " + formatOdds(odds) + " | Implied probability: " + implied.toFixed(1) + "% | Reuven AI working estimate: " + estimated + "%"
-        : "No exact odds detected. Add the Winner odds so Reuven AI can compare probability vs price.";
-      const valueLine = ev === null
-        ? "EV cannot be calculated without odds."
+        ? `\u05d9\u05d7\u05e1 Winner: ${formatOdds(odds)} | \u05d4\u05e1\u05ea\u05d1\u05e8\u05d5\u05ea \u05de\u05e8\u05d5\u05de\u05d6\u05ea: ${implied.toFixed(1)}% | \u05d4\u05e2\u05e8\u05db\u05ea \u05e8\u05d0\u05d5\u05d1\u05df: ${estimated}%`
+        : "\u05dc\u05d0 \u05d6\u05d5\u05d4\u05d4 \u05d9\u05d7\u05e1 \u05de\u05d3\u05d5\u05d9\u05e7. \u05d4\u05d5\u05e1\u05e3 \u05d0\u05ea \u05d4\u05d9\u05d7\u05e1 \u05de-Winner \u05db\u05d3\u05d9 \u05dc\u05d4\u05e9\u05d5\u05d5\u05ea \u05d4\u05e1\u05ea\u05d1\u05e8\u05d5\u05ea \u05de\u05d5\u05dc \u05de\u05d7\u05d9\u05e8.";
+      const evLine = ev === null
+        ? "EV \u05dc\u05d0 \u05e0\u05d9\u05ea\u05df \u05dc\u05d7\u05d9\u05e9\u05d5\u05d1 \u05dc\u05dc\u05d0 \u05d9\u05d7\u05e1."
         : ev > 0
-          ? "Estimated EV is positive: +" + (ev * 100).toFixed(1) + "% per 1 unit stake, before lineup/injury confirmation."
-          : "Estimated EV is not attractive: " + (ev * 100).toFixed(1) + "% per 1 unit stake.";
+          ? `EV \u05de\u05e9\u05d5\u05e2\u05e8 \u05d7\u05d9\u05d5\u05d1\u05d9: +${(ev * 100).toFixed(1)}% \u05dc\u05db\u05dc \u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05d9\u05de\u05d5\u05e8 \u2014 \u05dc\u05e4\u05e0\u05d9 \u05d0\u05d9\u05e9\u05d5\u05e8 \u05d4\u05e8\u05db\u05d1 \u05d5\u05e4\u05e6\u05d9\u05e2\u05d5\u05ea.`
+          : `EV \u05de\u05e9\u05d5\u05e2\u05e8 \u05e9\u05dc\u05d9\u05dc\u05d9: ${(ev * 100).toFixed(1)}% \u05dc\u05db\u05dc \u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05d9\u05de\u05d5\u05e8 \u2014 \u05d4\u05e1\u05d9\u05db\u05d5\u05d9 \u05d4\u05d2\u05dc\u05d5\u05dd \u05dc\u05d0 \u05de\u05e6\u05d3\u05d9\u05e7 \u05d0\u05ea \u05d4\u05de\u05d7\u05d9\u05e8.`;
       const caution = isShortOddsRange
-        ? "Special 1.40-1.90 rule: this is a short-price zone, so the edge must be very clear. I would be cautious, especially on straight win or Over bets."
-        : "Outside the 1.40-1.90 zone: volatility/value must be checked even more carefully.";
+        ? "\u05db\u05dc\u05dc 1.40-1.90: \u05d0\u05d6\u05d5\u05e8 \u05d9\u05d7\u05e1 \u05e7\u05e6\u05e8 \u2014 \u05d4\u05e4\u05e2\u05e8 \u05d7\u05d9\u05d9\u05d1 \u05dc\u05d4\u05d9\u05d5\u05ea \u05d1\u05e8\u05d5\u05e8 \u05de\u05d0\u05d5\u05d3. \u05d6\u05d4\u05d9\u05e8\u05d5\u05ea \u05d1\u05de\u05d9\u05d5\u05d7\u05d3 \u05d1\u05e0\u05d9\u05e6\u05d7\u05d5\u05df \u05d9\u05e9\u05d9\u05e8 \u05d0\u05d5 \u05de\u05e2\u05dc 2.5."
+        : "\u05de\u05d7\u05d5\u05e5 \u05dc\u05d8\u05d5\u05d5\u05d7 1.40-1.90: \u05d1\u05d3\u05d5\u05e7 \u05ea\u05e0\u05d5\u05d3\u05ea\u05d9\u05d5\u05ea \u05d5\u05e2\u05e8\u05da \u05d1\u05e7\u05e4\u05d9\u05d3\u05d4 \u05e2\u05d5\u05d3 \u05d9\u05d5\u05ea\u05e8.";
 
       return [
-        "Bet Summary\n" + value + "\nSport: " + sportName + " | Market: " + marketName,
-        "Winner Feed Context\n" + winnerContext,
-        "Strengths\n- The bet is framed clearly enough to compare market price against probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against the implied probability.",
-        "Weaknesses\n- Reuven AI does not currently have live injuries, confirmed lineups, player minutes, weather, or late market movement inside this local tool.\n- Short odds can still be bad value if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win bets are sensitive to tactics, red cards, weather, and lineup rotation."),
-        "Odds and Probability\n" + oddsLine,
-        "Value Assessment\n" + valueLine + "\n" + caution,
-        "Recommendation\n" + recommendation + "\nPractical call: " + (recommendation.includes("Favor") ? "worth considering only after checking lineups/injuries and confirming the Winner price is still live." : "I would not force this bet unless new data improves the edge."),
-        "Rating out of 10\n" + rating + "/10",
-        "Alternative Bets\n- If the straight win/Over price is too short, check BTTS, Over 1.5, double chance, or a safer basketball ML instead of a volatile spread.\n- If the edge is unclear, passing is a valid betting decision.\n\nFor entertainment and education only. This is not financial advice, and no bet is guaranteed."
+        `\ud83d\udccb \u05e1\u05d9\u05db\u05d5\u05dd \u05d4\u05d9\u05de\u05d5\u05e8\n${value}\n\u05e1\u05e4\u05d5\u05e8\u05d8: ${sportName} | \u05e9\u05d5\u05e7: ${marketName}`,
+        `\ud83d\udcca \u05d4\u05e7\u05e9\u05e8 Winner Feed\n${winnerContext}`,
+        `\ud83d\udcaa \u05e0\u05e7\u05d5\u05d3\u05d5\u05ea \u05d7\u05d5\u05d6\u05e7\n${strengths.map(s => `- ${s}`).join("\n")}`,
+        `\u26a0\ufe0f \u05e0\u05e7\u05d5\u05d3\u05d5\u05ea \u05d7\u05d5\u05dc\u05e9\u05d4 \u05d5\u05e2\u05e6\u05d5\u05ea \u05e9\u05d3\u05d4\n${weaknesses.map(w => `- ${w}`).join("\n")}\n\n${researchLine}`,
+        `\ud83c\udfaf \u05d4\u05e1\u05ea\u05d1\u05e8\u05d5\u05ea \u05de\u05d5\u05dc \u05d9\u05d7\u05e1\n${oddsLine}`,
+        `\ud83d\udcb0 \u05d4\u05e2\u05e8\u05db\u05ea \u05e2\u05e8\u05da\n${evLine}\n${caution}`,
+        `\u2705 \u05d4\u05de\u05dc\u05e6\u05d4\n${recLabel} (${recEn})\n${recCall}`,
+        `\u2b50 \u05e6\u05d9\u05d5\u05df: ${rating}/10 \u2014 ${ratingLabel}`,
+        `\ud83d\udd04 \u05d4\u05d9\u05de\u05d5\u05e8\u05d9\u05dd \u05d7\u05dc\u05d5\u05e4\u05d9\u05d9\u05dd\n${alts.map(a => `- ${a}`).join("\n")}\n\n\u05dc\u05d1\u05d9\u05d3\u05d5\u05e8 \u05d5\u05dc\u05d9\u05de\u05d5\u05d3 \u05d1\u05dc\u05d1\u05d3. \u05d0\u05d9\u05df \u05d9\u05d9\u05e2\u05d5\u05e5 \u05e4\u05d9\u05e0\u05e0\u05e1\u05d9 \u05d5\u05d0\u05d9\u05df \u05e2\u05e8\u05d1\u05d5\u05ea \u05e2\u05dc \u05ea\u05d5\u05e6\u05d0\u05d4.`
       ].join("\n\n");
     }
 
     function renderReubenAI() {
       const messages = state.reubenMessages.length
         ? state.reubenMessages
-        : [{ role: "ai", text: "Ask me about a football or basketball bet. If the match is loaded from Winner, I will use the available Winner odds and markets in the answer." }];
+        : [{ role: "ai", text: "שלום! אני ראובן AI — יועץ הימורים לכדורגל וכדורסל.\n\nתאר הימור שאתה שוקל: קבוצות, שוק, יחס Winner.\nאנתח: חוזקות, חולשות, EV, ציון מ-10 וחלופות.\n\nדוגמאות:\n• ריאל מדריד ניצחון @ 1.65\n• מעל 2.5 גולים @ 1.80\n• מכבי תל אביב ניצחון @ 1.55\n\nאו לחץ 'שאל ראובן' ישירות על קלף משחק." }];
+      const feedLoaded = !!(state.feed && allRows().length);
+      const feedStatus = feedLoaded
+        ? `Winner Feed פעיל · ${allRows().length} משחקים`
+        : "Winner Feed לא טעון";
+      const prefill = state.reubenPrefill || "";
       return `
         <section class="reuben-panel">
           <div class="section-title" style="margin:0">
             <div>
-              <h3>Reuven AI</h3>
-              <p>Separate chat advisor for football and basketball bets: strengths, weaknesses, implied probability, EV, rating and alternatives. It uses the loaded Winner feed and does not invent missing data.</p>
+              <h3>ראובן AI</h3>
+              <p>יועץ הימורים לכדורגל וכדורסל: חוזקות, חולשות, הסתברות מרומזת, EV, ציון וחלופות. משתמש ב-Winner Feed הטעון ולא ממציא נתונים.</p>
             </div>
-            <span class="pill">Bet advisor</span>
+            <span class="pill">${feedStatus}</span>
           </div>
-          <textarea id="reubenInput" placeholder="Write a bet to analyze: match, market, Winner odds, spread if relevant. Example: Real Madrid vs Barcelona, Over 2.5 @ 1.80"></textarea>
-          <button class="open-game" type="button" id="reubenAnalyze">Send to Reuven</button>
+          <textarea id="reubenInput" placeholder="כתוב הימור לניתוח: קבוצות, שוק, יחס Winner. דוגמה: ריאל מדריד ניצחון @ 1.65 | מכבי תל אביב ניצחון @ 1.55 | מעל 2.5 @ 1.80">${escapeHtml(prefill)}</textarea>
+          <button class="open-game" type="button" id="reubenAnalyze">שלח לראובן ←</button>
           <div class="chat-log" id="reubenOutput">
             ${messages.map(message => `<div class="chat-message ${message.role === "user" ? "user" : "ai"}">${escapeHtml(message.text)}</div>`).join("")}
           </div>
@@ -2721,6 +2836,18 @@
       return `${row.match} | ${explicitPickText(row)}${odds} | הפוגע`;
     }
 
+    function cardEdgeIndicator(row) {
+      if (!row.recommended || !row.odds || row.outsideRange) return "";
+      const sc  = row.recommendationScore || row.score || 0;
+      const gap = Number(row.marketGap || 0);
+      const prob = Number(row.normalizedProbability || 0);
+      let label, cls;
+      if (sc >= 65 && gap >= 0.08)         { label = "ערך";      cls = "edge-value"; }
+      else if (sc >= 50 && prob >= 0.58)   { label = "ערך נמוך"; cls = "edge-low";   }
+      else                                  { label = "הימנע";    cls = "edge-avoid"; }
+      return `<span class="edge-chip ${cls}">${label}</span>`;
+    }
+
     function rowCard(row) {
       const hasRecommendation = row.recommended || (!!row.odds && !row.outsideRange);
       const noPickLabel = row.recommendationReason === "rank"
@@ -2738,7 +2865,7 @@
                   ${leagueLogoMarkup(row)}
                   <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.league || "ליגה לא זמינה"}</span>
                 </div>
-                <div class="card-badge-row">${matchBadges(row)}</div>
+                <div class="card-badge-row">${matchBadges(row)}${cardEdgeIndicator(row)}</div>
               </div>
               <div class="card-time-box">
                 <span>${row.day || ""}</span>
@@ -2778,6 +2905,7 @@
             ${cardVerifiedMarkup(row)}
             <div class="card-footer-actions">
               <button class="open-game" data-open="${row.id}">פירוט משחק ←</button>
+              <button class="btn-ask-reuven" type="button" data-ask-reuven="${row.id}">שאל ראובן ←</button>
               <button class="btn-share-link" type="button" data-share-text="${escapeHtml(shareTextForRow(row))}">שתף</button>
             </div>
           </div>
@@ -3065,13 +3193,36 @@
         else navigator.clipboard?.writeText(text);
         return;
       }
+      // Ask Reuven AI from a game card — pre-fill and switch to Reuven tab
+      const askBtn = event.target.closest("[data-ask-reuven]");
+      if (askBtn) {
+        const row = findRow(askBtn.dataset.askReuven);
+        if (row) {
+          const pick = explicitPickText(row);
+          const odds = row.odds ? ` @ ${formatOdds(row.odds)}` : "";
+          const market = row.market || "";
+          state.reubenPrefill = `${row.match} | ${row.sport} | ${row.league} | שוק: ${market} | בחירה: ${pick}${odds}`;
+        }
+        state.sportTab = "reuben";
+        renderCards();
+        setTimeout(() => {
+          const input = document.getElementById("reubenInput");
+          if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+        }, 60);
+        return;
+      }
       if (event.target.closest("#reubenAnalyze")) {
         const input = document.getElementById("reubenInput");
         const question = input?.value || "";
-        const answer = analyzeReubenBet(question);
+        // find the matching prefill row for richer context
+        const prefillRow = state.reubenPrefill
+          ? allRows().find(r => state.reubenPrefill.includes(r.match || "")) || null
+          : null;
+        const answer = analyzeReubenBet(question, prefillRow);
         if (question.trim()) state.reubenMessages.push({ role: "user", text: question.trim() });
         state.reubenMessages.push({ role: "ai", text: answer });
         if (input) input.value = "";
+        state.reubenPrefill = "";
         renderCards();
         const output = document.getElementById("reubenOutput");
         if (output) output.scrollTop = output.scrollHeight;
