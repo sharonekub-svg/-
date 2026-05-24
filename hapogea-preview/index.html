@@ -264,26 +264,29 @@
       position: relative;
     }
     .logo-wrap {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       display: grid;
       place-items: center;
       border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,.05);
+      background: #fff;
       overflow: hidden;
       color: var(--text);
       font-weight: 900;
+      flex-shrink: 0;
     }
     .logo-wrap.small {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       font-size: 11px;
     }
     .logo-wrap img {
-      max-width: 82%;
-      max-height: 82%;
+      width: 80%;
+      height: 80%;
       object-fit: contain;
+      object-position: center;
+      display: block;
     }
     .team-side.selected .logo-wrap,
     .versus.selected {
@@ -2818,59 +2821,91 @@
     }
 
     // ── Client-side logo resolution ───────────────────────────────────────────
-    // Wikidata supports Hebrew search with origin=* CORS, so the browser can
-    // search in Hebrew, get P154 (official logo), and fall back to English
-    // Wikipedia thumbnail — all without server-side restrictions.
-    const _clientLogoCache = new Map();
+    // Strategy:
+    //   1. Wikidata P154 (official "logo image" property — always a badge, never a photo)
+    //   2. If no P154 but Wikidata returned English name → TheSportsDB strBadge (official crests)
+    //   3. Never use Wikipedia page thumbnails — they return stadium photos, not crests
+    //   4. Persist results in localStorage so logos don't re-fetch on every page load
 
-    async function _wikidataTeamLogo(teamName) {
+    const _LOGO_STORE_KEY = "hapogea_logos_v2";
+    function _loadLogoStore() {
+      try { return JSON.parse(localStorage.getItem(_LOGO_STORE_KEY) || "{}"); } catch(_) { return {}; }
+    }
+    function _saveLogoStore(store) {
+      try { localStorage.setItem(_LOGO_STORE_KEY, JSON.stringify(store)); } catch(_) {}
+    }
+
+    // Seed memory cache from localStorage on startup
+    const _clientLogoCache = new Map(Object.entries(_loadLogoStore()));
+
+    async function _fetchTeamBadge(teamName) {
       try {
-        const searchRes = await fetch(
-          `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=3&search=${encodeURIComponent(teamName)}&origin=*`,
-          { signal: AbortSignal.timeout(5000) }
+        // ── Step 1: Wikidata search in Hebrew (origin=* → CORS works in browser) ──
+        const srRes = await fetch(
+          `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=5&search=${encodeURIComponent(teamName)}&origin=*`,
+          { signal: AbortSignal.timeout(6000) }
         );
-        if (!searchRes.ok) return null;
-        const searchData = await searchRes.json();
-        const id = searchData?.search?.[0]?.id;
+        if (!srRes.ok) return null;
+        const srData = await srRes.json();
+
+        // Prefer results whose description mentions "football club", "basketball", "sport"
+        const candidates = srData?.search || [];
+        const id = (
+          candidates.find(c => /club|football|soccer|basketball|sport|קבוצת|ליגה/i.test(c.description || "")) ||
+          candidates[0]
+        )?.id;
         if (!id) return null;
 
-        const entityRes = await fetch(
+        // ── Step 2: Fetch entity — P154 is "logo image" (official badge only) ──
+        const entRes = await fetch(
           `https://www.wikidata.org/wiki/Special:EntityData/${id}.json`,
-          { signal: AbortSignal.timeout(5000) }
+          { signal: AbortSignal.timeout(6000) }
         );
-        if (!entityRes.ok) return null;
-        const entityData = await entityRes.json();
-        const entity = entityData?.entities?.[id];
+        if (!entRes.ok) return null;
+        const entData = await entRes.json();
+        const entity = entData?.entities?.[id];
         if (!entity) return null;
 
-        // P154 = official logo image
-        const image = entity.claims?.P154?.[0]?.mainsnak?.datavalue?.value;
-        if (image) {
-          return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(image)}?width=200`;
+        const logoFile = entity.claims?.P154?.[0]?.mainsnak?.datavalue?.value;
+        if (logoFile) {
+          // Wikimedia Commons direct file — always the official logo/badge
+          return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(logoFile)}?width=200`;
         }
 
-        // Fall back: get English name → Wikipedia thumbnail
+        // ── Step 3: No P154 → use English name to query TheSportsDB strBadge ──
         const englishName = entity.labels?.en?.value;
         if (!englishName) return null;
-        const wpRes = await fetch(
-          `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(englishName)}&prop=pageimages&format=json&pithumbsize=200&origin=*`,
-          { signal: AbortSignal.timeout(4000) }
+
+        const sdbRes = await fetch(
+          `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(englishName)}`,
+          { signal: AbortSignal.timeout(5000) }
         );
-        if (!wpRes.ok) return null;
-        const wpData = await wpRes.json();
-        const page = Object.values(wpData?.query?.pages || {})[0];
-        return page?.thumbnail?.source || null;
+        if (!sdbRes.ok) return null;
+        const sdbData = await sdbRes.json();
+        // Pick the team whose name most closely matches
+        const teams = sdbData?.teams || [];
+        const enLower = englishName.toLowerCase();
+        const match = teams.find(t => (t.strTeam || "").toLowerCase() === enLower) || teams[0];
+        const badge = match?.strBadge;
+        // strBadge URLs are always official transparent-background crests
+        return badge || null;
       } catch (_) {
         return null;
       }
     }
 
     function _resolveClientLogo(teamName) {
-      if (_clientLogoCache.has(teamName)) return Promise.resolve(_clientLogoCache.get(teamName));
-      const promise = _wikidataTeamLogo(teamName).then(url => {
+      const cached = _clientLogoCache.get(teamName);
+      if (cached !== undefined) return Promise.resolve(cached instanceof Promise ? null : cached);
+      const promise = _fetchTeamBadge(teamName).then(url => {
         _clientLogoCache.set(teamName, url);
+        if (url) {
+          const store = _loadLogoStore();
+          store[teamName] = url;
+          _saveLogoStore(store);
+        }
         return url;
-      });
+      }).catch(() => null);
       _clientLogoCache.set(teamName, promise);
       return promise;
     }
@@ -2889,7 +2924,7 @@
         _resolveClientLogo(teamName).then(url => {
           if (!url) return;
           for (const img of imgEls) {
-            if (!img.isConnected) continue; // card may have been replaced
+            if (!img.isConnected) continue;
             img.removeAttribute("data-team-name");
             img.src = url;
             img.onerror = function() { this.onerror = null; this.src = this.dataset.fallback; };
