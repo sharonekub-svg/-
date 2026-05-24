@@ -1707,9 +1707,10 @@
       return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
     }
 
-    function imageWithFallback(src, name, kind) {
+    function imageWithFallback(src, name, kind, teamLookupName = null) {
       const fallback = fallbackBadge(name, kind);
-      return `<img src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${fallback}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
+      const lookupAttr = teamLookupName ? ` data-team-name="${escapeHtml(teamLookupName)}"` : "";
+      return `<img src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${fallback}"${lookupAttr} loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
     }
 
     function sportIcon(rowOrSport) {
@@ -1720,10 +1721,12 @@
       if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
       const source = String(asset.logoSource || "");
       const isGenerated = !asset.logo || String(asset.logo).startsWith("data:image") || /generated|fallback|Wikipedia/i.test(source);
+      // For team logos with no real logo, add data-team-name so client-side JS can find the real crest
+      const lookupName = size !== "small" ? (asset.name || null) : null;
       if (asset.logo && !isGenerated) {
         return `<div class="logo-wrap ${size}">${imageWithFallback(asset.logo, asset.name || "", size === "small" ? "league" : "team")}</div>`;
       }
-      return `<div class="logo-wrap ${size}" title="תג גרפי יציב">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team")}</div>`;
+      return `<div class="logo-wrap ${size}">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team", lookupName)}</div>`;
     }
 
 
@@ -2814,6 +2817,88 @@
       `;
     }
 
+    // ── Client-side logo resolution ───────────────────────────────────────────
+    // Wikidata supports Hebrew search with origin=* CORS, so the browser can
+    // search in Hebrew, get P154 (official logo), and fall back to English
+    // Wikipedia thumbnail — all without server-side restrictions.
+    const _clientLogoCache = new Map();
+
+    async function _wikidataTeamLogo(teamName) {
+      try {
+        const searchRes = await fetch(
+          `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=3&search=${encodeURIComponent(teamName)}&origin=*`,
+          { signal: AbortSignal.timeout(5000) }
+        );
+        if (!searchRes.ok) return null;
+        const searchData = await searchRes.json();
+        const id = searchData?.search?.[0]?.id;
+        if (!id) return null;
+
+        const entityRes = await fetch(
+          `https://www.wikidata.org/wiki/Special:EntityData/${id}.json`,
+          { signal: AbortSignal.timeout(5000) }
+        );
+        if (!entityRes.ok) return null;
+        const entityData = await entityRes.json();
+        const entity = entityData?.entities?.[id];
+        if (!entity) return null;
+
+        // P154 = official logo image
+        const image = entity.claims?.P154?.[0]?.mainsnak?.datavalue?.value;
+        if (image) {
+          return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(image)}?width=200`;
+        }
+
+        // Fall back: get English name → Wikipedia thumbnail
+        const englishName = entity.labels?.en?.value;
+        if (!englishName) return null;
+        const wpRes = await fetch(
+          `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(englishName)}&prop=pageimages&format=json&pithumbsize=200&origin=*`,
+          { signal: AbortSignal.timeout(4000) }
+        );
+        if (!wpRes.ok) return null;
+        const wpData = await wpRes.json();
+        const page = Object.values(wpData?.query?.pages || {})[0];
+        return page?.thumbnail?.source || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function _resolveClientLogo(teamName) {
+      if (_clientLogoCache.has(teamName)) return Promise.resolve(_clientLogoCache.get(teamName));
+      const promise = _wikidataTeamLogo(teamName).then(url => {
+        _clientLogoCache.set(teamName, url);
+        return url;
+      });
+      _clientLogoCache.set(teamName, promise);
+      return promise;
+    }
+
+    function applyLogosToCards() {
+      const imgs = [...document.querySelectorAll("img[data-team-name]")];
+      if (!imgs.length) return;
+      const byName = new Map();
+      for (const img of imgs) {
+        const name = img.dataset.teamName;
+        if (!name) continue;
+        if (!byName.has(name)) byName.set(name, []);
+        byName.get(name).push(img);
+      }
+      for (const [teamName, imgEls] of byName) {
+        _resolveClientLogo(teamName).then(url => {
+          if (!url) return;
+          for (const img of imgEls) {
+            if (!img.isConnected) continue; // card may have been replaced
+            img.removeAttribute("data-team-name");
+            img.src = url;
+            img.onerror = function() { this.onerror = null; this.src = this.dataset.fallback; };
+          }
+        }).catch(() => {});
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     function render() {
       renderTabs();
       renderStats();
@@ -2823,6 +2908,7 @@
       renderHistory();
       renderProgressBoard();
       renderDebug();
+      applyLogosToCards();
     }
 
     function parseKickoffMs(day, time) {
