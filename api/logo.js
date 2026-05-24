@@ -102,16 +102,12 @@ module.exports = async (req, res) => {
   // CDN: cache successful redirects for 30 days, serve stale for 90 days.
   // 404s are not cached so they'll retry.
   try {
-    // Run SofaScore and Wikidata/SportsDB in parallel — return whichever finishes first with a result
-    const [sofaResult, wdResult] = await Promise.allSettled([
-      trySofaScore(q, type),
-      tryWikidataThenSportsDB(q, type),
-    ]);
-
-    const logoUrl =
-      (sofaResult.status === "fulfilled" && sofaResult.value) ||
-      (wdResult.status === "fulfilled" && wdResult.value) ||
-      null;
+    // Promise.any — returns as soon as the first source finds a logo.
+    // SofaScore usually wins (fast, Hebrew-native). Wikidata/SportsDB is the fallback.
+    const logoUrl = await Promise.any([
+      trySofaScore(q, type).then(url => { if (!url) throw new Error("miss"); return url; }),
+      tryWikidataThenSportsDB(q, type).then(url => { if (!url) throw new Error("miss"); return url; }),
+    ]).catch(() => null);
 
     if (logoUrl) {
       res.setHeader("Cache-Control", "public, s-maxage=2592000, stale-while-revalidate=7776000");

@@ -1712,8 +1712,12 @@
 
     function imageWithFallback(src, name, kind, teamLookupName = null) {
       const fallback = fallbackBadge(name, kind);
-      const lookupAttr = teamLookupName ? ` data-team-name="${escapeHtml(teamLookupName)}"` : "";
-      return `<img src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${fallback}"${lookupAttr} loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
+      // When no real logo: load from /api/logo so the server finds the badge.
+      // onerror falls back to the SVG placeholder if the API returns 404.
+      const imgSrc = (!src && teamLookupName)
+        ? `/api/logo?q=${encodeURIComponent(teamLookupName)}&type=${kind === "league" ? "league" : "team"}`
+        : (src || fallback);
+      return `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(name || "")}" data-fallback="${escapeHtml(fallback)}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
     }
 
     function sportIcon(rowOrSport) {
@@ -1735,10 +1739,15 @@
 
     function leagueLogoMarkup(row) {
       const source = String(row?.leagueAsset?.logoSource || "");
-      if (!row?.leagueAsset?.logo || /generated|fallback|Wikipedia/i.test(source) || String(row.leagueAsset.logo).startsWith("data:image")) {
-        return `<div class="logo-wrap small" title="Default sport icon">${sportIcon(row)}</div>`;
-      }
-      return logoMarkup(row.leagueAsset, "small");
+      const hasReal = row?.leagueAsset?.logo &&
+        !String(row.leagueAsset.logo).startsWith("data:image") &&
+        !/generated|fallback|Wikipedia/i.test(source);
+      if (hasReal) return logoMarkup(row.leagueAsset, "small");
+      const leagueName = row?.leagueAsset?.name || row?.league || "";
+      if (!leagueName) return `<div class="logo-wrap small">${sportIcon(row)}</div>`;
+      const fallback = fallbackBadge(leagueName, "league");
+      const src = `/api/logo?q=${encodeURIComponent(leagueName)}&type=league`;
+      return `<div class="logo-wrap small"><img src="${escapeHtml(src)}" alt="${escapeHtml(leagueName)}" data-fallback="${escapeHtml(fallback)}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback"></div>`;
     }
     function allRows() {
       if (!state.feed) return [];
@@ -2820,76 +2829,9 @@
       `;
     }
 
-    // ── Client-side logo resolution ───────────────────────────────────────────
-    // /api/logo?q=<name>&type=team|league  runs server-side (no CORS limits),
-    // tries SofaScore + Wikidata P154 + TheSportsDB in parallel, and returns a
-    // 302 redirect to the real badge. Vercel CDN caches it 30 days.
-    // Locally we mirror that cache in localStorage (hapogea_logos_v3) so
-    // resolved URLs are available instantly on the next page load.
-
-    const _LOGO_STORE_KEY = "hapogea_logos_v3";
-    function _loadLogoStore() {
-      try { return JSON.parse(localStorage.getItem(_LOGO_STORE_KEY) || "{}"); } catch(_) { return {}; }
-    }
-    function _saveLogoStore(store) {
-      try { localStorage.setItem(_LOGO_STORE_KEY, JSON.stringify(store)); } catch(_) {}
-    }
-    // Seed memory cache from localStorage on startup
-    const _clientLogoCache = new Map(Object.entries(_loadLogoStore()));
-
-    // Probe /api/logo — returns the final redirected image URL, or null on 404/error.
-    async function _fetchTeamBadge(teamName, type = "team") {
-      const apiUrl = `/api/logo?q=${encodeURIComponent(teamName)}&type=${type}`;
-      try {
-        // fetch() follows redirects by default; the final URL is the image
-        const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
-        if (!res.ok) return null;
-        // We got the image — use the API URL itself as src (browser caches via CDN)
-        return apiUrl;
-      } catch (_) {
-        return null;
-      }
-    }
-
-    function _resolveClientLogo(teamName, type = "team") {
-      const cached = _clientLogoCache.get(teamName);
-      if (cached !== undefined && !(cached instanceof Promise)) return Promise.resolve(cached);
-      const promise = _fetchTeamBadge(teamName, type).then(url => {
-        _clientLogoCache.set(teamName, url);
-        if (url) {
-          const store = _loadLogoStore();
-          store[teamName] = url;
-          _saveLogoStore(store);
-        }
-        return url;
-      }).catch(() => null);
-      _clientLogoCache.set(teamName, promise);
-      return promise;
-    }
-
-    function applyLogosToCards() {
-      const imgs = [...document.querySelectorAll("img[data-team-name]")];
-      if (!imgs.length) return;
-      const byName = new Map();
-      for (const img of imgs) {
-        const name = img.dataset.teamName;
-        if (!name) continue;
-        if (!byName.has(name)) byName.set(name, []);
-        byName.get(name).push(img);
-      }
-      for (const [teamName, imgEls] of byName) {
-        _resolveClientLogo(teamName).then(url => {
-          if (!url) return;
-          for (const img of imgEls) {
-            if (!img.isConnected) continue;
-            img.removeAttribute("data-team-name");
-            img.src = url;
-            img.onerror = function() { this.onerror = null; this.src = this.dataset.fallback; };
-          }
-        }).catch(() => {});
-      }
-    }
-    // ─────────────────────────────────────────────────────────────────────────
+    // Logo resolution is fully server-side via /api/logo (see api/logo.js).
+    // imageWithFallback sets img.src = "/api/logo?q=..." directly in the HTML.
+    // Vercel CDN caches each logo for 30 days. onerror shows SVG placeholder.
 
     function render() {
       renderTabs();
@@ -2900,7 +2842,6 @@
       renderHistory();
       renderProgressBoard();
       renderDebug();
-      applyLogosToCards();
     }
 
     function parseKickoffMs(day, time) {
