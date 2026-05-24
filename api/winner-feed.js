@@ -5,9 +5,8 @@ const ODDS_MIN = 1.4;
 const ODDS_MAX = 1.9;
 /** Top Winner picks shown per day (verified line + odds in range). */
 const TARGET_PICKS_PER_SPORT = 20;
-const SUPABASE_URL = "https://jgcmtrlviuivbtimtqjq.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnY210cmx2aXVpdmJ0aW10cWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTc5NzYsImV4cCI6MjA5MTY5Mzk3Nn0.LxaX1xDcvLFPtF4Q5QnUlV4zeHQBeDwlcJq3nao3mqk";
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://jgcmtrlviuivbtimtqjq.supabase.co";
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
 const SPORTS = {
   240: "כדורגל",
   227: "כדורסל",
@@ -163,6 +162,11 @@ function winnerHour(value) {
   return `${raw.slice(0, 2)}:${raw.slice(2, 4)}`;
 }
 
+function kickoffMs(dateKey, winnerTime) {
+  const time = winnerHour(winnerTime);
+  return new Date(`${dateKey}T${time}:00+03:00`).getTime();
+}
+
 function decimal(value) {
   const parsed = Number(String(value).replace(/[^\d.]/g, ""));
   return Number.isFinite(parsed) ? parsed : null;
@@ -311,6 +315,7 @@ function logoSearchTerms(name, kind) {
 }
 
 async function supabaseSearch(table, term) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
   const value = cleanText(term);
   if (!value || value.length < 2) return null;
   const query = `${table}?select=id,name,name_he,logo_url,slug&or=(name_he.ilike.*${encodeURIComponent(value)}*,name.ilike.*${encodeURIComponent(value)}*,slug.ilike.*${encodeURIComponent(value)}*)&limit=20`;
@@ -959,9 +964,9 @@ function favoriteInfo(row) {
 function hasSingleClearFavorite(row) {
   const info = favoriteInfo(row);
   return info.isFavorite && (
-    Number(row.marketGap || 0) >= 0.025 ||
-    Number(info.oddsGap || 0) >= 0.15 ||
-    Number(row.normalizedProbability || 0) >= 0.5
+    Number(row.marketGap || 0) >= 0.06 ||
+    Number(info.oddsGap || 0) >= 0.25 ||
+    Number(row.normalizedProbability || 0) >= 0.55
   );
 }
 
@@ -977,6 +982,7 @@ function scoreBreakdown(row) {
   const clearFavorite = hasSingleClearFavorite(row);
   const central = isCentralEvent(row);
   const spread = Number(row.spread);
+  const proximityBonus = Number(row.proximityBonus || 0);
   const extremeSpreadPenalty = Number(row.sportId) === WINNER_BASKETBALL_ID && Number.isFinite(spread) && Math.abs(spread) > 12
     ? 18
     : 0;
@@ -986,8 +992,9 @@ function scoreBreakdown(row) {
     oddsValue: Math.round(oddsQuality * 18),
     marketGap: Math.round(marketGap * 34),
     reliability: Math.round(reliability * 10),
-    niche: central ? -22 : 16,
+    niche: central ? 0 : -8,
     clearFavorite: clearFavorite ? 18 : -30,
+    proximity: proximityBonus,
     overroundPenalty: -Math.round(overroundPenalty),
     lowOddsPenalty: -tooLowOddsPenalty,
     extremeSpreadPenalty: -extremeSpreadPenalty,
@@ -1003,6 +1010,7 @@ function scoreBreakdown(row) {
       reliability: "אמינות שוק",
       niche: "נישה",
       clearFavorite: "פייבוריטית ברורה",
+      proximity: "קרבה לפתיחה",
       overroundPenalty: "מרווח בית",
       lowOddsPenalty: "יחס נמוך מדי",
       extremeSpreadPenalty: "ליין קיצוני",
@@ -1094,6 +1102,11 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
 
     const scored = bestScored;
     const _verifiedAt = new Date().toISOString();
+    const kickMs = kickoffMs(dateKey, market.m_hour);
+    const hoursToKickoff = Number.isFinite(kickMs) ? (kickMs - Date.now()) / 3600000 : 99;
+    const proximityBonus = hoursToKickoff >= 0 && hoursToKickoff <= 2 ? 8 : hoursToKickoff >= 0 && hoursToKickoff <= 6 ? 4 : 0;
+    const fairOdds = scored.normalizedProbability > 0 ? 1 / scored.normalizedProbability : null;
+    const valueIndicator = fairOdds && scored.odds && scored.odds > fairOdds * 1.03 ? "winner_higher" : null;
     const row = {
       id: `winner-${market.eId}`,
       eventId: String(market.eId),
@@ -1128,7 +1141,9 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
       marketGap: scored.marketGap,
       overround: scored.overround,
       globalAverageOdds: null,
-      valueIndicator: null,
+      valueIndicator,
+      fairOdds,
+      proximityBonus,
       score: outsideRange ? 0 : scored.score,
       status: "ממתין",
       result: "",
@@ -1180,7 +1195,7 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
     .map((row) => ({
       ...row,
       scoreBreakdown: scoreBreakdown(row),
-      recommendationScore: recommendationRank(row),
+      recommendationScore: Math.max(1, Math.min(100, recommendationRank(row))),
       nichePick: !isCentralEvent(row),
     }))
     .sort((a, b) => {
@@ -1194,6 +1209,7 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
       const sc = row.recommendationScore || row.score || 0;
       return {
         ...row,
+        score: Math.max(1, Math.min(100, sc)),
         recommended: true,
         recommendationReason: "top-20",
         riskLevel: sc >= 70 ? "נמוך" : sc >= 50 ? "בינוני" : "גבוה",
@@ -1226,6 +1242,7 @@ function buildResultRows(results, dateKey) {
       if (!market) return null;
       const actualWinnerRaw = cleanText((market.marketResults || [])[0]);
       const actualWinner = actualWinnerRaw.toLowerCase() === "x" ? "תיקו" : actualWinnerRaw;
+      const finishedAt = event.closedAt || event.finishedAt || (actualWinner ? verifiedAt : null);
       const teams = { home: cleanText(event.teamA), away: cleanText(event.teamB) };
       const _resultScore = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
       return {
@@ -1233,6 +1250,7 @@ function buildResultRows(results, dateKey) {
         eventId: String(event.eventid),
         source: "Winner Results",
         verifiedAt,
+        finishedAt,
         bettingStatus: "closed",
         resultVerified: !!actualWinner,
         day: dateKey,
@@ -1361,6 +1379,7 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
       const actualWinner = resultWinner(event);
       const phase = resultPhase(event);
       const verifiedAt = new Date().toISOString();
+      const finishedAt = event.closedAt || event.finishedAt || (phase === "final" ? verifiedAt : null);
       const teams = { home: cleanText(event.teamA), away: cleanText(event.teamB) };
       return {
         id: `result-${event.eventid}`,
@@ -1368,6 +1387,7 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
         eventId365: event.eventid365 || String(event.eventid).replace(/^365-/, ""),
         source: "365Scores Results",
         verifiedAt,
+        finishedAt,
         bettingStatus: "closed",
         resultVerified: !!actualWinner,
         day: dateKey,
@@ -1485,13 +1505,19 @@ function finalOpenRows(rows) {
 }
 
 function finalOpenRowsByDay(rows) {
-  // Process each sport separately so basketball isn't crowded out by football
+  // Build each sport independently, then keep the daily board capped at 20 total.
+  // The frontend still renders football and basketball as separate sections.
   const football   = (rows || []).filter((r) => Number(r.sportId) === WINNER_FOOTBALL_ID);
   const basketball = (rows || []).filter((r) => Number(r.sportId) === WINNER_BASKETBALL_ID);
   return [
     ...finalOpenRows(football),
     ...finalOpenRows(basketball),
-  ];
+  ].sort((a, b) => {
+    return (b.recommendationScore || 0) - (a.recommendationScore || 0)
+      || (b.probability || 0) - (a.probability || 0)
+      || (b.odds || 0) - (a.odds || 0)
+      || String(a.time).localeCompare(String(b.time));
+  }).slice(0, TARGET_PICKS_PER_SPORT);
 }
 
 function finalResultRowsByDay(rows) {
