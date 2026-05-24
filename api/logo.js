@@ -1,90 +1,104 @@
 // /api/logo?q=<Hebrew or English team name>&type=team|league
 // Returns a 302 redirect to the real badge image.
-// Vercel CDN caches the redirect for 30 days — the Lambda runs once per unique name.
+// Vercel CDN caches successful redirects for 30 days.
 
-const TIMEOUT_MS = 5000;
-
-function sig(ms) {
-  return AbortSignal.timeout(ms);
-}
-
-async function getJson(url, headers = {}) {
+async function getJson(url) {
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      "User-Agent": "HapogeaLogoBot/2.0 (https://github.com/sharonekub-svg/hapogea)",
       Accept: "application/json",
-      ...headers,
     },
-    signal: sig(TIMEOUT_MS),
+    signal: AbortSignal.timeout(6000),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-// ── Source 1: SofaScore ───────────────────────────────────────────────────────
-// Accepts any language including Hebrew. Returns team IDs for CDN logo URLs.
-async function trySofaScore(name, type) {
-  const entityType = type === "league" ? "uniqueTournament" : "team";
-  const data = await getJson(
-    `https://api.sofascore.com/api/v1/search/all?q=${encodeURIComponent(name)}&page=0`,
-    { Referer: "https://www.sofascore.com/", Origin: "https://www.sofascore.com" }
-  ).catch(() => null);
-  if (!data) return null;
-
-  const hit = (data.results || []).find(r => r.type === entityType);
-  const id = hit?.entity?.id;
-  if (!id) return null;
-
-  return type === "league"
-    ? `https://api.sofascore.com/api/v1/unique-tournament/${id}/image`
-    : `https://api.sofascore.com/api/v1/team/${id}/image`;
-}
-
-// ── Source 2: Wikidata P154 + TheSportsDB ─────────────────────────────────────
-// Wikidata Hebrew search → entity → P154 (official logo property).
-// If no P154, use the English label to query TheSportsDB strBadge.
-async function tryWikidataThenSportsDB(name, type) {
-  // Step 1 — Wikidata search in Hebrew
-  const srData = await getJson(
-    `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=5&search=${encodeURIComponent(name)}`
-  ).catch(() => null);
+// ── Source A: Wikipedia Hebrew → Wikidata P154 → TheSportsDB ────────────────
+// 1. Hebrew Wikipedia search returns: page title, wikibase_item ID, English langlink
+// 2. wbgetentities (compact) checks P154 (official logo property)
+// 3. If no P154, TheSportsDB strBadge via English name
+async function tryWikipediaChain(name, type) {
+  // Step 1 — Hebrew Wikipedia search (fast, reliable, returns English name in one call)
+  const srUrl =
+    `https://he.wikipedia.org/w/api.php?action=query` +
+    `&generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=5` +
+    `&prop=pageprops|langlinks&ppprop=wikibase_item&lllang=en&format=json`;
+  const srData = await getJson(srUrl).catch(() => null);
   if (!srData) return null;
 
-  const candidates = srData.search || [];
-  // Prefer candidates whose description mentions sport/club
-  const id = (
-    candidates.find(c => /club|football|soccer|basketball|sport|קבוצת/i.test(c.description || "")) ||
-    candidates[0]
-  )?.id;
-  if (!id) return null;
+  const pages = Object.values(srData.query?.pages || {});
+  if (!pages.length) return null;
 
-  // Step 2 — Fetch entity data
-  const entData = await getJson(
-    `https://www.wikidata.org/wiki/Special:EntityData/${id}.json`
-  ).catch(() => null);
-  const entity = entData?.entities?.[id];
-  if (!entity) return null;
+  // Prefer a page whose title contains a sport-related keyword
+  const page =
+    pages.find(p => /football|soccer|basketball|f\.c\.|b\.c\.|קבוצת|כדורסל/i.test(p.title || "")) ||
+    pages[0];
 
-  // P154 = "logo image" property — always an official badge, never a photo
-  const logoFile = entity.claims?.P154?.[0]?.mainsnak?.datavalue?.value;
+  const wdId = page.pageprops?.wikibase_item;            // e.g. "Q1523607"
+  const enTitle = page.langlinks?.[0]?.["*"] || null;   // e.g. "Liverpool F.C."
+
+  // Step 2 — Wikidata P154 via wbgetentities (returns only claims, NOT the full EntityData blob)
+  if (wdId) {
+    const wdUrl =
+      `https://www.wikidata.org/w/api.php?action=wbgetentities` +
+      `&ids=${wdId}&props=claims&format=json`;
+    const wdData = await getJson(wdUrl).catch(() => null);
+    const claims = wdData?.entities?.[wdId]?.claims || {};
+    const logoFile = claims.P154?.[0]?.mainsnak?.datavalue?.value;
+    if (logoFile) {
+      return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(logoFile)}?width=200`;
+    }
+  }
+
+  // Step 3 — TheSportsDB with English name (strBadge = official transparent crest)
+  if (enTitle) {
+    const param = type === "league" ? `l=${encodeURIComponent(enTitle)}` : `t=${encodeURIComponent(enTitle)}`;
+    const endpoint = type === "league" ? "search_all_leagues.php" : "searchteams.php";
+    const sdbData = await getJson(
+      `https://www.thesportsdb.com/api/v1/json/3/${endpoint}?${param}`
+    ).catch(() => null);
+    const items = sdbData?.teams || sdbData?.leagues || [];
+    if (items.length) {
+      const badge = items[0]?.strBadge || items[0]?.strLogo;
+      if (badge) return badge;
+    }
+  }
+
+  return null;
+}
+
+// ── Source B: English Wikipedia search (fallback when Hebrew page not found) ──
+// Transliterations like "Liverpool" or "Brentford" may come in as-is.
+async function tryEnglishWikipediaChain(name, type) {
+  const srUrl =
+    `https://en.wikipedia.org/w/api.php?action=query` +
+    `&generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=3` +
+    `&prop=pageprops&ppprop=wikibase_item&format=json`;
+  const srData = await getJson(srUrl).catch(() => null);
+  const pages = Object.values(srData?.query?.pages || {});
+  if (!pages.length) return null;
+
+  const page = pages.find(p => /football|soccer|basketball|f\.c\.|b\.c\.|sport/i.test(p.title || "")) || pages[0];
+  const wdId = page?.pageprops?.wikibase_item;
+  if (!wdId) return null;
+
+  const wdUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${wdId}&props=claims&format=json`;
+  const wdData = await getJson(wdUrl).catch(() => null);
+  const claims = wdData?.entities?.[wdId]?.claims || {};
+  const logoFile = claims.P154?.[0]?.mainsnak?.datavalue?.value;
   if (logoFile) {
     return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(logoFile)}?width=200`;
   }
 
-  // Step 3 — English label → TheSportsDB strBadge
-  const englishName = entity.labels?.en?.value;
-  if (!englishName) return null;
-
-  const endpoint = type === "league" ? "search_all_leagues.php?l" : "searchteams.php?t";
+  // TheSportsDB with the English page title
+  const param = type === "league" ? `l=${encodeURIComponent(page.title)}` : `t=${encodeURIComponent(page.title)}`;
+  const endpoint = type === "league" ? "search_all_leagues.php" : "searchteams.php";
   const sdbData = await getJson(
-    `https://www.thesportsdb.com/api/v1/json/3/${endpoint}=${encodeURIComponent(englishName)}`
+    `https://www.thesportsdb.com/api/v1/json/3/${endpoint}?${param}`
   ).catch(() => null);
-
-  const items = sdbData?.teams || sdbData?.countries || sdbData?.leagues || [];
-  if (!items.length) return null;
-  const enLower = englishName.toLowerCase();
-  const match = items.find(t => (t.strTeam || t.strLeague || "").toLowerCase() === enLower) || items[0];
-  return match?.strBadge || match?.strLogo || null;
+  const items = sdbData?.teams || sdbData?.leagues || [];
+  return items[0]?.strBadge || items[0]?.strLogo || null;
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
@@ -94,22 +108,17 @@ module.exports = async (req, res) => {
   const q = String(req.query?.q || "").trim();
   const type = req.query?.type === "league" ? "league" : "team";
 
-  if (!q) {
-    res.status(400).end();
-    return;
-  }
+  if (!q) { res.status(400).end(); return; }
 
-  // CDN: cache successful redirects for 30 days, serve stale for 90 days.
-  // 404s are not cached so they'll retry.
   try {
-    // Promise.any — returns as soon as the first source finds a logo.
-    // SofaScore usually wins (fast, Hebrew-native). Wikidata/SportsDB is the fallback.
+    // Run Hebrew and English chains in parallel — first non-null result wins
     const logoUrl = await Promise.any([
-      trySofaScore(q, type).then(url => { if (!url) throw new Error("miss"); return url; }),
-      tryWikidataThenSportsDB(q, type).then(url => { if (!url) throw new Error("miss"); return url; }),
+      tryWikipediaChain(q, type).then(u => { if (!u) throw 0; return u; }),
+      tryEnglishWikipediaChain(q, type).then(u => { if (!u) throw 0; return u; }),
     ]).catch(() => null);
 
     if (logoUrl) {
+      // Cache 30 days on CDN, serve stale for 90 — Lambda runs once per unique name
       res.setHeader("Cache-Control", "public, s-maxage=2592000, stale-while-revalidate=7776000");
       res.redirect(302, logoUrl);
     } else {
