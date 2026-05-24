@@ -1372,10 +1372,13 @@ function buildReuvenSchedule(markets, fromDate, daysAhead = 31) {
       title: cleanText(market.mp),
       tier: marketTier(market.mp, market.sId),
       outcomes: (oddsBook.outcomes || []).map((outcome) => ({
-        label: outcome.label,
+        label: outcome.team || outcome.desc,
         desc: outcome.desc,
+        team: outcome.team,
+        spread: outcome.spread,
         odds: outcome.odds,
-        side: outcome.side,
+        implied: outcome.implied,
+        noVigProbability: outcome.noVigProbability,
       })),
     });
     byEvent.set(key, item);

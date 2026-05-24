@@ -2184,6 +2184,72 @@
       }).join("\n");
     }
 
+    function reuvenOutcomeCandidates(row) {
+      const markets = row.markets || [];
+      const candidates = markets.flatMap(market => (market.outcomes || [])
+        .filter(outcome => Number(outcome.odds || 0) > 1)
+        .map(outcome => ({
+          marketId: market.marketId,
+          marketTitle: market.title || "Winner market",
+          tier: market.tier || "other",
+          label: outcome.label || outcome.team || outcome.desc || "בחירה",
+          desc: outcome.desc || outcome.label || outcome.team || "",
+          team: outcome.team || "",
+          odds: Number(outcome.odds),
+          implied: Number(outcome.implied || 0),
+          noVigProbability: Number(outcome.noVigProbability || 0),
+          spread: outcome.spread,
+        })));
+      if (!candidates.length && row.odds) {
+        candidates.push({
+          marketId: row.marketId,
+          marketTitle: row.market || "Winner market",
+          tier: "selected",
+          label: explicitPickText(row),
+          desc: explicitPickText(row),
+          team: row.pickTeam || "",
+          odds: Number(row.odds),
+          implied: Number(row.implied || 0),
+          noVigProbability: Number(row.normalizedProbability || 0),
+          spread: row.spread,
+        });
+      }
+      return candidates.sort((a, b) => {
+        const aCore = a.odds >= 1.4 && a.odds <= 1.9 ? 0 : 1;
+        const bCore = b.odds >= 1.4 && b.odds <= 1.9 ? 0 : 1;
+        const aTier = a.tier === "main" || a.tier === "selected" ? 0 : 1;
+        const bTier = b.tier === "main" || b.tier === "selected" ? 0 : 1;
+        return aCore - bCore || aTier - bTier || a.odds - b.odds;
+      });
+    }
+
+    function selectReuvenOutcome(row, query) {
+      const candidates = reuvenOutcomeCandidates(row);
+      if (!candidates.length) return null;
+      const terms = reuvenTerms(query);
+      const matched = candidates
+        .map(candidate => {
+          const haystack = normalizeReuvenText(`${candidate.marketTitle} ${candidate.label} ${candidate.desc} ${candidate.team}`);
+          const score = terms.reduce((sum, term) => sum + (haystack.includes(term) ? 1 : 0), 0);
+          return { candidate, score };
+        })
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score || a.candidate.odds - b.candidate.odds)[0];
+      return matched?.candidate || candidates.find(candidate => candidate.odds >= 1.4 && candidate.odds <= 1.9) || candidates[0];
+    }
+
+    function reuvenDataAccessSummary(row, selectedOutcome) {
+      const marketCount = (row.markets || []).length;
+      const outcomeCount = reuvenOutcomeCandidates(row).length;
+      const noVig = selectedOutcome?.noVigProbability ? `${Math.round(selectedOutcome.noVigProbability * 100)}%` : "לא זמין";
+      return [
+        `Winner odds: מחובר. נמצאו ${marketCount} שווקים ו-${outcomeCount} בחירות פעילות למשחק הזה.`,
+        `שוק שנבחר לניתוח: ${selectedOutcome ? `${selectedOutcome.marketTitle} | ${selectedOutcome.label} @ ${formatOdds(selectedOutcome.odds)}` : "אין כרגע שוק Winner פעיל למשחק הזה"}.`,
+        `סטטיסטיקת שוק זמינה עכשיו: הסתברות גלומה, no-vig probability (${noVig}), עומק שווקים וטווח יחסים.`,
+        "פציעות, הרכבים מאושרים, דקות שחקנים, מזג אוויר וסטטיסטיקות עומק לא מגיעים מ-Winner עצמו. ראובן לא ימציא אותם; צריך לחבר ספק נתונים נוסף כדי להפוך אותם ל-live."
+      ].join("\n");
+    }
+
     function findReuvenMatches(text) {
       const terms = reuvenTerms(text);
       if (!terms.length) return [];
@@ -2234,12 +2300,8 @@
       state.reubenCandidates = [matchedRow];
 
       const oddsMatch = value.match(/(?:odds|@)?\s*(\d+(?:[.,]\d+)?)/i);
-      const marketOdds = (matchedRow.markets || [])
-        .flatMap(market => market.outcomes || [])
-        .map(outcome => Number(outcome.odds || 0))
-        .filter(odd => odd > 1);
-      const inferredOdds = marketOdds.find(odd => odd >= 1.4 && odd <= 1.9) || marketOdds[0] || null;
-      const odds = oddsMatch ? Number(oddsMatch[1].replace(",", ".")) : inferredOdds;
+      const selectedOutcome = selectReuvenOutcome(matchedRow, value);
+      const odds = oddsMatch ? Number(oddsMatch[1].replace(",", ".")) : (selectedOutcome?.odds || null);
       const implied = odds && odds > 1 ? (1 / odds) * 100 : null;
       const lower = value.toLowerCase();
       const isBasketball = Number(matchedRow.sportId) === 227 || /basketball|nba|euroleague|maccabi/i.test(value);
@@ -2254,8 +2316,10 @@
         `${matchedRow.day} ${matchedRow.time || ""} | ${matchedRow.sport} | ${matchedRow.league} | ${matchedRow.match}`,
         reuvenMarketSummary(matchedRow),
       ].join("\n");
+      const dataAccess = reuvenDataAccessSummary(matchedRow, selectedOutcome);
 
       let estimated = odds ? Math.round(Math.max(38, Math.min(78, implied + 2))) : 55;
+      if (selectedOutcome?.noVigProbability) estimated = Math.round(Math.max(38, Math.min(80, selectedOutcome.noVigProbability * 100 + 2)));
       if (isSpread) estimated -= 4;
       if (isOver && isShortOddsRange) estimated -= 3;
       if (isBtts) estimated -= 1;
@@ -2278,10 +2342,10 @@
       rating = Math.max(1, Math.min(10, rating));
 
       const oddsLine = odds
-        ? "Odds: " + formatOdds(odds) + " | Implied probability: " + implied.toFixed(1) + "% | Reuven AI working estimate: " + estimated + "%"
-        : "No exact odds detected. Add the Winner odds so Reuven AI can compare probability vs price.";
+        ? "Winner odds: " + formatOdds(odds) + " | Market: " + (selectedOutcome?.marketTitle || marketName) + " | Pick: " + (selectedOutcome?.label || "user pick") + " | Implied probability: " + implied.toFixed(1) + "% | Reuven AI working estimate: " + estimated + "%"
+        : "מצאתי את המשחק, אבל אין כרגע שוק Winner פעיל עם יחס תקין לניתוח.";
       const valueLine = ev === null
-        ? "EV cannot be calculated without odds."
+        ? "אי אפשר לחשב EV עד שיש יחס Winner פעיל."
         : ev > 0
           ? "Estimated EV is positive: +" + (ev * 100).toFixed(1) + "% per 1 unit stake, before lineup/injury confirmation."
           : "Estimated EV is not attractive: " + (ev * 100).toFixed(1) + "% per 1 unit stake.";
@@ -2292,8 +2356,9 @@
       return [
         "Bet Summary\n" + value + "\nMatched Winner game: " + matchedRow.match + "\nSport: " + sportName + " | Market: " + marketName,
         "Winner Feed Context\n" + winnerContext,
+        "Data Access\n" + dataAccess,
         "Strengths\n- The bet is framed clearly enough to compare market price against probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against the implied probability.",
-        "Weaknesses\n- Reuven AI does not currently have live injuries, confirmed lineups, player minutes, weather, or late market movement inside this local tool.\n- Short odds can still be bad value if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win bets are sensitive to tactics, red cards, weather, and lineup rotation."),
+        "Weaknesses\n- Winner gives the betting market and odds, not a complete injury/lineup database. Missing external data is treated as uncertainty, not invented confidence.\n- Short odds can still be bad value if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win bets are sensitive to tactics, red cards, weather, and lineup rotation."),
         "Odds and Probability\n" + oddsLine,
         "Value Assessment\n" + valueLine + "\n" + caution,
         "Recommendation\n" + recommendation + "\nPractical call: " + (recommendation.includes("Favor") ? "worth considering only after checking lineups/injuries and confirming the Winner price is still live." : "I would not force this bet unless new data improves the edge."),
