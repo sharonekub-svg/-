@@ -762,6 +762,153 @@ function footballLogosStaticLookup(name) {
   return null;
 }
 // ─────────────────────────────────────────────────────────────────────────────
+// alexanderthebadatcoding/Sports-Logos — NBA + UEFA CL + Bundesliga extras
+// CDN: cdn.jsdelivr.net/gh/alexanderthebadatcoding/Sports-Logos@main/{folder}/{code}.png
+const SL = "https://cdn.jsdelivr.net/gh/alexanderthebadatcoding/Sports-Logos@main/";
+const SL_NBA  = SL + "NBA/";
+const SL_UEFA = SL + "UEFA/";
+const SL_GER  = SL + "Bundesliga/";
+const SL_NFL  = SL + "NFL/";
+
+const SPORTS_LOGOS_MAP = {
+  // ── NBA ──────────────────────────────────────────────────────────────────
+  "בוסטון סלטיקס":            SL_NBA + "BOS.png",
+  "סלטיקס":                   SL_NBA + "BOS.png",
+  "לוס אנג'לס לייקרס":        SL_NBA + "LAL.png",
+  "לייקרס":                   SL_NBA + "LAL.png",
+  "גולדן סטייט ווריורס":      SL_NBA + "GS.png",
+  "ווריורס":                  SL_NBA + "GS.png",
+  "מיאמי היט":                SL_NBA + "MIAH.png",
+  "היט":                      SL_NBA + "MIAH.png",
+  "מילווקי באקס":             SL_NBA + "MIL.png",
+  "באקס":                     SL_NBA + "MIL.png",
+  "פילדלפיה סיקסרס":          SL_NBA + "PHI.png",
+  "סיקסרס":                   SL_NBA + "PHI.png",
+  "דנבר נאגטס":               SL_NBA + "DEN.png",
+  "נאגטס":                    SL_NBA + "DEN.png",
+  "פניקס סאנס":               SL_NBA + "PHX.png",
+  "סאנס":                     SL_NBA + "PHX.png",
+  "ניו יורק ניקס":            SL_NBA + "NY.png",
+  "ניקס":                     SL_NBA + "NY.png",
+  "ברוקלין נטס":              SL_NBA + "BKN.png",
+  "נטס":                      SL_NBA + "BKN.png",
+  "שיקגו בולס":               SL_NBA + "CHIH.png",
+  "בולס":                     SL_NBA + "CHIH.png",
+  "קליבלנד קאבלירס":          SL_NBA + "CLE.png",
+  "קאבלירס":                  SL_NBA + "CLE.png",
+  "אטלנטה הוקס":              SL_NBA + "ATL.png",
+  "הוקס":                     SL_NBA + "ATL.png",
+  "טורונטו רפטורס":           SL_NBA + "TOR.png",
+  "רפטורס":                   SL_NBA + "TOR.png",
+  "אוקלהומה סיטי תאנדר":      SL_NBA + "OKC.png",
+  "תאנדר":                    SL_NBA + "OKC.png",
+  "מינסוטה טימברוולבס":       SL_NBA + "MIN.png",
+  "טימברוולבס":               SL_NBA + "MIN.png",
+  "אינדיאנה פייסרס":          SL_NBA + "IND.png",
+  "פייסרס":                   SL_NBA + "IND.png",
+  "שרלוט הורנטס":             SL_NBA + "CHA.png",
+  "הורנטס":                   SL_NBA + "CHA.png",
+  "ניו אורלינס פליקנס":       SL_NBA + "NO.png",
+  "פליקנס":                   SL_NBA + "NO.png",
+  "פורטלנד טריל בלייזרס":     SL_NBA + "POR.png",
+  "טריל בלייזרס":             SL_NBA + "POR.png",
+  "סקרמנטו קינגס":            SL_NBA + "SAC.png",
+  "קינגס":                    SL_NBA + "SAC.png",
+  "יוטה ג'אז":                SL_NBA + "UTAH.png",
+  "ג'אז":                     SL_NBA + "UTAH.png",
+  "ממפיס גריזליז":            SL_NBA + "MEM.png",
+  "גריזליז":                  SL_NBA + "MEM.png",
+  "סן אנטוניו ספרס":          SL_NBA + "SA.png",
+  "ספרס":                     SL_NBA + "SA.png",
+  "אורלנדו מג'יק":            SL_NBA + "ORL.png",
+  "מג'יק":                    SL_NBA + "ORL.png",
+  "יוסטון רוקטס":             SL_NBA + "HOU.png",
+  "רוקטס":                    SL_NBA + "HOU.png",
+  "דטרויט פיסטונס":           SL_NBA + "DET.png",
+  "פיסטונס":                  SL_NBA + "DET.png",
+  "לוס אנג'לס קליפרס":        SL_NBA + "LAC.png",
+  "קליפרס":                   SL_NBA + "LAC.png",
+  "וושינגטון ויזרדס":         SL_NBA + "WSH.png",
+  "ויזרדס":                   SL_NBA + "WSH.png",
+  "דאלאס מאבריקס":            SL_NBA + "DAL.png",
+  "מאבריקס":                  SL_NBA + "DAL.png",
+  "אורלנדו":                  SL_NBA + "ORL.png",
+
+  // ── UEFA Champions League extras (not in FCLOGO/luukhopman) ─────────────
+  "פריז סן ז'רמן":            SL_UEFA + "PSG.png",
+  "PSG":                      SL_UEFA + "PSG.png",
+  "מונאקו":                   SL_UEFA + "MON.png",
+  "AS מונאקו":                SL_UEFA + "MON.png",
+  "יאנג בויס":                SL_UEFA + "YB.png",
+  "סלטיק":                   SL_UEFA + "CEL.png",
+  "PSV":                      SL_UEFA + "PSV.png",
+  "PSV איינדהובן":            SL_UEFA + "PSV.png",
+  "כוכב אדום":                SL_UEFA + "RSB.png",
+  "שחטאר דונייצק":            SL_UEFA + "SHK.png",
+  "שחטאר":                    SL_UEFA + "SHK.png",
+  "זלצבורג":                  SL_UEFA + "SLZ.png",
+  "RB זלצבורג":               SL_UEFA + "SLZ.png",
+  "אסטון וילה":               SL_UEFA + "AVL.png",
+  "בולוניה":                  SL_UEFA + "BOL.png",
+  "ליל":                      SL_UEFA + "LILL.png",
+  "שטוטגרט":                  SL_UEFA + "STG.png",
+  "VFB שטוטגרט":              SL_UEFA + "STG.png",
+  "ברסט":                     SL_UEFA + "BRE.png",
+  "אינטר":                    SL_UEFA + "INT.png",
+  "אינטר מילאן":              SL_UEFA + "INT.png",
+  "יובנטוס":                  SL_UEFA + "JUV.png",
+  "ברוז' ":                   SL_UEFA + "BRU.png",
+  "ספורטינג ליסבון":          SL_UEFA + "SCP.png",
+  "ספורטינג CP":              SL_UEFA + "SCP.png",
+  "פנבנפיקה":                 SL_UEFA + "SLB.png",
+  "בנפיקה":                   SL_UEFA + "SLB.png",
+  "פייינורד":                 SL_UEFA + "FEY.png",
+  "גירונה":                   SL_UEFA + "GIR.png",
+  "ליברפול":                  SL_UEFA + "LIV.png",
+  "מנצ'סטר סיטי":             SL_UEFA + "MNC.png",
+  "ארסנל":                    SL_UEFA + "ARS.png",
+  "אטלטה":                    SL_UEFA + "ATA.png",
+  "אטלנטה":                   SL_UEFA + "ATA.png",
+
+  // ── Bundesliga extras (not in FCLOGO/luukhopman) ─────────────────────────
+  "בורוסיה מנכ'נגלדבאך":      SL_GER + "BMG.png",
+  "גלדבאך":                   SL_GER + "BMG.png",
+  "בוכום":                    SL_GER + "BOC.png",
+  "אוגסבורג":                 SL_GER + "FCA.png",
+  "יוניון ברלין":              SL_GER + "FCU.png",
+  "FC יוניון ברלין":           SL_GER + "FCU.png",
+  "היידנהיים":                SL_GER + "HDH.png",
+  "קיל":                      SL_GER + "KIE.png",
+  "הולשטיין קיל":             SL_GER + "KIE.png",
+  "מיינץ":                    SL_GER + "M05.png",
+  "FSV מיינץ":                SL_GER + "M05.png",
+  "זנט פאולי":                SL_GER + "STP.png",
+  "FC זנט פאולי":              SL_GER + "STP.png",
+  "ורדר ברמן":                SL_GER + "SVW.png",
+  "הופנהיים":                 SL_GER + "TSG.png",
+  "TSG הופנהיים":             SL_GER + "TSG.png",
+  "ולפסבורג":                 SL_GER + "WOB.png",
+  "VfL ולפסבורג":             SL_GER + "WOB.png",
+  "שטוטגרט":                  SL_GER + "VFB.png",
+  "VfB שטוטגרט":              SL_GER + "VFB.png",
+};
+
+function sportsLogosLookup(name) {
+  const clean = cleanText(name);
+  if (!clean) return null;
+  if (SPORTS_LOGOS_MAP[clean]) {
+    return { name: clean, logo_url: SPORTS_LOGOS_MAP[clean], source: "sports-logos-cdn" };
+  }
+  // Partial match for short aliases (e.g. "לייקרס" inside "לוס אנג'לס לייקרס")
+  for (const [key, url] of Object.entries(SPORTS_LOGOS_MAP)) {
+    const k = cleanText(key);
+    if (k && k.length >= 3 && (clean.includes(k) || k.includes(clean))) {
+      return { name: clean, logo_url: url, source: "sports-logos-cdn" };
+    }
+  }
+  return null;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 async function resolveLogoRow(table, kind, name) {
   const key = `${kind}:${cleanText(name)}`;
@@ -793,6 +940,16 @@ async function resolveLogoRow(table, kind, name) {
         globalLogoCache.delete(`${key}:pending`);
         resolvePending();
         return staticRow;
+      }
+    }
+    // ── Step 1c: alexanderthebadatcoding/Sports-Logos (NBA + UEFA CL extras) ─
+    if (kind === "team") {
+      const slRow = sportsLogosLookup(name);
+      if (slRow) {
+        globalLogoCache.set(key, slRow);
+        globalLogoCache.delete(`${key}:pending`);
+        resolvePending();
+        return slRow;
       }
     }
     // ── Step 2: Supabase + external APIs ─────────────────────────────────
