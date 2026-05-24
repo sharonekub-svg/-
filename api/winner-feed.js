@@ -449,6 +449,249 @@ async function wikidataLogoSearch(name, kind) {
   };
 }
 
+// ── Football Logos CDN (github.com/luukhopman/football-logos via jsDelivr) ──
+// Primary logo source — checked before any external API call.
+// Covers 25 European leagues with official PNG badges per team.
+const FL_CDN = "https://cdn.jsdelivr.net/gh/luukhopman/football-logos@master/logos/";
+const FL_EPL = FL_CDN + "England%20-%20Premier%20League/";
+const FL_ESP = FL_CDN + "Spain%20-%20LaLiga/";
+const FL_ITA = FL_CDN + "Italy%20-%20Serie%20A/";
+const FL_GER = FL_CDN + "Germany%20-%20Bundesliga/";
+const FL_POR = FL_CDN + "Portugal%20-%20Liga%20Portugal/";
+const FL_BEL = FL_CDN + "Belgium%20-%20Jupiler%20Pro%20League/";
+const FL_SCO = FL_CDN + "Scotland%20-%20Scottish%20Premiership/";
+const FL_NOR = FL_CDN + "Norway%20-%20Eliteserien/";
+const FL_SWE = FL_CDN + "Sweden%20-%20Allsvenskan/";
+const FL_BUL = FL_CDN + "Bulgaria%20-%20efbet%20Liga/";
+const FL_POL = FL_CDN + "Poland%20-%20PKO%20BP%20Ekstraklasa/";
+const FL_ROM = FL_CDN + "Romania%20-%20SuperLiga/";
+const FL_SUI = FL_CDN + "Switzerland%20-%20Super%20League/";
+const FL_CRO = FL_CDN + "Croatia%20-%20SuperSport%20HNL/";
+const FL_CZE = FL_CDN + "Czech%20Republic%20-%20Chance%20Liga/";
+const FL_DEN = FL_CDN + "Denmark%20-%20Superliga/";
+const FL_GRE = FL_CDN + "Greece%20-%20Super%20League%201/";
+const FL_ISR = FL_CDN + "Israel%20-%20Ligat%20ha'Al/";
+const FL_NED = FL_CDN + "Netherlands%20-%20Eredivisie/";
+const FL_AUT = FL_CDN + "Austria%20-%20Bundesliga/";
+const FL_SRB = FL_CDN + "Serbia%20-%20Super%20liga%20Srbije/";
+const FL_TUR = FL_CDN + "T%C3%BCrkiye%20-%20S%C3%BCper%20Lig/";
+const FL_RUS = FL_CDN + "Russia%20-%20Premier%20Liga/";
+const FL_UKR = FL_CDN + "Ukraine%20-%20Premier%20Liga/";
+
+/**
+ * Static map of Hebrew team names → official logo URL (jsDelivr CDN).
+ * Checked first in resolveLogoRow() before any external API call.
+ * Add new entries here whenever new teams appear in Winner feed.
+ */
+const FOOTBALL_LOGOS_MAP = {
+  // ── Premier League ──────────────────────────────────────────────────────
+  "ווסטהאם":               FL_EPL + "West%20Ham%20United.png",
+  "לידס":                  FL_EPL + "Leeds%20United.png",
+  "ליברפול":               FL_EPL + "Liverpool%20FC.png",
+  "ברנטפורד":              FL_EPL + "Brentford%20FC.png",
+  "טוטנהאם":               FL_EPL + "Tottenham%20Hotspur.png",
+  "אברטון":                FL_EPL + "Everton%20FC.png",
+  "ברייטון":               FL_EPL + "Brighton%20%26%20Hove%20Albion.png",
+  "מנצ'סטר יונייטד":      FL_EPL + "Manchester%20United.png",
+  "נוטינגהאם פורסט":      FL_EPL + "Nottingham%20Forest.png",
+  "בורנמות'":              FL_EPL + "AFC%20Bournemouth.png",
+  "מנצ'סטר סיטי":         FL_EPL + "Manchester%20City.png",
+  "ארסנל":                 FL_EPL + "Arsenal%20FC.png",
+  "צ'לסי":                FL_EPL + "Chelsea%20FC.png",
+  "אסטון וילה":            FL_EPL + "Aston%20Villa.png",
+  "ניוקאסל":               FL_EPL + "Newcastle%20United.png",
+  "פולהאם":                FL_EPL + "Fulham%20FC.png",
+  "קריסטל פאלאס":          FL_EPL + "Crystal%20Palace.png",
+  "וולברהמפטון":           FL_EPL + "Wolverhampton%20Wanderers.png",
+  "ברנסלי":                FL_EPL + "Burnley%20FC.png",
+  "סנדרלנד":               FL_EPL + "Sunderland%20AFC.png",
+  // ── La Liga ─────────────────────────────────────────────────────────────
+  "ריאל מדריד":            FL_ESP + "Real%20Madrid.png",
+  "ברצלונה":               FL_ESP + "FC%20Barcelona.png",
+  "אתלטיק בילבאו":         FL_ESP + "Athletic%20Bilbao.png",
+  "ולנסיה":                FL_ESP + "Valencia%20CF.png",
+  "אוסאסונה":              FL_ESP + "CA%20Osasuna.png",
+  "ג'ירונה":               FL_ESP + "Girona%20FC.png",
+  "מאיורקה":               FL_ESP + "RCD%20Mallorca.png",
+  "אלצ'ה":                FL_ESP + "Elche%20CF.png",
+  "אוביידו":               FL_ESP + "Real%20Oviedo.png",
+  "חטאפה":                 FL_ESP + "Getafe%20CF.png",
+  "סביליה":                FL_ESP + "Sevilla%20FC.png",
+  "ריאל בטיס":             FL_ESP + "Real%20Betis%20Balompi%C3%A9.png",
+  "וייאריאל":              FL_ESP + "Villarreal%20CF.png",
+  "אתלטיקו מדריד":         FL_ESP + "Atl%C3%A9tico%20de%20Madrid.png",
+  "ספורטינג חיחון":        FL_ESP + "Real%20Sporting%20de%20Gij%C3%B3n.png",
+  "ריאל סוסיאדד":          FL_ESP + "Real%20Sociedad.png",
+  "אספניול":               FL_ESP + "RCD%20Espanyol%20Barcelona.png",
+  "סלטה ויגו":             FL_ESP + "Celta%20de%20Vigo.png",
+  "לבנטה":                 FL_ESP + "Levante%20UD.png",
+  "ריאו ואיקנו":           FL_ESP + "Rayo%20Vallecano.png",
+  "אלאבס":                 FL_ESP + "Deportivo%20Alav%C3%A9s.png",
+  // ── Serie A ─────────────────────────────────────────────────────────────
+  "קרמונזה":               FL_ITA + "US%20Cremonese.png",
+  "קומו":                  FL_ITA + "Como%201907.png",
+  "לצ'ה":                 FL_ITA + "US%20Lecce.png",
+  "גנואה":                 FL_ITA + "Genoa%20CFC.png",
+  "יובנטוס":               FL_ITA + "Juventus%20FC.png",
+  "מילאן":                 FL_ITA + "AC%20Milan.png",
+  "אינטר מילאן":           FL_ITA + "Inter%20Milan.png",
+  "נאפולי":                FL_ITA + "SSC%20Napoli.png",
+  "פיורנטינה":             FL_ITA + "ACF%20Fiorentina.png",
+  "לאציו":                 FL_ITA + "SS%20Lazio.png",
+  "רומא":                  FL_ITA + "AS%20Roma.png",
+  "אטלנטה":                FL_ITA + "Atalanta%20BC.png",
+  "פיזה":                  FL_ITA + "Pisa%20Sporting%20Club.png",
+  "בולוניה":               FL_ITA + "Bologna%20FC%201909.png",
+  "טורינו":                FL_ITA + "Torino%20FC.png",
+  "אודינזה":               FL_ITA + "Udinese%20Calcio.png",
+  "קליארי":                FL_ITA + "Cagliari%20Calcio.png",
+  "פארמה":                 FL_ITA + "Parma%20Calcio%201913.png",
+  "ורונה":                 FL_ITA + "Hellas%20Verona.png",
+  "ססואולו":               FL_ITA + "US%20Sassuolo.png",
+  // ── Bundesliga ──────────────────────────────────────────────────────────
+  "באיירן מינכן":          FL_GER + "Bayern%20Munich.png",
+  "פרייבורג":              FL_GER + "SC%20Freiburg.png",
+  "בורוסיה דורטמונד":      FL_GER + "Borussia%20Dortmund.png",
+  "לבה קוזן":              FL_GER + "Bayer%2004%20Leverkusen.png",
+  "RB לייפציג":            FL_GER + "RB%20Leipzig.png",
+  "איינטרכט פרנקפורט":     FL_GER + "Eintracht%20Frankfurt.png",
+  "מיינץ":                 FL_GER + "1.FSV%20Mainz%2005.png",
+  "הופנהיים":              FL_GER + "TSG%201899%20Hoffenheim.png",
+  "וולפסבורג":             FL_GER + "VfL%20Wolfsburg.png",
+  "שטוטגרט":               FL_GER + "VfB%20Stuttgart.png",
+  "ורדר ברמן":             FL_GER + "SV%20Werder%20Bremen.png",
+  "בורוסיה מנכן גלדבך":    FL_GER + "Borussia%20M%C3%B6nchengladbach.png",
+  "אוניון ברלין":          FL_GER + "1.FC%20Union%20Berlin.png",
+  "היידנהיים":             FL_GER + "1.FC%20Heidenheim%201846.png",
+  "קלן":                   FL_GER + "1.FC%20K%C3%B6ln.png",
+  "המבורג":                FL_GER + "Hamburger%20SV.png",
+  "סט. פאולי":             FL_GER + "FC%20St.%20Pauli.png",
+  "אוגסבורג":              FL_GER + "FC%20Augsburg.png",
+  // ── Liga Portugal ───────────────────────────────────────────────────────
+  "בנפיקה":                FL_POR + "SL%20Benfica.png",
+  "ספורטינג":              FL_POR + "Sporting%20CP.png",
+  "ספורטינג פורטוגל":      FL_POR + "Sporting%20CP.png",
+  "FC פורטו":              FL_POR + "FC%20Porto.png",
+  "פורטו":                 FL_POR + "FC%20Porto.png",
+  "ברגה":                  FL_POR + "SC%20Braga.png",
+  "גיל ויסנטה":            FL_POR + "Gil%20Vicente%20FC.png",
+  "ריו אבה":               FL_POR + "Rio%20Ave%20FC.png",
+  "ויטוריה גימאראש":       FL_POR + "Vit%C3%B3ria%20Guimar%C3%A3es%20SC.png",
+  "כאזה פיה":              FL_POR + "Casa%20Pia%20AC.png",
+  "אסטוריל":               FL_POR + "GD%20Estoril%20Praia.png",
+  // ── Jupiler Pro League ──────────────────────────────────────────────────
+  "קלאב ברוז'":            FL_BEL + "Club%20Brugge%20KV.png",
+  "קלאב ברוז'ז":           FL_BEL + "Club%20Brugge%20KV.png",
+  "גנט":                   FL_BEL + "KAA%20Gent.png",
+  "אנדרלכט":               FL_BEL + "RSC%20Anderlecht.png",
+  "ז'נק":                  FL_BEL + "KRC%20Genk.png",
+  "סרקל ברוז'":            FL_BEL + "Cercle%20Brugge.png",
+  "רויאל אנטוורפ":         FL_BEL + "Royal%20Antwerp%20FC.png",
+  "סטנדר לייז'":           FL_BEL + "Standard%20Li%C3%A8ge.png",
+  "אוד הברלה לובן":        FL_BEL + "Oud-Heverlee%20Leuven.png",
+  // ── Scottish Premiership ─────────────────────────────────────────────────
+  "סט. מירן":              FL_SCO + "St.%20Mirren%20FC.png",
+  "ריינג'רס":              FL_SCO + "Rangers%20FC.png",
+  "סלטיק":                 FL_SCO + "Celtic%20FC.png",
+  "הארט":                  FL_SCO + "Heart%20of%20Midlothian%20FC.png",
+  "היברניאן":              FL_SCO + "Hibernian%20FC.png",
+  "קילמרנוק":              FL_SCO + "Kilmarnock%20FC.png",
+  "אברדין":                FL_SCO + "Aberdeen%20FC.png",
+  "דנדי":                  FL_SCO + "Dundee%20FC.png",
+  "דנדי יונייטד":          FL_SCO + "Dundee%20United%20FC.png",
+  "מאדרוול":               FL_SCO + "Motherwell%20FC.png",
+  // ── Eliteserien ─────────────────────────────────────────────────────────
+  "פרדריקסטאד":            FL_NOR + "Fredrikstad%20FK.png",
+  "הוגסונד":               FL_NOR + "FK%20Haugesund.png",
+  "סנדפיורד":              FL_NOR + "Sandefjord%20Fotball.png",
+  "רוזנבורג":              FL_NOR + "Rosenborg%20BK.png",
+  "מולדה":                 FL_NOR + "Molde%20FK.png",
+  "בודו גלימט":            FL_NOR + "FK%20Bod%C3%B8Glimt.png",
+  "ויקינג":                FL_NOR + "Viking%20FK.png",
+  "סקארפסבורג":            FL_NOR + "Sarpsborg%2008%20FF.png",
+  "SK בראן":               FL_NOR + "SK%20Brann.png",
+  "טרומסו":                FL_NOR + "Troms%C3%B8%20IL.png",
+  "סטרומסגודסט":           FL_NOR + "Str%C3%B8msgodset%20IF.png",
+  // ── Allsvenskan ─────────────────────────────────────────────────────────
+  "נורקופינג אף.קיי":      FL_SWE + "IFK%20Norrk%C3%B6ping.png",
+  "סיריוס":                FL_SWE + "IK%20Sirius.png",
+  "אוסטרס":                FL_SWE + "%C3%96sters%20IF.png",
+  "גאיס":                  FL_SWE + "GAIS.png",
+  "AIK":                   FL_SWE + "AIK.png",
+  "מלמו":                  FL_SWE + "Malm%C3%B6%20FF.png",
+  "IFK גטבורג":            FL_SWE + "IFK%20G%C3%B6teborg.png",
+  "המרבי":                 FL_SWE + "Hammarby%20IF.png",
+  "דיורגורדן":             FL_SWE + "Djurg%C3%A5rdens%20IF.png",
+  "הלמסטד":                FL_SWE + "Halmstads%20BK.png",
+  "אלפסבורג":              FL_SWE + "IF%20Elfsborg.png",
+  // ── efbet Liga (Bulgaria) ────────────────────────────────────────────────
+  "לבסקי סופיה":           FL_BUL + "Levski%20Sofia.png",
+  "לודוגורץ":              FL_BUL + "Ludogorets%20Razgrad.png",
+  "צסק\"א סופיה":          FL_BUL + "CSKA-Sofia.png",
+  "צסק\"א 1948 סופיה":     FL_BUL + "CSKA%201948.png",
+  // ── Ekstraklasa (Poland) ─────────────────────────────────────────────────
+  "ויצ'יסטה קרקוב":        FL_POL + "Cracovia.png",
+  "שלאסק ורוצלאב":         FL_POL + "GKS%20Katowice.png",
+  "פוגון גרודזיסק מזובייצ'קי": FL_POL + "Pogon%20Szczecin.png",
+  "לגיה ורשה":             FL_POL + "Legia%20Warszawa.png",
+  "לך פוזנן":              FL_POL + "Lech%20Poznan.png",
+  "לכיה גדנסק":            FL_POL + "Lechia%20Gdansk.png",
+  "ראקוב צ'נסטוחובה":      FL_POL + "Rak%C3%B3w%20Cz%C4%99stochowa.png",
+  "ארקה גדיניה":           FL_POL + "Arka%20Gdynia.png",
+  // ── SuperLiga (Romania) ──────────────────────────────────────────────────
+  "Cs Rapid Bucuresti":     FL_ROM + "FC%20Rapid%201923.png",
+  "FCSB":                   FL_ROM + "FCSB.png",
+  "CFR קלוז'":             FL_ROM + "CFR%20Cluj.png",
+  // ── Swiss Super League ───────────────────────────────────────────────────
+  "סט. גאלן":              FL_SUI + "FC%20St.%20Gallen%201879.png",
+  "סרוויט":                FL_SUI + "Servette%20FC.png",
+  "יאנג בויז":             FL_SUI + "BSC%20Young%20Boys.png",
+  "בזל":                   FL_SUI + "FC%20Basel%201893.png",
+  "לוזאן":                 FL_SUI + "FC%20Lausanne-Sport.png",
+  "סטאד לוזאן":            FL_SUI + "FC%20Lausanne-Sport.png",
+  "לוגנו":                 FL_SUI + "FC%20Lugano.png",
+  "לוצרן":                 FL_SUI + "FC%20Luzern.png",
+  "ציריך":                 FL_SUI + "FC%20Z%C3%BCrich.png",
+  "גרסהופר":               FL_SUI + "Grasshopper%20Club%20Zurich.png",
+  "זרוויט":                FL_SUI + "Servette%20FC.png",
+  // ── Ligat ha'Al (Israel) ─────────────────────────────────────────────────
+  "מכבי חיפה":             FL_ISR + "Maccabi%20Haifa.png",
+  "מכבי תל אביב":          FL_ISR + "Maccabi%20Tel%20Aviv.png",
+  "מכבי נתניה":            FL_ISR + "Maccabi%20Netanya.png",
+  "הפועל תל אביב":         FL_ISR + "Hapoel%20Tel%20Aviv.png",
+  "הפועל חיפה":            FL_ISR + "Hapoel%20Haifa.png",
+  "הפועל באר שבע":         FL_ISR + "Hapoel%20Beer%20Sheva.png",
+  "הפועל פתח תקוה":        FL_ISR + "Hapoel%20Petah%20Tikva.png",
+  "הפועל ירושלים":         FL_ISR + "Hapoel%20Jerusalem.png",
+  "בית\"ר ירושלים":        FL_ISR + "Beitar%20Jerusalem.png",
+  "FC אשדוד":              FL_ISR + "FC%20Ashdod.png",
+  "מכבי בני ריינה":        FL_ISR + "Maccabi%20Bnei%20Reineh.png",
+  "אחיד בני סח'נין":       FL_ISR + "Ihud%20Bnei%20Sakhnin.png",
+  "עירוני קרית שמונה":     FL_ISR + "Ironi%20Kiryat%20Shmona.png",
+};
+
+/**
+ * Returns a CDN logo row from the static football-logos map, or null.
+ * Used as the first (fastest) step in resolveLogoRow().
+ */
+function footballLogosStaticLookup(name) {
+  const clean = cleanText(name);
+  if (!clean) return null;
+  // Direct match
+  if (FOOTBALL_LOGOS_MAP[clean]) {
+    return { name: clean, logo_url: FOOTBALL_LOGOS_MAP[clean], source: "football-logos-cdn" };
+  }
+  // Partial / trimmed match — useful for names like "מנצ'סטר יונייטד אף.קיי"
+  for (const [key, url] of Object.entries(FOOTBALL_LOGOS_MAP)) {
+    const k = cleanText(key);
+    if (k && clean.includes(k) || (k.length >= 4 && k.includes(clean))) {
+      return { name: clean, logo_url: url, source: "football-logos-cdn" };
+    }
+  }
+  return null;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function resolveLogoRow(table, kind, name) {
   const key = `${kind}:${cleanText(name)}`;
   if (globalLogoCache.has(key)) return globalLogoCache.get(key);
@@ -461,6 +704,17 @@ async function resolveLogoRow(table, kind, name) {
   globalLogoCache.set(`${key}:pending`, pending);
   let row = null;
   try {
+    // ── Step 1: static CDN map (instant, no network) ──────────────────────
+    if (kind === "team") {
+      const staticRow = footballLogosStaticLookup(name);
+      if (staticRow) {
+        globalLogoCache.set(key, staticRow);
+        globalLogoCache.delete(`${key}:pending`);
+        resolvePending();
+        return staticRow;
+      }
+    }
+    // ── Step 2: Supabase + external APIs ─────────────────────────────────
     row = await Promise.race([
       (async () => {
         for (const term of logoSearchTerms(cleanText(name), kind)) {
