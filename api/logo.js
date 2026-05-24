@@ -2,16 +2,38 @@
 // Returns a 302 redirect to the real badge image.
 // Vercel CDN caches successful redirects for 30 days.
 
-async function getJson(url) {
+async function getJson(url, extraHeaders = {}) {
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "HapogeaLogoBot/2.0 (https://github.com/sharonekub-svg/hapogea)",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       Accept: "application/json",
+      ...extraHeaders,
     },
     signal: AbortSignal.timeout(6000),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
+}
+
+// ── Source 0: 365Scores search ────────────────────────────────────────────────
+// Israeli service, accepts Hebrew names natively, covers all Israeli clubs +
+// European leagues + NBA/basketball. Returns direct CDN image URLs.
+async function try365Scores(name, type) {
+  const data = await getJson(
+    `https://webws.365scores.com/web/search/?query=${encodeURIComponent(name)}&langId=2`,
+    { Origin: "https://www.365scores.com", Referer: "https://www.365scores.com/he/" }
+  ).catch(() => null);
+  if (!data) return null;
+
+  // type 1 = team/competitor, type 2 = competition/league
+  const wantType = type === "league" ? 2 : 1;
+  const competitors = (data.competitors || []);
+  const hit = competitors.find(c => c.type === wantType) ||
+              (type === "team" ? competitors[0] : null);
+  if (!hit?.id) return null;
+
+  const folder = type === "league" ? "Competitions" : "Teams";
+  return `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/${folder}/${hit.id}`;
 }
 
 // ── Source A: Wikipedia Hebrew → Wikidata P154 → TheSportsDB ────────────────
@@ -111,8 +133,9 @@ module.exports = async (req, res) => {
   if (!q) { res.status(400).end(); return; }
 
   try {
-    // Run Hebrew and English chains in parallel — first non-null result wins
+    // Run all three sources in parallel — first non-null result wins
     const logoUrl = await Promise.any([
+      try365Scores(q, type).then(u => { if (!u) throw 0; return u; }),
       tryWikipediaChain(q, type).then(u => { if (!u) throw 0; return u; }),
       tryEnglishWikipediaChain(q, type).then(u => { if (!u) throw 0; return u; }),
     ]).catch(() => null);

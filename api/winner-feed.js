@@ -559,9 +559,21 @@ async function resolveLogoRow(table, kind, name) {
   return row;
 }
 
+function asset365(name, logoUrl, kind) {
+  return {
+    name: cleanText(name),
+    logo: logoUrl,
+    initials: initials(name),
+    logoSource: "365Scores",
+    logoTier: 1,
+  };
+}
+
 async function enrichLogos(rows) {
-  async function teamAsset(name) {
+  async function teamAsset(name, directUrl) {
     const key = cleanText(name);
+    // If we already have a 365Scores URL, use it directly — no lookup needed
+    if (directUrl) return asset365(key, directUrl, "team");
     const row = await resolveLogoRow("teams", "team", key);
     return {
       name: key,
@@ -570,8 +582,9 @@ async function enrichLogos(rows) {
       logoSource: row?.source || (row?.logo_url ? "win2go teams" : "generated team badge"),
     };
   }
-  async function leagueAsset(name) {
+  async function leagueAsset(name, directUrl) {
     const key = cleanText(name);
+    if (directUrl) return asset365(key, directUrl, "league");
     const row = await resolveLogoRow("leagues", "league", key);
     return {
       name: key,
@@ -581,7 +594,7 @@ async function enrichLogos(rows) {
     };
   }
   function withLeagueFallback(asset, leagueAssetValue, teamName) {
-    if (hasVerifiedLogo(asset)) return { ...asset, logoTier: 1 };
+    if (hasVerifiedLogo(asset)) return { ...asset, logoTier: asset.logoTier || 1 };
     if (hasVerifiedLogo(leagueAssetValue)) {
       return {
         ...asset,
@@ -594,11 +607,10 @@ async function enrichLogos(rows) {
     return { ...asset, logo: fallbackLogo(teamName, "team"), logoSource: "dynamic generated shield", logoTier: 4 };
   }
   return Promise.all(rows.map(async (row) => {
-    // league + home + away all in parallel (was: league first, then home+away)
     const [leagueAssetValue, homeRaw, awayRaw] = await Promise.all([
-      leagueAsset(row.league),
-      teamAsset(row.home),
-      teamAsset(row.away),
+      leagueAsset(row.league, row.leagueLogoUrl),
+      teamAsset(row.home, row.homeLogoUrl),
+      teamAsset(row.away, row.awayLogoUrl),
     ]);
     const homeAsset = withLeagueFallback(homeRaw, leagueAssetValue, row.home);
     const awayAsset = withLeagueFallback(awayRaw, leagueAssetValue, row.away);
@@ -1421,6 +1433,10 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
           : homeScore > awayScore ? home : away
         : "";
       const start = game.startTime ? new Date(game.startTime) : null;
+      // Store 365Scores IDs — used to build direct CDN logo URLs
+      const homeId = game.homeCompetitor?.id;
+      const awayId = game.awayCompetitor?.id;
+      const competitionId = game.competition?.id || game.competitionId;
       rows.push({
         eventid: `365-${game.id}`,
         eventid365: String(game.id),
@@ -1439,6 +1455,10 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
         statusText: cleanText(game.statusText),
         markets: actualWinner ? [{ title: "המנצח", marketResults: [actualWinner] }] : [],
         source: "365Scores",
+        // Direct logo CDN paths — no lookup needed for matches we already got from 365
+        homeLogoUrl: homeId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Teams/${homeId}` : null,
+        awayLogoUrl: awayId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Teams/${awayId}` : null,
+        leagueLogoUrl: competitionId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitions/${competitionId}` : null,
       });
     }
   }
@@ -1480,6 +1500,10 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
         match: `${teams.home} - ${teams.away}`,
         home: teams.home,
         away: teams.away,
+        // Carry 365Scores CDN logo URLs so enrichLogos can skip the lookup
+        homeLogoUrl: event.homeLogoUrl || null,
+        awayLogoUrl: event.awayLogoUrl || null,
+        leagueLogoUrl: event.leagueLogoUrl || null,
         resultKey: resultKeyFor({ day: dateKey, sportId: winnerSportId, home: teams.home, away: teams.away }),
         market: marketTitle,
         pick: actualWinner,
