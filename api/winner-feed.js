@@ -245,18 +245,14 @@ function scores365Date(dateKey) {
 }
 
 function initials(value) {
-  return cleanText(value)
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  const firstWord = cleanText(value).split(" ").filter(Boolean)[0] || "";
+  return ([...firstWord][0] || "?").toUpperCase();
 }
 
 function fallbackLogo(name, type = "team") {
   const text = cleanText(name);
-  const abbr = text.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "?";
+  const firstWord = text.split(/\s+/).filter(Boolean)[0] || "";
+  const abbr = ([...firstWord][0] || "?").toUpperCase();
   // deterministic color from name hash
   let hash = 0;
   for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) & 0xffffffff;

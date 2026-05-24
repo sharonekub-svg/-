@@ -48,7 +48,7 @@ function bestNamedCandidate(query, rows, getName, minScore = 0.55) {
 
 function initials(value) {
   const parts = cleanText(value).split(/\s+/).filter(Boolean);
-  const first = parts.slice(0, 2).map((part) => [...part][0]).join("");
+  const first = [...(parts[0] || "")][0] || "";
   return (first || "?").toUpperCase();
 }
 
