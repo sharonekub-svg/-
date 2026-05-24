@@ -1735,9 +1735,8 @@
 
     function fallbackBadge(name, kind = "team") {
       const label = assetInitials(name);
-      const stroke = kind === "flag" ? "#ffc857" : kind === "league" ? "#55d6ff" : "#31d187";
-      const bg = kind === "flag" ? "#211b10" : kind === "league" ? "#111f2a" : "#102219";
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="${bg}"/><circle cx="48" cy="48" r="43" fill="none" stroke="${stroke}" stroke-width="5"/><text x="48" y="57" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="800" fill="#f7f3ea">${escapeHtml(label)}</text></svg>`;
+      const stroke = kind === "flag" ? "#9aa6af" : kind === "league" ? "#8fb6c9" : "#9aa6af";
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="20" fill="#10161b"/><circle cx="48" cy="48" r="38" fill="#182027"/><circle cx="48" cy="48" r="30" fill="none" stroke="${stroke}" stroke-width="4" stroke-dasharray="8 6"/><text x="48" y="58" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="900" fill="#e8eef2">${escapeHtml(label)}</text></svg>`;
       return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
     }
 

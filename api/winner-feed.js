@@ -253,19 +253,11 @@ function fallbackLogo(name, type = "team") {
   const text = cleanText(name);
   const firstWord = text.split(/\s+/).filter(Boolean)[0] || "";
   const abbr = ([...firstWord][0] || "?").toUpperCase();
-  // deterministic color from name hash
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) & 0xffffffff;
-  const hue = Math.abs(hash) % 360;
-  const sat = 55 + (Math.abs(hash >> 4) % 25);
-  const lit = 38 + (Math.abs(hash >> 8) % 18);
-  const color = `hsl(${hue},${sat}%,${lit}%)`;
-  const light = `hsl(${hue},${sat}%,${lit + 28}%)`;
   if (type === "league") {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="21" fill="${color}"/><circle cx="22" cy="22" r="15" fill="none" stroke="${light}" stroke-width="2"/><text x="22" y="27" text-anchor="middle" font-size="13" font-family="Arial,sans-serif" font-weight="700" fill="white">${abbr}</text></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#10161b"/><circle cx="22" cy="22" r="17" fill="#182027"/><circle cx="22" cy="22" r="13" fill="none" stroke="#8fb6c9" stroke-width="1.8" stroke-dasharray="4 3"/><text x="22" y="28" text-anchor="middle" font-size="15" font-family="Arial,sans-serif" font-weight="900" fill="#e8eef2">${abbr}</text></svg>`;
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
   }
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 50"><path d="M22 2 L40 10 L40 28 Q40 42 22 48 Q4 42 4 28 L4 10 Z" fill="${color}"/><path d="M22 6 L37 13 L37 28 Q37 40 22 45 Q7 40 7 28 L7 13 Z" fill="none" stroke="${light}" stroke-width="1.5"/><text x="22" y="31" text-anchor="middle" font-size="14" font-family="Arial,sans-serif" font-weight="800" fill="white">${abbr}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 50"><rect width="44" height="50" rx="10" fill="#10161b"/><path d="M22 3 L39 11 L39 28 Q39 41 22 47 Q5 41 5 28 L5 11 Z" fill="#182027"/><path d="M22 8 L35 14 L35 28 Q35 38 22 43 Q9 38 9 28 L9 14 Z" fill="none" stroke="#9aa6af" stroke-width="1.8" stroke-dasharray="4 3"/><text x="22" y="32" text-anchor="middle" font-size="16" font-family="Arial,sans-serif" font-weight="900" fill="#e8eef2">${abbr}</text></svg>`;
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 

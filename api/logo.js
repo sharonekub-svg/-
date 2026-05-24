@@ -55,21 +55,14 @@ function initials(value) {
 function fallbackSvg(name, type) {
   const text = cleanText(name) || "Team";
   const abbr = initials(text);
-  let hash = 0;
-  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) | 0;
-  const hue = Math.abs(hash) % 360;
-  const hue2 = (hue + 42) % 360;
-  const bg = `hsl(${hue}, 66%, 30%)`;
-  const bg2 = `hsl(${hue2}, 76%, 46%)`;
-  const accent = type === "league" ? "#55d6ff" : "#31d187";
+  const accent = type === "league" ? "#8fb6c9" : "#9aa6af";
   const shape = type === "league"
-    ? `<circle cx="48" cy="48" r="42" fill="url(#g)"/><circle cx="48" cy="48" r="32" fill="none" stroke="${accent}" stroke-width="4"/>`
-    : `<path d="M48 6 82 20v30c0 22-14 34-34 40-20-6-34-18-34-40V20z" fill="url(#g)"/><path d="M48 13 75 24v25c0 17-10 27-27 33-17-6-27-16-27-33V24z" fill="none" stroke="${accent}" stroke-width="4"/>`;
+    ? `<circle cx="48" cy="48" r="38" fill="#182027"/><circle cx="48" cy="48" r="30" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="7 5"/>`
+    : `<path d="M48 8 80 21v29c0 20-13 32-32 38-19-6-32-18-32-38V21z" fill="#182027"/><path d="M48 16 72 26v23c0 14-9 23-24 28-15-5-24-14-24-28V26z" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="7 5"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
-    <defs><linearGradient id="g" x1="12" y1="8" x2="84" y2="90"><stop stop-color="${bg2}"/><stop offset="1" stop-color="${bg}"/></linearGradient></defs>
-    <rect width="96" height="96" rx="22" fill="#0f1519"/>
+    <rect width="96" height="96" rx="20" fill="#10161b"/>
     ${shape}
-    <text x="48" y="57" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="900" fill="#fff">${abbr}</text>
+    <text x="48" y="58" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="900" fill="#e8eef2">${abbr}</text>
   </svg>`;
 }
 
@@ -101,7 +94,7 @@ async function try365Scores(name, type) {
   );
   if (!data) return null;
   const rows = type === "league" ? (data.competitions || []) : (data.competitors || []);
-  const row = bestNamedCandidate(name, rows, (item) => item.name || item.nameForURL || "", 0.48);
+  const row = bestNamedCandidate(name, rows, (item) => item.name || item.nameForURL || "", 0.72);
   if (!row?.id) return null;
   const folder = type === "league" ? "Competitions" : "Competitors";
   return {
@@ -117,7 +110,7 @@ async function trySofaScore(name, type) {
   );
   const target = type === "league" ? "uniqueTournament" : "team";
   const rows = (data?.results || []).filter((item) => item.type === target);
-  const row = bestNamedCandidate(name, rows, (item) => item.entity?.name || "", 0.5);
+  const row = bestNamedCandidate(name, rows, (item) => item.entity?.name || "", 0.72);
   const id = row?.entity?.id;
   if (!id) return null;
   return {
@@ -133,9 +126,9 @@ async function wikidataEntity(name, lang = "he") {
     `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=${lang}&format=json&limit=5&search=${encodeURIComponent(name)}&origin=*`
   );
   const hit = (search?.search || []).find((item) =>
-    similarity(name, item.label) >= 0.5 &&
+    similarity(name, item.label) >= 0.72 &&
     /club|football|soccer|basketball|sport|team|league|tournament|קבוצ|כדורגל|כדורסל|ליגה/i.test(`${item.description || ""} ${item.label || ""}`)
-  ) || bestNamedCandidate(name, search?.search || [], (item) => item.label || "", 0.62);
+  ) || bestNamedCandidate(name, search?.search || [], (item) => item.label || "", 0.78);
   if (!hit?.id) return null;
   const entity = await getJson(
     `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${hit.id}&props=claims|labels&languages=en|he&format=json&origin=*`
@@ -164,8 +157,8 @@ async function trySportsDb(name, type, originalName = name) {
   const param = type === "league" ? "l" : "t";
   const data = await getJson(`https://www.thesportsdb.com/api/v1/json/3/${endpoint}?${param}=${encodeURIComponent(name)}`);
   const rows = data?.teams || data?.leagues || [];
-  const row = bestNamedCandidate(originalName, rows, (item) => item.strTeam || item.strLeague || "", 0.45) ||
-    bestNamedCandidate(name, rows, (item) => item.strTeam || item.strLeague || "", 0.62);
+  const row = bestNamedCandidate(originalName, rows, (item) => item.strTeam || item.strLeague || "", 0.78) ||
+    bestNamedCandidate(name, rows, (item) => item.strTeam || item.strLeague || "", 0.82);
   const logo = row?.strBadge || row?.strLogo;
   return logo ? { url: logo, source: "TheSportsDB" } : null;
 }
