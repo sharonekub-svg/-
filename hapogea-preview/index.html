@@ -1757,7 +1757,7 @@
     function logoMarkup(asset, size = "") {
       if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
       const source = String(asset.logoSource || "");
-      const isGenerated = !asset.logo || String(asset.logo).startsWith("data:image") || /generated|fallback|Wikipedia/i.test(source);
+      const isGenerated = !asset.logo || String(asset.logo).startsWith("data:image") || /generated|fallback/i.test(source);
       // For team logos with no real logo, add data-team-name so client-side JS can find the real crest
       const lookupName = size !== "small" ? (asset.name || null) : null;
       if (asset.logo && !isGenerated) {
@@ -3069,10 +3069,8 @@
 
     // ── Client-side logo loader ───────────────────────────────────────────────
     // Server-side (winner-feed.js) already seeds 365Scores logo URLs into the
-    // feed JSON for any team appearing in the 365Scores schedule.
-    // For any remaining teams (SVG placeholder), applyLogosToCards() runs
-    // client-side using Wikidata (CORS origin=* supported) → P154 badge
-    // or English label → TheSportsDB strBadge.  No Wikipedia thumbnails.
+    // feed JSON. Remaining placeholder logos are upgraded through /api/logo,
+    // the same main resolver used for every team and league.
 
     const _logoMem = new Map();        // session memory
     const _LSKEY   = "hapogea_lg_v4";  // localStorage key
@@ -3093,52 +3091,14 @@
       } catch (_) {}
     }
 
-    async function _wbGetBadge(teamName) {
-      // 1. Wikidata Hebrew search (origin=* → CORS allowed in browser)
-      const sr = await fetch(
-        `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=5&search=${encodeURIComponent(teamName)}&origin=*`,
-        { signal: AbortSignal.timeout(6000) }
-      ).then(r => r.json()).catch(() => null);
-
-      const hit = (sr?.search || []).find(c =>
-        /club|football|soccer|basketball|sport|קבוצת/i.test(c.description || "")
-      ) || sr?.search?.[0];
-      if (!hit?.id) return null;
-
-      // 2. wbgetentities — compact (props=claims|labels, not the full EntityData blob)
-      const ent = await fetch(
-        `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${hit.id}&props=claims|labels&languages=en&format=json&origin=*`,
-        { signal: AbortSignal.timeout(6000) }
-      ).then(r => r.json()).catch(() => null);
-
-      const entity = ent?.entities?.[hit.id];
-      if (!entity) return null;
-
-      // P154 = "logo image" — always an official badge, never a photo
-      const logoFile = entity.claims?.P154?.[0]?.mainsnak?.datavalue?.value;
-      if (logoFile) {
-        return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(logoFile)}?width=200`;
-      }
-
-      // English label → TheSportsDB strBadge (no CORS issues, public API)
-      const en = entity.labels?.en?.value;
-      if (!en) return null;
-      const sdb = await fetch(
-        `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(en)}`,
-        { signal: AbortSignal.timeout(5000) }
-      ).then(r => r.json()).catch(() => null);
-      const enLow = en.toLowerCase();
-      const teams = sdb?.teams || [];
-      const match = teams.find(t => (t.strTeam || "").toLowerCase() === enLow) || teams[0];
-      return match?.strBadge || null;
-    }
-
     async function _resolveLogo(name) {
       if (_logoMem.has(name)) {
         const v = _logoMem.get(name);
         return (v instanceof Promise) ? null : v;
       }
-      const p = _wbGetBadge(name).then(url => {
+      const p = fetch(`/api/logo?q=${encodeURIComponent(name)}&type=team`, { signal: AbortSignal.timeout(7000) })
+        .then(response => response.ok ? response.url : null)
+        .then(url => {
         if (url) _saveLogo(name, url);
         else _logoMem.set(name, null);
         return url;
