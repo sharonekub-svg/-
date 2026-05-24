@@ -3,6 +3,10 @@ const SNAPSHOT = require("./winner-snapshot.json");
 
 const ODDS_MIN = 1.4;
 const ODDS_MAX = 1.9;
+// Basketball 2-way markets have different odds structure than football 3-way
+const BASKETBALL_ODDS_MIN = 1.25;
+const BASKETBALL_ODDS_MAX_MONEYLINE = 1.90;
+const BASKETBALL_ODDS_MAX_SPREAD = 2.05;
 /** Top Winner picks shown per day (verified line + odds in range). */
 const TARGET_PICKS_PER_SPORT = 20;
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://jgcmtrlviuivbtimtqjq.supabase.co";
@@ -771,7 +775,13 @@ function allowedMarket(market) {
 
 function scoreOutcome(market, outcome) {
   const odds = decimal(outcome.price);
-  if (!odds || odds <= ODDS_MIN || odds >= ODDS_MAX) return null;
+  const isBasketball = Number(market.sId) === WINNER_BASKETBALL_ID;
+  const isSpread = cleanText(market.mp).includes("הימור יתרון");
+  const oddsMin = isBasketball ? BASKETBALL_ODDS_MIN : ODDS_MIN;
+  const oddsMax = isBasketball
+    ? (isSpread ? BASKETBALL_ODDS_MAX_SPREAD : BASKETBALL_ODDS_MAX_MONEYLINE)
+    : ODDS_MAX;
+  if (!odds || odds <= oddsMin || odds >= oddsMax) return null;
   const oddsBook = marketOddsBook(market);
   const reliability = marketReliability(market.mp, market.sId);
   const implied = 1 / odds;
@@ -960,6 +970,19 @@ function favoriteInfo(row) {
 }
 
 function hasSingleClearFavorite(row) {
+  // Basketball spread markets are designed to be 50/50 — the lower-odds side is the pick
+  if (Number(row.sportId) === WINNER_BASKETBALL_ID && row.marketTier === "spread") {
+    return Number(row.normalizedProbability || 0) >= 0.47 || Number(row.marketGap || 0) >= 0.01;
+  }
+  // Basketball moneyline clear favorites have very high normalizedProbability
+  if (Number(row.sportId) === WINNER_BASKETBALL_ID) {
+    const info = favoriteInfo(row);
+    return info.isFavorite && (
+      Number(row.normalizedProbability || 0) >= 0.52 ||
+      Number(info.oddsGap || 0) >= 0.15 ||
+      Number(row.marketGap || 0) >= 0.04
+    );
+  }
   const info = favoriteInfo(row);
   return info.isFavorite && (
     Number(row.marketGap || 0) >= 0.06 ||
@@ -984,7 +1007,8 @@ function scoreBreakdown(row) {
   const extremeSpreadPenalty = Number(row.sportId) === WINNER_BASKETBALL_ID && Number.isFinite(spread) && Math.abs(spread) > 12
     ? 18
     : 0;
-  const tooLowOddsPenalty = odds <= 1.42 && marketGap < 0.08 ? 10 : 0;
+  const isBasketballRow = Number(row.sportId) === WINNER_BASKETBALL_ID;
+  const tooLowOddsPenalty = !isBasketballRow && odds <= 1.42 && marketGap < 0.08 ? 10 : 0;
   const components = {
     hitProbability: Math.round(hit * 72),
     oddsValue: Math.round(oddsQuality * 18),
@@ -1027,7 +1051,8 @@ function rejectionReasons(row) {
   if (!hasVerifiedLogo(row.awayAsset)) reasons.push("אין לוגו אמיתי לקבוצת החוץ");
   if (row.homeAsset?.logo && row.homeAsset.logo === row.awayAsset?.logo) reasons.push("לוגו זהה לשתי הקבוצות");
   if (!hasSingleClearFavorite(row)) reasons.push("אין פייבוריטית אחת מספיק ברורה");
-  if (Number(row.odds || 0) <= 1.42 && Number(row.marketGap || 0) < 0.08) {
+  const oddsLowThreshold = Number(row.sportId) === WINNER_BASKETBALL_ID ? 1.27 : 1.42;
+  if (Number(row.odds || 0) <= oddsLowThreshold && Number(row.marketGap || 0) < 0.04) {
     reasons.push("יחס נמוך מדי בלי פער שוק גדול");
   }
   return reasons;
