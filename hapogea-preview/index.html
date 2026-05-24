@@ -1447,6 +1447,8 @@
       selectedId: null,
       wcOpen: false,
       reubenMessages: [],
+      reubenCandidates: [],
+      reubenLastQuery: "",
       debugMode: location.pathname.includes("debug")
     };
     let lastLoadTime = 0;
@@ -1759,6 +1761,11 @@
       if (!state.feed) return [];
       return Object.values(state.feed.tabs)
         .flatMap(tab => Object.values(tab.sports || {}).flatMap(rows => rows || []));
+    }
+
+    function reuvenRows() {
+      const schedule = state.feed?.reuvenSchedule || [];
+      return [...schedule, ...allRows()];
     }
 
     function hasPick(row) {
@@ -2158,17 +2165,94 @@
       state.selectedId = null;
     }
 
+    function normalizeReuvenText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\u0590-\u05ff]+/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function reuvenTerms(value) {
+      return normalizeReuvenText(value)
+        .split(" ")
+        .filter(term => term.length >= 3 && !["winner", "odds", "over", "under", "bet", "win", "vs"].includes(term));
+    }
+
+    function reuvenMarketSummary(row) {
+      const markets = (row.markets || []).slice(0, 4);
+      if (!markets.length) {
+        return row.odds ? `${explicitPickText(row)} @ ${formatOdds(row.odds)}` : "No Winner odds on this row";
+      }
+      return markets.map(market => {
+        const outcomes = (market.outcomes || [])
+          .filter(outcome => outcome.odds)
+          .slice(0, 4)
+          .map(outcome => `${outcome.label || outcome.desc}: ${formatOdds(outcome.odds)}`)
+          .join(", ");
+        return `${market.title}: ${outcomes || "no active odds"}`;
+      }).join("\n");
+    }
+
+    function findReuvenMatches(text) {
+      const terms = reuvenTerms(text);
+      if (!terms.length) return [];
+      const rows = reuvenRows().map(row => {
+        const haystack = normalizeReuvenText(`${row.match || ""} ${row.home || ""} ${row.away || ""} ${row.league || ""}`);
+        const score = terms.reduce((sum, term) => sum + (haystack.includes(term) ? 1 : 0), 0);
+        return { row, score };
+      }).filter(item => item.score > 0);
+      const maxScore = Math.max(0, ...rows.map(item => item.score));
+      return rows
+        .filter(item => item.score >= Math.max(1, Math.min(maxScore, 2)))
+        .sort((a, b) => b.score - a.score || `${a.row.day} ${a.row.time}`.localeCompare(`${b.row.day} ${b.row.time}`))
+        .map(item => item.row)
+        .filter((row, index, arr) => arr.findIndex(other => String(other.eventId || other.id) === String(row.eventId || row.id)) === index)
+        .slice(0, 8);
+    }
+
     function analyzeReubenBet(text) {
       const value = String(text || "").trim();
       if (!value) {
         return "Enter a bet to analyze, for example: Real Madrid win @ 1.65, Over 2.5 goals @ 1.80, or Maccabi -4.5 @ 1.75.";
       }
+      const choice = value.match(/^\s*(?:#|מספר|בחירה)?\s*(\d+)\s*$/i);
+      if (choice && state.reubenCandidates.length) {
+        const picked = state.reubenCandidates[Number(choice[1]) - 1];
+        if (!picked) return `יש לי ${state.reubenCandidates.length} אפשרויות. תבחר מספר בין 1 ל-${state.reubenCandidates.length}.`;
+        return analyzeReuvenResolvedMatch(state.reubenLastQuery || value, picked);
+      }
+
+      const matches = findReuvenMatches(value);
+      state.reubenCandidates = matches;
+      state.reubenLastQuery = value;
+      if (!matches.length) {
+        return "אין. לא מצאתי בפיד Winner משחק בין הקבוצות האלו בחודש הקרוב. אם כתבת שם חלקי, נסה לכתוב את שתי הקבוצות כמו שמופיעות ב-Winner.";
+      }
+      if (matches.length > 1) {
+        return [
+          `מצאתי ${matches.length} משחקים אפשריים בחודש הקרוב. לאיזה אחד אתה מתכוון?`,
+          matches.map((row, index) => `${index + 1}. ${row.day} ${row.time || ""} | ${row.sport} | ${row.league} | ${row.match}\n${reuvenMarketSummary(row)}`).join("\n\n"),
+          "תכתוב רק את המספר, למשל 1."
+        ].join("\n\n");
+      }
+      return analyzeReuvenResolvedMatch(value, matches[0]);
+    }
+
+    function analyzeReuvenResolvedMatch(originalText, matchedRow) {
+      const value = String(originalText || "").trim();
+      state.reubenCandidates = [matchedRow];
 
       const oddsMatch = value.match(/(?:odds|@)?\s*(\d+(?:[.,]\d+)?)/i);
-      const odds = oddsMatch ? Number(oddsMatch[1].replace(",", ".")) : null;
+      const marketOdds = (matchedRow.markets || [])
+        .flatMap(market => market.outcomes || [])
+        .map(outcome => Number(outcome.odds || 0))
+        .filter(odd => odd > 1);
+      const inferredOdds = marketOdds.find(odd => odd >= 1.4 && odd <= 1.9) || marketOdds[0] || null;
+      const odds = oddsMatch ? Number(oddsMatch[1].replace(",", ".")) : inferredOdds;
       const implied = odds && odds > 1 ? (1 / odds) * 100 : null;
       const lower = value.toLowerCase();
-      const isBasketball = /basketball|nba|euroleague|maccabi/i.test(value);
+      const isBasketball = Number(matchedRow.sportId) === 227 || /basketball|nba|euroleague|maccabi/i.test(value);
       const isSpread = /[-+]\d+(?:[.,]\d+)?|spread|handicap|line/i.test(value);
       const isOver = /over|\bo\s*\d/i.test(lower);
       const isUnder = /under|\bu\s*\d/i.test(lower);
@@ -2176,16 +2260,10 @@
       const isShortOddsRange = odds && odds >= 1.4 && odds <= 1.9;
       const marketName = isSpread ? "spread / handicap" : isOver ? "over" : isUnder ? "under" : isBtts ? "BTTS" : "win / moneyline";
       const sportName = isBasketball ? "basketball" : "football";
-      const terms = lower.split(/[^a-z0-9\u0590-\u05ff]+/i).filter(term => term.length >= 3);
-      const winnerMatches = allRows()
-        .filter(row => {
-          const haystack = `${row.match || ""} ${row.home || ""} ${row.away || ""} ${row.league || ""} ${row.market || ""}`.toLowerCase();
-          return terms.some(term => haystack.includes(term));
-        })
-        .slice(0, 5);
-      const winnerContext = winnerMatches.length
-        ? winnerMatches.map(row => `- ${row.sport} | ${row.league} | ${row.match} | ${explicitPickText(row)} | Winner ${row.odds ? formatOdds(row.odds) : "no odds"} | ${row.day} ${row.time || ""}`).join("\n")
-        : "I did not find a matching loaded Winner card yet. I can still analyze the bet, but add team names and exact Winner odds for a sharper answer.";
+      const winnerContext = [
+        `${matchedRow.day} ${matchedRow.time || ""} | ${matchedRow.sport} | ${matchedRow.league} | ${matchedRow.match}`,
+        reuvenMarketSummary(matchedRow),
+      ].join("\n");
 
       let estimated = odds ? Math.round(Math.max(38, Math.min(78, implied + 2))) : 55;
       if (isSpread) estimated -= 4;
@@ -2222,7 +2300,7 @@
         : "Outside the 1.40-1.90 zone: volatility/value must be checked even more carefully.";
 
       return [
-        "Bet Summary\n" + value + "\nSport: " + sportName + " | Market: " + marketName,
+        "Bet Summary\n" + value + "\nMatched Winner game: " + matchedRow.match + "\nSport: " + sportName + " | Market: " + marketName,
         "Winner Feed Context\n" + winnerContext,
         "Strengths\n- The bet is framed clearly enough to compare market price against probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against the implied probability.",
         "Weaknesses\n- Reuven AI does not currently have live injuries, confirmed lineups, player minutes, weather, or late market movement inside this local tool.\n- Short odds can still be bad value if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win bets are sensitive to tactics, red cards, weather, and lineup rotation."),

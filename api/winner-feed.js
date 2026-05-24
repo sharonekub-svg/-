@@ -1220,6 +1220,51 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
     });
 }
 
+function buildReuvenSchedule(markets, fromDate, daysAhead = 31) {
+  const end = new Date(`${fromDate}T00:00:00Z`);
+  end.setUTCDate(end.getUTCDate() + daysAhead);
+  const endDate = end.toISOString().slice(0, 10);
+  const byEvent = new Map();
+  for (const market of markets || []) {
+    if (!allowedMarket(market)) continue;
+    const date = winnerDateToIso(market.e_date);
+    if (!date || date < fromDate || date > endDate) continue;
+    const teams = splitTeams(market.desc);
+    if (!teams.home || !teams.away) continue;
+    const key = String(market.eId || `${date}:${market.sId}:${market.desc}`);
+    const oddsBook = marketOddsBook(market);
+    const item = byEvent.get(key) || {
+      id: `reuven-${key}`,
+      eventId: market.eId,
+      day: date,
+      time: winnerHour(market.m_hour),
+      sport: SPORTS[market.sId] || "",
+      sportId: Number(market.sId),
+      league: cleanText(market.league),
+      country: cleanText(market.country),
+      match: cleanText(market.desc),
+      home: teams.home,
+      away: teams.away,
+      markets: [],
+    };
+    item.markets.push({
+      marketId: market.mId,
+      title: cleanText(market.mp),
+      tier: marketTier(market.mp, market.sId),
+      outcomes: (oddsBook.outcomes || []).map((outcome) => ({
+        label: outcome.label,
+        desc: outcome.desc,
+        odds: outcome.odds,
+        side: outcome.side,
+      })),
+    });
+    byEvent.set(key, item);
+  }
+  return [...byEvent.values()]
+    .sort((a, b) => `${a.day} ${a.time}`.localeCompare(`${b.day} ${b.time}`))
+    .slice(0, 500);
+}
+
 function resultStatus(event, pick) {
   const results = (event.markets || []).flatMap((market) => market.marketResults || []).map(cleanText);
   if (!results.length) return "ממתין";
@@ -1671,6 +1716,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     oddsRange: { min: ODDS_MIN, max: ODDS_MAX },
     targetPicksPerSport: TARGET_PICKS_PER_SPORT,
     lineStats,
+    reuvenSchedule: buildReuvenSchedule(markets, today, 31),
     debugAudit: {
       today: splitBySport(auditOpenRows(todayEnrichedRows, todayFinalRows)),
       tomorrow: splitBySport(auditOpenRows(tomorrowEnrichedRows, tomorrowFinalRows)),
