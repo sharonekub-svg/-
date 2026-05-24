@@ -1163,13 +1163,61 @@
       font-size: 12px;
       font-weight: 800;
     }
+    .sport-heading {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sport-icon {
+      width: 28px;
+      height: 28px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      font-size: 15px;
+    }
     .sport-section-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 12px;
     }
+    .progress-section {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    .progress-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+      padding: 10px;
+      min-width: 0;
+    }
+    .progress-main {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+    .progress-main b,
+    .progress-main span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     @media (max-width: 620px) {
       .cards { grid-template-columns: 1fr; }
+      .progress-grid { grid-template-columns: 1fr; }
       .card-head, .card-body { padding: 10px; }
       .pick-summary, .result-line { grid-template-columns: 1fr; }
       .odds-box, .result-score { width: 100%; }
@@ -1328,6 +1376,8 @@
     </section>
 
     <section class="history-section shell" id="historySection" style="display:none"></section>
+
+    <section class="history-section shell progress-section" id="progressSection" style="display:none"></section>
 
     <section class="panel debug-panel" id="debugPanel">
       <div class="section-title">
@@ -1656,6 +1706,10 @@
       return `<img src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${fallback}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
     }
 
+    function sportIcon(rowOrSport) {
+      const value = typeof rowOrSport === "string" ? rowOrSport : (rowOrSport?.sport || rowOrSport?.sportId || "");
+      return String(value).includes("227") || String(value).toLowerCase().includes("basket") ? "&#127936;" : "&#9917;";
+    }
     function logoMarkup(asset, size = "") {
       if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
       if (asset.logo) {
@@ -1664,6 +1718,14 @@
       return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team")}</div>`;
     }
 
+
+    function leagueLogoMarkup(row) {
+      const source = String(row?.leagueAsset?.logoSource || "");
+      if (!row?.leagueAsset?.logo || source.includes("generated")) {
+        return `<div class="logo-wrap small" title="Default sport icon">${sportIcon(row)}</div>`;
+      }
+      return logoMarkup(row.leagueAsset, "small");
+    }
     function allRows() {
       if (!state.feed) return [];
       return Object.values(state.feed.tabs)
@@ -1735,12 +1797,10 @@
       if (!tab) return [];
       const query = state.search.trim().toLowerCase();
       const isYesterday = state.day === "yesterday";
-      const tKeys = isYesterday ? trackedResultKeys() : null;
       const feedRows = [...daySportRows(state.day, state.sportTab)];
       const extra = isYesterday ? syntheticTrackerRows(tab.date, feedRows) : [];
       let rows = [...feedRows, ...extra].filter(row => {
-        if (isYesterday) { if (!row.fromTracker && !isTrackedRow(row, tKeys)) return false; }
-        else if (!hasPick(row)) return false;
+        if (!isYesterday && !hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
       });
@@ -1762,13 +1822,11 @@
     function currentRowsBySport() {
       const query = state.search.trim().toLowerCase();
       const isYesterday = state.day === "yesterday";
-      const tKeys = isYesterday ? trackedResultKeys() : null;
       const tab = state.feed?.tabs?.[state.day];
       const filterRows = (feedRows) => {
         const extra = (isYesterday && tab) ? syntheticTrackerRows(tab.date, feedRows) : [];
         return [...feedRows, ...extra].filter(row => {
-          if (isYesterday) { if (!row.fromTracker && !isTrackedRow(row, tKeys)) return false; }
-          else if (!hasPick(row)) return false;
+          if (!isYesterday && !hasPick(row)) return false;
           const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
           return !query || text.includes(query);
         });
@@ -2208,16 +2266,16 @@
         cards.innerHTML = banners + (sections.length
           ? sections.map(([, label, sportRows]) => `
               <section class="sport-section">
-                <div class="sport-section-title">${label}<span>${sportRows.length} משחקים</span></div>
+                <div class="sport-section-title"><div class="sport-heading"><span class="sport-icon">${label === "כדורסל" ? "🏀" : "⚽"}</span>${label}</div><span>${sportRows.length} משחקים</span></div>
                 <div class="sport-section-grid">${sportRows.map(rowCard).join("")}</div>
               </section>
             `).join("")
-          : `<div class="empty">${isOpenDay() ? "לא נמצאו 20 משחקי Winner אמיתיים בטווח 1.40-1.90." : "אין תוצאות סגורות עם לוגואים מאומתים."}</div>`);
+          : `<div class="empty">${isOpenDay() ? "No valid games today that match the criteria." : "No finished games loaded for this date."}</div>`);
         return;
       }
       cards.innerHTML = banners + (rows.length
         ? rows.map(rowCard).join("")
-        : `<div class="empty">${isOpenDay() ? "לא נמצאו משחקים ב-Winner לקטגוריה הזו." : "אין תוצאות סגורות בקטגוריה הזו."}</div>`);
+        : `<div class="empty">${isOpenDay() ? "No valid games today that match the criteria." : "No finished games loaded for this date."}</div>`);
     }
 
     function debugRows() {
@@ -2261,6 +2319,67 @@
           <div class="debug-reasons">${(row.reasons || []).join(" · ")}<br>logos: ${row.homeLogoSource} / ${row.awayLogoSource}</div>
         </article>
       `).join("") : `<div class="empty">No debug rows for this tab.</div>`;
+    }
+
+    function progressRows() {
+      if (!state.feed?.tabs) return [];
+      return ["yesterday", "today", "tomorrow"].flatMap(dayKey => {
+        const tab = state.feed.tabs[dayKey];
+        return ["football", "basketball"].flatMap(sportKey =>
+          (tab?.sports?.[sportKey] || []).map(row => ({ ...row, progressDayLabel: tab?.label || dayKey, progressSportKey: sportKey }))
+        );
+      });
+    }
+
+    function progressStatus(row) {
+      if (row.matchPhase === "final") return "Finished";
+      if (row.matchPhase === "live") return "Live";
+      if (row.matchPhase === "ht") return "HT";
+      if (String(row.bettingStatus || "").includes("cancelled")) return "Cancelled";
+      if (String(row.bettingStatus || "").includes("postponed")) return "Postponed";
+      return "Upcoming";
+    }
+
+    function progressResult(row) {
+      const outcome = rowOutcome(row);
+      if (outcome.key === "hit") return "Win";
+      if (outcome.key === "miss") return "Loss";
+      if (outcome.key === "void" || outcome.key === "unverified" || outcome.key === "closed") return "Push";
+      return "—";
+    }
+
+    function renderProgressBoard() {
+      const target = document.getElementById("progressSection");
+      if (!target) return;
+      const rows = progressRows();
+      if (!rows.length) {
+        target.style.display = "";
+        target.innerHTML = `<div class="empty">No games loaded yet. Refresh Winner data and try again.</div>`;
+        return;
+      }
+      target.style.display = "";
+      target.innerHTML = `
+        <div class="section-title">
+          <div>
+            <h3>Progress Bar</h3>
+            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">Yesterday, today and tomorrow · football and basketball · all loaded games.</p>
+          </div>
+          <span class="pill">${rows.length} games</span>
+        </div>
+        <div class="progress-grid">
+          ${rows.map(row => `
+            <div class="progress-item">
+              <span class="sport-icon">${sportIcon(row)}</span>
+              <div class="progress-main">
+                <span class="micro">${row.progressDayLabel || row.day} · ${row.sport || ""} · ${row.league || ""}</span>
+                <b>${escapeHtml(row.match || `${row.home || ""} - ${row.away || ""}`)}</b>
+                <span class="micro">${progressStatus(row)}${row.liveScore || row.result ? ` · ${escapeHtml(row.liveScore || row.result)}` : ""}</span>
+              </div>
+              <span class="badge ${progressResult(row) === "Win" ? "badge-won" : progressResult(row) === "Loss" ? "badge-lost" : "badge-pending"}">${progressResult(row)}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
     function predictionStatusInfo(value) {
@@ -2572,7 +2691,7 @@
             <div class="card-topline" style="width:100%">
               <div class="card-meta-stack">
                 <div class="league" style="display:flex;align-items:center;gap:6px">
-                  ${logoMarkup(row.leagueAsset, "small")}
+                  ${leagueLogoMarkup(row)}
                   <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.league || "ליגה לא זמינה"}</span>
                 </div>
                 <div class="card-badge-row">${matchBadges(row)}</div>
@@ -2677,6 +2796,7 @@
       renderDaily();
       renderCards();
       renderHistory();
+      renderProgressBoard();
       renderDebug();
     }
 
