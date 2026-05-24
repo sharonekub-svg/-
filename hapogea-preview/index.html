@@ -1611,7 +1611,7 @@
       const items = readTracker();
       return {
         byResultKey: new Set(items.map(i => String(i.resultKey || "")).filter(Boolean)),
-        byEventId: new Set(items.map(i => String(i.eventId || "")).filter(Boolean)),
+        byEventId:   new Set(items.map(i => String(i.eventId   || "")).filter(Boolean)),
       };
     }
 
@@ -1620,14 +1620,59 @@
         || keys.byEventId.has(String(row.eventId || ""));
     }
 
+    // Build synthetic result rows from tracker entries that have no matching
+    // feed row for a given date. Ensures settled bets always show in yesterday.
+    function syntheticTrackerRows(day, feedRows) {
+      const feedEventIds   = new Set(feedRows.map(r => String(r.eventId || "")));
+      const feedResultKeys = new Set(feedRows.map(r => String(r.resultKey || "")));
+      const yesterday = state.feed?.tabs?.yesterday?.date || "";
+      return readTracker()
+        .filter(item => {
+          if (item.predictedDay !== day && item.settledDay !== day) return false;
+          // Only add if no feed row already covers this bet
+          if (item.eventId   && feedEventIds.has(String(item.eventId)))   return false;
+          if (item.resultKey && feedResultKeys.has(String(item.resultKey))) return false;
+          return true;
+        })
+        .map(item => ({
+          id:           `tracker-${item.key || item.eventId}`,
+          eventId:      String(item.eventId || ""),
+          resultKey:    item.resultKey || "",
+          source:       "Tracker",
+          day:          item.predictedDay || day,
+          time:         item.kickoffTime || "",
+          sport:        item.sport === "basketball" ? "כדורסל" : "כדורגל",
+          sportId:      item.sport === "basketball" ? 227 : 240,
+          league:       item.league || "",
+          match:        item.match || "",
+          home:         item.home || "",
+          away:         item.away || "",
+          market:       "",
+          pick:         item.pick || "",
+          pickTeam:     item.pickTeam || "",
+          winnerPick:   item.pick || "",
+          odds:         item.odds || null,
+          recommended:  true,
+          bettingStatus:"closed",
+          status:       item.status === "hit" ? "נתפס" : item.status === "miss" ? "לא נתפס" : "ממתין",
+          matchPhase:   item.status !== "pending" ? "final" : "scheduled",
+          actualWinner: item.actualWinner || "",
+          result:       item.result || "",
+          liveScore:    item.result || "",
+          fromTracker:  true,
+        }));
+    }
+
     function currentRows() {
       const tab = state.feed?.tabs?.[state.day];
       if (!tab) return [];
       const query = state.search.trim().toLowerCase();
       const isYesterday = state.day === "yesterday";
       const tKeys = isYesterday ? trackedResultKeys() : null;
-      let rows = [...daySportRows(state.day, state.sportTab)].filter(row => {
-        if (isYesterday) { if (!isTrackedRow(row, tKeys)) return false; }
+      const feedRows = [...daySportRows(state.day, state.sportTab)];
+      const extra = isYesterday ? syntheticTrackerRows(tab.date, feedRows) : [];
+      let rows = [...feedRows, ...extra].filter(row => {
+        if (isYesterday) { if (!row.fromTracker && !isTrackedRow(row, tKeys)) return false; }
         else if (!hasPick(row)) return false;
         const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
         return !query || text.includes(query);
@@ -1651,14 +1696,18 @@
       const query = state.search.trim().toLowerCase();
       const isYesterday = state.day === "yesterday";
       const tKeys = isYesterday ? trackedResultKeys() : null;
-      const filterRows = rows => (rows || []).filter(row => {
-        if (isYesterday) { if (!isTrackedRow(row, tKeys)) return false; }
-        else if (!hasPick(row)) return false;
-        const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
-        return !query || text.includes(query);
-      });
+      const tab = state.feed?.tabs?.[state.day];
+      const filterRows = (feedRows) => {
+        const extra = (isYesterday && tab) ? syntheticTrackerRows(tab.date, feedRows) : [];
+        return [...feedRows, ...extra].filter(row => {
+          if (isYesterday) { if (!row.fromTracker && !isTrackedRow(row, tKeys)) return false; }
+          else if (!hasPick(row)) return false;
+          const text = `${row.match} ${row.league} ${row.market} ${row.pick}`.toLowerCase();
+          return !query || text.includes(query);
+        });
+      };
       return {
-        football: sortRows(filterRows(daySportRows(state.day, "football"))),
+        football:   sortRows(filterRows(daySportRows(state.day, "football"))),
         basketball: sortRows(filterRows(daySportRows(state.day, "basketball"))),
       };
     }
