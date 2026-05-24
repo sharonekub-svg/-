@@ -1135,6 +1135,33 @@
       line-height: 1.65;
       font-size: 13px;
     }
+    .chat-log {
+      display: grid;
+      gap: 10px;
+      max-height: 420px;
+      overflow: auto;
+      padding: 4px;
+    }
+    .chat-message {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      white-space: pre-wrap;
+      line-height: 1.65;
+      font-size: 13px;
+    }
+    .chat-message.user {
+      justify-self: end;
+      max-width: min(680px, 92%);
+      background: rgba(255,200,87,.08);
+      color: var(--text);
+    }
+    .chat-message.ai {
+      justify-self: start;
+      max-width: min(760px, 96%);
+      background: rgba(85,214,255,.055);
+      color: var(--muted);
+    }
     .history-rate { justify-content: space-between; flex-wrap: wrap; }
     .history-counts {
       display: flex;
@@ -1307,8 +1334,7 @@
         <button class="tab" data-day="tomorrow">מחר</button>
       </nav>
       <nav class="nav" id="sportTabs">
-        <button class="tab active" data-sport-tab="all">הכל</button>
-        <button class="tab" data-sport-tab="football">כדורגל</button>
+        <button class="tab active" data-sport-tab="football">כדורגל</button>
         <button class="tab" data-sport-tab="basketball">כדורסל</button>
         <button class="tab" data-sport-tab="reuben">ראובן AI</button>
       </nav>
@@ -1410,7 +1436,7 @@
     const state = {
       feed: null,
       day: "today",
-      sportTab: "all",
+      sportTab: "football",
       sort: "score",
       search: "",
       loading: true,
@@ -1420,6 +1446,7 @@
       loadError: "",
       selectedId: null,
       wcOpen: false,
+      reubenMessages: [],
       debugMode: location.pathname.includes("debug")
     };
     let lastLoadTime = 0;
@@ -1712,16 +1739,18 @@
     }
     function logoMarkup(asset, size = "") {
       if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
-      if (asset.logo) {
+      const source = String(asset.logoSource || "");
+      const isGenerated = !asset.logo || String(asset.logo).startsWith("data:image") || /generated|fallback|Wikipedia/i.test(source);
+      if (asset.logo && !isGenerated) {
         return `<div class="logo-wrap ${size}">${imageWithFallback(asset.logo, asset.name || "", size === "small" ? "league" : "team")}</div>`;
       }
-      return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team")}</div>`;
+      return `<div class="logo-wrap ${size}" title="תג גרפי יציב">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team")}</div>`;
     }
 
 
     function leagueLogoMarkup(row) {
       const source = String(row?.leagueAsset?.logoSource || "");
-      if (!row?.leagueAsset?.logo || source.includes("generated")) {
+      if (!row?.leagueAsset?.logo || /generated|fallback|Wikipedia/i.test(source) || String(row.leagueAsset.logo).startsWith("data:image")) {
         return `<div class="logo-wrap small" title="Default sport icon">${sportIcon(row)}</div>`;
       }
       return logoMarkup(row.leagueAsset, "small");
@@ -2147,6 +2176,16 @@
       const isShortOddsRange = odds && odds >= 1.4 && odds <= 1.9;
       const marketName = isSpread ? "spread / handicap" : isOver ? "over" : isUnder ? "under" : isBtts ? "BTTS" : "win / moneyline";
       const sportName = isBasketball ? "basketball" : "football";
+      const terms = lower.split(/[^a-z0-9\u0590-\u05ff]+/i).filter(term => term.length >= 3);
+      const winnerMatches = allRows()
+        .filter(row => {
+          const haystack = `${row.match || ""} ${row.home || ""} ${row.away || ""} ${row.league || ""} ${row.market || ""}`.toLowerCase();
+          return terms.some(term => haystack.includes(term));
+        })
+        .slice(0, 5);
+      const winnerContext = winnerMatches.length
+        ? winnerMatches.map(row => `- ${row.sport} | ${row.league} | ${row.match} | ${explicitPickText(row)} | Winner ${row.odds ? formatOdds(row.odds) : "no odds"} | ${row.day} ${row.time || ""}`).join("\n")
+        : "I did not find a matching loaded Winner card yet. I can still analyze the bet, but add team names and exact Winner odds for a sharper answer.";
 
       let estimated = odds ? Math.round(Math.max(38, Math.min(78, implied + 2))) : 55;
       if (isSpread) estimated -= 4;
@@ -2184,6 +2223,7 @@
 
       return [
         "Bet Summary\n" + value + "\nSport: " + sportName + " | Market: " + marketName,
+        "Winner Feed Context\n" + winnerContext,
         "Strengths\n- The bet is framed clearly enough to compare market price against probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against the implied probability.",
         "Weaknesses\n- Reuven AI does not currently have live injuries, confirmed lineups, player minutes, weather, or late market movement inside this local tool.\n- Short odds can still be bad value if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win bets are sensitive to tactics, red cards, weather, and lineup rotation."),
         "Odds and Probability\n" + oddsLine,
@@ -2195,22 +2235,26 @@
     }
 
     function renderReubenAI() {
+      const messages = state.reubenMessages.length
+        ? state.reubenMessages
+        : [{ role: "ai", text: "Ask me about a football or basketball bet. If the match is loaded from Winner, I will use the available Winner odds and markets in the answer." }];
       return `
         <section class="reuben-panel">
           <div class="section-title" style="margin:0">
             <div>
-              <h3>ראובן AI</h3>
-              <p>קטגוריה נפרדת לניתוח הימורים בכדורגל ובכדורסל: חוזקות, חולשות, יחס גלום, EV, דירוג ואלטרנטיבות. הוא לא ממציא מידע חסר.</p>
+              <h3>Reuven AI</h3>
+              <p>Separate chat advisor for football and basketball bets: strengths, weaknesses, implied probability, EV, rating and alternatives. It uses the loaded Winner feed and does not invent missing data.</p>
             </div>
-            <span class="pill">יועץ הימורים</span>
+            <span class="pill">Bet advisor</span>
           </div>
-          <textarea id="reubenInput" placeholder="כתוב כאן הימור לבדיקה: משחק, שוק, יחס Winner, ליין אם יש. לדוגמה: Real Madrid vs Barcelona, Over 2.5 @ 1.80"></textarea>
-          <button class="open-game" type="button" id="reubenAnalyze">נתח הימור</button>
-          <div class="reuben-output" id="reubenOutput">הניתוח יופיע כאן לפי: Bet Summary, Strengths, Weaknesses, Odds and Probability, Value Assessment, Recommendation, Rating out of 10, Alternative Bets.</div>
+          <textarea id="reubenInput" placeholder="Write a bet to analyze: match, market, Winner odds, spread if relevant. Example: Real Madrid vs Barcelona, Over 2.5 @ 1.80"></textarea>
+          <button class="open-game" type="button" id="reubenAnalyze">Send to Reuven</button>
+          <div class="chat-log" id="reubenOutput">
+            ${messages.map(message => `<div class="chat-message ${message.role === "user" ? "user" : "ai"}">${escapeHtml(message.text)}</div>`).join("")}
+          </div>
         </section>
       `;
     }
-
     function skeletonCards() {
       return Array.from({ length: 4 }, () => `
         <article class="card skeleton-card">
@@ -2928,6 +2972,10 @@
           showRefreshBar(true);
         } else {
           startFakeProgress();
+          window._overlayFallbackTimer = setTimeout(() => {
+            finishProgress();
+            if (!state.feed) document.getElementById("cards").innerHTML = skeletonCards();
+          }, 2800);
         }
       } else {
         showRefreshBar(true);
@@ -2956,6 +3004,7 @@
           state.error = `\u05e9\u05d2\u05d9\u05d0\u05d4: ${error.message}`;
         }
       } finally {
+        clearTimeout(window._overlayFallbackTimer);
         state.loading = false;
         finishProgress();
         showRefreshBar(false);
@@ -3018,8 +3067,14 @@
       }
       if (event.target.closest("#reubenAnalyze")) {
         const input = document.getElementById("reubenInput");
+        const question = input?.value || "";
+        const answer = analyzeReubenBet(question);
+        if (question.trim()) state.reubenMessages.push({ role: "user", text: question.trim() });
+        state.reubenMessages.push({ role: "ai", text: answer });
+        if (input) input.value = "";
+        renderCards();
         const output = document.getElementById("reubenOutput");
-        if (output) output.textContent = analyzeReubenBet(input?.value || "");
+        if (output) output.scrollTop = output.scrollHeight;
         return;
       }
       const button = event.target.closest("[data-open]");

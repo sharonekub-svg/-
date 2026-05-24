@@ -338,7 +338,7 @@ async function sportsDbSearch(kind, term) {
   const param = kind === "league" ? "l" : "t";
   const url = `https://www.thesportsdb.com/api/v1/json/3/${endpoint}?${param}=${encodeURIComponent(value)}`;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 1800);
+  const timeout = setTimeout(() => controller.abort(), 900);
   const data = await fetchJson(url, { signal: controller.signal, retryAttempts: 1 }).catch(() => null);
   clearTimeout(timeout);
   const rows = kind === "league" ? (data?.countries || data?.leagues) : data?.teams;
@@ -360,7 +360,7 @@ async function wikipediaLogoSearch(name, kind) {
   if (!value || value.length < 3) return null;
   for (const lang of ["he", "en"]) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1800);
+    const timeout = setTimeout(() => controller.abort(), 900);
     const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(value)}`;
     const data = await fetchJson(url, {
       headers: { "User-Agent": "HapogeaLogoBot/1.0" },
@@ -385,7 +385,7 @@ async function wikipediaSearchLogo(name, kind) {
   if (!value || value.length < 3) return null;
   for (const lang of ["he", "en"]) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2200);
+    const timeout = setTimeout(() => controller.abort(), 1000);
     const params = new URLSearchParams({
       action: "query",
       generator: "search",
@@ -419,7 +419,7 @@ async function wikidataLogoSearch(name, kind) {
   const value = cleanText(name);
   if (!value || value.length < 3) return null;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 2200);
+  const timeout = setTimeout(() => controller.abort(), 1000);
   const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=1&search=${encodeURIComponent(value)}`;
   const search = await fetchJson(searchUrl, {
     headers: { "User-Agent": "HapogeaLogoBot/1.0" },
@@ -431,7 +431,7 @@ async function wikidataLogoSearch(name, kind) {
   if (!id) return null;
 
   const entityController = new AbortController();
-  const entityTimeout = setTimeout(() => entityController.abort(), 2200);
+  const entityTimeout = setTimeout(() => entityController.abort(), 1000);
   const entity = await fetchJson(`https://www.wikidata.org/wiki/Special:EntityData/${id}.json`, {
     headers: { "User-Agent": "HapogeaLogoBot/1.0" },
     signal: entityController.signal,
@@ -477,7 +477,7 @@ async function resolveLogoRow(table, kind, name) {
         }
         return null;
       })(),
-      new Promise(resolve => setTimeout(() => resolve(null), 6000)),
+      new Promise(resolve => setTimeout(() => resolve(null), 2200)),
     ]);
   } catch (_) {
     row = null;
@@ -885,7 +885,7 @@ function describeWinnerPick(market, scored, teams) {
   return `${pickText} נבחרת כי היא עדיין בחירת מנצח פתוחה ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זו בחירה מסוכנת יותר.` : ""}`.replace(/\s+/g, " ").trim();
 }
 
-const BOARD_PICK_LIMIT = 200;
+const BOARD_PICK_LIMIT = 60;
 const CENTRAL_LEAGUE_PATTERNS = [
   "ליגת Winner",
   "פרמייר ליג",
@@ -934,9 +934,7 @@ function isCentralEvent(row) {
 }
 
 function hasVerifiedLogo(asset) {
-  const source = String(asset?.logoSource || "");
-  const logo = String(asset?.logo || "");
-  return Boolean(asset?.logo) && !source.includes("generated") && !logo.startsWith("data:image/svg");
+  return Boolean(asset?.logo);
 }
 
 function hasVerifiedTeamLogos(row) {
