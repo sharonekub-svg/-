@@ -2011,7 +2011,7 @@
             </div>
             ${hasRecommendation
               ? `<div class="picked-bet">
-                   <span class="label">בחירת האלגוריתם</span>
+                   <span class="label">הצד שנבחר</span>
                    <strong>${explicitPickText(row)}</strong>
                    <span class="picked-odds">${row.odds ? formatOdds(row.odds) : "תוצאה"}</span>
                    <span class="pick-action">${pickActionText(row)}</span>
@@ -2517,7 +2517,7 @@
               ${hasRecommendation
                 ? `<div class="pick-summary">
                      <div class="pick-summary-main">
-                       <span>מה הימרנו</span>
+                       <span>הצד שנבחר</span>
                        <strong>${explicitPickText(row)}</strong>
                        <span>${marketLabelText(row)} · ${pickActionText(row)}</span>
                      </div>
