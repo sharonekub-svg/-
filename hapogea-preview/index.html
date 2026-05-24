@@ -1540,17 +1540,34 @@
       return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
     }
 
-    function imageWithFallback(src, name, kind) {
+    function imageWithFallback(src, name, kind, teamLookupName = null) {
       const fallback = fallbackBadge(name, kind);
-      return `<img src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${fallback}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
+      const lookupAttr = teamLookupName ? ` data-team-name="${escapeHtml(teamLookupName)}"` : "";
+      return `<img src="${escapeHtml(src || fallback)}" alt="${escapeHtml(name || "")}" data-fallback="${escapeHtml(fallback)}"${lookupAttr} loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback">`;
     }
 
     function logoMarkup(asset, size = "") {
       if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
-      if (asset.logo) {
+      const source = String(asset.logoSource || "");
+      const isGenerated = !asset.logo || String(asset.logo).startsWith("data:image") || /generated|fallback|Wikipedia/i.test(source);
+      const lookupName = size !== "small" ? (asset.name || null) : null;
+      if (asset.logo && !isGenerated) {
         return `<div class="logo-wrap ${size}">${imageWithFallback(asset.logo, asset.name || "", size === "small" ? "league" : "team")}</div>`;
       }
-      return `<div class="logo-wrap ${size}" title="לא נמצא לוגו מאומת">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team")}</div>`;
+      return `<div class="logo-wrap ${size}">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team", lookupName)}</div>`;
+    }
+
+    function leagueLogoMarkup(row) {
+      const source = String(row?.leagueAsset?.logoSource || "");
+      const hasReal = row?.leagueAsset?.logo &&
+        !String(row.leagueAsset.logo).startsWith("data:image") &&
+        !/generated|fallback|Wikipedia/i.test(source);
+      if (hasReal) return logoMarkup(row.leagueAsset, "small");
+      const leagueName = row?.leagueAsset?.name || row?.league || "";
+      if (!leagueName) return `<div class="logo-wrap small">${sportIcon(row)}</div>`;
+      const fallback = fallbackBadge(leagueName, "league");
+      const src = `/api/logo?q=${encodeURIComponent(leagueName)}&type=league`;
+      return `<div class="logo-wrap small"><img src="${escapeHtml(src)}" alt="${escapeHtml(leagueName)}" data-fallback="${escapeHtml(fallback)}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback"></div>`;
     }
 
     function allRows() {
@@ -1983,7 +2000,7 @@
           <div class="card-head">
             <div style="min-width:0;flex:1">
               <div class="league" style="display:flex;align-items:center;gap:6px">
-                ${logoMarkup(row.leagueAsset, "small")}
+                ${leagueLogoMarkup(row)}
                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.league || "ליגה לא זמינה"}</span>
               </div>
               <div class="card-badge-row">${matchBadges(row)}</div>
@@ -2485,7 +2502,7 @@
             <div class="card-topline" style="width:100%">
               <div class="card-meta-stack">
                 <div class="league" style="display:flex;align-items:center;gap:6px">
-                  ${logoMarkup(row.leagueAsset, "small")}
+                  ${leagueLogoMarkup(row)}
                   <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.league || "ליגה לא זמינה"}</span>
                 </div>
                 <div class="card-badge-row">${matchBadges(row)}</div>
@@ -2577,6 +2594,104 @@
       `;
     }
 
+    // ── Client-side logo loader ───────────────────────────────────────────────
+    // Server-side (winner-feed.js) seeds 365Scores logo URLs for teams in the
+    // 365Scores schedule. For any remaining SVG placeholder, applyLogosToCards()
+    // runs Wikidata Hebrew search → P154 badge or English label → TheSportsDB.
+
+    const _logoMem = new Map();
+    const _LSKEY   = "hapogea_lg_v4";
+
+    (function seedFromStorage() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(_LSKEY) || "{}");
+        for (const [k, v] of Object.entries(stored)) _logoMem.set(k, v);
+      } catch (_) {}
+    })();
+
+    function _saveLogo(name, url) {
+      _logoMem.set(name, url);
+      try {
+        const s = JSON.parse(localStorage.getItem(_LSKEY) || "{}");
+        s[name] = url;
+        localStorage.setItem(_LSKEY, JSON.stringify(s));
+      } catch (_) {}
+    }
+
+    async function _wbGetBadge(teamName) {
+      const sr = await fetch(
+        `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=5&search=${encodeURIComponent(teamName)}&origin=*`,
+        { signal: AbortSignal.timeout(6000) }
+      ).then(r => r.json()).catch(() => null);
+
+      const hit = (sr?.search || []).find(c =>
+        /club|football|soccer|basketball|sport|קבוצת/i.test(c.description || "")
+      ) || sr?.search?.[0];
+      if (!hit?.id) return null;
+
+      const ent = await fetch(
+        `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${hit.id}&props=claims|labels&languages=en&format=json&origin=*`,
+        { signal: AbortSignal.timeout(6000) }
+      ).then(r => r.json()).catch(() => null);
+
+      const entity = ent?.entities?.[hit.id];
+      if (!entity) return null;
+
+      const logoFile = entity.claims?.P154?.[0]?.mainsnak?.datavalue?.value;
+      if (logoFile) {
+        return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(logoFile)}?width=200`;
+      }
+
+      const en = entity.labels?.en?.value;
+      if (!en) return null;
+      const sdb = await fetch(
+        `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(en)}`,
+        { signal: AbortSignal.timeout(5000) }
+      ).then(r => r.json()).catch(() => null);
+      const enLow = en.toLowerCase();
+      const teams = sdb?.teams || [];
+      const match = teams.find(t => (t.strTeam || "").toLowerCase() === enLow) || teams[0];
+      return match?.strBadge || null;
+    }
+
+    async function _resolveLogo(name) {
+      if (_logoMem.has(name)) {
+        const v = _logoMem.get(name);
+        return (v instanceof Promise) ? null : v;
+      }
+      const p = _wbGetBadge(name).then(url => {
+        if (url) _saveLogo(name, url);
+        else _logoMem.set(name, null);
+        return url;
+      }).catch(() => null);
+      _logoMem.set(name, p);
+      return p;
+    }
+
+    function applyLogosToCards() {
+      const imgs = [...document.querySelectorAll("img[data-team-name]")];
+      if (!imgs.length) return;
+      const map = new Map();
+      for (const img of imgs) {
+        const n = img.dataset.teamName;
+        if (!n) continue;
+        if (!map.has(n)) map.set(n, []);
+        map.get(n).push(img);
+      }
+      for (const [name, els] of map) {
+        _resolveLogo(name).then(url => {
+          if (!url) return;
+          for (const img of els) {
+            if (!img.isConnected) continue;
+            img.removeAttribute("data-team-name");
+            img.src = url;
+            img.onerror = function() { this.onerror = null; this.src = this.dataset.fallback; };
+          }
+        }).catch(() => {});
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     function render() {
       renderTabs();
       renderStats();
@@ -2585,6 +2700,7 @@
       renderCards();
       renderHistory();
       renderDebug();
+      applyLogosToCards();
     }
 
     function parseKickoffMs(day, time) {
