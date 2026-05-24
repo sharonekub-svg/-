@@ -300,7 +300,7 @@
     }
     .team-side.selected:after,
     .versus.selected:after {
-      content: "הצד שנבחן";
+      content: "הצד שנבחר";
       position: absolute;
       top: -10px;
       inset-inline-end: calc(50% - 44px);
@@ -1546,16 +1546,16 @@
     function pickActionText(row) {
       if (row.marketTier === "alternative-total") {
         const { dir, line } = overUnderParts(row);
-        return line != null ? `הצד שנבחן: ${dir} ${line} גולים` : `הצד שנבחן: ${dir} גולים`;
+        return line != null ? `הצד שנבחר: ${dir} ${line} גולים` : `הצד שנבחר: ${dir} גולים`;
       }
       const team = row.pickTeam || pickLabel(row);
       const side = pickSide(row);
       const spread = Number(row.spread);
-      if (side === "draw") return "הצד שנבחן: תיקו בסיום המשחק";
+      if (side === "draw") return "הצד שנבחר: תיקו בסיום המשחק";
       if (row.sportId === 227 && row.spread != null && Number.isFinite(spread)) {
         const abs = Math.abs(spread);
-        if (spread > 0) return `הצד שנבחן: ${team} עם יתרון +${abs}`;
-        return `הצד שנבחן: ${team} לנצח ביותר מ-${abs} נקודות`;
+        if (spread > 0) return `הצד שנבחר: ${team} עם יתרון +${abs}`;
+        return `הצד שנבחר: ${team} לנצח ביותר מ-${abs} נקודות`;
       }
       if (row.sportId === 227) return `יתרון סטטיסטי: ${team} כמנצחת משחק`;
       return `יתרון סטטיסטי: ${team} לניצחון`;
@@ -1581,7 +1581,7 @@
         const lineText = line != null ? `${line} גולים` : "גולים";
         const impliedPct = row.normalizedProbability ? Math.round(row.normalizedProbability * 100) : null;
         const pctText = impliedPct ? ` — הסתברות שוק ${impliedPct}%` : "";
-        return `כדורגל מעל/מתחת: הצד שנבחן הוא ${dir} ${lineText}${pctText}. האלגוריתם מבוסס על ניתוח יחסי Winner בשוק הגולים לאחר ניכוי מרווח הבית.`;
+        return `כדורגל מעל/מתחת: הצד שנבחר הוא ${dir} ${lineText}${pctText}. האלגוריתם מבוסס על ניתוח יחסי Winner בשוק הגולים לאחר ניכוי מרווח הבית.`;
       }
       const spread = Number(row.spread);
       const team = row.pickTeam || pickLabel(row);
@@ -1589,15 +1589,15 @@
       if (row.sportId === 227 && Number.isFinite(spread) && row.spread != null) {
         const abs = Math.abs(spread);
         if (spread > 0) {
-          return `כדורסל - ליין יתרון: הצד שנבחן הוא ${team} +${abs}. בדיקת התחזית מתאימה אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+          return `כדורסל - ליין יתרון: הצד שנבחר הוא ${team} +${abs}. בדיקת התחזית מתאימה אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
         }
-        return `כדורסל - ליין יתרון: הצד שנבחן הוא ${team} ${spread}. בדיקת התחזית מתאימה רק אם ${team} מנצחת ביותר מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+        return `כדורסל - ליין יתרון: הצד שנבחר הוא ${team} ${spread}. בדיקת התחזית מתאימה רק אם ${team} מנצחת ביותר מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
       }
       if (row.sportId === 227 && market.includes("המנצח")) {
-        return `כדורסל - מנצחת המשחק: הצד שנבחן הוא ${team} לניצחון במשחק${market.includes("כולל הארכות") ? " כולל הארכות" : ""}.`;
+        return `כדורסל - מנצחת המשחק: הצד שנבחר הוא ${team} לניצחון במשחק${market.includes("כולל הארכות") ? " כולל הארכות" : ""}.`;
       }
-      if (pickSide(row) === "draw") return "כדורגל - הצד שנבחן הוא תיקו בתוצאת הסיום.";
-      return `הצד שנבחן הוא ${team} בשוק ${market || "המנצח"}.`;
+      if (pickSide(row) === "draw") return "כדורגל - הצד שנבחר הוא תיקו בתוצאת הסיום.";
+      return `הצד שנבחר הוא ${team} בשוק ${market || "המנצח"}.`;
     }
 
     function pickSide(row) {
@@ -2111,7 +2111,7 @@
           <div class="odds">${formatOdds(tip.odds)}</div>
         </div>
         <p class="hero-copy" style="font-size:14px">
-          למה: ${(tip.explanation || [])[1] || "הצד שנבחן הוא פייבוריט סטטיסטי בשוק המנצח של Winner."}
+          למה: ${(tip.explanation || [])[1] || "הצד שנבחר הוא פייבוריט סטטיסטי בשוק המנצח של Winner."}
         </p>
         ${performanceMarkup}
         ${featuresMarkup}
@@ -3020,7 +3020,7 @@
               ${hasRecommendation
                 ? `<div class="pick-summary">
                      <div class="pick-summary-main">
-                       <span>הצד שנבחן</span>
+                       <span>הצד שנבחר</span>
                        <strong>${explicitPickText(row)}</strong>
                        <span>${marketLabelText(row)} · ${pickActionText(row)}</span>
                      </div>
