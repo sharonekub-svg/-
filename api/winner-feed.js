@@ -250,14 +250,23 @@ function initials(value) {
     .toUpperCase();
 }
 
-function fallbackLogo(name, kind) {
-  const label = initials(name).slice(0, 2) || "?";
-  const seed = [...cleanText(name)].reduce((total, char) => total + char.charCodeAt(0), 0);
-  const hueA = seed % 360;
-  const hueB = (hueA + 54) % 360;
-  const stroke = kind === "league" ? "#55d6ff" : "#ffc857";
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="hsl(${hueA},78%,28%)"/><stop offset="1" stop-color="hsl(${hueB},82%,18%)"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#000" flood-opacity=".35"/></filter></defs><path d="M64 8 111 25v36c0 29-18 49-47 59-29-10-47-30-47-59V25L64 8Z" fill="url(#g)" stroke="${stroke}" stroke-width="5" filter="url(#s)"/><path d="M31 43h66" stroke="rgba(255,255,255,.18)" stroke-width="5"/><text x="64" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" font-weight="900" fill="#f7f3ea">${label}</text></svg>`;
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+function fallbackLogo(name, type = "team") {
+  const text = cleanText(name);
+  const abbr = text.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "?";
+  // deterministic color from name hash
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) & 0xffffffff;
+  const hue = Math.abs(hash) % 360;
+  const sat = 55 + (Math.abs(hash >> 4) % 25);
+  const lit = 38 + (Math.abs(hash >> 8) % 18);
+  const color = `hsl(${hue},${sat}%,${lit}%)`;
+  const light = `hsl(${hue},${sat}%,${lit + 28}%)`;
+  if (type === "league") {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="21" fill="${color}"/><circle cx="22" cy="22" r="15" fill="none" stroke="${light}" stroke-width="2"/><text x="22" y="27" text-anchor="middle" font-size="13" font-family="Arial,sans-serif" font-weight="700" fill="white">${abbr}</text></svg>`;
+    return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 50"><path d="M22 2 L40 10 L40 28 Q40 42 22 48 Q4 42 4 28 L4 10 Z" fill="${color}"/><path d="M22 6 L37 13 L37 28 Q37 40 22 45 Q7 40 7 28 L7 13 Z" fill="none" stroke="${light}" stroke-width="1.5"/><text x="22" y="31" text-anchor="middle" font-size="14" font-family="Arial,sans-serif" font-weight="800" fill="white">${abbr}</text></svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
 function normalizeLogoName(value) {
@@ -891,10 +900,22 @@ const CENTRAL_LEAGUE_PATTERNS = [
   "פרמייר ליג",
   "אנגלית ראשונה",
   "ספרדית ראשונה",
+  "לה ליגה",
   "איטלקית ראשונה",
+  "סרייה א",
   "גרמנית ראשונה",
+  "בונדסליגה",
   "NBA",
   "יורוליג",
+  "ליגת אלופות",
+  "Champions League",
+  "Europa League",
+  "ליגת האלופות",
+  "ליגת אירופה",
+  "ליגה הלאומית",
+  "Ligue 1",
+  "Eredivisie",
+  "מחצית ראשונה",
 ];
 const HIGH_PROFILE_TEAM_PATTERNS = [
   "בית\"ר ירושלים",
@@ -990,7 +1011,7 @@ function scoreBreakdown(row) {
     oddsValue: Math.round(oddsQuality * 18),
     marketGap: Math.round(marketGap * 34),
     reliability: Math.round(reliability * 10),
-    niche: central ? 0 : -8,
+    niche: central ? -40 : 32,
     clearFavorite: clearFavorite ? 18 : -30,
     proximity: proximityBonus,
     overroundPenalty: -Math.round(overroundPenalty),

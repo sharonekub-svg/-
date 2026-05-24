@@ -878,36 +878,12 @@
     .live-minute { font-size: 11px; color: var(--red); font-weight: 900; }
     .live-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
 
-    /* ── Confidence panel ── */
-    .card-confidence {
-      display: grid; grid-template-columns: repeat(2,1fr); gap: 6px;
-      padding: 8px 10px; background: rgba(255,255,255,.03);
-      border: 1px solid var(--line); border-radius: 7px;
-    }
-    .conf-item { display: flex; flex-direction: column; gap: 2px; }
-    .conf-label { color: var(--soft); font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: .4px; }
-    .conf-value { font-weight: 900; font-size: 14px; color: var(--text); }
-    .conf-value.good { color: var(--green); }
-    .conf-value.ok   { color: var(--gold); }
-    .conf-value.weak { color: var(--red); }
-
     /* ── Verified timestamp ── */
     .card-verified {
       display: flex; align-items: center; gap: 5px;
       font-size: 10px; color: var(--soft); padding: 2px 0;
     }
     .vdot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
-
-    /* ── Score breakdown ── */
-    .score-breakdown { display: flex; gap: 5px; flex-wrap: wrap; }
-    .score-chip {
-      display: inline-flex; align-items: center; gap: 3px;
-      border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px;
-      font-size: 10px; color: var(--muted); background: rgba(255,255,255,.025);
-    }
-    .score-chip b { font-size: 11px; color: var(--text); }
-    .score-chip b.pos { color: var(--green); }
-    .score-chip b.neg { color: var(--red); }
 
     /* ── Verified badge (legacy, kept for modal) ── */
     .verified-badge {
