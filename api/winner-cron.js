@@ -1,9 +1,18 @@
 const { buildCachedWinnerFeedPayload } = require("./winner-feed");
 
-module.exports = async function handler(req, res) {
+function isAuthorized(req) {
+  // Vercel internal cron calls always include this header
+  if (req.headers["x-vercel-cron"]) return true;
   const expected = process.env.CRON_SECRET;
-  const provided = req.headers["x-cron-secret"] || req.query?.secret || "";
-  if (expected && provided !== expected) {
+  if (!expected) return true;
+  // Accept either Authorization: Bearer <secret> (Vercel standard) or x-cron-secret header
+  const bearer = (req.headers["authorization"] || "").replace(/^Bearer\s+/i, "");
+  const custom = req.headers["x-cron-secret"] || req.query?.secret || "";
+  return bearer === expected || custom === expected;
+}
+
+module.exports = async function handler(req, res) {
+  if (!isAuthorized(req)) {
     res.status(401).json({ ok: false, error: "Unauthorized cron request" });
     return;
   }
