@@ -2456,10 +2456,17 @@
       ].join("\n\n");
     }
 
+    function renderChatMessage(message) {
+      const image = message.image
+        ? `<img src="${escapeHtml(message.image)}" alt="טופס הימור שהועלה" style="max-width:220px;width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.12);margin-bottom:8px;display:block">`
+        : "";
+      return `<div class="chat-message ${message.role === "user" ? "user" : "ai"}" style="white-space:pre-wrap">${image}${escapeHtml(message.text)}</div>`;
+    }
+
     function renderReubenAI() {
       const messages = state.reubenMessages.length
         ? state.reubenMessages
-        : [{ role: "ai", text: "שלום! אני ראובן AI.\n\nאמור לי על איזה משחק אתה חושב להמר — כתוב שם הקבוצות ואני אמשוך את האודס האמיתי מ-Winner ואנתח עבורך.\n\nדוגמה: \"ברצלונה נגד ריאל מדריד, היום\"" }];
+        : [{ role: "ai", text: "שלום! אני ראובן AI.\n\nאפשר לכתוב משחק או להעלות תמונה של טופס הימור. אם תעלה תמונה, אנסה לקרוא את הבחירות והיחסים, להשוות ל-Winner, ולהגיד אם הטופס טוב או רע.\n\nדוגמה בטקסט: \"ברצלונה נגד ריאל מדריד, היום\"" }];
       const loading = state.reubenLoading;
       return `
         <section class="reuben-panel">
@@ -2471,12 +2478,17 @@
             <span class="pill">Winner · AI</span>
           </div>
           <div class="chat-log" id="reubenOutput">
-            ${messages.map(m => `<div class="chat-message ${m.role === "user" ? "user" : "ai"}" style="white-space:pre-wrap">${escapeHtml(m.text)}</div>`).join("")}
+            ${messages.map(renderChatMessage).join("")}
             ${loading ? `<div class="chat-message ai" style="opacity:.6">ראובן מנתח<span class="typing-dot">...</span></div>` : ""}
           </div>
           <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:4px">
             <textarea id="reubenInput" placeholder="כתוב משחק: קבוצה א' נגד קבוצה ב', היום / מחר" style="min-height:72px;resize:vertical" ${loading ? "disabled" : ""}></textarea>
             <button class="open-game" type="button" id="reubenAnalyze" style="align-self:end;min-width:80px" ${loading ? "disabled style='opacity:.5'" : ""}>${loading ? "⏳" : "שלח ←"}</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
+            <input id="reubenSlipFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" ${loading ? "disabled" : ""}>
+            <label for="reubenSlipFile" class="open-game" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;opacity:${loading ? ".5" : "1"}">העלה תמונת טופס</label>
+            <span class="micro">ראובן יקרא את הטופס רק אם ניתוח תמונה מחובר בשרת. בלי זה הוא לא ינחש.</span>
           </div>
         </section>
       `;
@@ -3139,6 +3151,73 @@
       applyLogosToCards();
     }
 
+    function scrollReuvenOutput() {
+      const output = document.getElementById("reubenOutput");
+      if (output) output.scrollTop = output.scrollHeight;
+    }
+
+    function imageFileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
+          reject(new Error("צריך להעלות קובץ תמונה PNG/JPG/WebP."));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("לא הצלחתי לקרוא את התמונה."));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error("קובץ התמונה לא תקין."));
+          img.onload = () => {
+            const maxSide = 1200;
+            const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+          img.src = String(reader.result || "");
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function analyzeReuvenSlipFile(file) {
+      const note = (document.getElementById("reubenInput")?.value || "").trim();
+      const image = await imageFileToDataUrl(file);
+      state.reubenMessages.push({
+        role: "user",
+        text: note ? `תנתח את הטופס הזה. הערה: ${note}` : "תנתח את הטופס הזה ותגיד אם הוא טוב או רע.",
+        image,
+      });
+      state.reubenLoading = true;
+      renderCards();
+      scrollReuvenOutput();
+      try {
+        const response = await fetch("/api/reuven-slip", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image, note }),
+        });
+        const data = await response.json().catch(() => ({}));
+        state.reubenMessages.push({
+          role: "ai",
+          text: data.answer || "לא הצלחתי לקבל ניתוח לטופס. תנסה שוב או תכתוב את הבחירות בטקסט.",
+        });
+      } catch (error) {
+        state.reubenMessages.push({
+          role: "ai",
+          text: `לא הצלחתי לשלוח את התמונה לניתוח: ${error.message}. תעתיק לי את המשחקים והיחסים בטקסט ואני אנתח אותם.`,
+        });
+      } finally {
+        state.reubenLoading = false;
+        const input = document.getElementById("reubenInput");
+        if (input) input.value = "";
+        renderCards();
+        scrollReuvenOutput();
+      }
+    }
+
     function parseKickoffMs(day, time) {
       if (!day || !time) return NaN;
       const match = String(time).match(/(\d{1,2}):(\d{2})/);
@@ -3368,14 +3447,28 @@
         state.reubenMessages.push({ role: "ai", text: analyzeReubenBet(question) });
         if (input) input.value = "";
         renderCards();
-        const output = document.getElementById("reubenOutput");
-        if (output) output.scrollTop = output.scrollHeight;
+        scrollReuvenOutput();
         return;
       }
       const button = event.target.closest("[data-open]");
       if (!button) return;
       state.selectedId = button.dataset.open;
       renderModal(findRow(state.selectedId));
+    });
+    document.getElementById("cards").addEventListener("change", event => {
+      if (event.target?.id !== "reubenSlipFile") return;
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+      analyzeReuvenSlipFile(file).catch(error => {
+        state.reubenMessages.push({
+          role: "ai",
+          text: `לא הצלחתי לקרוא את תמונת הטופס: ${error.message}`,
+        });
+        state.reubenLoading = false;
+        renderCards();
+        scrollReuvenOutput();
+      });
     });
     document.getElementById("closeModal").addEventListener("click", closeModal);
     document.getElementById("gameModal").addEventListener("click", event => {
