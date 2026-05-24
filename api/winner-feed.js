@@ -1563,8 +1563,8 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
       const away = cleanText(game.awayCompetitor?.name);
       if (!home || !away) continue;
       // Seed globalLogoCache so enrichLogos finds logos without extra lookups
-      seed365Logo("team", home, game.homeCompetitor?.id, "Teams");
-      seed365Logo("team", away, game.awayCompetitor?.id, "Teams");
+      seed365Logo("team", home, game.homeCompetitor?.id, "Competitors");
+      seed365Logo("team", away, game.awayCompetitor?.id, "Competitors");
       seed365Logo("league", cleanText(game.competitionDisplayName), game.competition?.id || game.competitionId, "Competitions");
       const homeScore = Number(game.homeCompetitor?.score);
       const awayScore = Number(game.awayCompetitor?.score);
@@ -1600,8 +1600,8 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
         markets: actualWinner ? [{ title: "המנצח", marketResults: [actualWinner] }] : [],
         source: "365Scores",
         // Direct logo CDN paths — no lookup needed for matches we already got from 365
-        homeLogoUrl: homeId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Teams/${homeId}` : null,
-        awayLogoUrl: awayId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Teams/${awayId}` : null,
+        homeLogoUrl: homeId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/${homeId}` : null,
+        awayLogoUrl: awayId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/${awayId}` : null,
         leagueLogoUrl: competitionId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitions/${competitionId}` : null,
       });
     }

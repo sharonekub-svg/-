@@ -103,7 +103,7 @@ async function try365Scores(name, type) {
   const rows = type === "league" ? (data.competitions || []) : (data.competitors || []);
   const row = bestNamedCandidate(name, rows, (item) => item.name || item.nameForURL || "", 0.48);
   if (!row?.id) return null;
-  const folder = type === "league" ? "Competitions" : "Teams";
+  const folder = type === "league" ? "Competitions" : "Competitors";
   return {
     url: `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/${folder}/${row.id}`,
     source: "365Scores",
