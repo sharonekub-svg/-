@@ -2073,25 +2073,66 @@
 
     function analyzeReubenBet(text) {
       const value = String(text || "").trim();
-      if (!value) return "כתוב הימור לבדיקה, למשל: מכבי תל אביב לנצח ביחס 1.65 או ברצלונה -1.5.";
-      const oddsMatch = value.match(/(?:יחס|@)?\s*(\d+(?:[.,]\d+)?)/);
+      if (!value) {
+        return "Enter a bet to analyze, for example: Real Madrid win @ 1.65, Over 2.5 goals @ 1.80, or Maccabi -4.5 @ 1.75.";
+      }
+
+      const oddsMatch = value.match(/(?:odds|@)?\s*(\d+(?:[.,]\d+)?)/i);
       const odds = oddsMatch ? Number(oddsMatch[1].replace(",", ".")) : null;
-      const implied = odds && odds > 1 ? Math.round((1 / odds) * 100) : null;
-      const isBasketball = /כדורסל|סל|NBA|יורוליג|מכבי תל אביב/i.test(value);
-      const isSpread = /[-+]\d+(?:[.,]\d+)?|ליין|הנדיקאפ|יתרון/i.test(value);
-      const risk = isSpread ? "בינוני-גבוה" : odds && odds < 1.45 ? "בינוני" : odds && odds > 1.9 ? "גבוה" : "בינוני";
-      const estimated = odds ? Math.max(38, Math.min(74, implied + (isSpread ? -4 : 3))) : 55;
+      const implied = odds && odds > 1 ? (1 / odds) * 100 : null;
+      const lower = value.toLowerCase();
+      const isBasketball = /basketball|nba|euroleague|maccabi/i.test(value);
+      const isSpread = /[-+]\d+(?:[.,]\d+)?|spread|handicap|line/i.test(value);
+      const isOver = /over|\bo\s*\d/i.test(lower);
+      const isUnder = /under|\bu\s*\d/i.test(lower);
+      const isBtts = /btts|both teams/i.test(lower);
+      const isShortOddsRange = odds && odds >= 1.4 && odds <= 1.9;
+      const marketName = isSpread ? "spread / handicap" : isOver ? "over" : isUnder ? "under" : isBtts ? "BTTS" : "win / moneyline";
+      const sportName = isBasketball ? "basketball" : "football";
+
+      let estimated = odds ? Math.round(Math.max(38, Math.min(78, implied + 2))) : 55;
+      if (isSpread) estimated -= 4;
+      if (isOver && isShortOddsRange) estimated -= 3;
+      if (isBtts) estimated -= 1;
+      estimated = Math.max(35, Math.min(78, estimated));
       const ev = odds ? (estimated / 100) * odds - 1 : null;
-      const rating = Math.max(1, Math.min(10, Math.round((estimated - 42) / 4 + (ev && ev > 0 ? 1 : 0) - (isSpread ? 1 : 0))));
+
+      let recommendation = "Neutral";
+      if (ev !== null && ev >= 0.08 && estimated >= (implied || 0) + 5) recommendation = "Strongly Favor";
+      else if (ev !== null && ev >= 0.025) recommendation = "Slightly Favor";
+      else if (ev !== null && ev <= -0.08) recommendation = "Strongly Against";
+      else if (ev !== null && ev < 0) recommendation = "Slightly Against";
+      if (isShortOddsRange && (isOver || marketName === "win / moneyline") && recommendation === "Strongly Favor") {
+        recommendation = "Slightly Favor";
+      }
+
+      let rating = 5;
+      if (ev !== null) rating = Math.round(5 + ev * 35 + (estimated - (implied || estimated)) / 5);
+      if (isShortOddsRange && (isOver || marketName === "win / moneyline")) rating -= 1;
+      if (isSpread) rating -= 1;
+      rating = Math.max(1, Math.min(10, rating));
+
+      const oddsLine = odds
+        ? "Odds: " + formatOdds(odds) + " | Implied probability: " + implied.toFixed(1) + "% | Reuven AI working estimate: " + estimated + "%"
+        : "No exact odds detected. Add the Winner odds so Reuven AI can compare probability vs price.";
+      const valueLine = ev === null
+        ? "EV cannot be calculated without odds."
+        : ev > 0
+          ? "Estimated EV is positive: +" + (ev * 100).toFixed(1) + "% per 1 unit stake, before lineup/injury confirmation."
+          : "Estimated EV is not attractive: " + (ev * 100).toFixed(1) + "% per 1 unit stake.";
+      const caution = isShortOddsRange
+        ? "Special 1.40-1.90 rule: this is a short-price zone, so the edge must be very clear. I would be cautious, especially on straight win or Over bets."
+        : "Outside the 1.40-1.90 zone: volatility/value must be checked even more carefully.";
+
       return [
-        `Bet Summary\n${value}`,
-        `Strengths\n- השוק מזוהה כ${isBasketball ? " כדורסל" : " כדורגל"}${isSpread ? " עם ליין/הנדיקאפ, לכן צריך לבדוק גם מרווח ניצחון ולא רק מנצחת." : " עם בחירת תוצאה ישירה יחסית."}\n- אם היחס אכן מ-Winner, אפשר להשוות אותו להסתברות הגלומה לפני החלטה.`,
-        `Weaknesses\n- ראובן AI לא מחובר כאן עדיין לפציעות, הרכבים, מנוחה וחדשות חיות, לכן אין ודאות מלאה.\n- בלי מקור תוצאה/ליין מאומת אסור לסמן הימור כבטוח.`,
-        `Odds and Probability\n${odds ? `יחס: ${formatOdds(odds)} · הסתברות גלומה: ${implied}% · הערכת מודל זמנית: ${estimated}%` : "לא זוהה יחס. כדי לחשב EV צריך יחס מדויק מ-Winner."}`,
-        `Value Assessment\n${ev === null ? "לא ניתן לחשב EV בלי יחס." : ev > 0 ? `חיובי זמנית: ${(ev * 100).toFixed(1)}% מעל יחידת הימור.` : `שלילי/גבולי זמנית: ${(ev * 100).toFixed(1)}%.`}`,
-        `Recommendation\n${ev !== null && ev > 0.03 ? "אפשר לשקול, אבל רק אחרי בדיקת פציעות/הרכבים/ליין עדכני." : "לא הייתי רץ על זה בלי מידע נוסף או יחס טוב יותר."}`,
-        `Rating out of 10\n${rating}/10 · רמת סיכון: ${risk}`,
-        `Alternative Bets\n- חפש Moneyline במקום ליין אם אין יתרון ברור.\n- בכדורגל: בדוק דאבל צ'אנס או Over 1.5 רק אם היחס נשאר בטווח 1.40-1.90.\n- בכדורסל: בדוק ליין נמוך יותר או ML אם ההפרש צפוי להיות תנודתי.`
+        "Bet Summary\n" + value + "\nSport: " + sportName + " | Market: " + marketName,
+        "Strengths\n- The bet is framed clearly enough to compare market price against probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against the implied probability.",
+        "Weaknesses\n- Reuven AI does not currently have live injuries, confirmed lineups, player minutes, weather, or late market movement inside this local tool.\n- Short odds can still be bad value if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win bets are sensitive to tactics, red cards, weather, and lineup rotation."),
+        "Odds and Probability\n" + oddsLine,
+        "Value Assessment\n" + valueLine + "\n" + caution,
+        "Recommendation\n" + recommendation + "\nPractical call: " + (recommendation.includes("Favor") ? "worth considering only after checking lineups/injuries and confirming the Winner price is still live." : "I would not force this bet unless new data improves the edge."),
+        "Rating out of 10\n" + rating + "/10",
+        "Alternative Bets\n- If the straight win/Over price is too short, check BTTS, Over 1.5, double chance, or a safer basketball ML instead of a volatile spread.\n- If the edge is unclear, passing is a valid betting decision.\n\nFor entertainment and education only. This is not financial advice, and no bet is guaranteed."
       ].join("\n\n");
     }
 
@@ -2101,11 +2142,11 @@
           <div class="section-title" style="margin:0">
             <div>
               <h3>ראובן AI</h3>
-              <p>בודק הימורים בכדורגל ובכדורסל לפי חוזקות, חולשות, הסתברות, יחס גלום ו-EV. הוא לא ממציא מידע חסר.</p>
+              <p>קטגוריה נפרדת לניתוח הימורים בכדורגל ובכדורסל: חוזקות, חולשות, יחס גלום, EV, דירוג ואלטרנטיבות. הוא לא ממציא מידע חסר.</p>
             </div>
-            <span class="pill">ניתוח אחראי</span>
+            <span class="pill">יועץ הימורים</span>
           </div>
-          <textarea id="reubenInput" placeholder="כתוב כאן הימור לבדיקה: קבוצה, שוק, יחס Winner, ליין אם יש..."></textarea>
+          <textarea id="reubenInput" placeholder="כתוב כאן הימור לבדיקה: משחק, שוק, יחס Winner, ליין אם יש. לדוגמה: Real Madrid vs Barcelona, Over 2.5 @ 1.80"></textarea>
           <button class="open-game" type="button" id="reubenAnalyze">נתח הימור</button>
           <div class="reuben-output" id="reubenOutput">הניתוח יופיע כאן לפי: Bet Summary, Strengths, Weaknesses, Odds and Probability, Value Assessment, Recommendation, Rating out of 10, Alternative Bets.</div>
         </section>
