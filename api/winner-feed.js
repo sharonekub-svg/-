@@ -624,6 +624,7 @@ async function enrichLogos(rows) {
 
 function resultIndex(results) {
   const map = new Map();
+  map.set("__events__", results || []);
   for (const event of results || []) {
     map.set(String(event.eventid), event);
     for (const key of resultKeyVariants({
@@ -636,6 +637,55 @@ function resultIndex(results) {
     }
   }
   return map;
+}
+
+function nameTokens(value) {
+  return normalizeMatchName(value)
+    .split(" ")
+    .filter((token) => token.length >= 2 && !["fc", "bc", "bk", "cf", "u19", "u20", "u21"].includes(token));
+}
+
+function teamNameScore(a, b) {
+  const left = normalizeMatchName(a);
+  const right = normalizeMatchName(b);
+  if (!left || !right) return 0;
+  if (left === right) return 1;
+  if (left.includes(right) || right.includes(left)) return 0.9;
+  const leftTokens = new Set(nameTokens(left));
+  const rightTokens = new Set(nameTokens(right));
+  if (!leftTokens.size || !rightTokens.size) return 0;
+  const overlap = [...leftTokens].filter((token) => rightTokens.has(token)).length;
+  return overlap / Math.max(leftTokens.size, rightTokens.size);
+}
+
+function resultMatchScore(row, event) {
+  if (!row || !event) return 0;
+  if (String(row.sportId || row.sportid) !== String(event.sportid)) return 0;
+  if (String(row.day || row.date) !== String(event.date)) return 0;
+  const direct = (teamNameScore(row.home, event.teamA) + teamNameScore(row.away, event.teamB)) / 2;
+  const swapped = (teamNameScore(row.home, event.teamB) + teamNameScore(row.away, event.teamA)) / 2;
+  return Math.max(direct, swapped);
+}
+
+function findResultEvent(resultsByEvent, row) {
+  if (!resultsByEvent || !row) return null;
+  const direct = resultsByEvent.get(String(row.eventId)) || resultsByEvent.get(String(row.resultKey || ""));
+  if (direct) return direct;
+  for (const key of resultKeyVariants(row)) {
+    const event = resultsByEvent.get(key);
+    if (event) return event;
+  }
+  const events = resultsByEvent.get("__events__") || [];
+  let best = null;
+  let bestScore = 0;
+  for (const event of events) {
+    const score = resultMatchScore(row, event);
+    if (score > bestScore) {
+      best = event;
+      bestScore = score;
+    }
+  }
+  return bestScore >= 0.55 ? best : null;
 }
 
 function resultWinner(event) {
@@ -690,6 +740,7 @@ function resultPhase(event) {
   if (!event) return "scheduled";
   const status = cleanText(event.status || event.statusText || event.eventStatus || event.matchStatus || event.state);
   const hasScore = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
+  const statusGroup = Number(event.statusGroup);
   // Check FINAL first — a game with a winner is always over, regardless of status text
   if (resultWinner(event)) return "final";
   if (/cancel|cancelled|canceled|abandon|void|בוטל|מבוטל/i.test(status)) return "cancelled";
@@ -697,6 +748,7 @@ function resultPhase(event) {
   if (/halftime|half.?time|half_time|הפסקה|מחצית/i.test(status)) return "ht";
   if (/final|ended|finished|over|הסתיים|נגמר/i.test(status)) return "final";
   if (isFinalResultEvent(event)) return "final";
+  if ((statusGroup === 2 || statusGroup === 3) && hasScore) return "live";
   if (/live|in.?play|playing|חי|משוחק/i.test(status)) return "live";
   // hasScore alone is NOT enough to call live — many cached/stale feeds have scores but are finished
   // Only call live if statusGroup explicitly signals it (365Scores) or status says so
@@ -724,6 +776,8 @@ function applyResult(row, event) {
     matchPhase: phase,
     bettingStatus: phase === "cancelled" ? "cancelled" : phase === "postponed" ? "postponed" : row.bettingStatus,
     resultVerifiedAt: phase === "final" || phase === "cancelled" || phase === "postponed" ? new Date().toISOString() : row.resultVerifiedAt,
+    finishedAt: phase === "final" ? (event.finishedAt || event.closedAt || new Date().toISOString()) : row.finishedAt,
+    matchMinute: phase === "live" || phase === "ht" ? event.matchMinute || event.gameTime || row.matchMinute || "" : row.matchMinute,
     status: finalStatus,
   };
 }
@@ -1291,7 +1345,7 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
           ],
     };
 
-    const matchedResult = resultsByEvent.get(String(market.eId)) || resultsByEvent.get(row.resultKey);
+    const matchedResult = findResultEvent(resultsByEvent, row);
     const enrichedRow = applyResult(row, matchedResult);
 
     const current = events.get(market.eId);
@@ -1465,7 +1519,7 @@ function buildResultRows(results, dateKey) {
       };
     })
     .filter(Boolean)
-    .slice(0, 20);
+    .slice(0, 200);
 }
 
 function seed365Logo(kind, name, id, folder) {
@@ -1539,6 +1593,7 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
         teamB: away,
         scoreA: hasScore ? String(homeScore) : "",
         scoreB: hasScore ? String(awayScore) : "",
+        matchMinute: game.gameTime || game.shortStatusText || "",
         statusGroup: game.statusGroup,
         isFinal,
         statusText: cleanText(game.statusText),
@@ -1604,6 +1659,7 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
         status: phase === "final" ? "נסגר" : phase === "cancelled" ? "בוטל" : phase === "postponed" ? "לא אומת" : "ממתין",
         liveScore: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
         matchPhase: actualWinner ? "final" : resultPhase(event),
+        matchMinute: event.matchMinute || "",
         result: scoreText(event.scoreA, event.scoreB, event.noScoreLabel),
         resultVerifiedAt: phase === "final" ? verifiedAt : "",
         signals,
@@ -1622,7 +1678,7 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
         ],
       };
     })
-    .slice(0, 60);
+    .slice(0, 200);
 }
 
 function build365FootballRows(results, dateKey) {
@@ -1643,6 +1699,34 @@ function build365BasketballRows(results, dateKey) {
     "המנצח",
     ["תוצאה מ-365Scores", "כיסוי כדורסל לכל הליגות", "משמש לסגירת תחזיות Winner"]
   );
+}
+
+function compactTrackingRow(row) {
+  return {
+    id: row.id,
+    eventId: row.eventId,
+    eventId365: row.eventId365,
+    source: row.source,
+    day: row.day,
+    time: row.time,
+    sport: row.sport,
+    sportId: row.sportId,
+    league: row.league,
+    match: row.match,
+    home: row.home,
+    away: row.away,
+    resultKey: row.resultKey,
+    actualWinner: row.actualWinner || "",
+    result: row.result || row.liveScore || "",
+    liveScore: row.liveScore || row.result || "",
+    matchPhase: row.matchPhase || "",
+    matchMinute: row.matchMinute || "",
+    status: row.status,
+    bettingStatus: row.bettingStatus,
+    verifiedAt: row.verifiedAt,
+    finishedAt: row.finishedAt,
+    resultVerifiedAt: row.resultVerifiedAt,
+  };
 }
 
 function splitBySport(rows) {
@@ -1845,6 +1929,17 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   const todayRows = splitBySport(todayFinalRows);
   const tomorrowFinalRows = withLogos ? finalOpenRowsByDay(tomorrowEnrichedRows) : tomorrowEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
   const tomorrowRows = splitBySport(tomorrowFinalRows);
+  const trackingResults = [
+    ...buildResultRows(winnerResultEvents, yesterday),
+    ...buildResultRows(winnerResultEvents, today),
+    ...buildResultRows(winnerResultEvents, tomorrow),
+    ...build365FootballRows(scores365Events, yesterday),
+    ...build365FootballRows(scores365Events, today),
+    ...build365FootballRows(scores365Events, tomorrow),
+    ...build365BasketballRows(scores365Events, yesterday),
+    ...build365BasketballRows(scores365Events, today),
+    ...build365BasketballRows(scores365Events, tomorrow),
+  ].map(compactTrackingRow);
   const lineStats = {
     football: {
       today: countRecommendedPicks(todayRows.football),
@@ -1867,6 +1962,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     oddsRange: { min: ODDS_MIN, max: ODDS_MAX },
     targetPicksPerSport: TARGET_PICKS_PER_SPORT,
     lineStats,
+    trackingResults,
     reuvenSchedule: buildReuvenSchedule(markets, today, 31),
     debugAudit: {
       today: splitBySport(auditOpenRows(todayEnrichedRows, todayFinalRows)),
