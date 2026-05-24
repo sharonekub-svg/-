@@ -1742,11 +1742,16 @@
       if (!asset) return `<div class="logo-wrap ${size}">${imageWithFallback("", "לא זמין", "team")}</div>`;
       const source = String(asset.logoSource || "");
       const isGenerated = !asset.logo || String(asset.logo).startsWith("data:image") || /generated|fallback|Wikipedia/i.test(source);
-      const lookupName = size !== "small" ? (asset.name || null) : null;
       if (asset.logo && !isGenerated) {
         return `<div class="logo-wrap ${size}">${imageWithFallback(asset.logo, asset.name || "", size === "small" ? "league" : "team")}</div>`;
       }
-      return `<div class="logo-wrap ${size}">${imageWithFallback("", asset.name || asset.initials || "לא זמין", size === "small" ? "league" : "team", lookupName)}</div>`;
+      const displayName = asset.name || asset.initials || "לא זמין";
+      if (size !== "small" && asset.name) {
+        const apiSrc = `/api/logo?q=${encodeURIComponent(asset.name)}&type=team`;
+        const fallback = fallbackBadge(displayName, "team");
+        return `<div class="logo-wrap ${size}"><img src="${escapeHtml(apiSrc)}" alt="${escapeHtml(displayName)}" data-fallback="${escapeHtml(fallback)}" loading="lazy" onerror="this.onerror=null;this.src=this.dataset.fallback"></div>`;
+      }
+      return `<div class="logo-wrap ${size}">${imageWithFallback("", displayName, size === "small" ? "league" : "team")}</div>`;
     }
 
     function leagueLogoMarkup(row) {
