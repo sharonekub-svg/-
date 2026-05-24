@@ -2327,9 +2327,26 @@
       return analyzeReuvenResolvedMatch(value, matches[0]);
     }
 
+    function reuvenPrefersHebrew(text) {
+      const hebrew = (String(text || "").match(/[\u0590-\u05ff]/g) || []).length;
+      const latin = (String(text || "").match(/[a-z]/gi) || []).length;
+      return hebrew >= latin;
+    }
+
+    function reuvenBetDecision(recommendation, rating, selectedOutcome) {
+      const shouldBet = recommendation.includes("Favor") && rating >= 6 && selectedOutcome?.odds;
+      return {
+        shouldBet,
+        pick: selectedOutcome?.label || selectedOutcome?.desc || "no clear pick",
+        market: selectedOutcome?.marketTitle || "Winner market",
+        odds: selectedOutcome?.odds || null,
+      };
+    }
+
     function analyzeReuvenResolvedMatch(originalText, matchedRow) {
       const value = String(originalText || "").trim();
       state.reubenCandidates = [matchedRow];
+      const hebrewAnswer = reuvenPrefersHebrew(value);
 
       const oddsMatch = value.match(/(?:odds|@)?\s*(\d+(?:[.,]\d+)?)/i);
       const selectedOutcome = selectReuvenOutcome(matchedRow, value);
@@ -2384,6 +2401,46 @@
       const caution = isShortOddsRange
         ? "Special 1.40-1.90 rule: this is a short-price zone, so the edge must be very clear. I would be cautious, especially on straight win or Over bets."
         : "Outside the 1.40-1.90 zone: volatility/value must be checked even more carefully.";
+      const decision = reuvenBetDecision(recommendation, rating, selectedOutcome);
+      const exactBet = decision.odds
+        ? `${decision.market} | ${decision.pick} @ ${formatOdds(decision.odds)}`
+        : decision.pick;
+
+      if (hebrewAnswer) {
+        const hebrewRecommendation = recommendation === "Strongly Favor" ? "בעד חזק"
+          : recommendation === "Slightly Favor" ? "בעד בזהירות"
+            : recommendation === "Slightly Against" ? "נגד בזהירות"
+              : recommendation === "Strongly Against" ? "נגד חזק"
+                : "ניטרלי";
+        const hebrewValueLine = ev === null
+          ? "אי אפשר לחשב EV עד שיש יחס Winner פעיל."
+          : ev > 0
+            ? "ה-EV המשוער חיובי: +" + (ev * 100).toFixed(1) + "% לכל יחידת הימור, לפני אימות הרכבים/פציעות."
+            : "ה-EV המשוער לא מספיק טוב: " + (ev * 100).toFixed(1) + "% לכל יחידת הימור.";
+        const hebrewCaution = isShortOddsRange
+          ? "כלל 1.40-1.90: זה טווח יחסים קצר, אז צריך יתרון ממש ברור. אני זהיר במיוחד בניצחון ישיר או Over."
+          : "מחוץ לטווח 1.40-1.90: חייבים לבדוק תנודתיות וערך בזהירות גבוהה יותר.";
+        const hebrewOddsLine = odds
+          ? "יחס Winner: " + formatOdds(odds) + " | שוק: " + (selectedOutcome?.marketTitle || marketName) + " | בחירה: " + (selectedOutcome?.label || "הבחירה שלך") + " | הסתברות גלומה: " + implied.toFixed(1) + "% | הערכת ראובן AI: " + estimated + "%"
+          : "מצאתי את המשחק, אבל אין כרגע שוק Winner פעיל עם יחס תקין לניתוח.";
+        const bottomLine = decision.shouldBet
+          ? `שורה תחתונה: כן, אפשר לשקול הימור. דירוג הבטא: ${rating}/10. אם אתה שם, הבחירה שלי היא: ${exactBet}.`
+          : `שורה תחתונה: לא הייתי ממהר להמר. דירוג הבטא: ${rating}/10. אם בכל זאת בודקים, הבחירה הכי קרובה היא: ${exactBet}.`;
+        return [
+          "סיכום ההימור\n" + value + "\nמשחק Winner שנמצא: " + matchedRow.match + "\nענף: " + (isBasketball ? "כדורסל" : "כדורגל") + " | שוק: " + marketName,
+          "נתוני Winner\n" + winnerContext,
+          "גישה לנתונים\n" + dataAccess,
+          "חוזקות\n- ההימור מספיק ברור כדי להשוות מחיר מול הסתברות.\n- השוק נבדק מול היחסים הפעילים של Winner.\n- אם היחס עדיין חי, אפשר לחשב הסתברות גלומה ו-EV.",
+          "חולשות וסיכונים\n- Winner נותן יחסים ושווקים, לא מאגר מלא של פציעות/הרכבים. מידע חסר נספר כאי-ודאות ולא כהמצאה.\n- יחס קצר יכול להיות רע אם השוק כבר תימחר את הפייבוריט.\n- " + (isBasketball ? "בכדורסל ליינים רגישים לקצב, רוטציות וגארבג' טיים." : "בכדורגל הימורי ניצחון/שערים רגישים לטקטיקה, אדומים, מזג אוויר ורוטציה."),
+          "יחסים והסתברות\n" + hebrewOddsLine,
+          "בדיקת ערך\n" + hebrewValueLine + "\n" + hebrewCaution,
+          "המלצה\n" + hebrewRecommendation + "\nקריאה מעשית: " + (decision.shouldBet ? "שווה לשקול רק אחרי בדיקת הרכבים/פציעות ואימות שהיחס עדיין חי ב-Winner." : "לא להכריח את ההימור אם אין יתרון ברור."),
+          "דירוג מ-1 עד 10\n" + rating + "/10",
+          "חלופות\n- אם ניצחון ישיר או Over קצר מדי, בדוק Over 1.5, סיכוי כפול, BTTS או בכדורסל Moneyline בטוח יותר.\n- אם אין יתרון ברור, גם לא להמר זו החלטה טובה.",
+          bottomLine,
+          "אני עונה לפי השפה שלך: אם תכתוב בעברית אענה בעברית; אם תכתוב באנגלית אענה באנגלית.\nלמטרות בידור ולמידה בלבד. זו לא המלצה פיננסית ואין הימור מובטח."
+        ].join("\n\n");
+      }
 
       return [
         "Bet Summary\n" + value + "\nMatched Winner game: " + matchedRow.match + "\nSport: " + sportName + " | Market: " + marketName,
@@ -2395,7 +2452,11 @@
         "Value Assessment\n" + valueLine + "\n" + caution,
         "Recommendation\n" + recommendation + "\nPractical call: " + (recommendation.includes("Favor") ? "worth considering only after checking lineups/injuries and confirming the Winner price is still live." : "I would not force this bet unless new data improves the edge."),
         "Rating out of 10\n" + rating + "/10",
-        "Alternative Bets\n- If the straight win/Over price is too short, check BTTS, Over 1.5, double chance, or a safer basketball ML instead of a volatile spread.\n- If the edge is unclear, passing is a valid betting decision.\n\nFor entertainment and education only. This is not financial advice, and no bet is guaranteed."
+        "Alternative Bets\n- If the straight win/Over price is too short, check BTTS, Over 1.5, double chance, or a safer basketball ML instead of a volatile spread.\n- If the edge is unclear, passing is a valid betting decision.",
+        (decision.shouldBet
+          ? `Bottom line: yes, this is worth considering. Beta bet rating: ${rating}/10. If you place it, my pick is: ${exactBet}.`
+          : `Bottom line: I would not rush this bet. Beta bet rating: ${rating}/10. If you still want to check it, the closest pick is: ${exactBet}.`),
+        "I answer in your language: if you write in English, I answer in English; if you write in Hebrew, I answer in Hebrew.\nFor entertainment and education only. This is not financial advice, and no bet is guaranteed."
       ].join("\n\n");
     }
 
