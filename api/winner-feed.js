@@ -250,322 +250,6 @@ function initials(value) {
     .toUpperCase();
 }
 
-// Hebrew → English name map for logo lookup via TheSportsDB and other English-only sources
-const HEBREW_EN_MAP = {
-  // ── Israeli Football ──────────────────────────────────────────────────────
-  "מכבי תל אביב": "Maccabi Tel Aviv",
-  "הפועל תל אביב": "Hapoel Tel Aviv",
-  "מכבי חיפה": "Maccabi Haifa",
-  "הפועל חיפה": "Hapoel Haifa",
-  "בית\"ר ירושלים": "Beitar Jerusalem",
-  "ביתר ירושלים": "Beitar Jerusalem",
-  "הפועל ירושלים": "Hapoel Jerusalem",
-  "הפועל באר שבע": "Hapoel Beer Sheva",
-  "מכבי נתניה": "Maccabi Netanya",
-  "מכבי פתח תקווה": "Maccabi Petah Tikva",
-  "הפועל פתח תקווה": "Hapoel Petah Tikva",
-  "בני סכנין": "Bnei Sakhnin",
-  "בני יהודה": "Bnei Yehuda",
-  "הפועל רעננה": "Hapoel Raanana",
-  "אשדוד": "FC Ashdod",
-  "מ.ס. אשדוד": "FC Ashdod",
-  "עירוני קרית שמונה": "Ironi Kiryat Shmona",
-  "אירוני קרית שמונה": "Ironi Kiryat Shmona",
-  "הפועל כפר סבא": "Hapoel Kfar Saba",
-  "מכבי כפר קאסם": "Maccabi Kafr Qasim",
-  "הפועל ראשון לציון": "Hapoel Rishon LeZion",
-  "נס ציונה": "FC Nes Ziona",
-  "הפועל עכו": "Hapoel Acre",
-  "הפועל קטמון ירושלים": "Hapoel Katamon Jerusalem",
-  "עירוני אשקלון": "Ironi Ashkelon",
-  "הפועל אשקלון": "Hapoel Ashkelon",
-  "הפועל נוף הגליל": "Hapoel Nof HaGalil",
-  "קבוצת ראשון לציון": "FC Rishon LeZion",
-  "אריאל": "FC Ariel",
-  "בני ראינה": "Bnei Reineh",
-  "הפועל עפולה": "Hapoel Afula",
-  // ── Israeli Basketball ────────────────────────────────────────────────────
-  "מכבי ראשון לציון": "Maccabi Rishon LeZion",
-  "בני הרצליה": "Bnei Herzliya",
-  "עירוני נס ציונה": "Ironi Nes Ziona",
-  "הפועל גלבוע גיליל": "Hapoel Galil Elyon",
-  "הפועל גלבוע גליל": "Hapoel Galil Elyon",
-  "מנורה מבטחים": "Maccabi Tel Aviv",
-  "אלשטיב אשדוד": "Elbit Ashdod",
-  "הפועל עילבון": "Hapoel Eilabun",
-  "מכבי אשדוד": "Maccabi Ashdod",
-  "הפועל חולון": "Hapoel Holon",
-  "עירוני קרית אתא": "Ironi Kiryat Ata",
-  // ── English Premier League ────────────────────────────────────────────────
-  "ליברפול": "Liverpool",
-  "מנצ'סטר סיטי": "Manchester City",
-  "מנצ'סטר יונייטד": "Manchester United",
-  "ארסנל": "Arsenal",
-  "צ'לסי": "Chelsea",
-  "טוטנהאם": "Tottenham Hotspur",
-  "ניוקאסל": "Newcastle United",
-  "אסטון וילה": "Aston Villa",
-  "ווסטהאם": "West Ham United",
-  "וסטהאם": "West Ham United",
-  "לידס": "Leeds United",
-  "אברטון": "Everton",
-  "לסטר": "Leicester City",
-  "וולברהמפטון": "Wolverhampton Wanderers",
-  "וולבס": "Wolverhampton Wanderers",
-  "בורנמות'": "AFC Bournemouth",
-  "ברייטון": "Brighton",
-  "נוטינגהאם פורסט": "Nottingham Forest",
-  "ברנטפורד": "Brentford",
-  "פולהאם": "Fulham",
-  "שפילד יונייטד": "Sheffield United",
-  "לוטון": "Luton Town",
-  "בירמינגהאם": "Birmingham City",
-  "קריסטל פאלאס": "Crystal Palace",
-  "סאות'המפטון": "Southampton",
-  "איפסוויץ'": "Ipswich Town",
-  "מידלסבורו": "Middlesbrough",
-  "סאנדרלנד": "Sunderland",
-  // ── La Liga ───────────────────────────────────────────────────────────────
-  "ריאל מדריד": "Real Madrid",
-  "ברצלונה": "Barcelona",
-  "אתלטיקו מדריד": "Atletico Madrid",
-  "ויארל": "Villarreal",
-  "ויאריאל": "Villarreal",
-  "סביליה": "Sevilla",
-  "ריאל סוסיאדד": "Real Sociedad",
-  "ריאל בתיס": "Real Betis",
-  "בתיס": "Real Betis",
-  "ולנסיה": "Valencia",
-  "אתלטיק בילבאו": "Athletic Club",
-  "סלטה ויגו": "Celta Vigo",
-  "ויאסולד": "Real Valladolid",
-  "ספורטינג חיחון": "Sporting Gijon",
-  "מיורקה": "RCD Mallorca",
-  "ג'ירונה": "Girona",
-  "אוסאסונה": "CA Osasuna",
-  "ראיו ויאקאנו": "Rayo Vallecano",
-  "אלאבס": "Deportivo Alaves",
-  "גרנדה": "Granada",
-  "ספורטינג גיחון": "Sporting Gijon",
-  "לאס פלאמס": "UD Las Palmas",
-  // ── Serie A ───────────────────────────────────────────────────────────────
-  "יובנטוס": "Juventus",
-  "אינטר מילאן": "Inter Milan",
-  "אינטר": "Inter Milan",
-  "מילאן": "AC Milan",
-  "AC מילאן": "AC Milan",
-  "נאפולי": "Napoli",
-  "רומא": "AS Roma",
-  "אס רומא": "AS Roma",
-  "לאציו": "SS Lazio",
-  "פיורנטינה": "Fiorentina",
-  "אטלנטה": "Atalanta",
-  "בולוניה": "Bologna",
-  "טורינו": "Torino",
-  "אודינזה": "Udinese",
-  "ססואלו": "Sassuolo",
-  "מונצה": "AC Monza",
-  "סאלרניטנה": "Salernitana",
-  "לצ'ה": "Lecce",
-  "ורונה": "Hellas Verona",
-  "ספציה": "Spezia",
-  "אמפולי": "Empoli",
-  "ג'נואה": "Genoa",
-  "קליארי": "Cagliari",
-  "פרוזינונה": "Frosinone",
-  "קומו": "Como",
-  "ונציה": "Venezia",
-  // ── Bundesliga ────────────────────────────────────────────────────────────
-  "בייארן מינכן": "Bayern Munich",
-  "ביאן מינכן": "Bayern Munich",
-  "בייאן מינכן": "Bayern Munich",
-  "בורוסיה דורטמונד": "Borussia Dortmund",
-  "דורטמונד": "Borussia Dortmund",
-  "ליפציג": "RB Leipzig",
-  "לוורקוזן": "Bayer Leverkusen",
-  "באייר לוורקוזן": "Bayer Leverkusen",
-  "אוניון ברלין": "Union Berlin",
-  "פרנקפורט": "Eintracht Frankfurt",
-  "איינטרכט פרנקפורט": "Eintracht Frankfurt",
-  "שאלקה": "Schalke 04",
-  "פריבורג": "SC Freiburg",
-  "וולפסבורג": "VfL Wolfsburg",
-  "הופנהיים": "TSG Hoffenheim",
-  "בורוסיה מנכנגלדבך": "Borussia Monchengladbach",
-  "מנכנגלדבך": "Borussia Monchengladbach",
-  "מיינץ": "Mainz 05",
-  "שטוטגרט": "VfB Stuttgart",
-  "ורדר ברמן": "Werder Bremen",
-  "אוגסבורג": "FC Augsburg",
-  "קלן": "FC Cologne",
-  "הרתה ברלין": "Hertha Berlin",
-  "דרמשטט": "SV Darmstadt",
-  "בוכום": "VfL Bochum",
-  "האמבורג": "Hamburger SV",
-  "ניורנברג": "FC Nurnberg",
-  "פאדרבורן": "SC Paderborn",
-  "קיל": "Holstein Kiel",
-  "זנקט פאולי": "FC St Pauli",
-  // ── Ligue 1 ───────────────────────────────────────────────────────────────
-  "פריז סן ז'רמן": "Paris Saint-Germain",
-  "פ.ס.ז": "Paris Saint-Germain",
-  "פ.ס.ז'": "Paris Saint-Germain",
-  "פריז": "Paris Saint-Germain",
-  "ליון": "Olympique Lyonnais",
-  "מרסיי": "Olympique de Marseille",
-  "מונאקו": "Monaco",
-  "ליל": "Lille",
-  "ניס": "Nice",
-  "רן": "Stade Rennais",
-  "ריאן": "Stade Rennais",
-  "לנס": "RC Lens",
-  "מץ": "Metz",
-  "נאנט": "FC Nantes",
-  "שטראסבור": "Strasbourg",
-  "לה אבר": "Le Havre",
-  "מונפלייה": "Montpellier",
-  "ברסט": "Brest",
-  "לוריאן": "Lorient",
-  "קלרמון": "Clermont Foot",
-  "אנז'ה": "Angers",
-  "סנט אטיין": "Saint-Etienne",
-  "ריימס": "Stade de Reims",
-  "טולוז": "Toulouse",
-  "מרסין": "Marseille",
-  // ── Eredivisie ────────────────────────────────────────────────────────────
-  "אייאקס": "Ajax",
-  "פ.ס.ו": "PSV Eindhoven",
-  "PSV": "PSV Eindhoven",
-  "פייאנורד": "Feyenoord",
-  "AZ": "AZ Alkmaar",
-  "טוונטה": "FC Twente",
-  "אוטרכט": "FC Utrecht",
-  "וילם ב'": "Willem II",
-  "גרונינגן": "FC Groningen",
-  "הרקלס": "Heracles",
-  "האנינגהם": "SC Heerenveen",
-  "ספרטה רוטרדם": "Sparta Rotterdam",
-  "ניימחן": "NEC Nijmegen",
-  // ── Portugal ──────────────────────────────────────────────────────────────
-  "בנפיקה": "Benfica",
-  "ספורטינג ליסבון": "Sporting CP",
-  "פורטו": "Porto",
-  "ברגה": "Braga",
-  "ויטוריה": "Vitoria SC",
-  "גימאראש": "Vitoria Guimaraes",
-  "ריו אבה": "Rio Ave",
-  // ── Scotland ──────────────────────────────────────────────────────────────
-  "סלטיק": "Celtic",
-  "ריינג'רס": "Rangers",
-  // ── Turkey ────────────────────────────────────────────────────────────────
-  "פנרבחה": "Fenerbahce",
-  "גלטסרי": "Galatasaray",
-  "גלאטסרי": "Galatasaray",
-  "בשיקטאש": "Besiktas",
-  "טרבזונספור": "Trabzonspor",
-  // ── Greece ────────────────────────────────────────────────────────────────
-  "אולימפיאקוס": "Olympiacos",
-  "פנאתינאיקוס": "Panathinaikos",
-  "PAOK": "PAOK Thessaloniki",
-  "פאוק": "PAOK Thessaloniki",
-  // ── Belgium ───────────────────────────────────────────────────────────────
-  "קלאב ברוגה": "Club Brugge",
-  "אנדרלכט": "Anderlecht",
-  "גנט": "KAA Gent",
-  "סטנדר ליאז'": "Standard Liege",
-  "יוניון סנט גילואן": "Royale Union Saint-Gilloise",
-  // ── Austria ───────────────────────────────────────────────────────────────
-  "אד בול זלצבורג": "Red Bull Salzburg",
-  "זלצבורג": "Red Bull Salzburg",
-  "LASK": "LASK Linz",
-  "שטורם גראץ": "Sturm Graz",
-  "ראפיד וינה": "Rapid Wien",
-  // ── Switzerland ──────────────────────────────────────────────────────────
-  "יאנג בויז": "BSC Young Boys",
-  "בזל": "FC Basel",
-  "זרין": "FC Zurich",
-  "לוגאנו": "FC Lugano",
-  "סרבט": "Servette FC",
-  // ── Serbia/Croatia/etc ────────────────────────────────────────────────────
-  "צרבנה זבזדה": "Red Star Belgrade",
-  "כוכב אדום בלגרד": "Red Star Belgrade",
-  "דינמו זאגרב": "Dinamo Zagreb",
-  // ── Ukraine/Russia ────────────────────────────────────────────────────────
-  "שחטר דונצק": "Shakhtar Donetsk",
-  "דינמו קייב": "Dynamo Kyiv",
-  "זניט": "Zenit Saint Petersburg",
-  "CSKA מוסקבה": "CSKA Moscow",
-  "לוקומוטיב מוסקבה": "Lokomotiv Moscow",
-  "ספרטק מוסקבה": "Spartak Moscow",
-  // ── Champions/Europa League ───────────────────────────────────────────────
-  "ליגת האלופות": "UEFA Champions League",
-  "ליגת אלופות אירופה": "UEFA Champions League",
-  "הליגה האירופית": "UEFA Europa League",
-  "ליגה אירופית": "UEFA Europa League",
-  "ליגת הקונפרנס": "UEFA Conference League",
-  // ── Israeli leagues ───────────────────────────────────────────────────────
-  "ליגת העל": "Israeli Premier League",
-  "ליגה לאומית": "Liga Leumit",
-  "גביע המדינה": "Israeli State Cup",
-  "ליגת ביסקוויט": "Israeli Premier League Basketball",
-  // ── NBA ───────────────────────────────────────────────────────────────────
-  "לוס אנג'לס לייקרס": "Los Angeles Lakers",
-  "בוסטון סלטיקס": "Boston Celtics",
-  "גולדן סטייט ווריירס": "Golden State Warriors",
-  "מיאמי היט": "Miami Heat",
-  "שיקגו בולס": "Chicago Bulls",
-  "סן אנטוניו ספרס": "San Antonio Spurs",
-  "אוקלהומה סיטי": "Oklahoma City Thunder",
-  "OKC": "Oklahoma City Thunder",
-  "קליבלנד קאבאלירס": "Cleveland Cavaliers",
-  "מילווקי באקס": "Milwaukee Bucks",
-  "פיניקס סאנס": "Phoenix Suns",
-  "דנוור נאגטס": "Denver Nuggets",
-  "דאלאס מאוורקס": "Dallas Mavericks",
-  "ברוקלין נטס": "Brooklyn Nets",
-  "ניו יורק ניקס": "New York Knicks",
-  "אורלנדו מג'יק": "Orlando Magic",
-  "אינדיאנה פייסרס": "Indiana Pacers",
-  "אטלנטה הוקס": "Atlanta Hawks",
-  "מינסוטה טימברוולבס": "Minnesota Timberwolves",
-  "לוס אנג'לס קליפרס": "LA Clippers",
-  "ממפיס גריזליס": "Memphis Grizzlies",
-  "ניו אורלינס פליקנס": "New Orleans Pelicans",
-  "סאקרמנטו קינגס": "Sacramento Kings",
-  "יוטה ג'אז": "Utah Jazz",
-  "פילדלפיה 76": "Philadelphia 76ers",
-  "שרלוט הורנטס": "Charlotte Hornets",
-  "טורונטו רפטורס": "Toronto Raptors",
-  "פורטלנד טרייל בלייזרס": "Portland Trail Blazers",
-  "וושינגטון ויזרדס": "Washington Wizards",
-  "דטרויט פיסטונס": "Detroit Pistons",
-  "הוסטון רוקטס": "Houston Rockets",
-  // ── EuroLeague Basketball ─────────────────────────────────────────────────
-  "אנדולוט אפסה": "Anadolu Efes",
-  "אפסה": "Anadolu Efes",
-  "בסקוניה": "Baskonia",
-  "אלבה ברלין": "ALBA Berlin",
-  "בייארן מינכן כדורסל": "Bayern Munich Basketball",
-  "וילרבן": "ASVEL Villeurbanne",
-  "פרטיזן": "Partizan Belgrade",
-  "מקאבי": "Maccabi Tel Aviv",
-  "סטרסבורג": "SIG Strasbourg",
-};
-
-function hebrewToEnglish(name) {
-  const clean = cleanText(name);
-  if (!clean) return null;
-  if (HEBREW_EN_MAP[clean]) return HEBREW_EN_MAP[clean];
-  // try stripping trailing sport suffix
-  const stripped = clean.replace(/\s*[\(\[].*[\)\]]$/, "").trim();
-  if (stripped !== clean && HEBREW_EN_MAP[stripped]) return HEBREW_EN_MAP[stripped];
-  // partial match — return first Hebrew key that is fully contained
-  for (const [he, en] of Object.entries(HEBREW_EN_MAP)) {
-    if (clean === he || clean.includes(he) || he.includes(clean)) return en;
-  }
-  return null;
-}
-
 function fallbackLogo(name, type = "team") {
   const text = cleanText(name);
   const abbr = text.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "?";
@@ -636,8 +320,6 @@ function logoSearchTerms(name, kind) {
     .replace(/\s+/g, " ")
     .trim();
   if (withoutSuffixes && withoutSuffixes !== clean) terms.push(withoutSuffixes);
-  const en = hebrewToEnglish(clean);
-  if (en) terms.push(en);
   return [...new Set(terms.filter(Boolean))];
 }
 
@@ -803,13 +485,21 @@ async function wikidataLogoSearch(name, kind) {
     retryAttempts: 1,
   }).catch(() => null);
   clearTimeout(entityTimeout);
-  const claims = entity?.entities?.[id]?.claims || {};
+  const entityData = entity?.entities?.[id] || {};
+  const claims = entityData.claims || {};
+  const labels = entityData.labels || {};
+  // P154 = logo image, P18 = image (fallback)
   const image = claims.P154?.[0]?.mainsnak?.datavalue?.value ||
     claims.P18?.[0]?.mainsnak?.datavalue?.value;
-  if (!image) return null;
+  // Return English label so callers can use it for TheSportsDB
+  const englishName = labels?.en?.value || null;
+  if (!image && !englishName) return null;
   return {
     name: value,
-    logo_url: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(image)}?width=160`,
+    logo_url: image
+      ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(image)}?width=160`
+      : null,
+    englishName,
     source: `Wikidata ${kind}`,
   };
 }
@@ -829,21 +519,36 @@ async function resolveLogoRow(table, kind, name) {
     row = await Promise.race([
       (async () => {
         for (const term of logoSearchTerms(cleanText(name), kind)) {
+          // 1. Supabase cache (fastest, has both Hebrew and English names)
           const supabaseRow = await supabaseSearch(table, term);
           if (supabaseRow?.logo_url) return supabaseRow;
-          const results = await Promise.allSettled([
-            sportsDbSearch(kind, term),
+
+          // 2. Run SofaScore + Wikidata in parallel — both accept Hebrew natively.
+          //    SofaScore has direct CDN logos; Wikidata returns logo + English label.
+          const [sofaRes, wdRes] = await Promise.allSettled([
             sofascoreLogoSearch(term, kind),
-            wikipediaLogoSearch(term, kind),
-            wikipediaSearchLogo(term, kind),
             wikidataLogoSearch(term, kind),
           ]);
-          const found = results.find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
+          if (sofaRes.status === "fulfilled" && sofaRes.value?.logo_url) return sofaRes.value;
+          if (wdRes.status === "fulfilled" && wdRes.value?.logo_url) return wdRes.value;
+
+          // 3. If Wikidata gave us the English name, use it for TheSportsDB + Wikipedia.
+          //    Otherwise fall back to the raw term (works when it's already Latin).
+          const englishName = (wdRes.status === "fulfilled" && wdRes.value?.englishName) || null;
+          const lookupTerm = englishName || term;
+
+          const [sdbRes, wpRes, wsRes] = await Promise.allSettled([
+            sportsDbSearch(kind, lookupTerm),
+            wikipediaLogoSearch(lookupTerm, kind),
+            wikipediaSearchLogo(lookupTerm, kind),
+          ]);
+          const found = [sdbRes, wpRes, wsRes]
+            .find(r => r.status === "fulfilled" && r.value?.logo_url)?.value || null;
           if (found?.logo_url) return found;
         }
         return null;
       })(),
-      new Promise(resolve => setTimeout(() => resolve(null), 4000)),
+      new Promise(resolve => setTimeout(() => resolve(null), 5000)),
     ]);
   } catch (_) {
     row = null;
