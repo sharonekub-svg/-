@@ -1395,6 +1395,18 @@ function buildResultRows(results, dateKey) {
     .slice(0, 20);
 }
 
+function seed365Logo(kind, name, id, folder) {
+  if (!name || !id) return;
+  const key = `${kind}:${name}`;
+  if (!globalLogoCache.has(key)) {
+    globalLogoCache.set(key, {
+      name,
+      logo_url: `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/${folder}/${id}`,
+      source: "365Scores",
+    });
+  }
+}
+
 async function get365Results(startDate, endDate, sportId365, winnerSportId, refererSport) {
   const dates = [startDate];
   if (endDate && endDate !== startDate) dates.push(endDate);
@@ -1423,6 +1435,10 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
       const home = cleanText(game.homeCompetitor?.name);
       const away = cleanText(game.awayCompetitor?.name);
       if (!home || !away) continue;
+      // Seed globalLogoCache so enrichLogos finds logos without extra lookups
+      seed365Logo("team", home, game.homeCompetitor?.id, "Teams");
+      seed365Logo("team", away, game.awayCompetitor?.id, "Teams");
+      seed365Logo("league", cleanText(game.competitionDisplayName), game.competition?.id || game.competitionId, "Competitions");
       const homeScore = Number(game.homeCompetitor?.score);
       const awayScore = Number(game.awayCompetitor?.score);
       const hasScore = Number.isFinite(homeScore) && Number.isFinite(awayScore) && homeScore >= 0 && awayScore >= 0;
