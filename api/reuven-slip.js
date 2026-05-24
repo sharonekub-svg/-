@@ -28,22 +28,25 @@ function compactWinnerContext(feed) {
 }
 
 async function callVision({ image, note, winnerContext }) {
-  const prompt = `You are ראובן AI, a sharp sports betting slip analyst.
+  const prompt = `You are AI Sports Analyst, a sharp sports and statistical analyst.
+
+Mandatory framing:
+AI Sports Analyst provides sports and statistical analysis only. This is not betting advice, not an instruction to stake money, and not a guarantee of results or profit.
 
 Task:
-1. Read the uploaded betting slip image. Extract all visible selections, games, markets, odds, stake, and total odds if visible.
+1. Read the uploaded image. Extract all visible games, markets, odds, stake, and total odds if visible, only as market context.
 2. Compare any recognizable games/markets against the provided Winner context when possible.
-3. Decide if the slip is good or bad. Do not pretend certainty. If text is unreadable, say exactly what is unreadable.
-4. Rate the whole slip from 1 to 10.
-5. Give a clear bottom line: whether to place it, avoid it, or reduce/change it.
+3. Analyze the sports/statistical strengths, weaknesses, uncertainty, and market context. Do not pretend certainty. If text is unreadable, say exactly what is unreadable.
+4. Rate the statistical edge/risk profile from 1 to 10.
+5. Give a clear bottom line about statistical quality only. Do not tell the user whether to place it, avoid it, stake money, or change it as a betting instruction.
 6. If the user wrote Hebrew, answer Hebrew. If English, answer English. Default Hebrew.
 
 Important:
 - Do not invent teams, odds, injuries, or markets that are not visible.
 - Winner odds are the bookmaker source. If the image odds differ from current Winner context, mention it.
-- For accumulators, be extra strict: one weak leg can make the whole form bad.
-- Explain which leg is the weakest and what you would remove or replace.
-- This is entertainment/education only, not financial advice.
+- For multi-leg forms, be extra strict: one weak leg can damage the statistical profile.
+- Explain which leg has the weakest statistical support and why, without giving instructions to bet.
+- Never use phrases like "place it", "bet on", "my pick", "best bet", "tip", or Hebrew equivalents such as "שים על" / "הייתי מהמר".
 
 User note:
 ${cleanText(note) || "No extra note."}
@@ -95,7 +98,7 @@ module.exports = async (req, res) => {
   if (!ANTHROPIC_API_KEY) {
     res.status(200).json({
       ok: false,
-      answer: "קיבלתי את תמונת הטופס, אבל ניתוח תמונה עדיין לא מופעל בשרת כי חסר ANTHROPIC_API_KEY. אני לא אנחש מה כתוב בתמונה. בינתיים תעתיק לי את המשחקים והיחסים מהטופס, ואני אנתח אותם מול Winner.",
+      answer: "קיבלתי את התמונה, אבל ניתוח תמונה עדיין לא מופעל בשרת כי חסר ANTHROPIC_API_KEY. אני לא אנחש מה כתוב בתמונה. בינתיים תעתיק לי את המשחקים והיחסים, ואני אתן ניתוח ספורטיבי וסטטיסטי בלבד מול נתוני Winner.",
     });
     return;
   }
@@ -114,7 +117,7 @@ module.exports = async (req, res) => {
     console.error("Reuven slip error:", error);
     res.status(200).json({
       ok: false,
-      answer: `לא הצלחתי לנתח את תמונת הטופס כרגע: ${error.message}. אם זה דחוף, תעתיק לי את המשחקים והיחסים בטקסט ואני אנתח אותם מיד.`,
+      answer: `לא הצלחתי לנתח את התמונה כרגע: ${error.message}. אם זה דחוף, תעתיק לי את המשחקים והנתונים בטקסט ואני אנתח אותם מבחינה ספורטיבית וסטטיסטית.`,
     });
   }
 };

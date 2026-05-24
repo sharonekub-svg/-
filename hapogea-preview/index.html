@@ -300,7 +300,7 @@
     }
     .team-side.selected:after,
     .versus.selected:after {
-      content: "הבחירה";
+      content: "הצד שנבחן";
       position: absolute;
       top: -10px;
       inset-inline-end: calc(50% - 44px);
@@ -1317,7 +1317,7 @@
       <nav class="nav" id="sportTabs">
         <button class="tab active" data-sport-tab="football">כדורגל</button>
         <button class="tab" data-sport-tab="basketball">כדורסל</button>
-        <button class="tab" data-sport-tab="reuben">ראובן AI</button>
+        <button class="tab" data-sport-tab="reuben">AI Sports Analyst</button>
       </nav>
     </div>
   </header>
@@ -1327,10 +1327,10 @@
       <div class="hero-main">
         <div class="hero-content">
           <span class="eyebrow">מקור Winner בלבד · יחסים אמיתיים בלבד · בלי המצאת נתונים</span>
-          <h2>אתמול, היום ומחר. כדורגל וכדורסל. תחזיות Winner עם מעקב פגיעה חודשי.</h2>
+          <h2>אתמול, היום ומחר. כדורגל וכדורסל. ניתוחי Winner עם מעקב דיוק סטטיסטי חודשי.</h2>
           <p class="hero-copy">
-            היום ומחר מציגים רק בחירות מנצח פתוחות להימור עם יחס Winner פעיל. אתמול סוגר תחזיות מול תוצאה רשמית,
-            והסטטיסטיקה החודשית מתעדכנת לפי הבחירות שהמערכת שמרה.
+            היום ומחר מציגים משחקים עם יתרון סטטיסטי ויחס Winner פעיל כנתון שוק. אתמול בודק תחזיות מול תוצאה רשמית,
+            והסטטיסטיקה החודשית מתעדכנת לפי הניתוחים שהמערכת שמרה.
           </p>
           <div class="stats" id="stats"></div>
         </div>
@@ -1341,8 +1341,8 @@
     <section class="panel wc-strip" id="worldCupSection">
       <div class="wc-banner" id="wcToggle" role="button" tabindex="0" aria-expanded="false">
         <div class="wc-banner-copy">
-          <h3>מונדיאל 2026: כל המשחקים והתחזיות</h3>
-          <p>לחץ כאן כדי להיכנס למשחקים. כל משחק מקבל דגלים, יחס משוער, תוצאה צפויה והסבר אלגוריתמי לפי איכות, שוק, ביתיות, עומק סגל, כושר והפרש שערים צפוי.</p>
+          <h3>מונדיאל 2026: כל המשחקים והניתוחים</h3>
+          <p>לחץ כאן כדי להיכנס למשחקים. כל משחק מקבל דגלים, נתוני שוק כאשר הם זמינים, והסבר אלגוריתמי לפי איכות, ביתיות, עומק סגל, כושר ומגמות משחק.</p>
           <button class="wc-enter" type="button">כניסה למשחקים</button>
         </div>
         <div class="wc-mark">26<span>FIFA</span></div>
@@ -1358,7 +1358,7 @@
       <div class="field">
         <label for="sort">מיון</label>
         <select id="sort">
-          <option value="score">ציון פגיעה</option>
+          <option value="score">ציון מודל</option>
           <option value="odds">יחס גבוה</option>
           <option value="probability">הסתברות</option>
           <option value="time">שעה</option>
@@ -1371,7 +1371,7 @@
       <section>
         <div class="section-title">
           <div>
-            <h3 id="listTitle">טיפים מחושבים</h3>
+            <h3 id="listTitle">ניתוחים מחושבים</h3>
             <p id="resultMeta">טוען נתונים מווינר</p>
           </div>
           <span class="pill">מקור: Winner</span>
@@ -1399,7 +1399,7 @@
   </main>
 
   <footer class="footer">
-    הדמו מיועד להצגת מוצר ושיטת דירוג. הוא אינו המלצת הימור ואינו מבטיח תוצאה. כאשר ממשק ציבורי אינו מחזיר נתון, הדמו מציין זאת ואינו משלים נתונים באופן מלאכותי.
+    הדמו מיועד להצגת מוצר ושיטת דירוג ספורטיבי. הוא אינו ייעוץ הימורים, אינו המלצה לשים כסף ואינו מבטיח תוצאה או רווח. כאשר ממשק ציבורי אינו מחזיר נתון, הדמו מציין זאת ואינו משלים נתונים באופן מלאכותי.
   </footer>
 
   <div class="modal" id="gameModal" aria-hidden="true">
@@ -1477,8 +1477,10 @@
     const statusClass = {
       "תפס": "hit",
       "נתפס": "hit",
+      "תחזית התאימה": "hit",
       "נפל": "miss",
       "לא נתפס": "miss",
+      "תחזית לא התאימה": "miss",
       "החזר": "unverified",
       "בוטל": "unverified",
       "לא אומת": "unverified",
@@ -1487,8 +1489,8 @@
     };
 
     function statusLabel(value) {
-      if (value === "hit" || value === "תפס" || value === "נתפס") return "תפס";
-      if (value === "miss" || value === "נפל" || value === "לא נתפס") return "נפל";
+      if (value === "hit" || value === "תפס" || value === "נתפס") return "תחזית התאימה";
+      if (value === "miss" || value === "נפל" || value === "לא נתפס") return "תחזית לא התאימה";
       if (value === "void" || value === "cancelled" || value === "בוטל") return "בוטל";
       if (value === "unverified" || value === "לא אומת" || value === "החזר") return "לא אומת";
       return value || "ממתין";
@@ -1508,6 +1510,12 @@
 
     function pickLabel(row) {
       return row.winnerPick || row.pick || "לא זמין";
+    }
+
+    function displayMarketTitle(value) {
+      return String(value || "")
+        .replace(/הימור יתרון/g, "ליין יתרון")
+        .replace(/הימור/g, "שוק");
     }
 
     function overUnderParts(row) {
@@ -1538,19 +1546,19 @@
     function pickActionText(row) {
       if (row.marketTier === "alternative-total") {
         const { dir, line } = overUnderParts(row);
-        return line != null ? `הבחירה שלנו: ${dir} ${line} גולים` : `הבחירה שלנו: ${dir} גולים`;
+        return line != null ? `הצד שנבחן: ${dir} ${line} גולים` : `הצד שנבחן: ${dir} גולים`;
       }
       const team = row.pickTeam || pickLabel(row);
       const side = pickSide(row);
       const spread = Number(row.spread);
-      if (side === "draw") return "הבחירה שלנו: תיקו בסיום המשחק";
+      if (side === "draw") return "הצד שנבחן: תיקו בסיום המשחק";
       if (row.sportId === 227 && row.spread != null && Number.isFinite(spread)) {
         const abs = Math.abs(spread);
-        if (spread > 0) return `הבחירה שלנו: ${team} עם יתרון +${abs}`;
-        return `הבחירה שלנו: ${team} לנצח ביותר מ-${abs} נקודות`;
+        if (spread > 0) return `הצד שנבחן: ${team} עם יתרון +${abs}`;
+        return `הצד שנבחן: ${team} לנצח ביותר מ-${abs} נקודות`;
       }
-      if (row.sportId === 227) return `הבחירה שלנו: ${team} מנצחת את המשחק`;
-      return `הבחירה שלנו: ${team} לניצחון`;
+      if (row.sportId === 227) return `יתרון סטטיסטי: ${team} כמנצחת משחק`;
+      return `יתרון סטטיסטי: ${team} לניצחון`;
     }
 
     function scoreBreakdownMarkup(row) {
@@ -1573,23 +1581,23 @@
         const lineText = line != null ? `${line} גולים` : "גולים";
         const impliedPct = row.normalizedProbability ? Math.round(row.normalizedProbability * 100) : null;
         const pctText = impliedPct ? ` — הסתברות שוק ${impliedPct}%` : "";
-        return `כדורגל מעל/מתחת: בחרנו ${dir} ${lineText}${pctText}. האלגוריתם מבוסס על ניתוח יחסי Winner בשוק הגולים לאחר ניכוי מרווח הבית.`;
+        return `כדורגל מעל/מתחת: הצד שנבחן הוא ${dir} ${lineText}${pctText}. האלגוריתם מבוסס על ניתוח יחסי Winner בשוק הגולים לאחר ניכוי מרווח הבית.`;
       }
       const spread = Number(row.spread);
       const team = row.pickTeam || pickLabel(row);
-      const market = row.market || "";
+      const market = displayMarketTitle(row.market || "");
       if (row.sportId === 227 && Number.isFinite(spread) && row.spread != null) {
         const abs = Math.abs(spread);
         if (spread > 0) {
-          return `כדורסל - הימור יתרון: בחרנו ${team} +${abs}. ההימור תופס אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+          return `כדורסל - ליין יתרון: הצד שנבחן הוא ${team} +${abs}. בדיקת התחזית מתאימה אם ${team} מנצחת או מפסידה בפחות מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
         }
-        return `כדורסל - הימור יתרון: בחרנו ${team} ${spread}. ההימור תופס רק אם ${team} מנצחת ביותר מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
+        return `כדורסל - ליין יתרון: הצד שנבחן הוא ${team} ${spread}. בדיקת התחזית מתאימה רק אם ${team} מנצחת ביותר מ-${abs} נקודות, כולל הארכות אם זה כתוב בשוק.`;
       }
       if (row.sportId === 227 && market.includes("המנצח")) {
-        return `כדורסל - מנצחת המשחק: בחרנו ${team} לניצחון במשחק${market.includes("כולל הארכות") ? " כולל הארכות" : ""}.`;
+        return `כדורסל - מנצחת המשחק: הצד שנבחן הוא ${team} לניצחון במשחק${market.includes("כולל הארכות") ? " כולל הארכות" : ""}.`;
       }
-      if (pickSide(row) === "draw") return "כדורגל - בחרנו תיקו בתוצאת הסיום.";
-      return `בחרנו ${team} בשוק ${market || "המנצח"}.`;
+      if (pickSide(row) === "draw") return "כדורגל - הצד שנבחן הוא תיקו בתוצאת הסיום.";
+      return `הצד שנבחן הוא ${team} בשוק ${market || "המנצח"}.`;
     }
 
     function pickSide(row) {
@@ -1837,7 +1845,7 @@
           odds:         item.odds || null,
           recommended:  true,
           bettingStatus:"closed",
-          status:       item.status === "hit" ? "נתפס" : item.status === "miss" ? "לא נתפס" : "ממתין",
+          status:       item.status === "hit" ? "hit" : item.status === "miss" ? "miss" : "pending",
           matchPhase:   item.status !== "pending" ? "final" : "scheduled",
           actualWinner: item.actualWinner || "",
           result:       item.result || "",
@@ -1948,9 +1956,9 @@
       const leagues = new Set(rows.map(row => row.league)).size;
       if (state.sportTab === "reuben") {
         document.getElementById("stats").innerHTML = [
-          ["סוכן", "ראובן AI"],
+          ["Agent", "AI Sports Analyst"],
           ["ספורט", "כדורגל/כדורסל"],
-          ["גישה", "EV"],
+          ["גישה", "ניתוח נתונים"],
           ["מקור", "נתונים זמינים"]
         ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
         return;
@@ -1958,8 +1966,8 @@
       document.getElementById("stats").innerHTML = [
         [state.day === "yesterday" ? "נסגרו" : "פתוחים", rows.length],
         ["ליגות", leagues],
-        ["פגיעה היום", performance.settled ? `${performance.hitRate}%` : "חדש"],
-        ["ROI", performance.settled ? `${performance.roiUnits >= 0 ? "+" : ""}${performance.roiUnits.toFixed(2)}u` : "חדש"]
+        ["דיוק תחזיות", performance.settled ? `${performance.hitRate}%` : "חדש"],
+        ["מדד יחסי", performance.settled ? `${performance.roiUnits >= 0 ? "+" : ""}${performance.roiUnits.toFixed(2)}u` : "חדש"]
       ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
     }
 
@@ -1974,7 +1982,7 @@
     }
 
     function wcFixtureOdds(item) {
-      if (!item.odds) return `<div class="wc-meta">אין יחס Winner פתוח כרגע. לא מוצגת תחזית לפני שיש שוק אמיתי; בדיקת AI מלאה נפתחת 48 שעות לפני המשחק עם פציעות, סגלים, מאמנים וכושר.</div>`;
+      if (!item.odds) return `<div class="wc-meta">אין יחס Winner פתוח כרגע. לא מוצג ניתוח שוק לפני שיש נתון אמיתי; בדיקת AI מלאה נפתחת 48 שעות לפני המשחק עם פציעות, סגלים, מאמנים וכושר.</div>`;
       const selected = item.pick || "";
       return `
         <div class="wc-odds">
@@ -1989,7 +1997,7 @@
       return `
         <div class="wc-why">
           <b>למה זה חשוב:</b>
-          במונדיאל לא מנחשים תוצאה חודשים מראש. ההמלצה נפתחת רק כשיש יחס Winner אמיתי, וב-48 השעות שלפני המשחק היא משקללת פציעות, סגלים, מאמנים, כושר, עומס מסעות, לחץ משחקים, קצב אפקטיבי ויצירת מצבים.
+          במונדיאל לא מנחשים תוצאה חודשים מראש. הניתוח נפתח רק כשיש יחס Winner אמיתי, וב-48 השעות שלפני המשחק הוא משקלל פציעות, סגלים, מאמנים, כושר, עומס מסעות, לחץ משחקים, קצב אפקטיבי ויצירת מצבים.
         </div>
       `;
     }
@@ -2012,7 +2020,7 @@
               <article class="wc-card compact" data-wc-open="true">
                 <strong>${item.home} נגד ${item.away}</strong>
                 <div class="wc-score"><span>${item.stage}</span><b>${item.date.slice(5)}</b></div>
-                <div class="wc-meta">${item.venue}. ${item.odds ? `יחס ${item.odds[item.pick].toFixed(2)}` : "תחזית תיפתח 48 שעות לפני המשחק כשיש יחס Winner אמיתי"}.</div>
+                <div class="wc-meta">${item.venue}. ${item.odds ? `נתון שוק ${item.odds[item.pick].toFixed(2)}` : "ניתוח ייפתח 48 שעות לפני המשחק כשיש יחס Winner אמיתי"}.</div>
               </article>
             `).join("")}
           </div>
@@ -2039,7 +2047,7 @@
               ${wcFixtureOdds(item)}
               <div class="wc-why">
                 <b>${item.source} · ${item.date}</b><br>
-                אין סימון הימור ואין תוצאת תחזית כרגע. 48 שעות לפני המשחק, ורק כשיש יחס Winner אמיתי, ה-AI Advisor יחשב פציעות, סגלים, מאמנים, כושר ונבחרת חזקה יותר לפני המלצה.
+                אין הוראת פעולה ואין תוצאת תחזית כרגע. 48 שעות לפני המשחק, ורק כשיש יחס Winner אמיתי, ה-AI Sports Analyst יחשב פציעות, סגלים, מאמנים, כושר ויתרונות סטטיסטיים.
               </div>
               <div class="wc-factors">
                 <span class="signal">שוק 1X2</span>
@@ -2061,16 +2069,16 @@
       const features = state.feed?.win2goFeatures || [];
       const performanceMarkup = `
         <div class="daily-head">
-          <h3>אחוז פגיעה היום</h3>
+          <h3>דיוק תחזיות סטטיסטיות</h3>
           <span class="pill">${activeTodayDate() || performance.month}</span>
         </div>
         <div class="metric-grid">
-          <div class="metric"><b>${performance.settled ? `${performance.hitRate}%` : "חדש"}</b><span>פגיעה</span></div>
-          <div class="metric"><b>${performance.hits}/${performance.settled}</b><span>תפסו</span></div>
-          <div class="metric"><b>${performance.roiUnits >= 0 ? "+" : ""}${performance.roiUnits.toFixed(2)}u</b><span>ROI יחידות</span></div>
+          <div class="metric"><b>${performance.settled ? `${performance.hitRate}%` : "חדש"}</b><span>דיוק</span></div>
+          <div class="metric"><b>${performance.hits}/${performance.settled}</b><span>התאימו</span></div>
+          <div class="metric"><b>${performance.roiUnits >= 0 ? "+" : ""}${performance.roiUnits.toFixed(2)}u</b><span>מדד יחסי</span></div>
           <div class="metric"><b>${performance.tracked}</b><span>נשמרו</span></div>
         </div>
-        <div class="micro" style="margin-top:8px;color:var(--muted)">1 יחידה = הימור שטוח אחד. ROI חיובי = רווח לפי יחידה קבועה.</div>
+        <div class="micro" style="margin-top:8px;color:var(--muted)">המדד היחסי הוא חישוב מוצר פנימי לבדיקת מודל, לא המלצה כספית.</div>
       `;
       const featuresMarkup = `
         <div>
@@ -2080,8 +2088,8 @@
       `;
       if (!tip) {
         box.innerHTML = `
-          <div class="daily-head"><h3>הטיפ המוביל</h3><span class="pill">אין בחירה פתוחה</span></div>
-          <p class="hero-copy" style="font-size:14px">לא נמצאה כרגע בחירה פתוחה בקטגוריה הזו עם יחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
+          <div class="daily-head"><h3>הניתוח המרכזי</h3><span class="pill">אין יתרון פתוח</span></div>
+          <p class="hero-copy" style="font-size:14px">לא נמצא כרגע משחק בקטגוריה הזו עם יתרון סטטיסטי ויחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
           ${performanceMarkup}
           ${featuresMarkup}
         `;
@@ -2089,7 +2097,7 @@
       }
       box.innerHTML = `
         <div class="daily-head">
-          <h3>הטיפ המוביל</h3>
+          <h3>הניתוח המרכזי</h3>
           <span class="pill">ציון ${tip.score}/100</span>
         </div>
         <div class="pickbox">
@@ -2103,7 +2111,7 @@
           <div class="odds">${formatOdds(tip.odds)}</div>
         </div>
         <p class="hero-copy" style="font-size:14px">
-          למה: ${(tip.explanation || [])[1] || "הבחירה היא פייבוריטית בשוק המנצח של Winner."}
+          למה: ${(tip.explanation || [])[1] || "הצד שנבחן הוא פייבוריט סטטיסטי בשוק המנצח של Winner."}
         </p>
         ${performanceMarkup}
         ${featuresMarkup}
@@ -2208,7 +2216,7 @@
           .slice(0, 4)
           .map(outcome => `${outcome.label || outcome.desc}: ${formatOdds(outcome.odds)}`)
           .join(", ");
-        return `${market.title}: ${outcomes || "no active odds"}`;
+        return `${displayMarketTitle(market.title)}: ${outcomes || "no active odds"}`;
       }).join("\n");
     }
 
@@ -2218,9 +2226,9 @@
         .filter(outcome => Number(outcome.odds || 0) > 1)
         .map(outcome => ({
           marketId: market.marketId,
-          marketTitle: market.title || "Winner market",
+          marketTitle: displayMarketTitle(market.title || "Winner market"),
           tier: market.tier || "other",
-          label: outcome.label || outcome.team || outcome.desc || "בחירה",
+          label: outcome.label || outcome.team || outcome.desc || "צד",
           desc: outcome.desc || outcome.label || outcome.team || "",
           team: outcome.team || "",
           odds: Number(outcome.odds),
@@ -2231,7 +2239,7 @@
       if (!candidates.length && row.odds) {
         candidates.push({
           marketId: row.marketId,
-          marketTitle: row.market || "Winner market",
+          marketTitle: displayMarketTitle(row.market || "Winner market"),
           tier: "selected",
           label: explicitPickText(row),
           desc: explicitPickText(row),
@@ -2271,7 +2279,7 @@
       const outcomeCount = reuvenOutcomeCandidates(row).length;
       const noVig = selectedOutcome?.noVigProbability ? `${Math.round(selectedOutcome.noVigProbability * 100)}%` : "לא זמין";
       return [
-        `Winner odds: מחובר. נמצאו ${marketCount} שווקים ו-${outcomeCount} בחירות פעילות למשחק הזה.`,
+        `Winner odds: מחובר. נמצאו ${marketCount} שווקים ו-${outcomeCount} צדדים פעילים למשחק הזה.`,
         `שוק שנבחר לניתוח: ${selectedOutcome ? `${selectedOutcome.marketTitle} | ${selectedOutcome.label} @ ${formatOdds(selectedOutcome.odds)}` : "אין כרגע שוק Winner פעיל למשחק הזה"}.`,
         `סטטיסטיקת שוק זמינה עכשיו: הסתברות גלומה, no-vig probability (${noVig}), עומק שווקים וטווח יחסים.`,
         "פציעות, הרכבים מאושרים, דקות שחקנים, מזג אוויר וסטטיסטיקות עומק לא מגיעים מ-Winner עצמו. ראובן לא ימציא אותם; צריך לחבר ספק נתונים נוסף כדי להפוך אותם ל-live."
@@ -2298,7 +2306,7 @@
     function analyzeReubenBet(text) {
       const value = String(text || "").trim();
       if (!value) {
-        return "Enter a bet to analyze, for example: Real Madrid win @ 1.65, Over 2.5 goals @ 1.80, or Maccabi -4.5 @ 1.75.";
+        return "Enter a match or market to analyze, for example: Real Madrid vs Barcelona, Over 2.5 goals as market context, or Maccabi -4.5 as a line to review statistically.";
       }
       const choice = value.match(/^\s*(?:#|מספר|בחירה)?\s*(\d+)\s*$/i);
       if (choice && state.reubenCandidates.length) {
@@ -2329,11 +2337,15 @@
       return hebrew >= latin;
     }
 
-    function reuvenBetDecision(recommendation, rating, selectedOutcome) {
-      const shouldBet = recommendation.includes("Favor") && rating >= 6 && selectedOutcome?.odds;
+    function asksForBettingInstruction(text) {
+      return /על מה.*(?:להמר|לשים)|מה לשים|מה הכי כדאי|מי הבחירה|היית מהמר|שים על|הימור הכי טוב|טיפ|what should i bet|best bet|your pick|bet on|place it/i.test(String(text || ""));
+    }
+
+    function reuvenStatisticalAssessment(recommendation, rating, selectedOutcome) {
+      const hasEdge = recommendation.includes("Favor") && rating >= 6 && selectedOutcome?.odds;
       return {
-        shouldBet,
-        pick: selectedOutcome?.label || selectedOutcome?.desc || "no clear pick",
+        hasEdge,
+        side: selectedOutcome?.label || selectedOutcome?.desc || "no clear statistical side",
         market: selectedOutcome?.marketTitle || "Winner market",
         odds: selectedOutcome?.odds || null,
       };
@@ -2387,20 +2399,20 @@
       rating = Math.max(1, Math.min(10, rating));
 
       const oddsLine = odds
-        ? "Winner odds: " + formatOdds(odds) + " | Market: " + (selectedOutcome?.marketTitle || marketName) + " | Pick: " + (selectedOutcome?.label || "user pick") + " | Implied probability: " + implied.toFixed(1) + "% | Reuven AI working estimate: " + estimated + "%"
+        ? "Winner odds: " + formatOdds(odds) + " | Market: " + (selectedOutcome?.marketTitle || marketName) + " | Tested side: " + (selectedOutcome?.label || "user side") + " | Implied probability: " + implied.toFixed(1) + "% | AI Sports Analyst estimate: " + estimated + "%"
         : "מצאתי את המשחק, אבל אין כרגע שוק Winner פעיל עם יחס תקין לניתוח.";
       const valueLine = ev === null
-        ? "אי אפשר לחשב EV עד שיש יחס Winner פעיל."
+        ? "Expected value cannot be estimated until there is an active Winner price."
         : ev > 0
-          ? "Estimated EV is positive: +" + (ev * 100).toFixed(1) + "% per 1 unit stake, before lineup/injury confirmation."
-          : "Estimated EV is not attractive: " + (ev * 100).toFixed(1) + "% per 1 unit stake.";
+          ? "Model edge is positive versus implied probability: +" + (ev * 100).toFixed(1) + "% before lineup/injury confirmation."
+          : "Model edge is not attractive versus implied probability: " + (ev * 100).toFixed(1) + "%.";
       const caution = isShortOddsRange
-        ? "Special 1.40-1.90 rule: this is a short-price zone, so the edge must be very clear. I would be cautious, especially on straight win or Over bets."
+        ? "Special 1.40-1.90 rule: this is a short-price zone, so the statistical edge must be very clear. Treat the price as market context, not an instruction."
         : "Outside the 1.40-1.90 zone: volatility/value must be checked even more carefully.";
-      const decision = reuvenBetDecision(recommendation, rating, selectedOutcome);
-      const exactBet = decision.odds
-        ? `${decision.market} | ${decision.pick} @ ${formatOdds(decision.odds)}`
-        : decision.pick;
+      const assessment = reuvenStatisticalAssessment(recommendation, rating, selectedOutcome);
+      const exactSide = assessment.odds
+        ? `${assessment.market} | ${assessment.side} @ ${formatOdds(assessment.odds)}`
+        : assessment.side;
 
       if (hebrewAnswer) {
         const hebrewRecommendation = recommendation === "Strongly Favor" ? "בעד חזק"
@@ -2409,56 +2421,63 @@
               : recommendation === "Strongly Against" ? "נגד חזק"
                 : "ניטרלי";
         const hebrewValueLine = ev === null
-          ? "אי אפשר לחשב EV עד שיש יחס Winner פעיל."
+          ? "אי אפשר לאמוד יתרון מול השוק עד שיש יחס Winner פעיל."
           : ev > 0
-            ? "ה-EV המשוער חיובי: +" + (ev * 100).toFixed(1) + "% לכל יחידת הימור, לפני אימות הרכבים/פציעות."
-            : "ה-EV המשוער לא מספיק טוב: " + (ev * 100).toFixed(1) + "% לכל יחידת הימור.";
+            ? "יתרון המודל מול ההסתברות הגלומה חיובי: +" + (ev * 100).toFixed(1) + "% לפני אימות הרכבים/פציעות."
+            : "יתרון המודל מול ההסתברות הגלומה לא מספיק חזק: " + (ev * 100).toFixed(1) + "%.";
         const hebrewCaution = isShortOddsRange
-          ? "כלל 1.40-1.90: זה טווח יחסים קצר, אז צריך יתרון ממש ברור. אני זהיר במיוחד בניצחון ישיר או Over."
+          ? "כלל 1.40-1.90: זה טווח יחסים קצר, אז צריך יתרון סטטיסטי ממש ברור. היחס הוא נתון שוק בלבד, לא הוראת פעולה."
           : "מחוץ לטווח 1.40-1.90: חייבים לבדוק תנודתיות וערך בזהירות גבוהה יותר.";
         const hebrewOddsLine = odds
-          ? "יחס Winner: " + formatOdds(odds) + " | שוק: " + (selectedOutcome?.marketTitle || marketName) + " | בחירה: " + (selectedOutcome?.label || "הבחירה שלך") + " | הסתברות גלומה: " + implied.toFixed(1) + "% | הערכת ראובן AI: " + estimated + "%"
+          ? "יחס Winner: " + formatOdds(odds) + " | שוק: " + (selectedOutcome?.marketTitle || marketName) + " | צד שנבדק: " + (selectedOutcome?.label || "הצד שהזכרת") + " | הסתברות גלומה: " + implied.toFixed(1) + "% | הערכת AI Sports Analyst: " + estimated + "%"
           : "מצאתי את המשחק, אבל אין כרגע שוק Winner פעיל עם יחס תקין לניתוח.";
-        const bottomLine = decision.shouldBet
-          ? `שורה תחתונה: כן, אפשר לשקול הימור. דירוג הבטא: ${rating}/10. אם אתה שם, הבחירה שלי היא: ${exactBet}.`
-          : `שורה תחתונה: לא הייתי ממהר להמר. דירוג הבטא: ${rating}/10. אם בכל זאת בודקים, הבחירה הכי קרובה היא: ${exactBet}.`;
+        const guardrail = asksForBettingInstruction(value)
+          ? "אני לא נותן המלצות הימורים או הוראות לשים כסף. לפי הנתונים הספורטיביים, אפשר לדבר רק על יתרון סטטיסטי, סיכונים ומגמות."
+          : "AI Sports Analyst מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.";
+        const bottomLine = assessment.hasEdge
+          ? `שורה תחתונה: קיים יתרון סטטיסטי מסוים בצד שנבדק (${exactSide}). דירוג יתרון סטטיסטי: ${rating}/10. זה אינו ייעוץ הימורים או הוראה לשים כסף.`
+          : `שורה תחתונה: היתרון הסטטיסטי לא מספיק חד כרגע. דירוג יתרון סטטיסטי: ${rating}/10. זה אינו ייעוץ הימורים או הוראה לשים כסף.`;
         return [
-          "סיכום ההימור\n" + value + "\nמשחק Winner שנמצא: " + matchedRow.match + "\nענף: " + (isBasketball ? "כדורסל" : "כדורגל") + " | שוק: " + marketName,
+          guardrail,
+          "סיכום ניתוח\n" + value + "\nמשחק Winner שנמצא: " + matchedRow.match + "\nענף: " + (isBasketball ? "כדורסל" : "כדורגל") + " | שוק: " + marketName,
           "נתוני Winner\n" + winnerContext,
           "גישה לנתונים\n" + dataAccess,
-          "חוזקות\n- ההימור מספיק ברור כדי להשוות מחיר מול הסתברות.\n- השוק נבדק מול היחסים הפעילים של Winner.\n- אם היחס עדיין חי, אפשר לחשב הסתברות גלומה ו-EV.",
-          "חולשות וסיכונים\n- Winner נותן יחסים ושווקים, לא מאגר מלא של פציעות/הרכבים. מידע חסר נספר כאי-ודאות ולא כהמצאה.\n- יחס קצר יכול להיות רע אם השוק כבר תימחר את הפייבוריט.\n- " + (isBasketball ? "בכדורסל ליינים רגישים לקצב, רוטציות וגארבג' טיים." : "בכדורגל הימורי ניצחון/שערים רגישים לטקטיקה, אדומים, מזג אוויר ורוטציה."),
+          "חוזקות\n- המשחק מספיק ברור כדי להשוות מחיר שוק מול הסתברות מודל.\n- השוק נבדק מול היחסים הפעילים של Winner כנתון קונטקסט.\n- אם היחס עדיין חי, אפשר לחשב הסתברות גלומה מול הערכת מודל.",
+          "חולשות וסיכונים\n- Winner נותן יחסים ושווקים, לא מאגר מלא של פציעות/הרכבים. מידע חסר נספר כאי-ודאות ולא כהמצאה.\n- יחס קצר יכול להיות רע אם השוק כבר תימחר את הפייבוריט.\n- " + (isBasketball ? "בכדורסל ליינים רגישים לקצב, רוטציות וגארבג' טיים." : "בכדורגל ניצחון/שערים רגישים לטקטיקה, אדומים, מזג אוויר ורוטציה."),
           "יחסים והסתברות\n" + hebrewOddsLine,
-          "בדיקת ערך\n" + hebrewValueLine + "\n" + hebrewCaution,
-          "המלצה\n" + hebrewRecommendation + "\nקריאה מעשית: " + (decision.shouldBet ? "שווה לשקול רק אחרי בדיקת הרכבים/פציעות ואימות שהיחס עדיין חי ב-Winner." : "לא להכריח את ההימור אם אין יתרון ברור."),
-          "דירוג מ-1 עד 10\n" + rating + "/10",
-          "חלופות\n- אם ניצחון ישיר או Over קצר מדי, בדוק Over 1.5, סיכוי כפול, BTTS או בכדורסל Moneyline בטוח יותר.\n- אם אין יתרון ברור, גם לא להמר זו החלטה טובה.",
+          "בדיקת יתרון סטטיסטי\n" + hebrewValueLine + "\n" + hebrewCaution,
+          "קריאה סטטיסטית\n" + hebrewRecommendation + "\nפירוש: " + (assessment.hasEdge ? "יש סימני יתרון, אבל מידע חסר כמו הרכבים/פציעות נשאר אי-ודאות." : "אין יתרון מספיק ברור בנתונים הזמינים."),
+          "דירוג יתרון סטטיסטי מ-1 עד 10\n" + rating + "/10",
+          "זוויות נוספות לבדיקה\n- אם ניצחון ישיר או Over קצר מדי, אפשר להשוות גם מגמות שערים, סיכוי כפול, BTTS או בכדורסל Moneyline/ליין רלוונטי כנתוני שוק.\n- אם אין יתרון ברור, המסקנה האנליטית היא שהנתונים לא מספיק חד-משמעיים.",
           bottomLine,
-          "אני עונה לפי השפה שלך: אם תכתוב בעברית אענה בעברית; אם תכתוב באנגלית אענה באנגלית.\nלמטרות בידור ולמידה בלבד. זו לא המלצה פיננסית ואין הימור מובטח."
+          "אני עונה לפי השפה שלך: אם תכתוב בעברית אענה בעברית; אם תכתוב באנגלית אענה באנגלית.\nלמטרות מידע ולמידה בלבד. אין כאן ייעוץ הימורים, המלצה לשים כסף או הבטחת תוצאה."
         ].join("\n\n");
       }
 
       return [
-        "Bet Summary\n" + value + "\nMatched Winner game: " + matchedRow.match + "\nSport: " + sportName + " | Market: " + marketName,
+        (asksForBettingInstruction(value)
+          ? "I do not provide betting instructions or tell users where to put money. From a sports/statistical angle, I can discuss edges, risks, and matchup data."
+          : "AI Sports Analyst provides sports and statistical analysis only. This is not betting advice, not an instruction to stake money, and not a guarantee of results or profit."),
+        "Analysis Summary\n" + value + "\nMatched Winner game: " + matchedRow.match + "\nSport: " + sportName + " | Market: " + marketName,
         "Winner Feed Context\n" + winnerContext,
         "Data Access\n" + dataAccess,
-        "Strengths\n- The bet is framed clearly enough to compare market price against probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against the implied probability.",
-        "Weaknesses\n- Winner gives the betting market and odds, not a complete injury/lineup database. Missing external data is treated as uncertainty, not invented confidence.\n- Short odds can still be bad value if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win bets are sensitive to tactics, red cards, weather, and lineup rotation."),
+        "Strengths\n- The match is framed clearly enough to compare market price against model probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against implied probability as market context.",
+        "Weaknesses\n- Winner gives the market and odds, not a complete injury/lineup database. Missing external data is treated as uncertainty, not invented confidence.\n- Short odds can still be weak if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win probabilities are sensitive to tactics, red cards, weather, and lineup rotation."),
         "Odds and Probability\n" + oddsLine,
-        "Value Assessment\n" + valueLine + "\n" + caution,
-        "Recommendation\n" + recommendation + "\nPractical call: " + (recommendation.includes("Favor") ? "worth considering only after checking lineups/injuries and confirming the Winner price is still live." : "I would not force this bet unless new data improves the edge."),
-        "Rating out of 10\n" + rating + "/10",
-        "Alternative Bets\n- If the straight win/Over price is too short, check BTTS, Over 1.5, double chance, or a safer basketball ML instead of a volatile spread.\n- If the edge is unclear, passing is a valid betting decision.",
-        (decision.shouldBet
-          ? `Bottom line: yes, this is worth considering. Beta bet rating: ${rating}/10. If you place it, my pick is: ${exactBet}.`
-          : `Bottom line: I would not rush this bet. Beta bet rating: ${rating}/10. If you still want to check it, the closest pick is: ${exactBet}.`),
-        "I answer in your language: if you write in English, I answer in English; if you write in Hebrew, I answer in Hebrew.\nFor entertainment and education only. This is not financial advice, and no bet is guaranteed."
+        "Statistical Edge Assessment\n" + valueLine + "\n" + caution,
+        "Statistical Read\n" + recommendation + "\nMeaning: " + (assessment.hasEdge ? "there are edge signals, but missing lineup/injury data remains uncertainty." : "the available data does not show a clear enough edge."),
+        "Statistical Edge Rating out of 10\n" + rating + "/10",
+        "Alternative Angles\n- If straight win or Over is too short, compare BTTS, Over 1.5, double chance, or basketball ML/spread as market context.\n- If the edge is unclear, the analytical conclusion is that the data is not decisive.",
+        (assessment.hasEdge
+          ? `Bottom line: there is some statistical edge on the tested side (${exactSide}). Statistical edge rating: ${rating}/10. This is not betting advice or an instruction to stake money.`
+          : `Bottom line: the statistical edge is not sharp enough right now. Statistical edge rating: ${rating}/10. This is not betting advice or an instruction to stake money.`),
+        "I answer in your language: if you write in English, I answer in English; if you write in Hebrew, I answer in Hebrew.\nFor information and education only. No betting advice, no instruction to stake money, and no guaranteed result."
       ].join("\n\n");
     }
 
     function renderChatMessage(message) {
       const image = message.image
-        ? `<img src="${escapeHtml(message.image)}" alt="טופס הימור שהועלה" style="max-width:220px;width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.12);margin-bottom:8px;display:block">`
+        ? `<img src="${escapeHtml(message.image)}" alt="תמונה שהועלתה לניתוח נתונים" style="max-width:220px;width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.12);margin-bottom:8px;display:block">`
         : "";
       return `<div class="chat-message ${message.role === "user" ? "user" : "ai"}" style="white-space:pre-wrap">${image}${escapeHtml(message.text)}</div>`;
     }
@@ -2466,14 +2485,15 @@
     function renderReubenAI() {
       const messages = state.reubenMessages.length
         ? state.reubenMessages
-        : [{ role: "ai", text: "שלום! אני ראובן AI.\n\nאפשר לכתוב משחק או להעלות תמונה של טופס הימור. אם תעלה תמונה, אנסה לקרוא את הבחירות והיחסים, להשוות ל-Winner, ולהגיד אם הטופס טוב או רע.\n\nדוגמה בטקסט: \"ברצלונה נגד ריאל מדריד, היום\"" }];
+        : [{ role: "ai", text: "שלום! אני AI Sports Analyst.\n\nAI Sports Analyst מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.\n\nשאל אותי על משחקים, קבוצות, חוזקות, חולשות ונתונים סטטיסטיים. אעזור לך להבין את המשחק טוב יותר לפי נתונים, בלי לתת הוראות או המלצות להימור.\n\nדוגמה בטקסט: \"ברצלונה נגד ריאל מדריד, היום\"" }];
       const loading = state.reubenLoading;
       return `
         <section class="reuben-panel">
           <div class="section-title" style="margin:0">
             <div>
-              <h3 style="display:flex;align-items:center;gap:8px">ראובן AI <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:rgba(85,214,255,.15);color:var(--cyan)">BETA</span></h3>
-              <p>יועץ הימורי חכם — מושך אודס אמיתי מ-Winner ומנתח כל משחק שתבקש.</p>
+              <h3 style="display:flex;align-items:center;gap:8px">AI Sports Analyst <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:rgba(85,214,255,.15);color:var(--cyan)">BETA</span></h3>
+              <p><b>AI Sports Analyst מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.</b></p>
+              <p>שאל את ה-Agent על משחקים, קבוצות, חוזקות, חולשות ונתונים סטטיסטיים. ה-Agent יעזור לך להבין את המשחק טוב יותר לפי נתונים, בלי לתת הוראות או המלצות להימור.</p>
             </div>
             <span class="pill">Winner · AI</span>
           </div>
@@ -2487,8 +2507,8 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
             <input id="reubenSlipFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" ${loading ? "disabled" : ""}>
-            <label for="reubenSlipFile" class="open-game" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;opacity:${loading ? ".5" : "1"}">העלה תמונת טופס</label>
-            <span class="micro">ראובן יקרא את הטופס רק אם ניתוח תמונה מחובר בשרת. בלי זה הוא לא ינחש.</span>
+            <label for="reubenSlipFile" class="open-game" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;opacity:${loading ? ".5" : "1"}">העלה תמונה לניתוח נתונים</label>
+            <span class="micro">ה-Agent יקרא רק נתונים גלויים בתמונה. בלי חיבור ניתוח תמונה בשרת הוא לא ינחש.</span>
           </div>
         </section>
       `;
@@ -2511,7 +2531,7 @@
       const title = document.getElementById("listTitle");
       const meta = document.getElementById("resultMeta");
       if (state.sportTab === "reuben") {
-        title.textContent = "ראובן AI · ניתוח הימור";
+        title.textContent = "AI Sports Analyst · ניתוח משחק לפי נתונים";
         meta.textContent = "סוכן ניתוח לכדורגל וכדורסל";
         cards.innerHTML = renderReubenAI();
         return;
@@ -2531,9 +2551,9 @@
       const totalRows = daySportRows(state.day, state.sportTab).length;
       const withPick = rows.filter(row => row.recommended && !row.outsideRange).length;
       const withoutPick = Math.max(0, rows.length - withPick);
-      const withoutPickText = `${withoutPick} \u05dc\u05dc\u05d0 \u05d4\u05de\u05dc\u05e6\u05d4`;
+      const withoutPickText = `${withoutPick} ללא יתרון סטטיסטי`;
       meta.textContent = isOpenDay()
-        ? `${rows.length}/20 \u05de\u05e9\u05d7\u05e7\u05d9 Winner \u05d4\u05db\u05d9 \u05d7\u05d6\u05e7\u05d9\u05dd \u00b7 ${withPick} \u05e2\u05dd \u05d4\u05de\u05dc\u05e6\u05d4${withoutPick ? ` \u00b7 ${withoutPickText}` : ""}. ${sourceMode}${isRefreshing ? " \u00b7 \u05de\u05ea\u05e2\u05d3\u05db\u05df..." : ""}`
+        ? `${rows.length}/20 משחקי Winner עם הציון הסטטיסטי הגבוה ביותר · ${withPick} עם יתרון סטטיסטי${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}${isRefreshing ? " · מתעדכן..." : ""}`
         : `${rows.length} \u05ea\u05d5\u05e6\u05d0\u05d5\u05ea \u05e8\u05e9\u05de\u05d9\u05d5\u05ea \u05de\u05ea\u05d5\u05da ${totalRows}. \u05d4\u05de\u05e1\u05da \u05d4\u05d6\u05d4 \u05e1\u05d5\u05d2\u05e8 \u05ea\u05d7\u05d6\u05d9\u05d5\u05ea \u05e9\u05e0\u05e9\u05de\u05e8\u05d5 \u05e7\u05d5\u05d3\u05dd. ${sourceMode}${isRefreshing ? " \u00b7 \u05de\u05ea\u05e2\u05d3\u05db\u05df..." : ""}`;
       const banners = [
         (state.feed?.fallback || state.feed?.stale) ? `<div class="fallback-banner">\u05de\u05d5\u05e6\u05d2\u05d9\u05dd \u05e0\u05ea\u05d5\u05e0\u05d9 \u05d2\u05d9\u05d1\u05d5\u05d9 \u05de\u05d0\u05d5\u05de\u05ea\u05d9\u05dd. Winner Live \u05dc\u05d0 \u05d6\u05de\u05d9\u05df \u05db\u05e8\u05d2\u05e2 \u05d1\u05e9\u05e8\u05ea; \u05d4\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd \u05e2\u05d5\u05d3\u05db\u05e0\u05d5 ${formatShortTime(state.feed.generatedAt || state.localCachedAt)}.</div>` : "",
@@ -2624,9 +2644,9 @@
 
     function progressResult(row) {
       const outcome = rowOutcome(row);
-      if (outcome.key === "hit") return "Win";
-      if (outcome.key === "miss") return "Loss";
-      if (outcome.key === "void" || outcome.key === "unverified" || outcome.key === "closed") return "Push";
+      if (outcome.key === "hit") return "התאימה";
+      if (outcome.key === "miss") return "לא התאימה";
+      if (outcome.key === "void" || outcome.key === "unverified" || outcome.key === "closed") return "לא נספר";
       return "—";
     }
 
@@ -2657,7 +2677,7 @@
                 <b>${escapeHtml(row.match || `${row.home || ""} - ${row.away || ""}`)}</b>
                 <span class="micro">${progressStatus(row)}${row.liveScore || row.result ? ` · ${escapeHtml(row.liveScore || row.result)}` : ""}</span>
               </div>
-              <span class="badge ${progressResult(row) === "Win" ? "badge-won" : progressResult(row) === "Loss" ? "badge-lost" : "badge-pending"}">${progressResult(row)}</span>
+              <span class="badge ${progressResult(row) === "התאימה" ? "badge-won" : progressResult(row) === "לא התאימה" ? "badge-lost" : "badge-pending"}">${progressResult(row)}</span>
             </div>
           `).join("")}
         </div>
@@ -2666,12 +2686,12 @@
 
     function predictionStatusInfo(value) {
       const raw = String(value || "").trim();
-      if (raw === "hit" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "תפס", cls: "hit" };
-      if (raw === "miss" || raw === "נפל" || raw === "לא נתפס") return { key: "miss", label: "נפל", cls: "miss" };
+      if (raw === "hit" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "תחזית התאימה", cls: "hit" };
+      if (raw === "miss" || raw === "נפל" || raw === "לא נתפס") return { key: "miss", label: "תחזית לא התאימה", cls: "miss" };
       if (raw === "void" || raw === "cancelled" || raw === "בוטל") return { key: "void", label: "בוטל", cls: "unverified" };
       if (raw === "unverified" || raw === "לא אומת" || raw === "החזר") return { key: "unverified", label: "לא אומת", cls: "unverified" };
       if (raw === "closed" || raw === "נסגר") return { key: "closed", label: "נסגר", cls: "closed" };
-      return { key: "pending", label: "ממתין", cls: "wait" };
+      return { key: "pending", label: "ממתין לתוצאה", cls: "wait" };
     }
 
     function matchStatusInfo(row) {
@@ -2913,7 +2933,7 @@
       return `
         <div class="result-line">
           <div class="result-detail">
-            <span>סטטוס תחזית</span>
+            <span>בדיקת תחזית סטטיסטית</span>
             <b>${outcome.label}${outcome.actual ? ` · בפועל: ${outcome.actual}` : ""}</b>
             <span>${verifyLabel}</span>
           </div>
@@ -2962,7 +2982,7 @@
 
     function shareTextForRow(row) {
       const odds = row.odds ? ` @ ${formatOdds(row.odds)}` : "";
-      return `${row.match} | ${explicitPickText(row)}${odds} | הפוגע`;
+      return `${row.match} | ${explicitPickText(row)}${odds} | AI Sports Analyst`;
     }
 
     function rowCard(row) {
@@ -2971,7 +2991,7 @@
         ? "לא בטופ 20"
         : row.recommendationReason === "odds-range"
           ? "מחוץ לטווח 1.40-1.90"
-          : "ללא המלצה";
+          : "ללא יתרון סטטיסטי";
       const why = (row.explanation || [])[1] || (row.signals || []).slice(0, 2).join(" · ");
       return `
         <article class="card" data-id="${row.id}">
@@ -3000,7 +3020,7 @@
               ${hasRecommendation
                 ? `<div class="pick-summary">
                      <div class="pick-summary-main">
-                       <span>מה הימרנו</span>
+                       <span>הצד שנבחן</span>
                        <strong>${explicitPickText(row)}</strong>
                        <span>${marketLabelText(row)} · ${pickActionText(row)}</span>
                      </div>
@@ -3010,7 +3030,7 @@
                    ${oddsMovementMarkup(row)}`
                 : `<div class="pick-summary" style="opacity:.72">
                      <div class="pick-summary-main">
-                       <span>ללא המלצה</span>
+                       <span>ללא יתרון סטטיסטי</span>
                        <strong>${explicitPickText(row)}${row.oddsRaw ? ` · ${formatOdds(row.oddsRaw)}` : ""}</strong>
                        <span>${noPickLabel}</span>
                      </div>
@@ -3042,16 +3062,16 @@
       target.innerHTML = `
         <div class="section-title">
           <div>
-            <h3>היסטוריית תוצאות</h3>
-            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">נוסחה: תפס / (תפס + נפל). ממתין, בוטל ולא אומת לא נספרים באחוז.</p>
+            <h3>היסטוריית בדיקת תחזיות</h3>
+            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">נוסחה: תחזיות שהתאימו / תחזיות מאומתות. ממתין, בוטל ולא אומת לא נספרים בדיוק.</p>
           </div>
         </div>
         <div class="history-rate">
           <b>${rateText}</b>
-          <span style="color:var(--muted);font-size:13px">ROI ביחידת הימור קבועה: ${roiText}</span>
+          <span style="color:var(--muted);font-size:13px">מדד יחסי פנימי: ${roiText}</span>
           <div class="history-counts">
-            <span class="badge badge-won">תפס ${perf.hits}</span>
-            <span class="badge badge-lost">נפל ${perf.misses}</span>
+            <span class="badge badge-won">התאימו ${perf.hits}</span>
+            <span class="badge badge-lost">לא התאימו ${perf.misses}</span>
             <span class="badge badge-pending">ממתין ${perf.pending}</span>
             <span class="badge badge-unverified">בוטל/לא אומת ${perf.voided}</span>
           </div>
@@ -3065,7 +3085,7 @@
                 <span class="badge ${badgeClass}">${info.label}</span>
                 <div>
                   <div style="font-weight:800;font-size:12px">${escapeHtml(item.match || "")}</div>
-                  <div class="h-pick">בחירה: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
+                  <div class="h-pick">צד שנבדק: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
                   <div class="h-pick">תוצאה: ${escapeHtml(item.result || item.actualWinner || "ממתין לאימות")}</div>
                 </div>
                 <div style="font-size:10px;color:var(--soft)">${item.settledDay || item.predictedDay || ""}</div>
@@ -3187,7 +3207,7 @@
       const image = await imageFileToDataUrl(file);
       state.reubenMessages.push({
         role: "user",
-        text: note ? `תנתח את הטופס הזה. הערה: ${note}` : "תנתח את הטופס הזה ותגיד אם הוא טוב או רע.",
+        text: note ? `נתח את התמונה הזו מבחינה ספורטיבית וסטטיסטית. הערה: ${note}` : "נתח את התמונה הזו מבחינה ספורטיבית וסטטיסטית בלבד.",
         image,
       });
       state.reubenLoading = true;
@@ -3202,12 +3222,12 @@
         const data = await response.json().catch(() => ({}));
         state.reubenMessages.push({
           role: "ai",
-          text: data.answer || "לא הצלחתי לקבל ניתוח לטופס. תנסה שוב או תכתוב את הבחירות בטקסט.",
+          text: data.answer || "לא הצלחתי לקבל ניתוח לתמונה. תנסה שוב או תכתוב את המשחקים והנתונים בטקסט.",
         });
       } catch (error) {
         state.reubenMessages.push({
           role: "ai",
-          text: `לא הצלחתי לשלוח את התמונה לניתוח: ${error.message}. תעתיק לי את המשחקים והיחסים בטקסט ואני אנתח אותם.`,
+          text: `לא הצלחתי לשלוח את התמונה לניתוח: ${error.message}. תעתיק לי את המשחקים והנתונים בטקסט ואני אנתח אותם מבחינה ספורטיבית.`,
         });
       } finally {
         state.reubenLoading = false;

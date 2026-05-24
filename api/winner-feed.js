@@ -719,8 +719,8 @@ function spreadStatus(event, row) {
       ? awayScore + spread - homeScore
       : null;
   if (adjusted === null) return "";
-  if (adjusted > 0) return "תפס";
-  if (adjusted < 0) return "נפל";
+  if (adjusted > 0) return "hit";
+  if (adjusted < 0) return "miss";
   return "לא אומת";
 }
 
@@ -969,16 +969,16 @@ function describeOverUnderPick(market, scored) {
   ];
   if (oppOdds && oppPct) {
     const gap = impliedPct - oppPct;
-    parts.push(`"${opposite}" מתומחר ב-${oppOdds.toFixed(2)} (${oppPct}%) — האלגוריתם בחר "${dir}" בפער של ${gap} נקודות אחוז.`);
+    parts.push(`"${opposite}" מתומחר ב-${oppOdds.toFixed(2)} (${oppPct}%) — האלגוריתם סימן את "${dir}" כצד בעל יתרון של ${gap} נקודות אחוז.`);
   }
   if (line != null) {
     if (line <= 2.5) {
-      parts.push(`קו ${line} גולים הוא נפוץ בכדורגל אירופאי (ממוצע הלשכות ~2.6 גולים למשחק). ${dir === "מעל" ? "הבחירה מניחה שהמשחק יהיה פתוח." : "הבחירה מניחה שהמשחק יהיה כבד הגנתית."}`);
+      parts.push(`קו ${line} גולים הוא נפוץ בכדורגל אירופאי (ממוצע הלשכות ~2.6 גולים למשחק). ${dir === "מעל" ? "הניתוח מניח שהמשחק יהיה פתוח." : "הניתוח מניח שהמשחק יהיה כבד הגנתית."}`);
     } else {
-      parts.push(`קו ${line} גולים — קו גבוה, מתאים למשחקים התקפיים. ${dir === "מעל" ? "הבחירה מניחה לפחות " + Math.ceil(line) + " גולים." : "הבחירה מניחה משחק צמוד ומועט גולים."}`);
+      parts.push(`קו ${line} גולים — קו גבוה, מתאים למשחקים התקפיים. ${dir === "מעל" ? "הניתוח מניח לפחות " + Math.ceil(line) + " גולים." : "הניתוח מניח משחק צמוד ומועט גולים."}`);
     }
   }
-  parts.push(`האלגוריתם מבוסס על סיגנל שוק Winner: כשהצד "${dir}" מתומחר בטווח 1.40–1.90 ומשקף הסתברות גבוהה לאחר ניכוי מרווח הבית, הוא נכנס להמלצה.`);
+  parts.push(`האלגוריתם מבוסס על סיגנל שוק Winner: כשהצד "${dir}" מתומחר בטווח 1.40–1.90 ומשקף הסתברות גבוהה לאחר ניכוי מרווח הבית, הוא נכנס לניתוח המרכזי.`);
   return parts.join(" ");
 }
 
@@ -1006,18 +1006,18 @@ function describeWinnerPick(market, scored, teams) {
     pickedTeam === cleanText(teams.away) ? "away" :
     cleanText(scored.pick).toLowerCase() === "x" ? "draw" : "team";
   const venueReason =
-    side === "home" ? `${pickText} משחקת בבית, ולכן הבחירה מקבלת גם יתרון מגרש.` :
+    side === "home" ? `${pickText} משחקת בבית, ולכן הצד שנבחן מקבל גם יתרון מגרש.` :
     side === "away" ? `${pickText} מסומנת כפייבוריטית גם בחוץ, וזה בדרך כלל מצביע על פער איכות מול היריבה ולא רק על יתרון ביתיות.` :
     side === "draw" ? "תיקו נבחר רק אם השוק מתמחר אותו בתוך הטווח ובפער סביר מהקבוצות." :
-    "הבחירה מזוהה ישירות מתוך שוק המנצח של Winner.";
+    "הצד שנבחן מזוהה ישירות מתוך שוק המנצח של Winner.";
   const gapReason = opponent?.odds
     ? `מול ${opponent.desc}, השוק נותן ליריבה יחס ${opponent.odds.toFixed(2)}, כלומר Winner רואה אותה כפחות סבירה לניצחון.`
     : "";
   const drawReason = draw?.odds ? `גם התיקו רחוק יותר ביחס ${draw.odds.toFixed(2)}.` : "";
   if (favorite?.desc === scored.pick) {
-    return `${pickText} נבחרת לניצחון כי היא הפייבוריטית הברורה בשוק המנצח של Winner. ${venueReason} ${gapReason} ${drawReason} ${alternatives ? `החלופות בשוק: ${alternatives}.` : ""}`.replace(/\s+/g, " ").trim();
+    return `${pickText} מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. ${venueReason} ${gapReason} ${drawReason} ${alternatives ? `חלופות השוק: ${alternatives}.` : ""}`.replace(/\s+/g, " ").trim();
   }
-  return `${pickText} נבחרת כי היא עדיין בחירת מנצח פתוחה ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זו בחירה מסוכנת יותר.` : ""}`.replace(/\s+/g, " ").trim();
+  return `${pickText} מסומנת כי היא עדיין צד מנצח פתוח ב-Winner בתוך הטווח המבוקש. ${venueReason} ${favorite ? `חשוב: הפייבוריט הראשי לפי Winner הוא ${favorite.desc}, לכן זה צד מסוכן יותר.` : ""}`.replace(/\s+/g, " ").trim();
 }
 
 const BOARD_PICK_LIMIT = 60;
@@ -1163,7 +1163,7 @@ function scoreBreakdown(row) {
     ...components,
     total,
     labels: {
-      hitProbability: "סבירות פגיעה",
+      hitProbability: "הסתברות מודל",
       oddsValue: "ערך יחס",
       marketGap: "פער שוק",
       reliability: "אמינות שוק",
@@ -1183,7 +1183,7 @@ function recommendationRank(row) {
 
 function rejectionReasons(row) {
   const reasons = [];
-  if (!row.recommended || !row.odds) reasons.push("לא המלצה פעילה");
+  if (!row.recommended || !row.odds) reasons.push("לא ניתוח פעיל");
   if (!hasVerifiedLogo(row.homeAsset)) reasons.push("אין לוגו אמיתי לקבוצת הבית");
   if (!hasVerifiedLogo(row.awayAsset)) reasons.push("אין לוגו אמיתי לקבוצת החוץ");
   if (row.homeAsset?.logo && row.homeAsset.logo === row.awayAsset?.logo) reasons.push("לוגו זהה לשתי הקבוצות");
@@ -1309,9 +1309,9 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
       result: "",
       signals: outsideRange
         ? [
-            `יחס Winner ${scored.odds.toFixed(2)} — מחוץ לטווח ההמלצה (1.40–1.90)`,
+            `יחס Winner ${scored.odds.toFixed(2)} — מחוץ לטווח הניתוח המרכזי (1.40–1.90)`,
             `הסתברות שוק ${Math.round(scored.normalizedProbability * 100)} אחוז`,
-            "המשחק מוצג ללא בחירה",
+            "המשחק מוצג ללא יתרון סטטיסטי",
           ]
         : [
             `הסתברות Winner מנוכת מרווח ${Math.round(scored.normalizedProbability * 100)} אחוז`,
@@ -1322,12 +1322,12 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
       allMarkets: eventMarkets,
       explanation: outsideRange
         ? [
-            "המשחק מופיע בווינר-ליין אך הפייבוריט מחוץ לטווח ההמלצה.",
-            `יחס הפייבוריט הוא ${scored.odds.toFixed(2)} — ${scored.odds < 1.4 ? "נמוך מדי (פערים ברורים מדי, סיכון גבוה להפתעה)" : "גבוה מדי (שוק פתוח מדי, אין יתרון ברור)"}. אין כאן המלצה.`,
-            "האלגוריתם מציג את המשחק כדי שתוכל לראות את כל הלוח — אך לא ממליץ על הימור.",
+            "המשחק מופיע בווינר-ליין אך הפייבוריט מחוץ לטווח הניתוח המרכזי.",
+            `יחס הפייבוריט הוא ${scored.odds.toFixed(2)} — ${scored.odds < 1.4 ? "נמוך מדי (פערים ברורים מדי, סיכון גבוה להפתעה)" : "גבוה מדי (שוק פתוח מדי, אין יתרון ברור)"}. אין כאן יתרון סטטיסטי מסומן.`,
+            "האלגוריתם מציג את המשחק כדי שתוכל לראות את כל הלוח — בלי לתת הוראת פעולה.",
           ]
         : [
-            "המשחק מופיע בווינר-ליין ולכן ניתן להמר עליו בזמן משיכת הנתונים.",
+            "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
             describeWinnerPick(market, scored, teams),
             "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור.",
           ],
@@ -1435,8 +1435,8 @@ function resultStatus(event, pick) {
   if (!results.length) return "ממתין";
   const cleanPick = cleanText(pick);
   return results.some((result) => result === cleanPick || result.includes(cleanPick) || cleanPick.includes(result))
-    ? "תפס"
-    : "נפל";
+    ? "hit"
+    : "miss";
 }
 
 function buildResultRows(results, dateKey) {
@@ -1483,7 +1483,7 @@ function buildResultRows(results, dateKey) {
         matchPhase: actualWinner ? "final" : resultPhase(event),
         result: _resultScore,
         resultVerifiedAt: actualWinner ? verifiedAt : "",
-        signals: ["תוצאה רשמית מווינר", "ארכיון לבדיקת פגיעה", "אין יחס עבר בממשק הציבורי"],
+        signals: ["תוצאה רשמית מווינר", "ארכיון לבדיקת תחזית סטטיסטית", "אין יחס עבר בממשק הציבורי"],
         allMarkets: (event.markets || []).map((item) => ({
           marketId: null,
           title: cleanText(item.title),
@@ -1662,7 +1662,7 @@ function build365ResultRows(results, dateKey, winnerSportId, marketTitle, signal
         explanation: [
           `זהו משחק ${SPORTS[winnerSportId] || "ספורט"} מארכיון התוצאות של 365Scores.`,
           `התוצאה הרשמית לפי 365Scores היא ${actualWinner || "לא זמינה"}.`,
-          "היחסים והבחירה עדיין מגיעים מ-Winner; 365Scores משמש רק לסגירת התוצאה.",
+          "היחסים והצד שנבחן עדיין מגיעים מ-Winner; 365Scores משמש רק לסגירת התוצאה.",
         ],
       };
     })
@@ -1962,10 +1962,10 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       tomorrow: { label: "מחר", date: tomorrow, sports: tomorrowRows },
     },
     modelStats: {
-      title: "מה עומד מאחורי הניחושים",
+      title: "מה עומד מאחורי הניתוחים",
       factors: [
         "שוקי בסיס: 1X2 בכדורגל, מנצחת/ליין יתרון בכדורסל מכל הליגות שמופיעות ב-Winner. בימים חלשים נכנסים שווקים חלופיים מסומנים בלבד.",
-        `${TARGET_PICKS_PER_SPORT} המלצות ביום — יחס Winner אמיתי בטווח 1.40-1.90; אם יחס יוצא מהטווח או השוק לא זמין, המשחק לא נכנס לטופ.`,
+        `${TARGET_PICKS_PER_SPORT} ניתוחים ביום — יחס Winner אמיתי בטווח 1.40-1.90 כנתון שוק; אם יחס יוצא מהטווח או השוק לא זמין, המשחק לא נכנס לטופ.`,
         "היחסים מומרים להסתברות, עוברים ניכוי מרווח בית, ואז מדורגים לפי הסתברות מנורמלת ופער מול היריבה הקרובה.",
         "בית/חוץ: פייבוריט בחוץ מקבל הסבר של פער איכות; פייבוריט בבית מקבל יתרון מגרש.",
         "לא מוצגים פציעות, הרכבים או חדשות אם הם לא חזרו ממקור מאומת.",
@@ -1976,18 +1976,18 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       "קטגוריות כדורגל וכדורסל",
       "יחסי Winner בזמן אמת או snapshot מאומת",
       "לוגואים לקבוצות ולליגות",
-      "אחוז פגיעה חודשי לפי תחזיות שנשמרו",
+      "דיוק תחזיות סטטיסטיות לפי ניתוחים שנשמרו",
       "ציון ביטחון והסתברות שוק",
-      "הסבר למה הבחירה צפויה לנצח",
-      "AI Advisor למנוי: ניתוח הימור ידני, סיכון, חלופה מומלצת וסטטיסטיקות רלוונטיות",
-      "מונדיאל: המלצות רק בחלון 48 שעות לפני משחק עם פציעות, סגלים, מאמנים וכושר",
+      "הסבר יתרון סטטיסטי לכל משחק",
+      "AI Sports Analyst: ניתוח משחק ידני, סיכון, חלופות שוק וסטטיסטיקות רלוונטיות",
+      "מונדיאל: ניתוחים רק בחלון 48 שעות לפני משחק עם פציעות, סגלים, מאמנים וכושר",
       "חיפוש ומיון",
       "פירוט משחק",
     ],
     notes: [
-      `אתמול/היום/מחר: עד ${TARGET_PICKS_PER_SPORT} המלצות ביום עם יחס Winner בטווח 1.40-1.90; כדורגל וכדורסל מופרדים בתצוגה.`,
+      `אתמול/היום/מחר: עד ${TARGET_PICKS_PER_SPORT} ניתוחים ביום עם יחס Winner בטווח 1.40-1.90 כנתון שוק; כדורגל וכדורסל מופרדים בתצוגה.`,
       "אם בווינר יש פחות מ-20 משחקי בסיס בטווח, האלגוריתם מוסיף סיכוי כפול או מעל/מתחת רק כשהיחס עדיין בטווח ומסמן זאת כשוק חלופי.",
-      "אתמול הוא מסך סגירה ובדיקת פגיעה מול תוצאה רשמית, לא מסך הימור פתוח.",
+      "אתמול הוא מסך סגירה ובדיקת תחזית סטטיסטית מול תוצאה רשמית, לא מסך פעולה פתוחה.",
       "לכל קבוצה וליגה מוצג לוגו ממקור חיצוני או תג גרפי כאשר אין לוגו רשמי זמין.",
     ],
   };
@@ -1995,8 +1995,8 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
 
 function normalizePredictionStatus(status) {
   const value = cleanText(status);
-  if (value === "נתפס" || value === "תפס") return "תפס";
-  if (value === "לא נתפס" || value === "נפל") return "נפל";
+  if (value === "נתפס" || value === "תפס" || value === "hit") return "hit";
+  if (value === "לא נתפס" || value === "נפל" || value === "miss") return "miss";
   if (value === "החזר" || value === "לא אומת") return "לא אומת";
   if (value === "בוטל") return "בוטל";
   return value || "ממתין";
