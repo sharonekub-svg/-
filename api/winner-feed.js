@@ -449,8 +449,79 @@ async function wikidataLogoSearch(name, kind) {
   };
 }
 
+// ── FCLOGO SVG (github.com/FCLOGO/fclogo.top via jsDelivr) ─────────────────
+// Tier-1 source: high-quality official SVG logos per club.
+// URL pattern: FC_CDN + "{ASSOC}/clubs/{NNN}_{Club}/svg/{Logo}.svg"
+const FC_CDN = "https://cdn.jsdelivr.net/gh/FCLOGO/fclogo.top@main/src/data/logos/";
+const FC_FA  = FC_CDN + "theFA/clubs/";
+const FC_ESP = FC_CDN + "RFEF/clubs/";
+const FC_ITA = FC_CDN + "FIGC/clubs/";
+const FC_GER = FC_CDN + "DFB/clubs/";
+const FC_POR = FC_CDN + "FPF/clubs/";
+
+const FCLOGO_MAP = {
+  // ── Premier League (theFA) ───────────────────────────────────────────────
+  "צ'לסי":               FC_FA + "001_Chelsea/svg/Chelsea-FC-v2006.svg",
+  "מנצ'סטר סיטי":       FC_FA + "002_Man City/svg/Manchester-City-v2016.svg",
+  "ארסנל":               FC_FA + "003_Arsenal/svg/Arsenal-FC-v2002.svg",
+  "ליברפול":             FC_FA + "004_Liverpool/svg/Liverpool-Football-Club-v2024-minor.svg",
+  "בורנמות'":            FC_FA + "006_Bournemouth/svg/AFC-Bournemouth-v2013.svg",
+  "ברנטפורד":            FC_FA + "007_Brentford/svg/Brentford-Football-Club-v2017.svg",
+  "ברייטון":             FC_FA + "008_Brighton/svg/Brighton-Hove-Albion-v2011.svg",
+  "אברטון":              FC_FA + "010_Everton/svg/Everton-Football-Club-v2014.svg",
+  "מנצ'סטר יונייטד":    FC_FA + "014_Man United/svg/Manchester-United-Football-Club-v1998.svg",
+  "ניוקאסל":             FC_FA + "015_Newcastle/svg/Newcastle-United-Football-Club-v1988.svg",
+  "נוטינגהאם פורסט":    FC_FA + "016_Nottingham/svg/Nottingham-Forest-Football-Club-v2010.svg",
+  "טוטנהאם":             FC_FA + "018_Hotspur/svg/Tottenham-Hotspur-Football-Club-v2024.svg",
+  "ווסטהאם":             FC_FA + "019_West Ham/svg/West-Ham-United-Football-Club-v2016.svg",
+  "לידס":                FC_FA + "021_Leeds United/svg/Leeds-United-v2002.svg",
+  // ── La Liga (RFEF) ───────────────────────────────────────────────────────
+  "ריאל מדריד":          FC_ESP + "001_Real Madrid/svg/Real-Madrid-CF-v2002.svg",
+  "אתלטיקו מדריד":       FC_ESP + "002_Atletico Madrid/svg/Atletico-Madrid-v2024.svg",
+  "אתלטיק בילבאו":       FC_ESP + "004_Athletic Bilbao/svg/Athletic-Club-Bilbao-v2008.svg",
+  "ברצלונה":             FC_ESP + "006_Barcelona/svg/FC-Barcelona-v2002.svg",
+  // ── Serie A (FIGC) ───────────────────────────────────────────────────────
+  "יובנטוס":             FC_ITA + "001_Juventus/svg/Juventus-FC-v2017.svg",
+  "אינטר מילאן":         FC_ITA + "002_Intel Milan/svg/FC-Inter-Milan-v2021.svg",
+  "אטלנטה":              FC_ITA + "003_Atalanta/svg/Atalanta-BC-v1993.svg",
+  "מילאן":               FC_ITA + "013_AC Milan/svg/AC-Milan-v2009.svg",
+  "נאפולי":              FC_ITA + "015_Napoli/svg/SSC-Napoli-v2024.svg",
+  "רומא":                FC_ITA + "017_Roma/svg/AS-Roma-v2016.svg",
+  // ── Bundesliga (DFB) ─────────────────────────────────────────────────────
+  "באיירן מינכן":        FC_GER + "001_Bayern Munich/svg/FC-Bayern-Munchen-v2024.svg",
+  "בורוסיה דורטמונד":    FC_GER + "002_Dortmund/svg/Borussia-Dortmund-v1993.svg",
+  "לבה קוזן":            FC_GER + "004_Leverkusen/svg/Bayer-04-Leverkusen-v2006.svg",
+  "RB לייפציג":          FC_GER + "006_Leipzig/svg/RB-Leipzig-v2020.svg",
+  "איינטרכט פרנקפורט":   FC_GER + "007_Frankfurt/svg/Eintracht-Frankfurt-v1998.svg",
+  "פרייבורג":            FC_GER + "011_Freiburg/svg/SC-Freiburg-v2008.svg",
+  // ── Liga Portugal (FPF) ──────────────────────────────────────────────────
+  "בנפיקה":              FC_POR + "001_Benfica/svg/Sport-Lisboa-e-Benfica-v1999.svg",
+  "פורטו":               FC_POR + "002_Porto/svg/Futebol-Clube-do-Porto-v2002.svg",
+  "FC פורטו":            FC_POR + "002_Porto/svg/Futebol-Clube-do-Porto-v2002.svg",
+};
+
+/**
+ * Returns FCLOGO SVG row (highest quality) or null.
+ * Called first in resolveLogoRow(), before the PNG map and external APIs.
+ */
+function fclogoStaticLookup(name) {
+  const clean = cleanText(name);
+  if (!clean) return null;
+  const url = FCLOGO_MAP[clean];
+  if (url) return { name: clean, logo_url: url, source: "fclogo-svg" };
+  // Partial match
+  for (const [key, u] of Object.entries(FCLOGO_MAP)) {
+    const k = cleanText(key);
+    if (k && (clean.includes(k) || (k.length >= 4 && k.includes(clean)))) {
+      return { name: clean, logo_url: u, source: "fclogo-svg" };
+    }
+  }
+  return null;
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 // ── Football Logos CDN (github.com/luukhopman/football-logos via jsDelivr) ──
-// Primary logo source — checked before any external API call.
+// Tier-2 source — PNG badges, wider league coverage than FCLOGO.
 // Covers 25 European leagues with official PNG badges per team.
 const FL_CDN = "https://cdn.jsdelivr.net/gh/luukhopman/football-logos@master/logos/";
 const FL_EPL = FL_CDN + "England%20-%20Premier%20League/";
@@ -704,7 +775,17 @@ async function resolveLogoRow(table, kind, name) {
   globalLogoCache.set(`${key}:pending`, pending);
   let row = null;
   try {
-    // ── Step 1: static CDN map (instant, no network) ──────────────────────
+    // ── Step 1a: FCLOGO SVG map (vector, highest quality, instant) ───────────
+    if (kind === "team") {
+      const svgRow = fclogoStaticLookup(name);
+      if (svgRow) {
+        globalLogoCache.set(key, svgRow);
+        globalLogoCache.delete(`${key}:pending`);
+        resolvePending();
+        return svgRow;
+      }
+    }
+    // ── Step 1b: luukhopman PNG map (wide league coverage, instant) ───────────
     if (kind === "team") {
       const staticRow = footballLogosStaticLookup(name);
       if (staticRow) {
