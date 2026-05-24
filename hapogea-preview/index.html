@@ -491,14 +491,32 @@
     .signals { display: flex; gap: 6px; flex-wrap: wrap; }
     .signal { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 7px; }
     .details { border-top: 1px solid var(--line); padding-top: 10px; color: var(--muted); line-height: 1.45; font-size: 13px; }
+    .card-actions { display: flex; gap: 6px; margin-top: 0; }
     .open-game {
-      width: 100%;
+      flex: 1;
       border: 1px solid var(--line-strong);
       background: rgba(255,255,255,.04);
       color: var(--text);
       min-height: 40px;
       border-radius: 7px;
       font-weight: 900;
+    }
+    .btn-save {
+      flex: 1;
+      border: 1px solid rgba(49,209,135,.4);
+      background: rgba(49,209,135,.07);
+      color: var(--green);
+      min-height: 40px;
+      border-radius: 7px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .btn-save.saved {
+      background: rgba(49,209,135,.18);
+      border-color: var(--green);
+      color: var(--green);
+      cursor: default;
     }
     .modal {
       position: fixed;
@@ -1437,35 +1455,8 @@
       return left === right || left.includes(right) || right.includes(left);
     }
 
-    function rememberOpenPredictions(feed) {
-      if (!feed?.tabs) return;
-      const todayDate = activeTodayDate(feed);
-      const tracker = readTracker();
-      const byKey = new Map(tracker.map(item => [item.key, item]));
-      ["football", "basketball"].forEach(sport => {
-        (feed.tabs.today?.sports?.[sport] || []).forEach(row => {
-          if (!row.odds || row.outsideRange || row.day !== todayDate) return;
-          const key = predictionKey(row);
-          if (byKey.has(key)) return;
-          byKey.set(key, {
-            key,
-            eventId: row.eventId,
-            resultKey: row.resultKey,
-            marketId: row.marketId,
-            outcomeId: row.outcomeId,
-            sport,
-            pick: pickLabel(row),
-            match: row.match,
-            league: row.league,
-            odds: row.odds,
-            predictedDay: row.day,
-            month: String(row.day || "").slice(0, 7),
-            status: "pending"
-          });
-        });
-      });
-      writeTracker([...byKey.values()].filter(item => item.predictedDay === todayDate));
-    }
+    // Auto-tracking removed — history only shows what the user explicitly saved.
+    function rememberOpenPredictions(_feed) { /* no-op */ }
 
     function settleTrackedPredictions(feed) {
       if (!feed?.tabs?.yesterday) return;
@@ -2036,7 +2027,12 @@
             }
             ${resultMarkup(row)}
             ${cardVerifiedMarkup(row)}
-            <button class="open-game" data-open="${row.id}">פירוט משחק ↗</button>
+            <div class="card-actions">
+              ${hasRecommendation
+                ? `<button class="btn-save${isManualSaved(row) ? " saved" : ""}" data-save="${row.id}">${isManualSaved(row) ? "✓ נשמר" : "+ שמור תחזית"}</button>`
+                : ""}
+              <button class="open-game" data-open="${row.id}">פירוט משחק ↗</button>
+            </div>
           </div>
         </article>
       `;
@@ -2253,42 +2249,38 @@
         status.includes("בוטל") || status.includes("נדחה") || status.includes("החזר") || status.includes("לא אומת");
     }
 
-    function rememberOpenPredictions(feed) {
-      if (!feed?.tabs) return;
+    function savePrediction(row) {
+      const key = predictionKey(row);
       const tracker = readTracker();
-      const byKey = new Map(tracker.map(item => [item.key, item]));
-      ["today", "tomorrow"].forEach(dayName => {
-        ["football", "basketball"].forEach(sport => {
-          (feed.tabs?.[dayName]?.sports?.[sport] || []).forEach(row => {
-            if (!row.recommended || !row.odds || row.outsideRange) return;
-            const key = predictionKey(row);
-            const previous = byKey.get(key) || {};
-            byKey.set(key, {
-              ...previous,
-              key,
-              eventId: row.eventId,
-              resultKey: row.resultKey,
-              marketId: row.marketId,
-              outcomeId: row.outcomeId,
-              sport,
-              sportId: row.sportId,
-              home: row.home,
-              away: row.away,
-              league: row.league,
-              kickoffTime: row.time,
-              pick: pickLabel(row),
-              pickTeam: row.pickTeam,
-              match: row.match,
-              odds: row.odds,
-              oddsVerifiedAt: row.verifiedAt || feed.generatedAt || previous.oddsVerifiedAt || "",
-              predictedDay: row.day,
-              month: String(row.day || "").slice(0, 7),
-              status: previous.status && previous.status !== "pending" ? previous.status : "pending"
-            });
-          });
-        });
-      });
-      writeTracker([...byKey.values()]);
+      if (tracker.some(i => i.key === key)) return false; // already saved
+      writeTracker([...tracker, {
+        key,
+        eventId: row.eventId,
+        resultKey: row.resultKey,
+        marketId: row.marketId,
+        outcomeId: row.outcomeId,
+        sport: row.sport,
+        sportId: row.sportId,
+        home: row.home,
+        away: row.away,
+        league: row.league,
+        kickoffTime: row.time,
+        pick: pickLabel(row),
+        pickTeam: row.pickTeam,
+        match: row.match,
+        odds: row.odds,
+        oddsVerifiedAt: row.verifiedAt || state.feed?.generatedAt || "",
+        predictedDay: row.day,
+        month: String(row.day || "").slice(0, 7),
+        status: "pending",
+        savedManually: true,
+      }]);
+      return true;
+    }
+
+    function isManualSaved(row) {
+      const key = predictionKey(row);
+      return readTracker().some(i => i.key === key);
     }
 
     function settleTrackedPredictions(feed) {
@@ -2542,7 +2534,12 @@
             </div>
             ${resultMarkup(row)}
             ${cardVerifiedMarkup(row)}
-            <button class="open-game" data-open="${row.id}">פירוט משחק ←</button>
+            <div class="card-actions">
+              ${hasRecommendation
+                ? `<button class="btn-save${isManualSaved(row) ? " saved" : ""}" data-save="${row.id}">${isManualSaved(row) ? "✓ נשמר" : "+ שמור תחזית"}</button>`
+                : ""}
+              <button class="open-game" data-open="${row.id}">פירוט משחק ←</button>
+            </div>
           </div>
         </article>
       `;
@@ -2834,10 +2831,23 @@
       document.getElementById("worldCupSection").scrollIntoView({ behavior: "smooth", block: "start" });
     });
     document.getElementById("cards").addEventListener("click", event => {
-      const button = event.target.closest("[data-open]");
-      if (!button) return;
-      state.selectedId = button.dataset.open;
-      renderModal(findRow(state.selectedId));
+      const openBtn = event.target.closest("[data-open]");
+      if (openBtn) {
+        state.selectedId = openBtn.dataset.open;
+        renderModal(findRow(state.selectedId));
+        return;
+      }
+      const saveBtn = event.target.closest("[data-save]");
+      if (saveBtn && !saveBtn.classList.contains("saved")) {
+        const row = findRow(saveBtn.dataset.save);
+        if (row) {
+          savePrediction(row);
+          saveBtn.textContent = "✓ נשמר";
+          saveBtn.classList.add("saved");
+          settleTrackedPredictions(state.feed);
+          render();
+        }
+      }
     });
     document.getElementById("closeModal").addEventListener("click", closeModal);
     document.getElementById("gameModal").addEventListener("click", event => {
