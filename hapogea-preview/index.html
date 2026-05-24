@@ -2255,26 +2255,58 @@
         .slice(0, 3);
 
       // \u2500\u2500 6. "Game not found" guard \u2500\u2500
-      // Only trigger if the user actually mentioned teams, not just a general question
+      // If user mentioned teams and the game is simply not in the feed \u2014 stop here.
       if (hasTeams && !winnerMatches.length && state.feed) {
-        const dayRows = Object.values((state.feed?.tabs?.[targetDayKey === "dayafter" ? "tomorrow" : targetDayKey]?.sports) || {}).flatMap(r => r || []);
-        const feedHasGames = dayRows.length > 0;
-        const suggestion = feedHasGames
-          ? `\u05d1-Winner ${targetDayLabel} \u05d9\u05e9 ${dayRows.length} \u05de\u05e9\u05d7\u05e7\u05d9\u05dd \u2014 \u05d1\u05d3\u05d5\u05e7 \u05e9\u05d4\u05e9\u05dd \u05db\u05ea\u05d5\u05d1 \u05e7\u05e8\u05d5\u05d1 \u05dc\u05de\u05d4 \u05e9\u05de\u05d5\u05e4\u05d9\u05e2 \u05d1\u05e7\u05dc\u05e4\u05d9\u05dd.`
-          : `\u05d1-Winner ${targetDayLabel} \u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05de\u05e9\u05d7\u05e7\u05d9\u05dd \u05d1\u05dc\u05d5\u05d3.`;
-        return `\u05dc\u05d0 \u05de\u05e6\u05d0\u05ea\u05d9 \u05de\u05e9\u05d7\u05e7 "${[team1, team2].filter(Boolean).join(" \u05e0\u05d2\u05d3 ")}" \u05d1-Winner \u05dc${targetDayLabel}.\n\n${suggestion}\n\n\u05d4\u05d0\u05dd \u05d4\u05ea\u05db\u05d5\u05d5\u05e0\u05ea \u05dc\u05de\u05d5\u05e2\u05d3 \u05d0\u05d7\u05e8, \u05d0\u05d5 \u05dc\u05d6\u05d5\u05d2 \u05e7\u05d1\u05d5\u05e6\u05d5\u05ea \u05e9\u05d5\u05e0\u05d4? \u05dc\u05d7\u05dc\u05d5\u05e4\u05d9\u05df, \u05dc\u05d7\u05e5 \u05e2\u05dc "\u05e9\u05d0\u05dc \u05e8\u05d0\u05d5\u05d1\u05df \u2190" \u05d9\u05e9\u05d9\u05e8\u05d5\u05ea \u05e2\u05dc \u05e7\u05dc\u05e3 \u05de\u05e9\u05d7\u05e7 \u05db\u05d3\u05d9 \u05dc\u05e7\u05d1\u05dc \u05e0\u05d9\u05ea\u05d5\u05d7 \u05de\u05d3\u05d5\u05d9\u05e7.`;
+        return "\u05d0\u05d9\u05df \u05d0\u05ea \u05d4\u05de\u05e9\u05d7\u05e7 \u05d4\u05d6\u05d4.";
       }
 
       // \u2500\u2500 7. Build Winner context block \u2500\u2500
       const winnerRow = winnerMatches[0] || null;
-      const winnerOdds = winnerRow?.odds || odds;
-      const winnerPick = winnerRow ? explicitPickText(winnerRow) : null;
+
+      // Find actual Winner odds for the specific market the user asked about.
+      // We look at allMarkets first; if no match, fall back to row.odds.
+      // We do NOT use user-typed odds \u2014 only what Winner actually offers.
+      function findWinnerMarketOdds(row) {
+        if (!row) return null;
+        const mkts = row.allMarkets || [];
+        if (isSpread) {
+          const m = mkts.find(m => /\u05d9\u05ea\u05e8\u05d5\u05df|spread/i.test(m.title));
+          const o = m?.outcomes?.find(o => Number(o.price) >= 1.5);
+          if (o?.price) return { odds: Number(o.price), desc: o.desc, marketTitle: m.title };
+        }
+        if (isOver || isUnder) {
+          const line = isOver25 ? 2.5 : isOver15 ? 1.5 : null;
+          const m = mkts.find(m => /\u05de\u05e2\u05dc.*\u05de\u05ea\u05d7\u05ea|over.*under/i.test(m.title));
+          if (m) {
+            const dir = isOver ? "\u05de\u05e2\u05dc" : "\u05de\u05ea\u05d7\u05ea";
+            const o = m.outcomes?.find(o => (o.desc || "").includes(dir) && (!line || Math.abs(Number((o.desc || "").match(/\d+[.,]\d+/)?.[0]) - line) < 0.3));
+            if (o?.price) return { odds: Number(o.price), desc: o.desc, marketTitle: m.title };
+          }
+        }
+        if (isBtts) {
+          const m = mkts.find(m => /btts|\u05e9\u05e0\u05d9.*\u05d1\u05e7\u05d9\u05e2/i.test(m.title));
+          const o = m?.outcomes?.find(o => /\u05db\u05df|yes/i.test(o.desc));
+          if (o?.price) return { odds: Number(o.price), desc: o.desc, marketTitle: m.title };
+        }
+        if (isDC) {
+          const m = mkts.find(m => /\u05db\u05e4\u05d5\u05dc|double.?chance/i.test(m.title));
+          const o = m?.outcomes?.[0];
+          if (o?.price) return { odds: Number(o.price), desc: o.desc, marketTitle: m.title };
+        }
+        // Default: primary market odds from the row itself
+        return row.odds ? { odds: row.odds, desc: explicitPickText(row), marketTitle: row.market } : null;
+      }
+
+      const marketData = findWinnerMarketOdds(winnerRow);
+      const winnerOdds = marketData?.odds || null;   // ONLY Winner odds \u2014 no user fallback
+      const winnerPick = marketData?.desc || (winnerRow ? explicitPickText(winnerRow) : null);
+      const winnerMarketTitle = marketData?.marketTitle || winnerRow?.market || "";
       const winnerMarkets = (winnerRow?.allMarkets || []).slice(0, 3)
         .map(m => `${m.title}: ${(m.outcomes || []).slice(0, 3).map(o => `${o.desc}${o.price ? " " + formatOdds(Number(o.price)) : ""}`).join(", ")}`)
         .join("\n  ");
 
-      // \u2500\u2500 8. Probability estimation \u2500\u2500
-      const baseOdds = winnerOdds || odds;
+      // \u2500\u2500 8. Probability estimation (uses ONLY Winner odds) \u2500\u2500
+      const baseOdds = winnerOdds;   // strictly Winner \u2014 no user-typed fallback
       const baseImplied = baseOdds && baseOdds > 1 ? (1 / baseOdds) * 100 : null;
       let estimated = baseImplied ? Math.round(baseImplied + 2) : 55;
       if (isShortOddsRange || (baseOdds && baseOdds >= 1.4 && baseOdds <= 1.9)) {
@@ -2289,9 +2321,9 @@
       if (isSpread && !(baseOdds >= 1.4 && baseOdds <= 1.9)) estimated -= 4;
       if (isOver25 && !(baseOdds >= 1.4 && baseOdds <= 1.9)) estimated -= 3;
       estimated = Math.max(32, Math.min(80, estimated));
-      const useOdds = winnerOdds || odds;
+      const useOdds = winnerOdds;                                  // only Winner odds
       const useImplied = useOdds ? (1 / useOdds) * 100 : null;
-      const ev = useOdds ? ((estimated / 100) * useOdds - 1) : null;
+      const ev = winnerOdds ? ((estimated / 100) * winnerOdds - 1) : null;
 
       // \u2500\u2500 9. Recommendation & rating \u2500\u2500
       let recLabel = "\u05e0\u05d9\u05d8\u05e8\u05dc\u05d9", recEn = "Neutral";
@@ -2314,8 +2346,8 @@
 
       // Paragraph 1: game context
       const gameIntro = winnerRow
-        ? `\u05d0\u05e0\u05d9 \u05e8\u05d5\u05d0\u05d4 \u05e9\u05d4\u05de\u05e9\u05d7\u05e7 ${winnerRow.match} \u05e7\u05d9\u05d9\u05dd \u05d1-Winner ${targetDayLabel}${winnerRow.time ? ` \u05d1\u05e9\u05e2\u05d4 ${winnerRow.time}` : ""}, \u05d1\u05dc\u05d9\u05d2\u05ea ${winnerRow.league}. \u05d4\u05d0\u05dc\u05d2\u05d5\u05e8\u05d9\u05ea\u05dd \u05e9\u05dc Winner \u05de\u05ea\u05de\u05d7\u05e8 \u05d0\u05ea ${winnerPick}${winnerOdds ? ` \u05d1\u05d9\u05d7\u05e1 ${formatOdds(winnerOdds)}` : ""}${winnerMarkets ? `.\n\n\u05e9\u05d5\u05d5\u05e7\u05d9\u05dd \u05d6\u05de\u05d9\u05e0\u05d9\u05dd:\n  ${winnerMarkets}` : "."}`
-        : `\u05d1\u05d3\u05e7\u05ea\u05d9 \u05d0\u05ea \u05d4-Feed \u05e9\u05dc Winner \u2014 \u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d4 \u05d4\u05ea\u05d0\u05de\u05d4 \u05d9\u05e9\u05d9\u05e8\u05d4 \u05dc\u05de\u05e9\u05d7\u05e7 \u05d6\u05d4${targetDayKey !== "today" ? ` \u05dc${targetDayLabel}` : ""}. \u05d0\u05e0\u05ea\u05d7 \u05e2\u05dc \u05e1\u05de\u05da \u05d4\u05de\u05d9\u05d3\u05e2 \u05e9\u05de\u05e1\u05e8\u05ea.`;
+        ? `\u05d0\u05e0\u05d9 \u05e8\u05d5\u05d0\u05d4 \u05e9\u05d4\u05de\u05e9\u05d7\u05e7 ${winnerRow.match} \u05e7\u05d9\u05d9\u05dd \u05d1-Winner ${targetDayLabel}${winnerRow.time ? ` \u05d1\u05e9\u05e2\u05d4 ${winnerRow.time}` : ""}, \u05d1\u05dc\u05d9\u05d2\u05ea ${winnerRow.league}. Winner \u05de\u05ea\u05de\u05d7\u05e8 \u05d0\u05ea "${winnerPick}"${winnerOdds ? ` \u05d1\u05d9\u05d7\u05e1 ${formatOdds(winnerOdds)}` : ""}${winnerMarketTitle ? ` (\u05e9\u05d5\u05e7: ${winnerMarketTitle})` : ""}${winnerMarkets ? `.\n\n\u05db\u05dc \u05e9\u05d5\u05d5\u05e7\u05d9\u05dd \u05d6\u05de\u05d9\u05e0\u05d9\u05dd:\n  ${winnerMarkets}` : "."}`
+        : `\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d4 \u05d4\u05ea\u05d0\u05de\u05d4 \u05d1-Winner Feed${targetDayKey !== "today" ? ` \u05dc${targetDayLabel}` : ""}. \u05d0\u05e0\u05ea\u05d7 \u05e2\u05dc \u05e1\u05de\u05da \u05d4\u05de\u05d9\u05d3\u05e2 \u05e9\u05de\u05e1\u05e8\u05ea.`;
 
       // Paragraph 2: strengths (natural)
       const strengthPoints = [];
