@@ -2821,83 +2821,40 @@
     }
 
     // ── Client-side logo resolution ───────────────────────────────────────────
-    // Strategy:
-    //   1. Wikidata P154 (official "logo image" property — always a badge, never a photo)
-    //   2. If no P154 but Wikidata returned English name → TheSportsDB strBadge (official crests)
-    //   3. Never use Wikipedia page thumbnails — they return stadium photos, not crests
-    //   4. Persist results in localStorage so logos don't re-fetch on every page load
+    // /api/logo?q=<name>&type=team|league  runs server-side (no CORS limits),
+    // tries SofaScore + Wikidata P154 + TheSportsDB in parallel, and returns a
+    // 302 redirect to the real badge. Vercel CDN caches it 30 days.
+    // Locally we mirror that cache in localStorage (hapogea_logos_v3) so
+    // resolved URLs are available instantly on the next page load.
 
-    const _LOGO_STORE_KEY = "hapogea_logos_v2";
+    const _LOGO_STORE_KEY = "hapogea_logos_v3";
     function _loadLogoStore() {
       try { return JSON.parse(localStorage.getItem(_LOGO_STORE_KEY) || "{}"); } catch(_) { return {}; }
     }
     function _saveLogoStore(store) {
       try { localStorage.setItem(_LOGO_STORE_KEY, JSON.stringify(store)); } catch(_) {}
     }
-
     // Seed memory cache from localStorage on startup
     const _clientLogoCache = new Map(Object.entries(_loadLogoStore()));
 
-    async function _fetchTeamBadge(teamName) {
+    // Probe /api/logo — returns the final redirected image URL, or null on 404/error.
+    async function _fetchTeamBadge(teamName, type = "team") {
+      const apiUrl = `/api/logo?q=${encodeURIComponent(teamName)}&type=${type}`;
       try {
-        // ── Step 1: Wikidata search in Hebrew (origin=* → CORS works in browser) ──
-        const srRes = await fetch(
-          `https://www.wikidata.org/w/api.php?action=wbsearchentities&language=he&format=json&limit=5&search=${encodeURIComponent(teamName)}&origin=*`,
-          { signal: AbortSignal.timeout(6000) }
-        );
-        if (!srRes.ok) return null;
-        const srData = await srRes.json();
-
-        // Prefer results whose description mentions "football club", "basketball", "sport"
-        const candidates = srData?.search || [];
-        const id = (
-          candidates.find(c => /club|football|soccer|basketball|sport|קבוצת|ליגה/i.test(c.description || "")) ||
-          candidates[0]
-        )?.id;
-        if (!id) return null;
-
-        // ── Step 2: Fetch entity — P154 is "logo image" (official badge only) ──
-        const entRes = await fetch(
-          `https://www.wikidata.org/wiki/Special:EntityData/${id}.json`,
-          { signal: AbortSignal.timeout(6000) }
-        );
-        if (!entRes.ok) return null;
-        const entData = await entRes.json();
-        const entity = entData?.entities?.[id];
-        if (!entity) return null;
-
-        const logoFile = entity.claims?.P154?.[0]?.mainsnak?.datavalue?.value;
-        if (logoFile) {
-          // Wikimedia Commons direct file — always the official logo/badge
-          return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(logoFile)}?width=200`;
-        }
-
-        // ── Step 3: No P154 → use English name to query TheSportsDB strBadge ──
-        const englishName = entity.labels?.en?.value;
-        if (!englishName) return null;
-
-        const sdbRes = await fetch(
-          `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(englishName)}`,
-          { signal: AbortSignal.timeout(5000) }
-        );
-        if (!sdbRes.ok) return null;
-        const sdbData = await sdbRes.json();
-        // Pick the team whose name most closely matches
-        const teams = sdbData?.teams || [];
-        const enLower = englishName.toLowerCase();
-        const match = teams.find(t => (t.strTeam || "").toLowerCase() === enLower) || teams[0];
-        const badge = match?.strBadge;
-        // strBadge URLs are always official transparent-background crests
-        return badge || null;
+        // fetch() follows redirects by default; the final URL is the image
+        const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) return null;
+        // We got the image — use the API URL itself as src (browser caches via CDN)
+        return apiUrl;
       } catch (_) {
         return null;
       }
     }
 
-    function _resolveClientLogo(teamName) {
+    function _resolveClientLogo(teamName, type = "team") {
       const cached = _clientLogoCache.get(teamName);
-      if (cached !== undefined) return Promise.resolve(cached instanceof Promise ? null : cached);
-      const promise = _fetchTeamBadge(teamName).then(url => {
+      if (cached !== undefined && !(cached instanceof Promise)) return Promise.resolve(cached);
+      const promise = _fetchTeamBadge(teamName, type).then(url => {
         _clientLogoCache.set(teamName, url);
         if (url) {
           const store = _loadLogoStore();
