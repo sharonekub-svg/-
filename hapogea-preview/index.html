@@ -841,8 +841,28 @@
       flex-wrap: wrap;
     }
     .footer { padding-top: 18px; padding-bottom: 24px; color: var(--soft); font-size: 12px; line-height: 1.6; }
-    .footer a.privacy-link { color: var(--cyan); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color .2s; }
-    .footer a.privacy-link:hover { border-color: var(--cyan); }
+    /* ── Privacy Policy floating badge (bottom-right) ── */
+    .privacy-fab {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 999;
+      background: rgba(20,28,36,.82);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      backdrop-filter: blur(8px);
+      transition: color .18s, border-color .18s, background .18s;
+      cursor: pointer;
+    }
+    .privacy-fab:hover {
+      color: var(--cyan);
+      border-color: var(--cyan);
+      background: rgba(20,28,36,.96);
+    }
 
     /* ── Privacy Policy modal ── */
     #privacyModal { display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,.7); backdrop-filter:blur(4px); }
@@ -1462,9 +1482,9 @@
 
   <footer class="footer">
     הדמו מיועד להצגת מוצר ושיטת דירוג בלבד. אינו המלצת הימור ואינו מבטיח תוצאה. גיל מינימום להשתתפות בהימורים: 18+.
-    &nbsp;·&nbsp;
-    <a href="#" class="privacy-link" id="openPrivacy">Privacy Policy</a>
   </footer>
+
+  <a href="#" class="privacy-fab" id="openPrivacy">Privacy Policy</a>
 
   <!-- ── Privacy Policy Modal ── -->
   <div id="privacyModal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
