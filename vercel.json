@@ -4,14 +4,17 @@
   "outputDirectory": "hapogea-preview",
   "framework": null,
   "installCommand": "echo skip",
+  "functions": {
+    "api/winner-feed.js": { "maxDuration": 30 },
+    "api/cron.js": { "maxDuration": 30 },
+    "api/debug-odds.js": { "maxDuration": 60 }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 3 * * *"
-    }
+    { "path": "/api/cron", "schedule": "0 3 * * *" },
+    { "path": "/api/cron", "schedule": "0 21 * * *" }
   ]
 }
