@@ -2141,21 +2141,20 @@ async function buildOddsApiFeed() {
   const today    = israelDate(0);
   const tomorrow = israelDate(1);
 
+  // Fetch only tomorrow from Odds API — today's games may have already started
+  // and get removed from the API. Use snapshot for today.
   const results = await Promise.allSettled(
     ODDS_API_SPORTS.map((sport) =>
-      fetchOddsApiSport(sport.key, today, tomorrow).then((events) =>
+      fetchOddsApiSport(sport.key, tomorrow, tomorrow).then((events) =>
         events.map((e) => oddsApiEventToRow(e, sport)).filter(Boolean)
       )
     )
   );
 
-  const todayRows    = [];
   const tomorrowRows = [];
-
   for (const r of results) {
     if (r.status !== "fulfilled") continue;
     for (const row of r.value) {
-      if (row.day === today)    todayRows.push(row);
       if (row.day === tomorrow) tomorrowRows.push(row);
     }
   }
@@ -2163,9 +2162,13 @@ async function buildOddsApiFeed() {
   const sortByScore = (rows) =>
     rows.sort((a, b) => (b.recommendationScore || 0) - (a.recommendationScore || 0));
 
-  const snapshotNorm  = normalizeFallbackRows(SNAPSHOT);
-  const yesterdayTab  = snapshotNorm.tabs?.yesterday || {
+  // Use snapshot for yesterday + today (has all games regardless of start time)
+  const snapshotNorm = normalizeFallbackRows(SNAPSHOT);
+  const yesterdayTab = snapshotNorm.tabs?.yesterday || {
     label: "אתמול", date: israelDate(-1), sports: { football: [], basketball: [] },
+  };
+  const todayTab = snapshotNorm.tabs?.today || {
+    label: "היום", date: today, sports: { football: [], basketball: [] },
   };
 
   const now = new Date().toISOString();
@@ -2174,14 +2177,14 @@ async function buildOddsApiFeed() {
     generatedAt:  now,
     oddsSource:   "The Odds API",
     lineStats: {
-      football:   { today: todayRows.filter((r) => r.sportId === 240).length, tomorrow: tomorrowRows.filter((r) => r.sportId === 240).length },
-      basketball: { today: todayRows.filter((r) => r.sportId === 227).length, tomorrow: tomorrowRows.filter((r) => r.sportId === 227).length },
-      total:      { yesterday: 0, today: todayRows.length, tomorrow: tomorrowRows.length },
+      football:   { today: (todayTab.sports?.football?.length || 0), tomorrow: tomorrowRows.filter((r) => r.sportId === 240).length },
+      basketball: { today: (todayTab.sports?.basketball?.length || 0), tomorrow: tomorrowRows.filter((r) => r.sportId === 227).length },
+      total:      { yesterday: 0, today: (todayTab.sports?.football?.length || 0) + (todayTab.sports?.basketball?.length || 0), tomorrow: tomorrowRows.length },
     },
     tabs: {
       yesterday: { ...yesterdayTab, date: israelDate(-1) },
-      today:     { label: "היום",  date: today,          sports: splitBySport(sortByScore(todayRows).slice(0, TARGET_PICKS_PER_SPORT * 2)) },
-      tomorrow:  { label: "מחר",   date: tomorrow,       sports: splitBySport(sortByScore(tomorrowRows).slice(0, TARGET_PICKS_PER_SPORT * 2)) },
+      today:     { ...todayTab,     date: today },
+      tomorrow:  { label: "מחר", date: tomorrow, sports: splitBySport(sortByScore(tomorrowRows).slice(0, TARGET_PICKS_PER_SPORT * 2)) },
     },
     reuvenSchedule: [],
     audit:          {},
