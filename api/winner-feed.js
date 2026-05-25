@@ -4,22 +4,44 @@ const SNAPSHOT = require("./winner-snapshot.json");
 // ── The Odds API (fallback when Winner is blocked) ───────────────────────────
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
-// Trimmed to 10 core leagues (was 39) to stay within the free-tier quota of
-// 500 req/month: 10 req/cron × 30 days = 300 req/month.
+// Broad league pool — discoverActiveSports() filters to only leagues with upcoming events,
+// so inactive (off-season) leagues cost 0 extra requests.
 const ODDS_API_SPORTS = [
-  // כדורגל — קופות דרום אמריקה (שלישי/חמישי בערב), ליגת האלופות (שלישי/רביעי)
-  { key: "soccer_conmebol_copa_libertadores",  label: "קופה ליברטדורס",   sportId: 240 },
-  { key: "soccer_conmebol_copa_sudamericana",  label: "קופה סודאמריקאנה", sportId: 240 },
-  { key: "soccer_uefa_champs_league",          label: "ליגת האלופות",      sportId: 240 },
-  { key: "soccer_uefa_europa_league",          label: "ליגה אירופית",      sportId: 240 },
-  // ליגות עם משחקים שוטפים לאורך השנה
-  { key: "soccer_brazil_campeonato",           label: "ברזילאית ראשונה",   sportId: 240 },
-  { key: "soccer_argentina_primera_division",  label: "ארגנטינאית ראשונה", sportId: 240 },
-  { key: "soccer_usa_mls",                     label: "MLS",               sportId: 240 },
-  { key: "soccer_mexico_ligamx",               label: "ליגה MX",           sportId: 240 },
+  // דרום אמריקה — כוסות (שלישי/חמישי) וליגות מקומיות (שוטף כל השנה)
+  { key: "soccer_conmebol_copa_libertadores",    label: "קופה ליברטדורס",      sportId: 240 },
+  { key: "soccer_conmebol_copa_sudamericana",    label: "קופה סודאמריקאנה",    sportId: 240 },
+  { key: "soccer_brazil_campeonato",             label: "ברזילאית ראשונה",      sportId: 240 },
+  { key: "soccer_brazil_serie_b",               label: "ברזילאית שנייה",        sportId: 240 },
+  { key: "soccer_argentina_primera_division",    label: "ארגנטינאית ראשונה",   sportId: 240 },
+  { key: "soccer_colombia_primera_a",           label: "קולומביאנית ראשונה",   sportId: 240 },
+  { key: "soccer_chile_primera_division",       label: "צ'יליאנית ראשונה",     sportId: 240 },
+  { key: "soccer_mexico_ligamx",                label: "ליגה MX",               sportId: 240 },
+  // צפון אמריקה (אביב–סתיו)
+  { key: "soccer_usa_mls",                       label: "MLS",                   sportId: 240 },
+  { key: "soccer_usa_usl_championship",         label: "USL Championship",      sportId: 240 },
+  // אירופה — גביעים (שלישי/רביעי) וליגות שמסיימות מאוחר
+  { key: "soccer_uefa_champs_league",            label: "ליגת האלופות",          sportId: 240 },
+  { key: "soccer_uefa_europa_league",            label: "ליגה אירופית",          sportId: 240 },
+  { key: "soccer_uefa_europa_conference_league", label: "ליגת הקונפרנס",        sportId: 240 },
+  { key: "soccer_turkey_super_league",          label: "טורקית ראשונה",          sportId: 240 },
+  { key: "soccer_greece_super_league",          label: "יוונית ראשונה",          sportId: 240 },
+  { key: "soccer_portugal_primeira_liga",       label: "פורטוגלית ראשונה",      sportId: 240 },
+  { key: "soccer_israel_premier_league",        label: "ליגת העל",               sportId: 240 },
+  // סקנדינביה (אפריל–נובמבר — פעיל בימי חול)
+  { key: "soccer_sweden_allsvenskan",           label: "שבדית ראשונה",           sportId: 240 },
+  { key: "soccer_norway_eliteserien",           label: "נורבגית ראשונה",         sportId: 240 },
+  { key: "soccer_denmark_superliga",            label: "דנית ראשונה",            sportId: 240 },
+  { key: "soccer_finland_veikkausliiga",        label: "פינית ראשונה",           sportId: 240 },
+  // אסיה (מרץ–נובמבר — לרוב שלישי/שישי)
+  { key: "soccer_south_korea_kleague1",         label: "K-League",              sportId: 240 },
+  { key: "soccer_japan_j_league",               label: "J-League",              sportId: 240 },
+  { key: "soccer_china_superleague",            label: "סינית ראשונה",           sportId: 240 },
+  { key: "soccer_australia_aleague",            label: "A-League",              sportId: 240 },
   // כדורסל
-  { key: "basketball_nba",                     label: "NBA",               sportId: 227 },
-  { key: "basketball_euroleague",              label: "יורוליג",           sportId: 227 },
+  { key: "basketball_nba",                       label: "NBA",                   sportId: 227 },
+  { key: "basketball_nbl",                      label: "NBL",                   sportId: 227 },
+  { key: "basketball_euroleague",                label: "יורוליג",               sportId: 227 },
+  { key: "basketball_ncaab",                    label: "NCAA",                  sportId: 227 },
 ];
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2114,8 +2136,9 @@ function oddsApiEventToRow(event, sportMeta) {
 
   if (!allCandidates.length) return null;
 
-  // Prefer candidates in the 1.35–2.20 range (Winner-like); otherwise pick closest.
-  const TARGET_MIN = 1.35, TARGET_MAX = 2.20;
+  // Wide range: capture strong favourites (1.20) through mild underdogs (2.80).
+  // Necessary because many markets have the favourite below 1.35 or underdog above 2.20.
+  const TARGET_MIN = 1.20, TARGET_MAX = 2.80;
   const inRange = allCandidates.filter((c) => c.odds >= TARGET_MIN && c.odds <= TARGET_MAX);
   const hasInRange = inRange.length > 0;
   const pool = hasInRange ? inRange : allCandidates;
@@ -2208,6 +2231,25 @@ async function buildOddsApiFeed() {
 
   const todayRows    = allRows.filter((r) => r.day === today);
   const tomorrowRows = allRows.filter((r) => r.day === tomorrow);
+
+  // If today has fewer than 8 recommended football games, fill from the nearest upcoming days.
+  // Each fill row keeps its original `day` so the UI can show the actual date.
+  const FOOTBALL_MIN = 8;
+  const todayFootballRec = todayRows.filter(
+    (r) => Number(r.sportId) === WINNER_FOOTBALL_ID && r.recommended
+  );
+  if (todayFootballRec.length < FOOTBALL_MIN) {
+    const needed   = FOOTBALL_MIN - todayFootballRec.length;
+    const todayIds = new Set(todayRows.map((r) => r.id));
+    const fill = sortByScore(
+      allRows.filter(
+        (r) => r.day > today && Number(r.sportId) === WINNER_FOOTBALL_ID && r.recommended && !todayIds.has(r.id)
+      )
+    )
+      .sort((a, b) => a.day.localeCompare(b.day) || (b.recommendationScore || 0) - (a.recommendationScore || 0))
+      .slice(0, needed);
+    for (const row of fill) todayRows.push(row);
+  }
 
   // If no games on Israeli tomorrow, fall back to nearest future Israeli date
   const nearestFutureDate = allRows
