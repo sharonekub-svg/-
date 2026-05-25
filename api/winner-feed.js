@@ -2090,10 +2090,11 @@ function oddsApiEventToRow(event, sportMeta) {
 
   if (!allCandidates.length) return null;
 
-  // Prefer candidates in the 1.35–2.20 range (Winner-like); otherwise pick lowest odds.
+  // Prefer candidates in the 1.35–2.20 range (Winner-like); otherwise pick closest.
   const TARGET_MIN = 1.35, TARGET_MAX = 2.20;
   const inRange = allCandidates.filter((c) => c.odds >= TARGET_MIN && c.odds <= TARGET_MAX);
-  const pool = inRange.length ? inRange : allCandidates;
+  const hasInRange = inRange.length > 0;
+  const pool = hasInRange ? inRange : allCandidates;
   // Among valid candidates, pick the one closest to 1.65 (ideal confidence score ~61%)
   const TARGET_ODDS = 1.65;
   const pick = pool.sort((a, b) => Math.abs(a.odds - TARGET_ODDS) - Math.abs(b.odds - TARGET_ODDS))[0];
@@ -2124,8 +2125,8 @@ function oddsApiEventToRow(event, sportMeta) {
     probability:        prob,
     recommendationScore:score,
     score,
-    recommended:        true,
-    outsideRange:       false,
+    recommended:        hasInRange,   // only recommend if odds are in the 1.35–2.20 range
+    outsideRange:       !hasInRange,  // properly marks games outside the preferred range
     status:             "ממתין",
     matchPhase:         "scheduled",
     bettingStatus:      "available",
