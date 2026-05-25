@@ -4,51 +4,22 @@ const SNAPSHOT = require("./winner-snapshot.json");
 // ── The Odds API (fallback when Winner is blocked) ───────────────────────────
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
+// Trimmed to 10 core leagues (was 39) to stay within the free-tier quota of
+// 500 req/month: 10 req/cron × 30 days = 300 req/month.
 const ODDS_API_SPORTS = [
-  // כדורגל — קאפ / גמל (משחקי שלשה/רביעי)
-  { key: "soccer_conmebol_copa_libertadores",  label: "קופה ליברטדורס",      sportId: 240 },
-  { key: "soccer_conmebol_copa_sudamericana",  label: "קופה סודאמריקאנה",    sportId: 240 },
-  { key: "soccer_uefa_champs_league",          label: "ליגת האלופות",         sportId: 240 },
-  { key: "soccer_uefa_europa_league",          label: "ליגה אירופית",         sportId: 240 },
-  { key: "soccer_uefa_europa_conference_league", label: "ליגת הקונפרנס",     sportId: 240 },
-  // ליגות פעילות בשנה העגולה (דרום/צפון אמריקה, סקנדינביה, אסיה, אוסטרליה)
-  { key: "soccer_usa_mls",                     label: "MLS",                 sportId: 240 },
-  { key: "soccer_usa_usl_championship",        label: "USL Championship",    sportId: 240 },
-  { key: "soccer_canada_premier_league",       label: "CPL",                 sportId: 240 },
-  { key: "soccer_brazil_campeonato",           label: "ברזילאית ראשונה",     sportId: 240 },
-  { key: "soccer_brazil_serie_b",              label: "ברזילאית שנייה",      sportId: 240 },
-  { key: "soccer_argentina_primera_division",  label: "ארגנטינאית ראשונה",   sportId: 240 },
-  { key: "soccer_chile_primera_division",      label: "צ'יליאנית ראשונה",    sportId: 240 },
-  { key: "soccer_colombia_primera_a",          label: "קולומביאנית ראשונה",  sportId: 240 },
-  { key: "soccer_mexico_ligamx",               label: "ליגה MX",             sportId: 240 },
-  { key: "soccer_mexico_ligamx_expansion",     label: "MX Expansion",        sportId: 240 },
-  { key: "soccer_sweden_allsvenskan",          label: "שבדית ראשונה",        sportId: 240 },
-  { key: "soccer_norway_eliteserien",          label: "נורבגית ראשונה",      sportId: 240 },
-  { key: "soccer_denmark_superliga",           label: "דנית ראשונה",         sportId: 240 },
-  { key: "soccer_finland_veikkausliiga",       label: "פינית ראשונה",        sportId: 240 },
-  { key: "soccer_australia_aleague",           label: "A-League",            sportId: 240 },
-  { key: "soccer_japan_j_league",              label: "J-League",            sportId: 240 },
-  { key: "soccer_south_korea_kleague1",        label: "K-League",            sportId: 240 },
-  { key: "soccer_china_superleague",           label: "סין ראשונה",          sportId: 240 },
-  // ליגות אירופה / מזרח
-  { key: "soccer_israel_premier_league",       label: "ליגת העל",            sportId: 240 },
-  { key: "soccer_turkey_super_league",         label: "טורקית ראשונה",       sportId: 240 },
-  { key: "soccer_greece_super_league",         label: "יוונית ראשונה",       sportId: 240 },
-  { key: "soccer_england_league1",             label: "ליג 1 אנגלי",         sportId: 240 },
-  { key: "soccer_england_league2",             label: "ליג 2 אנגלי",         sportId: 240 },
-  { key: "soccer_spain_segunda_division",      label: "סגונדה",              sportId: 240 },
-  { key: "soccer_italy_serie_b",               label: "סרייה ב׳",            sportId: 240 },
-  { key: "soccer_germany_bundesliga2",         label: "בונדסליגה 2",         sportId: 240 },
-  { key: "soccer_france_ligue_deux",           label: "ליג 2 צרפת",          sportId: 240 },
-  { key: "soccer_netherlands_eerste_divisie",  label: "הולנד ראשונה",        sportId: 240 },
-  { key: "soccer_austria_bundesliga",          label: "אוסטרית ראשונה",      sportId: 240 },
-  { key: "soccer_poland_ekstraklasa",          label: "פולנית ראשונה",       sportId: 240 },
-  { key: "soccer_portugal_primeira_liga",      label: "פורטוגלית ראשונה",    sportId: 240 },
+  // כדורגל — קופות דרום אמריקה (שלישי/חמישי בערב), ליגת האלופות (שלישי/רביעי)
+  { key: "soccer_conmebol_copa_libertadores",  label: "קופה ליברטדורס",   sportId: 240 },
+  { key: "soccer_conmebol_copa_sudamericana",  label: "קופה סודאמריקאנה", sportId: 240 },
+  { key: "soccer_uefa_champs_league",          label: "ליגת האלופות",      sportId: 240 },
+  { key: "soccer_uefa_europa_league",          label: "ליגה אירופית",      sportId: 240 },
+  // ליגות עם משחקים שוטפים לאורך השנה
+  { key: "soccer_brazil_campeonato",           label: "ברזילאית ראשונה",   sportId: 240 },
+  { key: "soccer_argentina_primera_division",  label: "ארגנטינאית ראשונה", sportId: 240 },
+  { key: "soccer_usa_mls",                     label: "MLS",               sportId: 240 },
+  { key: "soccer_mexico_ligamx",               label: "ליגה MX",           sportId: 240 },
   // כדורסל
-  { key: "basketball_nba",                     label: "NBA",                 sportId: 227 },
-  { key: "basketball_nbl",                     label: "NBL",                 sportId: 227 },
-  { key: "basketball_euroleague",              label: "יורוליג",             sportId: 227 },
-  { key: "basketball_ncaab",                   label: "NCAA",                sportId: 227 },
+  { key: "basketball_nba",                     label: "NBA",               sportId: 227 },
+  { key: "basketball_euroleague",              label: "יורוליג",           sportId: 227 },
 ];
 // ─────────────────────────────────────────────────────────────────────────────
 
