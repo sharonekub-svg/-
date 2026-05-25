@@ -1,6 +1,26 @@
 const crypto = require("crypto");
 const SNAPSHOT = require("./winner-snapshot.json");
 
+// ── The Odds API (fallback when Winner is blocked) ───────────────────────────
+const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
+const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
+const ODDS_API_SPORTS = [
+  { key: "soccer_israel_premier_league", label: "ליגת העל",       sportId: 240 },
+  { key: "soccer_spain_la_liga",         label: "לה ליגה",        sportId: 240 },
+  { key: "soccer_italy_serie_a",         label: "סרייה א׳",       sportId: 240 },
+  { key: "soccer_germany_bundesliga",    label: "בונדסליגה",      sportId: 240 },
+  { key: "soccer_france_ligue_one",      label: "ליג 1",          sportId: 240 },
+  { key: "soccer_netherlands_eredivisie",label: "ארדיביזי",       sportId: 240 },
+  { key: "soccer_turkey_super_league",   label: "טורקית ראשונה",  sportId: 240 },
+  { key: "soccer_usa_mls",               label: "MLS",             sportId: 240 },
+  { key: "soccer_brazil_campeonato",     label: "ברזילאית ראשונה",sportId: 240 },
+  { key: "soccer_sweden_allsvenskan",    label: "שבדית ראשונה",   sportId: 240 },
+  { key: "soccer_norway_eliteserien",    label: "נורבגית ראשונה", sportId: 240 },
+  { key: "basketball_nba",               label: "NBA",             sportId: 227 },
+  { key: "basketball_euroleague",        label: "יורוליג",        sportId: 227 },
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
 const ODDS_MIN = 1.4;
 const ODDS_MAX = 1.9;
 // Basketball 2-way markets have different odds structure than football 3-way
@@ -2002,6 +2022,157 @@ function normalizePredictionStatus(status) {
   return value || "ממתין";
 }
 
+// ── The Odds API integration ─────────────────────────────────────────────────
+
+async function fetchOddsApiSport(sportKey, dateFrom, dateTo) {
+  const url =
+    `${ODDS_API_BASE}/sports/${sportKey}/odds` +
+    `?apiKey=${ODDS_API_KEY}` +
+    `&regions=eu&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
+    `&commenceTimeFrom=${dateFrom}T00:00:00Z` +
+    `&commenceTimeTo=${dateTo}T23:59:59Z`;
+  try {
+    const data = await fetchJson(url, { retryAttempts: 1, retryBaseDelay: 500 });
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function oddsApiEventToRow(event, sportMeta) {
+  const bookmaker =
+    event.bookmakers?.find((b) => ["bet365", "unibet", "williamhill", "betfair"].includes(b.key)) ||
+    event.bookmakers?.[0];
+  if (!bookmaker) return null;
+
+  const h2h = bookmaker.markets?.find((m) => m.key === "h2h");
+  if (!h2h?.outcomes?.length) return null;
+
+  const home = event.home_team;
+  const away = event.away_team;
+  const homeOdds = h2h.outcomes.find((o) => o.name === home)?.price || null;
+  const awayOdds = h2h.outcomes.find((o) => o.name === away)?.price || null;
+  const drawOdds = h2h.outcomes.find((o) => o.name === "Draw")?.price || null;
+
+  const commenceDate = new Date(event.commence_time);
+  const ilParts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Jerusalem",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    }).formatToParts(commenceDate).map((p) => [p.type, p.value])
+  );
+  const day  = `${ilParts.year}-${ilParts.month}-${ilParts.day}`;
+  const time = `${ilParts.hour}:${ilParts.minute}`;
+
+  const isFootball = Number(sportMeta.sportId) === WINNER_FOOTBALL_ID;
+  const candidates = isFootball
+    ? [
+        homeOdds >= ODDS_MIN && homeOdds <= ODDS_MAX ? { name: home,    odds: homeOdds } : null,
+        drawOdds >= ODDS_MIN && drawOdds <= ODDS_MAX ? { name: "תיקו", odds: drawOdds } : null,
+        awayOdds >= ODDS_MIN && awayOdds <= ODDS_MAX ? { name: away,    odds: awayOdds } : null,
+      ].filter(Boolean)
+    : [
+        homeOdds >= BASKETBALL_ODDS_MIN && homeOdds <= BASKETBALL_ODDS_MAX_MONEYLINE ? { name: home, odds: homeOdds } : null,
+        awayOdds >= BASKETBALL_ODDS_MIN && awayOdds <= BASKETBALL_ODDS_MAX_MONEYLINE ? { name: away, odds: awayOdds } : null,
+      ].filter(Boolean);
+
+  if (!candidates.length) return null;
+
+  const pick  = candidates.sort((a, b) => a.odds - b.odds)[0];
+  const prob  = 1 / pick.odds;
+  const score = Math.round(prob * 100);
+
+  return {
+    id:                 `odds-${event.id}`,
+    eventId:            event.id,
+    source:             "The Odds API",
+    day,
+    time,
+    sport:              isFootball ? "כדורגל" : "כדורסל",
+    sportId:            sportMeta.sportId,
+    league:             sportMeta.label,
+    match:              `${home} - ${away}`,
+    home,
+    away,
+    pick:               pick.name,
+    pickTeam:           pick.name,
+    winnerPick:         pick.name,
+    odds:               pick.odds,
+    oddsRaw:            pick.odds,
+    homeOdds:           homeOdds  || null,
+    drawOdds:           drawOdds  || null,
+    awayOdds:           awayOdds  || null,
+    probability:        prob,
+    recommendationScore:score,
+    score,
+    recommended:        true,
+    outsideRange:       false,
+    status:             "ממתין",
+    matchPhase:         "scheduled",
+    bettingStatus:      "available",
+    riskLevel:          score >= 70 ? "נמוך" : score >= 50 ? "בינוני" : "גבוה",
+    resultKey:          `${sportMeta.sportId}:${day}:${normalizeMatchName(home)}:${normalizeMatchName(away)}`,
+    verifiedAt:         new Date().toISOString(),
+  };
+}
+
+async function buildOddsApiFeed() {
+  if (!ODDS_API_KEY) throw new Error("ODDS_API_KEY not set");
+
+  const today    = israelDate(0);
+  const tomorrow = israelDate(1);
+
+  const results = await Promise.allSettled(
+    ODDS_API_SPORTS.map((sport) =>
+      fetchOddsApiSport(sport.key, today, tomorrow).then((events) =>
+        events.map((e) => oddsApiEventToRow(e, sport)).filter(Boolean)
+      )
+    )
+  );
+
+  const todayRows    = [];
+  const tomorrowRows = [];
+
+  for (const r of results) {
+    if (r.status !== "fulfilled") continue;
+    for (const row of r.value) {
+      if (row.day === today)    todayRows.push(row);
+      if (row.day === tomorrow) tomorrowRows.push(row);
+    }
+  }
+
+  const sortByScore = (rows) =>
+    rows.sort((a, b) => (b.recommendationScore || 0) - (a.recommendationScore || 0));
+
+  const snapshotNorm  = normalizeFallbackRows(SNAPSHOT);
+  const yesterdayTab  = snapshotNorm.tabs?.yesterday || {
+    label: "אתמול", date: israelDate(-1), sports: { football: [], basketball: [] },
+  };
+
+  const now = new Date().toISOString();
+  return {
+    ok:           true,
+    generatedAt:  now,
+    oddsSource:   "The Odds API",
+    lineStats: {
+      football:   { today: todayRows.filter((r) => r.sportId === 240).length, tomorrow: tomorrowRows.filter((r) => r.sportId === 240).length },
+      basketball: { today: todayRows.filter((r) => r.sportId === 227).length, tomorrow: tomorrowRows.filter((r) => r.sportId === 227).length },
+      total:      { yesterday: 0, today: todayRows.length, tomorrow: tomorrowRows.length },
+    },
+    tabs: {
+      yesterday: { ...yesterdayTab, date: israelDate(-1) },
+      today:     { label: "היום",  date: today,          sports: splitBySport(sortByScore(todayRows).slice(0, TARGET_PICKS_PER_SPORT * 2)) },
+      tomorrow:  { label: "מחר",   date: tomorrow,       sports: splitBySport(sortByScore(tomorrowRows).slice(0, TARGET_PICKS_PER_SPORT * 2)) },
+    },
+    reuvenSchedule: [],
+    audit:          {},
+    trackingResults:[],
+    faq:            [],
+  };
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function normalizeFallbackRows(payload) {
   const verifiedAt = payload.generatedAt || new Date().toISOString();
   const copy = JSON.parse(JSON.stringify(payload));
@@ -2096,14 +2267,21 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   let payload;
   try {
     payload = await buildWinnerFeedPayload({ withLogos: true });
-  } catch (error) {
-    payload = {
-      ...normalizeFallbackRows(SNAPSHOT),
-      ok: true,
-      fallback: true,
-      fallbackReason: "טעינת Winner נכשלה, לכן נשמר snapshot מאומת כ-cache שרת.",
-      liveError: error.message,
-    };
+  } catch (winnerError) {
+    // Winner blocked — try The Odds API
+    try {
+      payload = await buildOddsApiFeed();
+    } catch (oddsError) {
+      // Final fallback: local snapshot
+      payload = {
+        ...normalizeFallbackRows(SNAPSHOT),
+        ok: true,
+        fallback: true,
+        fallbackReason: "Winner וThe Odds API לא זמינים, נטען snapshot.",
+        liveError: winnerError.message,
+        oddsError: oddsError.message,
+      };
+    }
   }
   const entry = { cachedAt: Date.now(), payload };
   await kvSet(key, entry, 2 * 60 * 60);
