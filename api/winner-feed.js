@@ -2068,7 +2068,7 @@ async function fetchOddsApiSport(sportKey, dateFrom, dateTo) {
     return Array.isArray(data) ? data : [];
   } catch (e) {
     // Propagate quota errors so callers can fall back to snapshot
-    if (e.message?.startsWith("401:")) throw e;
+    if (e.message?.includes("401:")) throw e;
     return [];
   }
 }
@@ -2189,7 +2189,7 @@ async function buildOddsApiFeed() {
     );
     for (const r of batchResults) {
       if (r.status === "rejected") {
-        if (r.reason?.message?.startsWith("401:")) {
+        if (r.reason?.message?.includes("401:")) {
           throw new Error("Odds API quota exceeded: " + r.reason.message.slice(0, 120));
         }
         continue;
