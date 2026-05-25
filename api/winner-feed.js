@@ -2351,6 +2351,28 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
       };
     }
   }
+
+  // If Winner worked but tomorrow is empty, supplement tomorrow from The Odds API
+  const tomorrowCount =
+    (payload.tabs?.tomorrow?.sports?.football?.length || 0) +
+    (payload.tabs?.tomorrow?.sports?.basketball?.length || 0);
+  if (tomorrowCount === 0 && !payload.fallback) {
+    try {
+      const oddsFeed = await buildOddsApiFeed();
+      const oddsCount =
+        (oddsFeed.tabs?.tomorrow?.sports?.football?.length || 0) +
+        (oddsFeed.tabs?.tomorrow?.sports?.basketball?.length || 0);
+      if (oddsCount > 0) {
+        payload = {
+          ...payload,
+          tabs: { ...payload.tabs, tomorrow: oddsFeed.tabs.tomorrow },
+          oddsSource: "The Odds API",
+        };
+      }
+    } catch {
+      // Keep payload with empty tomorrow rather than crashing
+    }
+  }
   const entry = { cachedAt: Date.now(), payload };
   await kvSet(key, entry, 2 * 60 * 60);
   return {
