@@ -2056,11 +2056,11 @@ function normalizePredictionStatus(status) {
 
 async function fetchOddsApiSport(sportKey, dateFrom, dateTo) {
   // The Odds API only accepts UTC (Z) format — timezone offsets cause 422.
-  // Israel is UTC+3, so to cover the full Israeli day we widen by 3h each side.
+  // Use eu,us regions to get broad bookmaker coverage (EU alone misses American/S-American leagues).
   const url =
     `${ODDS_API_BASE}/sports/${sportKey}/odds` +
     `?apiKey=${ODDS_API_KEY}` +
-    `&regions=eu&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
+    `&regions=eu,us&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
     `&commenceTimeFrom=${dateFrom}T00:00:00Z` +
     `&commenceTimeTo=${dateTo}T23:59:59Z`;
   try {
