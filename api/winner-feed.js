@@ -2066,7 +2066,9 @@ async function fetchOddsApiSport(sportKey, dateFrom, dateTo) {
   try {
     const data = await fetchJson(url, { retryAttempts: 1, retryBaseDelay: 500 });
     return Array.isArray(data) ? data : [];
-  } catch {
+  } catch (e) {
+    // Propagate quota errors so callers can fall back to snapshot
+    if (e.message?.startsWith("401:")) throw e;
     return [];
   }
 }
@@ -2186,7 +2188,12 @@ async function buildOddsApiFeed() {
       )
     );
     for (const r of batchResults) {
-      if (r.status !== "fulfilled") continue;
+      if (r.status === "rejected") {
+        if (r.reason?.message?.startsWith("401:")) {
+          throw new Error("Odds API quota exceeded: " + r.reason.message.slice(0, 120));
+        }
+        continue;
+      }
       for (const row of r.value) {
         // Accept any game whose Israel-timezone day >= today
         if (row.day >= today) allRows.push(row);
@@ -2260,11 +2267,13 @@ function normalizeFallbackRows(payload) {
         tomorrow:  emptyTab("מחר", israelDate(1)),
       };
     } else if (daysDiff === 2) {
-      // Snapshot is 2 days old: old tomorrow → yesterday, everything else empty
+      // Snapshot is 2 days old: old today → yesterday, old tomorrow → today.
+      // Copa/South-American games in the old "tomorrow" (22:00+ UTC) can still be
+      // upcoming from Israel's perspective at the time this runs.
       copy.tabs = {
-        yesterday: { ...copy.tabs.tomorrow, label: "אתמול", date: israelDate(-1) },
-        today:     emptyTab("היום",  currentDate),
-        tomorrow:  emptyTab("מחר",  israelDate(1)),
+        yesterday: { ...copy.tabs.today,    label: "אתמול", date: israelDate(-1) },
+        today:     { ...copy.tabs.tomorrow, label: "היום",  date: currentDate },
+        tomorrow:  emptyTab("מחר", israelDate(1)),
       };
     } else {
       // Snapshot is 3+ days old: clear everything
