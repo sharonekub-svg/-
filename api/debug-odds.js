@@ -74,7 +74,10 @@ module.exports = async function handler(req, res) {
       }
       const sample = events[0] ? `${events[0].home_team} vs ${events[0].away_team}` : "";
       const errMsg = !Array.isArray(data) && data?.message ? data.message : "";
-      results.push({ sport: key, status: r.status, total: events.length, byDate, sample, errMsg });
+      // Check bookmaker availability (events can exist but have empty bookmakers)
+      const withOdds = events.filter(e => (e.bookmakers?.length || 0) > 0).length;
+      const sampleBookmakers = events[0]?.bookmakers?.map(b => b.key).slice(0, 3).join(",") || "";
+      results.push({ sport: key, status: r.status, total: events.length, withOdds, byDate, sample, sampleBookmakers, errMsg });
     } catch (e) {
       results.push({ sport: key, error: e.message });
     }
