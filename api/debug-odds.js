@@ -59,25 +59,27 @@ module.exports = async function handler(req, res) {
   const dayPlus4 = israelDate(4);
   const results = [];
 
-  await Promise.allSettled(
-    ODDS_API_SPORTS.map(async (key) => {
-      try {
-        const url = `${ODDS_API_BASE}/sports/${key}/odds?apiKey=${ODDS_API_KEY}&regions=eu&markets=h2h&dateFormat=iso&oddsFormat=decimal&commenceTimeFrom=${tomorrow}T00:00:00%2B03:00&commenceTimeTo=${dayPlus4}T23:59:59%2B03:00`;
-        const r = await fetch(url);
-        const data = await r.json();
-        const events = Array.isArray(data) ? data : [];
-        const byDate = {};
-        for (const e of events) {
-          const d = e.commence_time?.slice(0, 10) || "?";
-          byDate[d] = (byDate[d] || 0) + 1;
-        }
-        const sample = events[0] ? `${events[0].home_team} vs ${events[0].away_team}` : "";
-        results.push({ sport: key, status: r.status, total: events.length, byDate, sample });
-      } catch (e) {
-        results.push({ sport: key, error: e.message });
+  for (const key of ODDS_API_SPORTS) {
+    try {
+      const url = `${ODDS_API_BASE}/sports/${key}/odds?apiKey=${ODDS_API_KEY}&regions=eu&markets=h2h&dateFormat=iso&oddsFormat=decimal&commenceTimeFrom=${tomorrow}T00:00:00Z&commenceTimeTo=${dayPlus4}T23:59:59Z`;
+      const r = await fetch(url);
+      const text = await r.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = text; }
+      const events = Array.isArray(data) ? data : [];
+      const byDate = {};
+      for (const e of events) {
+        const d = e.commence_time?.slice(0, 10) || "?";
+        byDate[d] = (byDate[d] || 0) + 1;
       }
-    })
-  );
+      const sample = events[0] ? `${events[0].home_team} vs ${events[0].away_team}` : "";
+      const errMsg = !Array.isArray(data) && data?.message ? data.message : "";
+      results.push({ sport: key, status: r.status, total: events.length, byDate, sample, errMsg });
+    } catch (e) {
+      results.push({ sport: key, error: e.message });
+    }
+    await new Promise(r => setTimeout(r, 150));
+  }
 
   results.sort((a, b) => (b.total || 0) - (a.total || 0));
   res.status(200).json({ tomorrow, dayPlus4, results });

@@ -2055,13 +2055,14 @@ function normalizePredictionStatus(status) {
 // ── The Odds API integration ─────────────────────────────────────────────────
 
 async function fetchOddsApiSport(sportKey, dateFrom, dateTo) {
-  // Use Israel-timezone midnight boundaries (+03:00 offset)
+  // The Odds API only accepts UTC (Z) format — timezone offsets cause 422.
+  // Israel is UTC+3, so to cover the full Israeli day we widen by 3h each side.
   const url =
     `${ODDS_API_BASE}/sports/${sportKey}/odds` +
     `?apiKey=${ODDS_API_KEY}` +
     `&regions=eu&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
-    `&commenceTimeFrom=${dateFrom}T00:00:00%2B03:00` +
-    `&commenceTimeTo=${dateTo}T23:59:59%2B03:00`;
+    `&commenceTimeFrom=${dateFrom}T00:00:00Z` +
+    `&commenceTimeTo=${dateTo}T23:59:59Z`;
   try {
     const data = await fetchJson(url, { retryAttempts: 1, retryBaseDelay: 500 });
     return Array.isArray(data) ? data : [];
@@ -2165,23 +2166,26 @@ async function buildOddsApiFeed() {
   // Query up to 3 days out so slow midweek days (Tuesday/Wednesday) always yield games.
   const dayPlus3 = israelDate(4);
 
-  // Fetch tomorrow through +3 days from Odds API.
+  // Fetch in batches of 5 to avoid the Odds API per-second rate limit (429).
   // Today's in-progress games are excluded because the API removes them once started.
-  const results = await Promise.allSettled(
-    ODDS_API_SPORTS.map((sport) =>
-      fetchOddsApiSport(sport.key, tomorrow, dayPlus3).then((events) =>
-        events.map((e) => oddsApiEventToRow(e, sport)).filter(Boolean)
-      )
-    )
-  );
-
-  // Collect all future rows, sorted by date then confidence
+  const BATCH = 5;
   const allFutureRows = [];
-  for (const r of results) {
-    if (r.status !== "fulfilled") continue;
-    for (const row of r.value) {
-      if (row.day >= tomorrow) allFutureRows.push(row);
+  for (let i = 0; i < ODDS_API_SPORTS.length; i += BATCH) {
+    const batch = ODDS_API_SPORTS.slice(i, i + BATCH);
+    const batchResults = await Promise.allSettled(
+      batch.map((sport) =>
+        fetchOddsApiSport(sport.key, tomorrow, dayPlus3).then((events) =>
+          events.map((e) => oddsApiEventToRow(e, sport)).filter(Boolean)
+        )
+      )
+    );
+    for (const r of batchResults) {
+      if (r.status !== "fulfilled") continue;
+      for (const row of r.value) {
+        if (row.day >= tomorrow) allFutureRows.push(row);
+      }
     }
+    if (i + BATCH < ODDS_API_SPORTS.length) await sleep(300);
   }
 
   // Find the nearest date that has games (tomorrow, or the next available date)
