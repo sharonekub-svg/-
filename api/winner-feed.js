@@ -2096,6 +2096,9 @@ function oddsApiEventToRow(event, sportMeta) {
   );
   const day  = `${ilParts.year}-${ilParts.month}-${ilParts.day}`;
   const time = `${ilParts.hour}:${ilParts.minute}`;
+  // UTC date of the game (used for "tomorrow" matching — South American games start
+  // after Israel midnight but are still "tomorrow" on the international calendar)
+  const utcDay = event.commence_time ? event.commence_time.slice(0, 10) : day;
 
   const isFootball = Number(sportMeta.sportId) === WINNER_FOOTBALL_ID;
 
@@ -2128,6 +2131,7 @@ function oddsApiEventToRow(event, sportMeta) {
     id:                 `odds-${event.id}`,
     eventId:            event.id,
     source:             "The Odds API",
+    utcDay,
     day,
     time,
     sport:              isFootball ? "כדורגל" : "כדורסל",
@@ -2182,20 +2186,24 @@ async function buildOddsApiFeed() {
     for (const r of batchResults) {
       if (r.status !== "fulfilled") continue;
       for (const row of r.value) {
-        if (row.day >= tomorrow) allFutureRows.push(row);
+        // Use UTC date for "tomorrow" matching: South American games start after Israel
+        // midnight but are still "tomorrow" on the global calendar (utcDay = "2026-05-26")
+        if ((row.utcDay || row.day) >= tomorrow) allFutureRows.push(row);
       }
     }
     if (i + BATCH < ODDS_API_SPORTS.length) await sleep(300);
   }
 
-  // Find the nearest date that has games (tomorrow, or the next available date)
-  const nearestDate = allFutureRows.reduce((best, row) => {
-    if (!best || row.day < best) return row.day;
+  // Find the nearest UTC calendar date that has games (tomorrow, or next available day)
+  const nearestUtcDate = allFutureRows.reduce((best, row) => {
+    const d = row.utcDay || row.day;
+    if (!best || d < best) return d;
     return best;
   }, null) || tomorrow;
 
-  // Take games only from the nearest available date
-  const tomorrowRows = allFutureRows.filter((r) => r.day === nearestDate);
+  // Include all games on that nearest UTC date (Copa games start after IL midnight but
+  // are still "tomorrow" on the international calendar)
+  const tomorrowRows = allFutureRows.filter((r) => (r.utcDay || r.day) === nearestUtcDate);
 
   const sortByScore = (rows) =>
     [...rows].sort((a, b) => (b.recommendationScore || 0) - (a.recommendationScore || 0));
