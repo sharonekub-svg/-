@@ -2060,7 +2060,7 @@ async function fetchOddsApiSport(sportKey, dateFrom, dateTo) {
   const url =
     `${ODDS_API_BASE}/sports/${sportKey}/odds` +
     `?apiKey=${ODDS_API_KEY}` +
-    `&regions=eu,us&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
+    `&regions=uk,eu,us&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
     `&commenceTimeFrom=${dateFrom}T00:00:00Z` +
     `&commenceTimeTo=${dateTo}T23:59:59Z`;
   try {

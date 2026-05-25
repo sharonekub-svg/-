@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
 
   for (const key of ODDS_API_SPORTS) {
     try {
-      const url = `${ODDS_API_BASE}/sports/${key}/odds?apiKey=${ODDS_API_KEY}&regions=eu,us&markets=h2h&dateFormat=iso&oddsFormat=decimal&commenceTimeFrom=${tomorrow}T00:00:00Z&commenceTimeTo=${dayPlus4}T23:59:59Z`;
+      const url = `${ODDS_API_BASE}/sports/${key}/odds?apiKey=${ODDS_API_KEY}&regions=uk,eu,us&markets=h2h&dateFormat=iso&oddsFormat=decimal&commenceTimeFrom=${tomorrow}T00:00:00Z&commenceTimeTo=${dayPlus4}T23:59:59Z`;
       const r = await fetch(url);
       const text = await r.text();
       let data;
