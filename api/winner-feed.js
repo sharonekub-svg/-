@@ -2167,18 +2167,17 @@ async function buildOddsApiFeed() {
 
   const today    = israelDate(0);
   const tomorrow = israelDate(1);
-  // Query up to 3 days out so slow midweek days (Tuesday/Wednesday) always yield games.
-  const dayPlus3 = israelDate(4);
+  const dayPlus4 = israelDate(5);
 
-  // Fetch in batches of 5 to avoid the Odds API per-second rate limit (429).
-  // Today's in-progress games are excluded because the API removes them once started.
+  // Query from today UTC — Copa/South American games start at 22:00+ UTC which is
+  // after midnight Israel time (tomorrow in IL), so we must include today's UTC date.
   const BATCH = 5;
-  const allFutureRows = [];
+  const allRows = [];
   for (let i = 0; i < ODDS_API_SPORTS.length; i += BATCH) {
     const batch = ODDS_API_SPORTS.slice(i, i + BATCH);
     const batchResults = await Promise.allSettled(
       batch.map((sport) =>
-        fetchOddsApiSport(sport.key, tomorrow, dayPlus3).then((events) =>
+        fetchOddsApiSport(sport.key, today, dayPlus4).then((events) =>
           events.map((e) => oddsApiEventToRow(e, sport)).filter(Boolean)
         )
       )
@@ -2186,52 +2185,47 @@ async function buildOddsApiFeed() {
     for (const r of batchResults) {
       if (r.status !== "fulfilled") continue;
       for (const row of r.value) {
-        // Use UTC date for "tomorrow" matching: South American games start after Israel
-        // midnight but are still "tomorrow" on the global calendar (utcDay = "2026-05-26")
-        if ((row.utcDay || row.day) >= tomorrow) allFutureRows.push(row);
+        // Accept any game whose UTC start date >= today
+        if ((row.utcDay || row.day) >= today) allRows.push(row);
       }
     }
     if (i + BATCH < ODDS_API_SPORTS.length) await sleep(300);
   }
 
-  // Find the nearest UTC calendar date that has games (tomorrow, or next available day)
-  const nearestUtcDate = allFutureRows.reduce((best, row) => {
-    const d = row.utcDay || row.day;
-    if (!best || d < best) return d;
-    return best;
-  }, null) || tomorrow;
-
-  // Include all games on that nearest UTC date (Copa games start after IL midnight but
-  // are still "tomorrow" on the international calendar)
-  const tomorrowRows = allFutureRows.filter((r) => (r.utcDay || r.day) === nearestUtcDate);
-
   const sortByScore = (rows) =>
     [...rows].sort((a, b) => (b.recommendationScore || 0) - (a.recommendationScore || 0));
 
-  // Use snapshot for yesterday + today (has all games regardless of start time)
+  // Split by Israel timezone day (row.day is already in Israel time from oddsApiEventToRow)
+  const todayRows    = allRows.filter((r) => r.day === today);
+  const tomorrowRows = allRows.filter((r) => r.day === tomorrow);
+
+  // If no games on Israeli tomorrow, fall back to nearest future Israeli date
+  const nearestFutureDate = allRows
+    .filter((r) => r.day > tomorrow)
+    .reduce((best, r) => (!best || r.day < best ? r.day : best), null);
+  const fallbackTomorrowRows = tomorrowRows.length === 0 && nearestFutureDate
+    ? allRows.filter((r) => r.day === nearestFutureDate)
+    : tomorrowRows;
+  const tomorrowDate = tomorrowRows.length > 0 ? tomorrow : (nearestFutureDate || tomorrow);
+
+  const pickedToday    = sortByScore(todayRows).slice(0, TARGET_PICKS_PER_SPORT * 2);
+  const pickedTomorrow = sortByScore(fallbackTomorrowRows).slice(0, TARGET_PICKS_PER_SPORT * 2);
+
+  // Snapshot for yesterday only
   const snapshotNorm = normalizeFallbackRows(SNAPSHOT);
   const yesterdayTab = snapshotNorm.tabs?.yesterday || {
     label: "אתמול", date: israelDate(-1), sports: { football: [], basketball: [] },
   };
-  const todayTab = snapshotNorm.tabs?.today || {
-    label: "היום", date: today, sports: { football: [], basketball: [] },
-  };
 
-  const picked = sortByScore(tomorrowRows).slice(0, TARGET_PICKS_PER_SPORT * 2);
   const now = new Date().toISOString();
   return {
     ok:           true,
     generatedAt:  now,
     oddsSource:   "The Odds API",
-    lineStats: {
-      football:   { today: (todayTab.sports?.football?.length || 0), tomorrow: picked.filter((r) => r.sportId === 240).length },
-      basketball: { today: (todayTab.sports?.basketball?.length || 0), tomorrow: picked.filter((r) => r.sportId === 227).length },
-      total:      { yesterday: 0, today: (todayTab.sports?.football?.length || 0) + (todayTab.sports?.basketball?.length || 0), tomorrow: picked.length },
-    },
     tabs: {
       yesterday: { ...yesterdayTab, date: israelDate(-1) },
-      today:     { ...todayTab,     date: today },
-      tomorrow:  { label: "מחר", date: nearestDate, sports: splitBySport(picked) },
+      today:     { label: "היום",  date: today,         sports: splitBySport(pickedToday) },
+      tomorrow:  { label: "מחר",   date: tomorrowDate,  sports: splitBySport(pickedTomorrow) },
     },
     reuvenSchedule: [],
     audit:          {},
@@ -2352,25 +2346,35 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
     }
   }
 
-  // If Winner worked but tomorrow is empty, supplement tomorrow from The Odds API
+  // If Winner has no games for today or tomorrow, supplement from The Odds API
+  const todayCount =
+    (payload.tabs?.today?.sports?.football?.length || 0) +
+    (payload.tabs?.today?.sports?.basketball?.length || 0);
   const tomorrowCount =
     (payload.tabs?.tomorrow?.sports?.football?.length || 0) +
     (payload.tabs?.tomorrow?.sports?.basketball?.length || 0);
-  if (tomorrowCount === 0 && !payload.fallback) {
+  if ((todayCount === 0 || tomorrowCount === 0) && !payload.fallback) {
     try {
       const oddsFeed = await buildOddsApiFeed();
-      const oddsCount =
+      const newTabs = { ...payload.tabs };
+      let usedOdds = false;
+      const oddsToday =
+        (oddsFeed.tabs?.today?.sports?.football?.length || 0) +
+        (oddsFeed.tabs?.today?.sports?.basketball?.length || 0);
+      const oddsTomorrow =
         (oddsFeed.tabs?.tomorrow?.sports?.football?.length || 0) +
         (oddsFeed.tabs?.tomorrow?.sports?.basketball?.length || 0);
-      if (oddsCount > 0) {
-        payload = {
-          ...payload,
-          tabs: { ...payload.tabs, tomorrow: oddsFeed.tabs.tomorrow },
-          oddsSource: "The Odds API",
-        };
+      if (todayCount === 0 && oddsToday > 0) {
+        newTabs.today = oddsFeed.tabs.today;
+        usedOdds = true;
       }
+      if (tomorrowCount === 0 && oddsTomorrow > 0) {
+        newTabs.tomorrow = oddsFeed.tabs.tomorrow;
+        usedOdds = true;
+      }
+      if (usedOdds) payload = { ...payload, tabs: newTabs, oddsSource: "The Odds API" };
     } catch {
-      // Keep payload with empty tomorrow rather than crashing
+      // Keep payload as-is rather than crashing
     }
   }
   const entry = { cachedAt: Date.now(), payload };
