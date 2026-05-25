@@ -2005,6 +2005,52 @@ function normalizePredictionStatus(status) {
 function normalizeFallbackRows(payload) {
   const verifiedAt = payload.generatedAt || new Date().toISOString();
   const copy = JSON.parse(JSON.stringify(payload));
+
+  // Shift tabs if snapshot is stale relative to current Israeli date
+  const snapshotTodayDate = copy.tabs?.today?.date;
+  const currentDate = israelDate(0);
+  if (snapshotTodayDate && snapshotTodayDate !== currentDate) {
+    const snapshotMs = new Date(`${snapshotTodayDate}T00:00:00+03:00`).getTime();
+    const currentMs  = new Date(`${currentDate}T00:00:00+03:00`).getTime();
+    const daysDiff   = Math.round((currentMs - snapshotMs) / (24 * 60 * 60 * 1000));
+
+    const emptyTab = (label, date) => ({ label, date, sports: { football: [], basketball: [] } });
+
+    if (daysDiff === 1) {
+      // Snapshot is 1 day old: old today → yesterday, old tomorrow → today, tomorrow → empty
+      copy.tabs = {
+        yesterday: { ...copy.tabs.today,    label: "אתמול", date: israelDate(-1) },
+        today:     { ...copy.tabs.tomorrow, label: "היום",  date: currentDate },
+        tomorrow:  emptyTab("מחר", israelDate(1)),
+      };
+    } else if (daysDiff === 2) {
+      // Snapshot is 2 days old: old tomorrow → yesterday, everything else empty
+      copy.tabs = {
+        yesterday: { ...copy.tabs.tomorrow, label: "אתמול", date: israelDate(-1) },
+        today:     emptyTab("היום",  currentDate),
+        tomorrow:  emptyTab("מחר",  israelDate(1)),
+      };
+    } else {
+      // Snapshot is 3+ days old: clear everything
+      copy.tabs = {
+        yesterday: emptyTab("אתמול", israelDate(-1)),
+        today:     emptyTab("היום",  currentDate),
+        tomorrow:  emptyTab("מחר",  israelDate(1)),
+      };
+    }
+
+    // Sync the `day` field on every row to its tab's date
+    for (const tab of Object.values(copy.tabs)) {
+      if (!tab.date) continue;
+      for (const rows of Object.values(tab.sports || {})) {
+        for (const row of rows || []) {
+          row.day = tab.date;
+        }
+      }
+    }
+  }
+
+  // Normalize row fields
   for (const tab of Object.values(copy.tabs || {})) {
     for (const rows of Object.values(tab.sports || {})) {
       for (const row of rows || []) {
@@ -2022,11 +2068,15 @@ function normalizeFallbackRows(payload) {
   return copy;
 }
 
+function isCachedPayloadFresh(payload) {
+  return payload?.tabs?.today?.date === israelDate(0);
+}
+
 async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   const key = cacheKeyForToday();
   const cached = await kvGet(key);
-  // Fresh hit — serve immediately
-  if (!force && isFreshCache(cached, CACHE_TTL_MS.full)) {
+  // Fresh hit — serve immediately (only if tab dates match today)
+  if (!force && isFreshCache(cached, CACHE_TTL_MS.full) && isCachedPayloadFresh(cached.payload)) {
     return {
       ...cached.payload,
       cache: { status: "hit", key, cachedAt: cached.cachedAt, ttlMs: CACHE_TTL_MS.full },
@@ -2035,7 +2085,7 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   // Stale but recent (< 20 min): serve immediately, let CDN stale-while-revalidate
   // trigger the background rebuild on the next CDN revalidation cycle.
   const staleAgeMs = cached?.cachedAt ? Date.now() - Number(cached.cachedAt) : Infinity;
-  if (!force && cached?.payload && staleAgeMs < 20 * 60 * 1000) {
+  if (!force && cached?.payload && staleAgeMs < 20 * 60 * 1000 && isCachedPayloadFresh(cached.payload)) {
     return {
       ...cached.payload,
       stale: true,
