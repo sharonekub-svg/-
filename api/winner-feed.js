@@ -2169,15 +2169,18 @@ async function buildOddsApiFeed() {
   const tomorrow = israelDate(1);
   const dayPlus4 = israelDate(5);
 
-  // Query from today UTC — Copa/South American games start at 22:00+ UTC which is
-  // after midnight Israel time (tomorrow in IL), so we must include today's UTC date.
+  // Query from yesterday Israel date (= UTC yesterday) so we capture South American/Copa
+  // games that start at 22:00–23:00 UTC — these fall on the PREVIOUS UTC day but are
+  // "today" in Israel time (01:00–02:00 AM Israel). Filter keeps only rows whose
+  // Israel-timezone day (row.day) >= today.
+  const queryFrom = israelDate(-1);
   const BATCH = 5;
   const allRows = [];
   for (let i = 0; i < ODDS_API_SPORTS.length; i += BATCH) {
     const batch = ODDS_API_SPORTS.slice(i, i + BATCH);
     const batchResults = await Promise.allSettled(
       batch.map((sport) =>
-        fetchOddsApiSport(sport.key, today, dayPlus4).then((events) =>
+        fetchOddsApiSport(sport.key, queryFrom, dayPlus4).then((events) =>
           events.map((e) => oddsApiEventToRow(e, sport)).filter(Boolean)
         )
       )
@@ -2185,8 +2188,8 @@ async function buildOddsApiFeed() {
     for (const r of batchResults) {
       if (r.status !== "fulfilled") continue;
       for (const row of r.value) {
-        // Accept any game whose UTC start date >= today
-        if ((row.utcDay || row.day) >= today) allRows.push(row);
+        // Accept any game whose Israel-timezone day >= today
+        if (row.day >= today) allRows.push(row);
       }
     }
     if (i + BATCH < ODDS_API_SPORTS.length) await sleep(300);
