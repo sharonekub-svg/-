@@ -2357,7 +2357,24 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
       }
       if (usedOdds) payload = { ...payload, tabs: newTabs, oddsSource: "The Odds API" };
     } catch {
-      // Keep payload as-is rather than crashing
+      // Odds API failed — if both tabs are still empty, use the snapshot as last resort
+      if (todayCount === 0 && tomorrowCount === 0) {
+        const snap = normalizeFallbackRows(SNAPSHOT);
+        const snapToday    = (snap.tabs?.today?.sports?.football?.length    || 0) + (snap.tabs?.today?.sports?.basketball?.length    || 0);
+        const snapTomorrow = (snap.tabs?.tomorrow?.sports?.football?.length || 0) + (snap.tabs?.tomorrow?.sports?.basketball?.length || 0);
+        if (snapToday > 0 || snapTomorrow > 0) {
+          payload = {
+            ...payload,
+            tabs: {
+              yesterday: payload.tabs?.yesterday || snap.tabs?.yesterday,
+              today:     snapToday    > 0 ? snap.tabs.today    : payload.tabs?.today,
+              tomorrow:  snapTomorrow > 0 ? snap.tabs.tomorrow : payload.tabs?.tomorrow,
+            },
+            oddsSource: "snapshot",
+            snapshotFallback: true,
+          };
+        }
+      }
     }
   }
   const entry = { cachedAt: Date.now(), payload };
