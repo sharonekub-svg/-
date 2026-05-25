@@ -5,19 +5,31 @@ const SNAPSHOT = require("./winner-snapshot.json");
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
 const ODDS_API_SPORTS = [
-  { key: "soccer_israel_premier_league", label: "ליגת העל",       sportId: 240 },
-  { key: "soccer_spain_la_liga",         label: "לה ליגה",        sportId: 240 },
-  { key: "soccer_italy_serie_a",         label: "סרייה א׳",       sportId: 240 },
-  { key: "soccer_germany_bundesliga",    label: "בונדסליגה",      sportId: 240 },
-  { key: "soccer_france_ligue_one",      label: "ליג 1",          sportId: 240 },
-  { key: "soccer_netherlands_eredivisie",label: "ארדיביזי",       sportId: 240 },
-  { key: "soccer_turkey_super_league",   label: "טורקית ראשונה",  sportId: 240 },
-  { key: "soccer_usa_mls",               label: "MLS",             sportId: 240 },
-  { key: "soccer_brazil_campeonato",     label: "ברזילאית ראשונה",sportId: 240 },
-  { key: "soccer_sweden_allsvenskan",    label: "שבדית ראשונה",   sportId: 240 },
-  { key: "soccer_norway_eliteserien",    label: "נורבגית ראשונה", sportId: 240 },
-  { key: "basketball_nba",               label: "NBA",             sportId: 227 },
-  { key: "basketball_euroleague",        label: "יורוליג",        sportId: 227 },
+  // ליגות פעילות בשנה העגולה (דרום אמריקה, צפון אמריקה, סקנדינביה, אוסטרליה)
+  { key: "soccer_usa_mls",                    label: "MLS",                  sportId: 240 },
+  { key: "soccer_brazil_campeonato",          label: "ברזילאית ראשונה",      sportId: 240 },
+  { key: "soccer_argentina_primera_division", label: "ארגנטינאית ראשונה",    sportId: 240 },
+  { key: "soccer_chile_primera_division",     label: "צ'יליאנית ראשונה",     sportId: 240 },
+  { key: "soccer_colombia_primera_a",         label: "קולומביאנית ראשונה",   sportId: 240 },
+  { key: "soccer_mexico_ligamx",              label: "ליגה MX",              sportId: 240 },
+  { key: "soccer_sweden_allsvenskan",         label: "שבדית ראשונה",         sportId: 240 },
+  { key: "soccer_norway_eliteserien",         label: "נורבגית ראשונה",       sportId: 240 },
+  { key: "soccer_denmark_superliga",          label: "דנית ראשונה",          sportId: 240 },
+  { key: "soccer_finland_veikkausliiga",      label: "פינית ראשונה",         sportId: 240 },
+  { key: "soccer_australia_aleague",          label: "A-League",             sportId: 240 },
+  { key: "soccer_japan_j_league",             label: "J-League",             sportId: 240 },
+  { key: "soccer_south_korea_kleague1",       label: "K-League",             sportId: 240 },
+  // ליגות אירופה שעדיין פועלות (פלייאוף / גמר עונה)
+  { key: "soccer_israel_premier_league",      label: "ליגת העל",             sportId: 240 },
+  { key: "soccer_turkey_super_league",        label: "טורקית ראשונה",        sportId: 240 },
+  { key: "soccer_greece_super_league",        label: "יוונית ראשונה",        sportId: 240 },
+  { key: "soccer_england_league1",            label: "ליג 1 אנגלי",          sportId: 240 },
+  { key: "soccer_england_league2",            label: "ליג 2 אנגלי",          sportId: 240 },
+  { key: "soccer_spain_segunda_division",     label: "סגונדה",               sportId: 240 },
+  { key: "soccer_italy_serie_b",              label: "סרייה ב׳",             sportId: 240 },
+  // כדורסל
+  { key: "basketball_nba",                    label: "NBA",                  sportId: 227 },
+  { key: "basketball_nbl",                    label: "NBL",                  sportId: 227 },
 ];
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2066,15 +2078,21 @@ function oddsApiEventToRow(event, sportMeta) {
   const time = `${ilParts.hour}:${ilParts.minute}`;
 
   const isFootball = Number(sportMeta.sportId) === WINNER_FOOTBALL_ID;
+
+  // Wider odds range for Odds API — real-market odds differ from Winner's tight range.
+  // Accept 1.25–3.0 for football, 1.1–2.5 for basketball, then pick the best value.
+  const OA_FB_MIN = 1.25, OA_FB_MAX = 3.0;
+  const OA_BB_MIN = 1.10, OA_BB_MAX = 2.5;
+
   const candidates = isFootball
     ? [
-        homeOdds >= ODDS_MIN && homeOdds <= ODDS_MAX ? { name: home,    odds: homeOdds } : null,
-        drawOdds >= ODDS_MIN && drawOdds <= ODDS_MAX ? { name: "תיקו", odds: drawOdds } : null,
-        awayOdds >= ODDS_MIN && awayOdds <= ODDS_MAX ? { name: away,    odds: awayOdds } : null,
+        homeOdds >= OA_FB_MIN && homeOdds <= OA_FB_MAX ? { name: home,    odds: homeOdds } : null,
+        drawOdds >= OA_FB_MIN && drawOdds <= OA_FB_MAX ? { name: "תיקו", odds: drawOdds } : null,
+        awayOdds >= OA_FB_MIN && awayOdds <= OA_FB_MAX ? { name: away,    odds: awayOdds } : null,
       ].filter(Boolean)
     : [
-        homeOdds >= BASKETBALL_ODDS_MIN && homeOdds <= BASKETBALL_ODDS_MAX_MONEYLINE ? { name: home, odds: homeOdds } : null,
-        awayOdds >= BASKETBALL_ODDS_MIN && awayOdds <= BASKETBALL_ODDS_MAX_MONEYLINE ? { name: away, odds: awayOdds } : null,
+        homeOdds >= OA_BB_MIN && homeOdds <= OA_BB_MAX ? { name: home, odds: homeOdds } : null,
+        awayOdds >= OA_BB_MIN && awayOdds <= OA_BB_MAX ? { name: away, odds: awayOdds } : null,
       ].filter(Boolean);
 
   if (!candidates.length) return null;
