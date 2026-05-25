@@ -1659,6 +1659,9 @@
         if (!raw) return null;
         const { feed, at } = JSON.parse(raw);
         if (!feed?.ok || Date.now() - at > FEED_LS_MAX_AGE_MS) return null;
+        // Invalidate cache if the feed's today date no longer matches the current Israeli date
+        const currentDate = israelDayString();
+        if (feed.tabs?.today?.date && feed.tabs.today.date !== currentDate) return null;
         return { feed, at };
       } catch (_) { return null; }
     }
@@ -3299,6 +3302,10 @@
         const currentIsraelDay = israelDayString();
         const feedDay = activeTodayDate();
         if (feedDay && currentIsraelDay !== feedDay) {
+          // Rotate day tab: tomorrow → today, today → yesterday
+          if (state.day === "tomorrow") state.day = "today";
+          else if (state.day === "today") state.day = "yesterday";
+          localStorage.removeItem(FEED_LS_KEY);
           loadFeed().finally(scheduleMidnightShift);
         } else {
           scheduleMidnightShift();
