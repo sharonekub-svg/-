@@ -1,64 +1,84 @@
-const { ODDS_API_KEY, ODDS_API_BASE, ODDS_API_SPORTS } = (() => {
-  const KEY  = process.env.ODDS_API_KEY || "";
-  const BASE = "https://api.the-odds-api.com/v4";
-  const SPORTS = [
-    { key: "soccer_usa_mls",                    label: "MLS" },
-    { key: "soccer_brazil_campeonato",           label: "ברזיל" },
-    { key: "soccer_argentina_primera_division",  label: "ארגנטינה" },
-    { key: "soccer_chile_primera_division",      label: "צ'ילה" },
-    { key: "soccer_colombia_primera_a",          label: "קולומביה" },
-    { key: "soccer_mexico_ligamx",               label: "מקסיקו" },
-    { key: "soccer_sweden_allsvenskan",          label: "שבדיה" },
-    { key: "soccer_norway_eliteserien",          label: "נורבגיה" },
-    { key: "soccer_denmark_superliga",           label: "דנמרק" },
-    { key: "soccer_finland_veikkausliiga",       label: "פינלנד" },
-    { key: "soccer_japan_j_league",             label: "יפן" },
-    { key: "soccer_south_korea_kleague1",        label: "קוריאה" },
-    { key: "soccer_australia_aleague",           label: "אוסטרליה" },
-    { key: "soccer_israel_premier_league",       label: "ישראל" },
-    { key: "soccer_turkey_super_league",         label: "טורקיה" },
-    { key: "soccer_greece_super_league",         label: "יוון" },
-    { key: "soccer_england_league1",             label: "אנגליה ליג 1" },
-    { key: "soccer_england_league2",             label: "אנגליה ליג 2" },
-    { key: "soccer_spain_segunda_division",      label: "ספרד סגונדה" },
-    { key: "soccer_italy_serie_b",               label: "איטליה ב'" },
-    { key: "basketball_nba",                     label: "NBA" },
-    { key: "basketball_nbl",                     label: "NBL" },
-  ];
-  return { ODDS_API_KEY: KEY, ODDS_API_BASE: BASE, ODDS_API_SPORTS: SPORTS };
-})();
+const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
+const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
+const ODDS_API_SPORTS = [
+  "soccer_conmebol_copa_libertadores",
+  "soccer_conmebol_copa_sudamericana",
+  "soccer_uefa_champs_league",
+  "soccer_uefa_europa_league",
+  "soccer_uefa_europa_conference_league",
+  "soccer_usa_mls",
+  "soccer_usa_usl_championship",
+  "soccer_canada_premier_league",
+  "soccer_brazil_campeonato",
+  "soccer_brazil_serie_b",
+  "soccer_argentina_primera_division",
+  "soccer_chile_primera_division",
+  "soccer_colombia_primera_a",
+  "soccer_mexico_ligamx",
+  "soccer_mexico_ligamx_expansion",
+  "soccer_sweden_allsvenskan",
+  "soccer_norway_eliteserien",
+  "soccer_denmark_superliga",
+  "soccer_finland_veikkausliiga",
+  "soccer_australia_aleague",
+  "soccer_japan_j_league",
+  "soccer_south_korea_kleague1",
+  "soccer_china_superleague",
+  "soccer_israel_premier_league",
+  "soccer_turkey_super_league",
+  "soccer_greece_super_league",
+  "soccer_england_league1",
+  "soccer_england_league2",
+  "soccer_spain_segunda_division",
+  "soccer_italy_serie_b",
+  "soccer_germany_bundesliga2",
+  "soccer_france_ligue_deux",
+  "soccer_netherlands_eerste_divisie",
+  "soccer_austria_bundesliga",
+  "soccer_poland_ekstraklasa",
+  "soccer_portugal_primeira_liga",
+  "basketball_nba",
+  "basketball_nbl",
+  "basketball_euroleague",
+];
 
 module.exports = async function handler(req, res) {
+  res.setHeader("Content-Type", "application/json");
   if (!ODDS_API_KEY) return res.status(400).json({ error: "no key" });
 
   function israelDate(offset = 0) {
-    const now = new Date();
-    now.setUTCDate(now.getUTCDate() + offset);
+    const d = new Date(Date.now() + offset * 24 * 60 * 60 * 1000);
     const parts = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit",
-    }).formatToParts(now);
+    }).formatToParts(d);
     const m = Object.fromEntries(parts.map(p => [p.type, p.value]));
     return `${m.year}-${m.month}-${m.day}`;
   }
 
   const tomorrow = israelDate(1);
+  const dayPlus4 = israelDate(4);
   const results = [];
 
   await Promise.allSettled(
-    ODDS_API_SPORTS.map(async (sport) => {
+    ODDS_API_SPORTS.map(async (key) => {
       try {
-        const url = `${ODDS_API_BASE}/sports/${sport.key}/odds?apiKey=${ODDS_API_KEY}&regions=eu&markets=h2h&dateFormat=iso&oddsFormat=decimal&commenceTimeFrom=${tomorrow}T00:00:00Z&commenceTimeTo=${tomorrow}T23:59:59Z`;
+        const url = `${ODDS_API_BASE}/sports/${key}/odds?apiKey=${ODDS_API_KEY}&regions=eu&markets=h2h&dateFormat=iso&oddsFormat=decimal&commenceTimeFrom=${tomorrow}T00:00:00%2B03:00&commenceTimeTo=${dayPlus4}T23:59:59%2B03:00`;
         const r = await fetch(url);
         const data = await r.json();
-        const count = Array.isArray(data) ? data.length : 0;
-        const sample = Array.isArray(data) && data[0] ? `${data[0].home_team} vs ${data[0].away_team}` : "";
-        results.push({ sport: sport.key, label: sport.label, status: r.status, count, sample });
+        const events = Array.isArray(data) ? data : [];
+        const byDate = {};
+        for (const e of events) {
+          const d = e.commence_time?.slice(0, 10) || "?";
+          byDate[d] = (byDate[d] || 0) + 1;
+        }
+        const sample = events[0] ? `${events[0].home_team} vs ${events[0].away_team}` : "";
+        results.push({ sport: key, status: r.status, total: events.length, byDate, sample });
       } catch (e) {
-        results.push({ sport: sport.key, label: sport.label, error: e.message });
+        results.push({ sport: key, error: e.message });
       }
     })
   );
 
-  results.sort((a, b) => (b.count || 0) - (a.count || 0));
-  res.status(200).json({ tomorrow, results });
+  results.sort((a, b) => (b.total || 0) - (a.total || 0));
+  res.status(200).json({ tomorrow, dayPlus4, results });
 };

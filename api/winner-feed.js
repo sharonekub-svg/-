@@ -5,31 +5,50 @@ const SNAPSHOT = require("./winner-snapshot.json");
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
 const ODDS_API_SPORTS = [
-  // ליגות פעילות בשנה העגולה (דרום אמריקה, צפון אמריקה, סקנדינביה, אוסטרליה)
-  { key: "soccer_usa_mls",                    label: "MLS",                  sportId: 240 },
-  { key: "soccer_brazil_campeonato",          label: "ברזילאית ראשונה",      sportId: 240 },
-  { key: "soccer_argentina_primera_division", label: "ארגנטינאית ראשונה",    sportId: 240 },
-  { key: "soccer_chile_primera_division",     label: "צ'יליאנית ראשונה",     sportId: 240 },
-  { key: "soccer_colombia_primera_a",         label: "קולומביאנית ראשונה",   sportId: 240 },
-  { key: "soccer_mexico_ligamx",              label: "ליגה MX",              sportId: 240 },
-  { key: "soccer_sweden_allsvenskan",         label: "שבדית ראשונה",         sportId: 240 },
-  { key: "soccer_norway_eliteserien",         label: "נורבגית ראשונה",       sportId: 240 },
-  { key: "soccer_denmark_superliga",          label: "דנית ראשונה",          sportId: 240 },
-  { key: "soccer_finland_veikkausliiga",      label: "פינית ראשונה",         sportId: 240 },
-  { key: "soccer_australia_aleague",          label: "A-League",             sportId: 240 },
-  { key: "soccer_japan_j_league",             label: "J-League",             sportId: 240 },
-  { key: "soccer_south_korea_kleague1",       label: "K-League",             sportId: 240 },
-  // ליגות אירופה שעדיין פועלות (פלייאוף / גמר עונה)
-  { key: "soccer_israel_premier_league",      label: "ליגת העל",             sportId: 240 },
-  { key: "soccer_turkey_super_league",        label: "טורקית ראשונה",        sportId: 240 },
-  { key: "soccer_greece_super_league",        label: "יוונית ראשונה",        sportId: 240 },
-  { key: "soccer_england_league1",            label: "ליג 1 אנגלי",          sportId: 240 },
-  { key: "soccer_england_league2",            label: "ליג 2 אנגלי",          sportId: 240 },
-  { key: "soccer_spain_segunda_division",     label: "סגונדה",               sportId: 240 },
-  { key: "soccer_italy_serie_b",              label: "סרייה ב׳",             sportId: 240 },
+  // כדורגל — קאפ / גמל (משחקי שלשה/רביעי)
+  { key: "soccer_conmebol_copa_libertadores",  label: "קופה ליברטדורס",      sportId: 240 },
+  { key: "soccer_conmebol_copa_sudamericana",  label: "קופה סודאמריקאנה",    sportId: 240 },
+  { key: "soccer_uefa_champs_league",          label: "ליגת האלופות",         sportId: 240 },
+  { key: "soccer_uefa_europa_league",          label: "ליגה אירופית",         sportId: 240 },
+  { key: "soccer_uefa_europa_conference_league", label: "ליגת הקונפרנס",     sportId: 240 },
+  // ליגות פעילות בשנה העגולה (דרום/צפון אמריקה, סקנדינביה, אסיה, אוסטרליה)
+  { key: "soccer_usa_mls",                     label: "MLS",                 sportId: 240 },
+  { key: "soccer_usa_usl_championship",        label: "USL Championship",    sportId: 240 },
+  { key: "soccer_canada_premier_league",       label: "CPL",                 sportId: 240 },
+  { key: "soccer_brazil_campeonato",           label: "ברזילאית ראשונה",     sportId: 240 },
+  { key: "soccer_brazil_serie_b",              label: "ברזילאית שנייה",      sportId: 240 },
+  { key: "soccer_argentina_primera_division",  label: "ארגנטינאית ראשונה",   sportId: 240 },
+  { key: "soccer_chile_primera_division",      label: "צ'יליאנית ראשונה",    sportId: 240 },
+  { key: "soccer_colombia_primera_a",          label: "קולומביאנית ראשונה",  sportId: 240 },
+  { key: "soccer_mexico_ligamx",               label: "ליגה MX",             sportId: 240 },
+  { key: "soccer_mexico_ligamx_expansion",     label: "MX Expansion",        sportId: 240 },
+  { key: "soccer_sweden_allsvenskan",          label: "שבדית ראשונה",        sportId: 240 },
+  { key: "soccer_norway_eliteserien",          label: "נורבגית ראשונה",      sportId: 240 },
+  { key: "soccer_denmark_superliga",           label: "דנית ראשונה",         sportId: 240 },
+  { key: "soccer_finland_veikkausliiga",       label: "פינית ראשונה",        sportId: 240 },
+  { key: "soccer_australia_aleague",           label: "A-League",            sportId: 240 },
+  { key: "soccer_japan_j_league",              label: "J-League",            sportId: 240 },
+  { key: "soccer_south_korea_kleague1",        label: "K-League",            sportId: 240 },
+  { key: "soccer_china_superleague",           label: "סין ראשונה",          sportId: 240 },
+  // ליגות אירופה / מזרח
+  { key: "soccer_israel_premier_league",       label: "ליגת העל",            sportId: 240 },
+  { key: "soccer_turkey_super_league",         label: "טורקית ראשונה",       sportId: 240 },
+  { key: "soccer_greece_super_league",         label: "יוונית ראשונה",       sportId: 240 },
+  { key: "soccer_england_league1",             label: "ליג 1 אנגלי",         sportId: 240 },
+  { key: "soccer_england_league2",             label: "ליג 2 אנגלי",         sportId: 240 },
+  { key: "soccer_spain_segunda_division",      label: "סגונדה",              sportId: 240 },
+  { key: "soccer_italy_serie_b",               label: "סרייה ב׳",            sportId: 240 },
+  { key: "soccer_germany_bundesliga2",         label: "בונדסליגה 2",         sportId: 240 },
+  { key: "soccer_france_ligue_deux",           label: "ליג 2 צרפת",          sportId: 240 },
+  { key: "soccer_netherlands_eerste_divisie",  label: "הולנד ראשונה",        sportId: 240 },
+  { key: "soccer_austria_bundesliga",          label: "אוסטרית ראשונה",      sportId: 240 },
+  { key: "soccer_poland_ekstraklasa",          label: "פולנית ראשונה",       sportId: 240 },
+  { key: "soccer_portugal_primeira_liga",      label: "פורטוגלית ראשונה",    sportId: 240 },
   // כדורסל
-  { key: "basketball_nba",                    label: "NBA",                  sportId: 227 },
-  { key: "basketball_nbl",                    label: "NBL",                  sportId: 227 },
+  { key: "basketball_nba",                     label: "NBA",                 sportId: 227 },
+  { key: "basketball_nbl",                     label: "NBL",                 sportId: 227 },
+  { key: "basketball_euroleague",              label: "יורוליג",             sportId: 227 },
+  { key: "basketball_ncaab",                   label: "NCAA",                sportId: 227 },
 ];
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -115,14 +134,13 @@ async function fetchJson(url, options = {}) {
 }
 
 function israelDate(offsetDays = 0) {
-  const now = new Date();
-  now.setUTCDate(now.getUTCDate() + offsetDays);
+  const d = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000);
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Jerusalem",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(now);
+  }).formatToParts(d);
   const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${map.year}-${map.month}-${map.day}`;
 }
@@ -2037,12 +2055,13 @@ function normalizePredictionStatus(status) {
 // ── The Odds API integration ─────────────────────────────────────────────────
 
 async function fetchOddsApiSport(sportKey, dateFrom, dateTo) {
+  // Use Israel-timezone midnight boundaries (+03:00 offset)
   const url =
     `${ODDS_API_BASE}/sports/${sportKey}/odds` +
     `?apiKey=${ODDS_API_KEY}` +
     `&regions=eu&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
-    `&commenceTimeFrom=${dateFrom}T00:00:00Z` +
-    `&commenceTimeTo=${dateTo}T23:59:59Z`;
+    `&commenceTimeFrom=${dateFrom}T00:00:00%2B03:00` +
+    `&commenceTimeTo=${dateTo}T23:59:59%2B03:00`;
   try {
     const data = await fetchJson(url, { retryAttempts: 1, retryBaseDelay: 500 });
     return Array.isArray(data) ? data : [];
@@ -2079,25 +2098,28 @@ function oddsApiEventToRow(event, sportMeta) {
 
   const isFootball = Number(sportMeta.sportId) === WINNER_FOOTBALL_ID;
 
-  // Wider odds range for Odds API — real-market odds differ from Winner's tight range.
-  // Accept 1.25–3.0 for football, 1.1–2.5 for basketball, then pick the best value.
-  const OA_FB_MIN = 1.25, OA_FB_MAX = 3.0;
-  const OA_BB_MIN = 1.10, OA_BB_MAX = 2.5;
-
-  const candidates = isFootball
+  // Collect all candidates regardless of odds range, then pick closest to Winner sweet spot.
+  // Winner typically recommends outcomes around 1.5–1.8 (high confidence).
+  const allCandidates = isFootball
     ? [
-        homeOdds >= OA_FB_MIN && homeOdds <= OA_FB_MAX ? { name: home,    odds: homeOdds } : null,
-        drawOdds >= OA_FB_MIN && drawOdds <= OA_FB_MAX ? { name: "תיקו", odds: drawOdds } : null,
-        awayOdds >= OA_FB_MIN && awayOdds <= OA_FB_MAX ? { name: away,    odds: awayOdds } : null,
+        homeOdds ? { name: home,    odds: homeOdds } : null,
+        drawOdds ? { name: "תיקו", odds: drawOdds } : null,
+        awayOdds ? { name: away,    odds: awayOdds } : null,
       ].filter(Boolean)
     : [
-        homeOdds >= OA_BB_MIN && homeOdds <= OA_BB_MAX ? { name: home, odds: homeOdds } : null,
-        awayOdds >= OA_BB_MIN && awayOdds <= OA_BB_MAX ? { name: away, odds: awayOdds } : null,
+        homeOdds ? { name: home, odds: homeOdds } : null,
+        awayOdds ? { name: away, odds: awayOdds } : null,
       ].filter(Boolean);
 
-  if (!candidates.length) return null;
+  if (!allCandidates.length) return null;
 
-  const pick  = candidates.sort((a, b) => a.odds - b.odds)[0];
+  // Prefer candidates in the 1.35–2.20 range (Winner-like); otherwise pick lowest odds.
+  const TARGET_MIN = 1.35, TARGET_MAX = 2.20;
+  const inRange = allCandidates.filter((c) => c.odds >= TARGET_MIN && c.odds <= TARGET_MAX);
+  const pool = inRange.length ? inRange : allCandidates;
+  // Among valid candidates, pick the one closest to 1.65 (ideal confidence score ~61%)
+  const TARGET_ODDS = 1.65;
+  const pick = pool.sort((a, b) => Math.abs(a.odds - TARGET_ODDS) - Math.abs(b.odds - TARGET_ODDS))[0];
   const prob  = 1 / pick.odds;
   const score = Math.round(prob * 100);
 
@@ -2140,27 +2162,39 @@ async function buildOddsApiFeed() {
 
   const today    = israelDate(0);
   const tomorrow = israelDate(1);
+  // Query up to 3 days out so slow midweek days (Tuesday/Wednesday) always yield games.
+  const dayPlus3 = israelDate(4);
 
-  // Fetch only tomorrow from Odds API — today's games may have already started
-  // and get removed from the API. Use snapshot for today.
+  // Fetch tomorrow through +3 days from Odds API.
+  // Today's in-progress games are excluded because the API removes them once started.
   const results = await Promise.allSettled(
     ODDS_API_SPORTS.map((sport) =>
-      fetchOddsApiSport(sport.key, tomorrow, tomorrow).then((events) =>
+      fetchOddsApiSport(sport.key, tomorrow, dayPlus3).then((events) =>
         events.map((e) => oddsApiEventToRow(e, sport)).filter(Boolean)
       )
     )
   );
 
-  const tomorrowRows = [];
+  // Collect all future rows, sorted by date then confidence
+  const allFutureRows = [];
   for (const r of results) {
     if (r.status !== "fulfilled") continue;
     for (const row of r.value) {
-      if (row.day === tomorrow) tomorrowRows.push(row);
+      if (row.day >= tomorrow) allFutureRows.push(row);
     }
   }
 
+  // Find the nearest date that has games (tomorrow, or the next available date)
+  const nearestDate = allFutureRows.reduce((best, row) => {
+    if (!best || row.day < best) return row.day;
+    return best;
+  }, null) || tomorrow;
+
+  // Take games only from the nearest available date
+  const tomorrowRows = allFutureRows.filter((r) => r.day === nearestDate);
+
   const sortByScore = (rows) =>
-    rows.sort((a, b) => (b.recommendationScore || 0) - (a.recommendationScore || 0));
+    [...rows].sort((a, b) => (b.recommendationScore || 0) - (a.recommendationScore || 0));
 
   // Use snapshot for yesterday + today (has all games regardless of start time)
   const snapshotNorm = normalizeFallbackRows(SNAPSHOT);
@@ -2171,20 +2205,21 @@ async function buildOddsApiFeed() {
     label: "היום", date: today, sports: { football: [], basketball: [] },
   };
 
+  const picked = sortByScore(tomorrowRows).slice(0, TARGET_PICKS_PER_SPORT * 2);
   const now = new Date().toISOString();
   return {
     ok:           true,
     generatedAt:  now,
     oddsSource:   "The Odds API",
     lineStats: {
-      football:   { today: (todayTab.sports?.football?.length || 0), tomorrow: tomorrowRows.filter((r) => r.sportId === 240).length },
-      basketball: { today: (todayTab.sports?.basketball?.length || 0), tomorrow: tomorrowRows.filter((r) => r.sportId === 227).length },
-      total:      { yesterday: 0, today: (todayTab.sports?.football?.length || 0) + (todayTab.sports?.basketball?.length || 0), tomorrow: tomorrowRows.length },
+      football:   { today: (todayTab.sports?.football?.length || 0), tomorrow: picked.filter((r) => r.sportId === 240).length },
+      basketball: { today: (todayTab.sports?.basketball?.length || 0), tomorrow: picked.filter((r) => r.sportId === 227).length },
+      total:      { yesterday: 0, today: (todayTab.sports?.football?.length || 0) + (todayTab.sports?.basketball?.length || 0), tomorrow: picked.length },
     },
     tabs: {
       yesterday: { ...yesterdayTab, date: israelDate(-1) },
       today:     { ...todayTab,     date: today },
-      tomorrow:  { label: "מחר", date: tomorrow, sports: splitBySport(sortByScore(tomorrowRows).slice(0, TARGET_PICKS_PER_SPORT * 2)) },
+      tomorrow:  { label: "מחר", date: nearestDate, sports: splitBySport(picked) },
     },
     reuvenSchedule: [],
     audit:          {},
