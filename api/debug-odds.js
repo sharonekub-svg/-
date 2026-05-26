@@ -1,18 +1,5 @@
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
-// Same 10 core leagues as winner-feed.js to avoid draining quota during debugging
-const ODDS_API_SPORTS = [
-  "soccer_conmebol_copa_libertadores",
-  "soccer_conmebol_copa_sudamericana",
-  "soccer_uefa_champs_league",
-  "soccer_uefa_europa_league",
-  "soccer_brazil_campeonato",
-  "soccer_argentina_primera_division",
-  "soccer_usa_mls",
-  "soccer_mexico_ligamx",
-  "basketball_nba",
-  "basketball_euroleague",
-];
 
 module.exports = async function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
@@ -27,35 +14,50 @@ module.exports = async function handler(req, res) {
     return `${m.year}-${m.month}-${m.day}`;
   }
 
-  const tomorrow = israelDate(1);
-  const dayPlus4 = israelDate(4);
-  const results = [];
+  const today    = israelDate(0);
+  const dayPlus5 = israelDate(5);
 
-  for (const key of ODDS_API_SPORTS) {
+  // Step 1: discover ALL active sports (1 request)
+  const sportsResp = await fetch(`${ODDS_API_BASE}/sports/?apiKey=${ODDS_API_KEY}`);
+  const allSports  = await sportsResp.json();
+  const soccerKeys = Array.isArray(allSports)
+    ? allSports.filter(s => s.key.startsWith("soccer_") && s.active).map(s => s.key)
+    : [];
+
+  // Step 2: query each soccer league for today only
+  const results = [];
+  for (const key of soccerKeys) {
     try {
-      const url = `${ODDS_API_BASE}/sports/${key}/odds?apiKey=${ODDS_API_KEY}&regions=uk,eu,us&markets=h2h&dateFormat=iso&oddsFormat=decimal&commenceTimeFrom=${tomorrow}T00:00:00Z&commenceTimeTo=${dayPlus4}T23:59:59Z`;
-      const r = await fetch(url);
+      const url =
+        `${ODDS_API_BASE}/sports/${key}/odds?apiKey=${ODDS_API_KEY}` +
+        `&regions=uk,eu,us&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
+        `&commenceTimeFrom=${today}T00:00:00Z&commenceTimeTo=${today}T23:59:59Z`;
+      const r    = await fetch(url);
       const text = await r.text();
       let data;
       try { data = JSON.parse(text); } catch { data = text; }
       const events = Array.isArray(data) ? data : [];
-      const byDate = {};
-      for (const e of events) {
-        const d = e.commence_time?.slice(0, 10) || "?";
-        byDate[d] = (byDate[d] || 0) + 1;
-      }
-      const sample = events[0] ? `${events[0].home_team} vs ${events[0].away_team}` : "";
-      const errMsg = !Array.isArray(data) && data?.message ? data.message : "";
-      // Check bookmaker availability (events can exist but have empty bookmakers)
       const withOdds = events.filter(e => (e.bookmakers?.length || 0) > 0).length;
-      const sampleBookmakers = events[0]?.bookmakers?.map(b => b.key).slice(0, 3).join(",") || "";
-      results.push({ sport: key, status: r.status, total: events.length, withOdds, byDate, sample, sampleBookmakers, errMsg });
+      const errMsg   = !Array.isArray(data) && data?.message ? data.message : "";
+      if (events.length > 0 || errMsg) {
+        const games = events.map(e => {
+          const bm = e.bookmakers?.[0];
+          const h2h = bm?.markets?.find(m => m.key === "h2h");
+          const odds = (h2h?.outcomes || []).map(o => `${o.name}:${o.price}`).join(", ");
+          return `${e.home_team} vs ${e.away_team} (${e.commence_time?.slice(11,16)} UTC) [${odds}]`;
+        });
+        results.push({ sport: key, total: events.length, withOdds, games, errMsg });
+      }
     } catch (e) {
       results.push({ sport: key, error: e.message });
     }
-    await new Promise(r => setTimeout(r, 150));
+    await new Promise(r => setTimeout(r, 100));
   }
 
-  results.sort((a, b) => (b.total || 0) - (a.total || 0));
-  res.status(200).json({ tomorrow, dayPlus4, results });
+  res.status(200).json({
+    today,
+    totalSoccerLeaguesChecked: soccerKeys.length,
+    leaguesWithGamesToday: results.filter(r => r.total > 0).length,
+    results,
+  });
 };
