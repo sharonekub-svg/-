@@ -16,7 +16,6 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/winner-cron", "schedule": "0 */2 * * *" },
     { "path": "/api/winner-cron-midnight", "schedule": "5 21 * * *" }
   ]
 }
