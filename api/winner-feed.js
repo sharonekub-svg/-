@@ -2478,9 +2478,10 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
     try {
       payload = await buildOddsApiFeed();
     } catch (oddsError) {
-      const snapshot = payloadMatchesIsraelDates(SNAPSHOT)
-        ? normalizeFallbackRows(SNAPSHOT)
-        : markStaleDatePayload(SNAPSHOT, "טעינת Winner ו-The Odds API נכשלה וה-snapshot המקומי שייך לתאריך אחר, לכן לא מוצגים משחקים ישנים בתור היום.");
+      const snapshotNorm1 = normalizeFallbackRows(SNAPSHOT);
+      const snapshot = payloadMatchesIsraelDates(snapshotNorm1)
+        ? snapshotNorm1
+        : markStaleDatePayload(snapshotNorm1, "טעינת Winner ו-The Odds API נכשלה וה-snapshot המקומי שייך לתאריך אחר, לכן לא מוצגים משחקים ישנים בתור היום.");
       payload = {
         ...snapshot,
         ok: true,
@@ -2527,9 +2528,10 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   }
 
   if (!payloadMatchesIsraelDates(payload)) {
-    const snapshot = payloadMatchesIsraelDates(SNAPSHOT)
-      ? normalizeFallbackRows(SNAPSHOT)
-      : markStaleDatePayload(payload, "המקור החזיר תאריכים שלא תואמים ל-Asia/Jerusalem, לכן הטאבים הפתוחים רוקנו כדי לא להציג משחקים ישנים בתור היום.");
+    const snapshotNorm2 = normalizeFallbackRows(SNAPSHOT);
+    const snapshot = payloadMatchesIsraelDates(snapshotNorm2)
+      ? snapshotNorm2
+      : markStaleDatePayload(snapshotNorm2, "המקור החזיר תאריכים שלא תואמים ל-Asia/Jerusalem, לכן הטאבים הפתוחים רוקנו כדי לא להציג משחקים ישנים בתור היום.");
     payload = {
       ...snapshot,
       ok: true,
@@ -2565,9 +2567,10 @@ module.exports = async function handler(req, res) {
         });
         return;
       }
-      const snapshot = payloadMatchesIsraelDates(SNAPSHOT)
-        ? normalizeFallbackRows(SNAPSHOT)
-        : markStaleDatePayload(SNAPSHOT, "חיבור חי ל-Winner נחסם וה-snapshot המקומי שייך לתאריך אחר, לכן לא מוצגים משחקים ישנים בתור היום.");
+      const snapshotNorm3 = normalizeFallbackRows(SNAPSHOT);
+      const snapshot = payloadMatchesIsraelDates(snapshotNorm3)
+        ? snapshotNorm3
+        : markStaleDatePayload(snapshotNorm3, "חיבור חי ל-Winner נחסם וה-snapshot המקומי שייך לתאריך אחר, לכן לא מוצגים משחקים ישנים בתור היום.");
       res.status(200).json({
         ...snapshot,
         ok: true,
