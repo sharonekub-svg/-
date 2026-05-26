@@ -2419,6 +2419,77 @@
       };
     }
 
+    function reuvenOutcomeStrength(row, selectedOutcome) {
+      const allCandidates = reuvenOutcomeCandidates(row);
+      const sameMarket = selectedOutcome?.marketId
+        ? allCandidates.filter(candidate => String(candidate.marketId || "") === String(selectedOutcome.marketId || ""))
+        : allCandidates;
+      const ranked = sameMarket
+        .filter(candidate => Number(candidate.odds || 0) > 1)
+        .map(candidate => ({
+          ...candidate,
+          probability: Number(candidate.noVigProbability || 0) || (candidate.odds ? 1 / candidate.odds : 0),
+        }))
+        .sort((a, b) => b.probability - a.probability || a.odds - b.odds);
+      const selectedNorm = normalizeReuvenText(selectedOutcome?.label || selectedOutcome?.desc || explicitPickText(row));
+      const selected = ranked.find(candidate => {
+        const label = normalizeReuvenText(`${candidate.label || ""} ${candidate.desc || ""} ${candidate.team || ""}`);
+        return selectedNorm && (label.includes(selectedNorm) || selectedNorm.includes(label));
+      }) || selectedOutcome || ranked[0] || null;
+      const selectedProbability = Number(selected?.noVigProbability || 0) || (selected?.odds ? 1 / selected.odds : 0);
+      const closest = ranked.find(candidate => normalizeReuvenText(candidate.label) !== normalizeReuvenText(selected?.label));
+      const closestProbability = Number(closest?.noVigProbability || 0) || (closest?.odds ? 1 / closest.odds : 0);
+      const gap = selectedProbability && closestProbability ? selectedProbability - closestProbability : 0;
+      return { ranked, selected, selectedProbability, closest, closestProbability, gap };
+    }
+
+    function reuvenWhySide(row, selectedOutcome, hebrewAnswer) {
+      const strength = reuvenOutcomeStrength(row, selectedOutcome);
+      const side = strength.selected?.label || selectedOutcome?.label || explicitPickText(row);
+      const odds = Number(strength.selected?.odds || selectedOutcome?.odds || row.odds || 0);
+      const implied = odds > 1 ? Math.round((1 / odds) * 100) : null;
+      const noVig = strength.selectedProbability ? Math.round(strength.selectedProbability * 100) : null;
+      const closest = strength.closest?.label || "";
+      const gap = Number.isFinite(strength.gap) ? Math.round(strength.gap * 100) : null;
+      const sideNorm = normalizeReuvenText(side);
+      const homeNorm = normalizeReuvenText(row.home || "");
+      const awayNorm = normalizeReuvenText(row.away || "");
+      const isHome = sideNorm && homeNorm && (sideNorm.includes(homeNorm) || homeNorm.includes(sideNorm));
+      const isAway = sideNorm && awayNorm && (sideNorm.includes(awayNorm) || awayNorm.includes(sideNorm));
+
+      if (hebrewAnswer) {
+        const bullets = [
+          `- הצד שנבדק: ${side}${selectedOutcome?.marketTitle ? ` (${selectedOutcome.marketTitle})` : ""}.`,
+        ];
+        if (odds) bullets.push(`- יחס Winner הנוכחי הוא ${formatOdds(odds)}, כלומר הסתברות גלומה של בערך ${implied}%.`);
+        if (noVig) bullets.push(`- אחרי ניכוי מרווח שוק, ההסתברות הנקייה המשוערת היא בערך ${noVig}%.`);
+        if (closest && gap !== null) {
+          bullets.push(gap > 0
+            ? `- מול הצד הקרוב ביותר (${closest}) יש פער הסתברות של כ-${gap} נקודות, וזה מסביר למה הצד הזה מקבל יתרון סטטיסטי.`
+            : `- הפער מול הצד הקרוב ביותר (${closest}) לא מספיק חד, ולכן היתרון נשאר זהיר.`);
+        }
+        if (isHome) bullets.push("- הצד הזה מופיע כקבוצת בית, ולכן הביתיות נספרת כחיזוק סטטיסטי אפשרי.");
+        else if (isAway) bullets.push("- למרות שזה צד חוץ, השוק עדיין מתמחר אותו חזק, וזה יכול לרמוז על פער איכות לפי Winner.");
+        bullets.push("- הניתוח לא ממציא פציעות, הרכבים או מזג אוויר אם הם לא מחוברים כמקור נתונים חי.");
+        return bullets.join("\n");
+      }
+
+      const bullets = [
+        `- Tested side: ${side}${selectedOutcome?.marketTitle ? ` (${selectedOutcome.marketTitle})` : ""}.`,
+      ];
+      if (odds) bullets.push(`- Current Winner price is ${formatOdds(odds)}, which implies roughly ${implied}% probability.`);
+      if (noVig) bullets.push(`- After removing market margin, the estimated clean market probability is about ${noVig}%.`);
+      if (closest && gap !== null) {
+        bullets.push(gap > 0
+          ? `- Versus the closest alternative (${closest}), the probability gap is about ${gap} points, which is the main reason this side has a statistical edge.`
+          : `- The gap versus the closest alternative (${closest}) is not sharp, so the edge stays cautious.`);
+      }
+      if (isHome) bullets.push("- This side is the home team, so home context is counted as a possible statistical support.");
+      else if (isAway) bullets.push("- This is an away side, but Winner still prices it strongly, which can indicate a quality gap in the market.");
+      bullets.push("- The analysis does not invent injuries, lineups, or weather if those live sources are not connected.");
+      return bullets.join("\n");
+    }
+
     function analyzeReuvenResolvedMatch(originalText, matchedRow) {
       const value = String(originalText || "").trim();
       state.reubenCandidates = [matchedRow];
@@ -2442,6 +2513,7 @@
         reuvenMarketSummary(matchedRow),
       ].join("\n");
       const dataAccess = reuvenDataAccessSummary(matchedRow, selectedOutcome);
+      const whySide = reuvenWhySide(matchedRow, selectedOutcome, hebrewAnswer);
 
       let estimated = odds ? Math.round(Math.max(38, Math.min(78, implied + 2))) : 55;
       if (selectedOutcome?.noVigProbability) estimated = Math.round(Math.max(38, Math.min(80, selectedOutcome.noVigProbability * 100 + 2)));
@@ -2510,6 +2582,7 @@
           "סיכום ניתוח\n" + value + "\nמשחק Winner שנמצא: " + matchedRow.match + "\nענף: " + (isBasketball ? "כדורסל" : "כדורגל") + " | שוק: " + marketName,
           "נתוני Winner\n" + winnerContext,
           "גישה לנתונים\n" + dataAccess,
+          "למה דווקא הצד הזה\n" + whySide,
           "חוזקות\n- המשחק מספיק ברור כדי להשוות מחיר שוק מול הסתברות מודל.\n- השוק נבדק מול היחסים הפעילים של Winner כנתון קונטקסט.\n- אם היחס עדיין חי, אפשר לחשב הסתברות גלומה מול הערכת מודל.",
           "חולשות וסיכונים\n- Winner נותן יחסים ושווקים, לא מאגר מלא של פציעות/הרכבים. מידע חסר נספר כאי-ודאות ולא כהמצאה.\n- יחס קצר יכול להיות רע אם השוק כבר תימחר את הפייבוריט.\n- " + (isBasketball ? "בכדורסל ליינים רגישים לקצב, רוטציות וגארבג' טיים." : "בכדורגל ניצחון/שערים רגישים לטקטיקה, אדומים, מזג אוויר ורוטציה."),
           "יחסים והסתברות\n" + hebrewOddsLine,
@@ -2529,6 +2602,7 @@
         "Analysis Summary\n" + value + "\nMatched Winner game: " + matchedRow.match + "\nSport: " + sportName + " | Market: " + marketName,
         "Winner Feed Context\n" + winnerContext,
         "Data Access\n" + dataAccess,
+        "Why this side\n" + whySide,
         "Strengths\n- The match is framed clearly enough to compare market price against model probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against implied probability as market context.",
         "Weaknesses\n- Winner gives the market and odds, not a complete injury/lineup database. Missing external data is treated as uncertainty, not invented confidence.\n- Short odds can still be weak if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win probabilities are sensitive to tactics, red cards, weather, and lineup rotation."),
         "Odds and Probability\n" + oddsLine,
@@ -2561,8 +2635,8 @@
             <div class="thinking-steps">
               <div class="thinking-step"><span class="thinking-line"></span><span>מחפש התאמה למשחק וליום הנכון</span></div>
               <div class="thinking-step"><span class="thinking-line"></span><span>בודק שווקי Winner ויחסים זמינים</span></div>
-              <div class="thinking-step"><span class="thinking-line"></span><span>משווה הסתברות גלומה ויתרון סטטיסטי</span></div>
-              <div class="thinking-step"><span class="thinking-line"></span><span>מנסח תשובה בלי המלצת הימור</span></div>
+              <div class="thinking-step"><span class="thinking-line"></span><span>מחשב פער מול השוק והיריבה הקרובה</span></div>
+              <div class="thinking-step"><span class="thinking-line"></span><span>בונה הסבר ברור למה הצד הזה מקבל יתרון</span></div>
             </div>
           </div>
         </div>
@@ -3564,7 +3638,7 @@
           state.reubenLoading = false;
           renderCards();
           scrollReuvenOutput();
-        }, 650);
+        }, 240);
         return;
       }
       const button = event.target.closest("[data-open]");
