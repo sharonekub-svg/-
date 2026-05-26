@@ -1272,7 +1272,7 @@ function rejectionReasons(row) {
   return reasons;
 }
 
-function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, resultsByEvent = new Map(), sportIdFilter = null) {
+function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, resultsByEvent = new Map(), sportIdFilter = null, standingsMap365 = new Map()) {
   const events = new Map();
 
   // First pass: collect all events that have an allowed market on this date
@@ -1413,22 +1413,58 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
     const matchedResult = findResultEvent(resultsByEvent, row);
     const enrichedRow = applyResult(row, matchedResult);
 
+    // ── Motivation check via 365scores standings ──
+    // Only applies when the pick is a specific team win (not draw/X)
+    let motivationInfo = null;
+    const pickRaw = cleanText(scored.pick).toLowerCase();
+    const isDrawPick = pickRaw === "x" || pickRaw === "תיקו";
+    if (!isDrawPick && matchedResult?.competitionId365 && standingsMap365.size) {
+      const standings = standingsMap365.get(String(matchedResult.competitionId365));
+      if (standings?.length) {
+        // Determine which team is the favourite pick
+        const pickNorm = normalizeMatchName(scored.pickTeam || outcomeTeam(scored.pick));
+        const homeNorm = normalizeMatchName(teams.home);
+        const awayNorm = normalizeMatchName(teams.away);
+        const homeScore = teamNameScore(pickNorm, homeNorm);
+        const awayScore = teamNameScore(pickNorm, awayNorm);
+        const isPickHome = homeScore >= awayScore && homeScore >= 0.5;
+        const favoriteCompetitorId = isPickHome
+          ? matchedResult.homeCompetitorId
+          : matchedResult.awayCompetitorId;
+        if (favoriteCompetitorId) {
+          motivationInfo = getTeamStakeFromStandings(standings, favoriteCompetitorId);
+        }
+      }
+    }
+
     const current = events.get(market.eId);
     // Prefer: in-range pick > outside-range; within same category prefer higher score
     const currentOutside = current?.outsideRange ?? true;
     const newOutside = enrichedRow.outsideRange;
+    const enrichedWithMotivation = motivationInfo
+      ? { ...enrichedRow, motivationInfo, motivationRisk: !motivationInfo.hasStake }
+      : enrichedRow;
+
     const shouldReplace = !current
       || (currentOutside && !newOutside)
-      || (!currentOutside && !newOutside && (enrichedRow.score > current.score || (enrichedRow.score === current.score && (enrichedRow.oddsRaw || 0) < (current.oddsRaw || 0))));
+      || (!currentOutside && !newOutside && (enrichedWithMotivation.score > current.score || (enrichedWithMotivation.score === current.score && (enrichedWithMotivation.oddsRaw || 0) < (current.oddsRaw || 0))));
     if (shouldReplace) {
-      events.set(market.eId, enrichedRow);
+      events.set(market.eId, enrichedWithMotivation);
     }
   }
 
   const candidates = [...events.values()]
     .filter((row) => row.status === "ממתין")
     .filter((row) => isOpenDisplayable(row))
-    .filter((row) => hasSingleClearFavorite(row));
+    .filter((row) => hasSingleClearFavorite(row))
+    // Motivation filter: exclude games where the favourite has no meaningful stake
+    .filter((row) => {
+      if (!row.motivationRisk) return true;
+      console.info(
+        `[motivation-filter] Excluded: ${row.match} — ${row.motivationInfo?.label || "no stake"}`
+      );
+      return false;
+    });
   const strictCandidates = candidates.filter((row) => !row.outsideRange && row.odds);
   const softCandidates = candidates
     .filter((row) => row.outsideRange && row.oddsRaw >= SOFT_ODDS_MIN && row.oddsRaw <= SOFT_ODDS_MAX)
@@ -1694,6 +1730,10 @@ async function get365Results(startDate, endDate, sportId365, winnerSportId, refe
         homeLogoUrl: homeId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/${homeId}` : null,
         awayLogoUrl: awayId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/${awayId}` : null,
         leagueLogoUrl: competitionId ? `https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitions/${competitionId}` : null,
+        // Carry raw IDs for standings / motivation lookup
+        homeCompetitorId: homeId || null,
+        awayCompetitorId: awayId || null,
+        competitionId365: competitionId || null,
       });
     }
   }
@@ -1994,6 +2034,22 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   ]);
   const resultEvents = [...winnerResultEvents, ...scores365Events];
   const resultsByEvent = resultIndex(resultEvents);
+
+  // ── Standings: fetch for competitions appearing in today's / tomorrow's 365scores games
+  const competitionIds365 = new Set(
+    scores365Events
+      .filter((e) => e.competitionId365 && (e.date === today || e.date === tomorrow))
+      .map((e) => String(e.competitionId365))
+  );
+  const standingsEntries = await Promise.allSettled(
+    [...competitionIds365].map(async (id) => [id, await fetch365Standings(id)])
+  );
+  const standingsMap365 = new Map(
+    standingsEntries
+      .filter((r) => r.status === "fulfilled" && r.value[1]?.length)
+      .map((r) => r.value)
+  );
+
   const yesterdayMerged = mergeRows(
     buildResultRows(winnerResultEvents, yesterday),
     [
@@ -2002,12 +2058,12 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     ]
   );
   const todayCurrentRows = [
-    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
-    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
+    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
+    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
   ];
   const tomorrowCurrentRows = [
-    ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID),
-    ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID),
+    ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
+    ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
   ];
   // Enrich all three days in parallel — was sequential (3x slower)
   const [yesterdayEnrichedRows, todayEnrichedRows, tomorrowEnrichedRows] = withLogos
@@ -2106,6 +2162,100 @@ function normalizePredictionStatus(status) {
   if (value === "החזר" || value === "לא אומת") return "לא אומת";
   if (value === "בוטל") return "בוטל";
   return value || "ממתין";
+}
+
+// ── Standings & Motivation filter ────────────────────────────────────────────
+
+const standingsCache365 = globalThis.__STANDINGS_365_CACHE__ ||
+  (globalThis.__STANDINGS_365_CACHE__ = new Map());
+
+/**
+ * Fetch league standings from 365scores for a given competition ID.
+ * Cached for 6 hours. Returns [] on any error (fail-open).
+ */
+async function fetch365Standings(competitionId) {
+  if (!competitionId) return [];
+  const cacheKey = `standings365:${competitionId}`;
+  const cached = standingsCache365.get(cacheKey);
+  if (cached && Date.now() - cached.at < 6 * 60 * 60 * 1000) return cached.data;
+  const url =
+    `https://webws.365scores.com/web/standings/?appTypeId=5&langId=8` +
+    `&competitionId=${competitionId}&games=0`;
+  const data = await fetchJson(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+      Origin: "https://www.365scores.com",
+      Referer: "https://www.365scores.com/",
+      Accept: "application/json",
+    },
+    retryAttempts: 1,
+  }).catch(() => null);
+  const standings = data?.standings || [];
+  standingsCache365.set(cacheKey, { at: Date.now(), data: standings });
+  return standings;
+}
+
+/**
+ * Check a team's motivation based on standings.
+ * Returns:
+ *   { hasStake: false, penaltyType, label, signal }  → exclude from recommendations
+ *   { hasStake: true,  penaltyType: null, label }    → keep, may have soft note
+ *   null                                              → no data, keep by default
+ *
+ * penaltyType values:
+ *   "champion_confirmed"  – team already secured the title
+ *   "relegated_confirmed" – team already relegated
+ *   "promotion_confirmed" – team already promoted (in lower league)
+ */
+function getTeamStakeFromStandings(standings, competitorId) {
+  if (!standings?.length || !competitorId) return null;
+  for (const group of standings) {
+    for (const row of group.rows || []) {
+      if (String(row.competitor?.id) !== String(competitorId)) continue;
+      const qt = cleanText(row.qualifiedType || row.type || "").toLowerCase();
+      const isQual = Boolean(row.qualified);
+      // Title / Championship confirmed
+      if (isQual && (
+        qt.includes("champion") || qt === "winner" || qt.includes("title") ||
+        qt === "1st" || qt === "first"
+      )) {
+        return {
+          hasStake: false,
+          penaltyType: "champion_confirmed",
+          label: "אליפות בטוחה",
+          signal: "קבוצה זו כבר הבטיחה את האליפות — מוטיבציה עלולה להיות נמוכה, לא מומלצת.",
+        };
+      }
+      // Promotion confirmed (lower league teams)
+      if (isQual && (qt.includes("promot") || qt.includes("upgrad"))) {
+        return {
+          hasStake: false,
+          penaltyType: "promotion_confirmed",
+          label: "עלייה בטוחה",
+          signal: "קבוצה זו כבר הבטיחה עלייה — מוטיבציה עלולה להיות נמוכה, לא מומלצת.",
+        };
+      }
+      // Relegation confirmed — bad team anyway, rarely a favourite
+      if (isQual && (
+        qt.includes("relegat") || qt.includes("descent") || qt.includes("demot") || qt.includes("drop")
+      )) {
+        return {
+          hasStake: false,
+          penaltyType: "relegated_confirmed",
+          label: "ירידה בטוחה",
+          signal: "קבוצה זו כבר ירדה לדיוויזיה נמוכה — מוטיבציה עלולה להיות נמוכה.",
+        };
+      }
+      // Still fighting (European spot, avoiding relegation, title race, etc.)
+      return {
+        hasStake: true,
+        penaltyType: null,
+        label: isQual ? "מוכשרת למטרה, עדיין נלחמת על מיקום" : "עדיין נלחמת על מטרה",
+        signal: null,
+      };
+    }
+  }
+  return null; // team not found — keep by default
 }
 
 // ── The Odds API integration ─────────────────────────────────────────────────
