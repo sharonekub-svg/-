@@ -21,7 +21,7 @@ function readBody(req) {
 function fetchJson(url) {
   return new Promise((resolve, reject) => {
     https
-      .get(url, { timeout: 8000 }, (res) => {
+      .get(url, { timeout: 10000 }, (res) => {
         let data = '';
         res.on('data', (c) => (data += c));
         res.on('end', () => {
@@ -42,12 +42,57 @@ function parseOdds(val) {
 }
 
 function oddsInRange(odds) {
-  return odds >= 1.4 && odds <= 1.9;
+  return odds != null && odds >= 1.4 && odds <= 1.9;
 }
 
-// ── Feed flattener ──
-// Handles both { tabs: { today: { sports: { id: [rows] } } } }
-// and           { tabs: { today: { sports: { id: { rows: [] } } } } }
+// ── Extract best odds from a reuvenSchedule row (has nested markets[].outcomes[]) ──
+function extractScheduleOdds(row) {
+  if (!row.markets || !row.markets.length) return null;
+  const market = row.markets.find((m) => m.tier === 'primary') || row.markets[0];
+  const outcomes = (market.outcomes || []).filter((o) => o.odds > 0);
+  if (!outcomes.length) return null;
+
+  const inRange = outcomes.filter((o) => oddsInRange(o.odds));
+  const pool = inRange.length ? inRange : outcomes;
+  const best = pool.sort((a, b) => Math.abs(a.odds - 1.65) - Math.abs(b.odds - 1.65))[0];
+
+  // Also extract 1X2-style odds
+  const nonDraw = outcomes.filter((o) => String(o.desc).toLowerCase() !== 'x');
+  const draw = outcomes.find((o) => String(o.desc).toLowerCase() === 'x');
+  return {
+    pick: best.label || best.team || best.desc,
+    odds: inRange.length ? best.odds : null,   // null = outside range, no recommendation
+    oddsRaw: best.odds,
+    odds1: nonDraw[0]?.odds || null,
+    oddsX: draw?.odds || null,
+    odds2: nonDraw[1]?.odds || null,
+    outsideRange: inRange.length === 0,
+  };
+}
+
+// Normalise a schedule row to look like a tabs row
+function normalizeScheduleRow(row) {
+  if (row._normalised) return row;
+  const extracted = extractScheduleOdds(row);
+  return {
+    ...row,
+    _normalised: true,
+    _fromSchedule: true,
+    odds: extracted?.odds ?? null,
+    oddsRaw: extracted?.oddsRaw ?? null,
+    winnerPick: extracted?.pick || null,
+    pick: extracted?.pick || null,
+    odds1: extracted?.odds1 ?? null,
+    oddsX: extracted?.oddsX ?? null,
+    odds2: extracted?.odds2 ?? null,
+    outsideRange: extracted?.outsideRange ?? true,
+    _sportId: row.sportId || row._sportId,
+  };
+}
+
+// ── Feed flattener – handles the actual feed structure:
+// feed.tabs.{today|tomorrow|yesterday}.sports.{football|basketball} → arrays of rows
+// Also handles older { id: [rows] } formats
 function flattenFeed(feed, targetTab) {
   const rows = [];
   const tabs = targetTab ? [targetTab] : ['today', 'tomorrow', 'yesterday'];
@@ -74,12 +119,23 @@ function flattenFeed(feed, targetTab) {
   return rows;
 }
 
+// ── Check if a row has any meaningful odds ──
+function hasAnyOdds(row) {
+  return (
+    (row.odds != null && row.odds > 0) ||
+    (row.oddsRaw != null && row.oddsRaw > 0) ||
+    (row.odds1 != null && row.odds1 > 0) ||
+    (row.oddsX != null && row.oddsX > 0) ||
+    (row.odds2 != null && row.odds2 > 0)
+  );
+}
+
 // ── Match scoring (1–10) ──
 function scoreMatch(row) {
   let score = 5.0;
 
-  // Pick odds for scoring (prefer algorithm pick odds over 1X2 min)
-  const mainOdds = parseOdds(row.odds);
+  // Prefer recommended odds; fall back to oddsRaw, then 1X2 min
+  const mainOdds = parseOdds(row.odds) || parseOdds(row.oddsRaw);
   const odds1 = parseOdds(row.odds1);
   const oddsX = parseOdds(row.oddsX);
   const odds2 = parseOdds(row.odds2);
@@ -100,15 +156,16 @@ function scoreMatch(row) {
 
   // Model/confidence score (0–100 → 0–1.5 bonus)
   const modelScore = parseFloat(row.score || row.confidence || row.modelScore || 0);
-  if (modelScore > 0) score += Math.min(modelScore / 100, 1.5);
+  if (modelScore > 0 && modelScore <= 100) score += Math.min(modelScore / 100, 1.5);
 
   // Probability bonus
-  const prob = parseFloat(row.prob1 || row.prob || row.probability || 0);
-  if (prob > 65) score += 0.5;
-  else if (prob > 55) score += 0.2;
+  const prob = parseFloat(row.prob1 || row.prob || row.probability || row.normalizedProbability || 0);
+  const probPct = prob <= 1 ? prob * 100 : prob;
+  if (probPct > 65) score += 0.5;
+  else if (probPct > 55) score += 0.2;
 
   // Market gap bonus
-  if (parseFloat(row.marketGap || 0) > 5) score += 0.5;
+  if (parseFloat(row.marketGap || 0) > 0.05) score += 0.5;
 
   // Penalties
   if (row.outsideRange) score -= 2.0;
@@ -120,9 +177,10 @@ function scoreMatch(row) {
 function recommendedOutcome(row) {
   // Prefer the algorithm's own pick
   const pick = row.winnerPick || row.pick || row.pickTeam;
-  if (pick && row.odds) {
+  const pickOdds = parseOdds(row.odds) || parseOdds(row.oddsRaw);
+  if (pick && pickOdds) {
     const spread = row.spread != null ? ` ${Number(row.spread) > 0 ? '+' : ''}${row.spread}` : '';
-    return { label: `${pick}${spread}`, odds: parseOdds(row.odds) };
+    return { label: `${pick}${spread}`, odds: pickOdds };
   }
 
   // Fall back to 1X2 odds – prefer range 1.40-1.90
@@ -148,10 +206,13 @@ function buildReason(row, score, rec) {
     else parts.push(`יחס ${o.toFixed(2)} – מחוץ לטווח המועדף`);
   }
   if (row.rec || row.recommended) parts.push('מומלץ על ידי האלגוריתם');
-  const prob = parseFloat(row.prob1 || row.prob || 0);
-  if (prob > 50) parts.push(`הסתברות ${Math.round(prob)}%`);
+  const prob = parseFloat(row.prob1 || row.prob || row.probability || row.normalizedProbability || 0);
+  const probPct = prob <= 1 ? Math.round(prob * 100) : Math.round(prob);
+  if (probPct > 50) parts.push(`הסתברות ${probPct}%`);
   if (score >= 8) parts.push('ציון גבוה מאוד');
   else if (score >= 7) parts.push('ציון גבוה');
+  if (row._fromSchedule) parts.push('נמצא בלוח Winner');
+  if (row.outsideRange) parts.push('יחס מחוץ לטווח המועדף');
   return parts.join(' · ') || 'ניתוח סטטיסטי';
 }
 
@@ -163,14 +224,16 @@ function buildCard(row, score) {
     away: row.away || '?',
     league: row.league || row.competition || '',
     time: row.time || row.kickoff || '',
-    sport: row._sportId,
-    tab: row._tab,
+    day: row.day || '',
+    sport: row._sportId || row.sportId || row.sport || '',
+    tab: row._tab || '',
     recommendation: rec?.label || null,
     recommendedOdds: rec?.odds ? Number(rec.odds.toFixed(2)) : null,
     rating: score,
     reason: buildReason(row, score, rec),
     status: row.status || '',
     isPremium: Boolean(row.isPremium || row.premium),
+    outsideRange: Boolean(row.outsideRange),
   };
 }
 
@@ -184,7 +247,7 @@ function norm(str) {
 }
 
 function tokenize(text) {
-  return norm(text).split(/[\s,./;:!?]+/).filter((t) => t.length >= 2);
+  return norm(text).split(/[\s,./;:!?()-]+/).filter((t) => t.length >= 2);
 }
 
 // ── Intent detection ──
@@ -193,12 +256,13 @@ const SPORT_MAP = {
   football: [
     'כדורגל', 'פרמייר', 'champions', 'liga', 'laliga', 'בונדסליגה', 'סריה',
     'ליגת העל', 'ברזיל', 'copa', 'uefa', 'euro', 'premier', 'soccer',
-    'ligue', 'eredivisie', 'mundial', 'מונדיאל',
+    'ligue', 'eredivisie', 'mundial', 'מונדיאל', 'כדורג',
   ],
   basketball: [
     'כדורסל', 'nba', 'ncaa', 'euroleague', 'יורוליג', 'אירוליג', 'euroliga',
     'nbl', 'basketball', 'לייקרס', 'lakers', 'celtics', 'warriors', 'bulls',
-    'מכבי', 'maccabi', 'hapoel', 'הפועל',
+    'מכבי', 'maccabi', 'hapoel', 'הפועל', 'ניקס', 'knicks', 'nets', 'bucks',
+    'heat', 'suns', 'nuggets', 'cavaliers', 'thunder', 'clippers',
   ],
 };
 
@@ -213,7 +277,7 @@ function detectDate(tokens) {
   const joined = tokens.join(' ');
   if (/אתמול|yesterday/.test(joined)) return 'yesterday';
   if (/מחר|tomorrow/.test(joined)) return 'tomorrow';
-  return 'today'; // default (covers היום, הלילה, today, tonight)
+  return 'today';
 }
 
 function detectLimit(tokens) {
@@ -231,7 +295,7 @@ function detectIntent(tokens) {
     tokens.some((t) =>
       ['טיפים', 'טיפ', 'tips', 'tip', 'המלצות', 'המלצה', 'best', 'top'].includes(t)
     ) ||
-    /תן לי|give me|show me|הכי טובים|הכי חזקים/.test(joined);
+    /תן לי|give me|show me|הכי טובים|הכי חזקים|הצג/.test(joined);
 
   const isGeneralQuestion =
     /יש משהו|יש.*היום|יש.*מחר|מה יש|what.*today|what.*tomorrow/.test(joined);
@@ -241,13 +305,34 @@ function detectIntent(tokens) {
   return 'general';
 }
 
-// ── Match search ──
-function matchScore(row, tokens) {
-  const hay = norm(`${row.match || ''} ${row.home || ''} ${row.away || ''} ${row.league || ''}`);
+// ── Match text search with fuzzy scoring ──
+
+// Score how well a row matches the user's query tokens
+function textMatchScore(row, tokens) {
+  const fields = [
+    row.match || '',
+    row.home || '',
+    row.away || '',
+    row.league || '',
+    row.sport || '',
+    row.country || '',
+  ];
+  const hay = norm(fields.join(' '));
+  const hayTokens = hay.split(/\s+/);
+
   let hits = 0;
   for (const t of tokens) {
     if (t.length < 2) continue;
-    if (hay.includes(t)) hits++;
+    if (hay.includes(t)) {
+      // Exact substring – strong signal
+      hits += 2;
+    } else {
+      // Partial: token is prefix/suffix of a hay word, or hay word is prefix of token
+      const partial = hayTokens.some(
+        (w) => w.length >= 3 && (w.startsWith(t) || t.startsWith(w))
+      );
+      if (partial) hits += 1;
+    }
   }
   return hits;
 }
@@ -258,12 +343,13 @@ const SPORT_IDS_FOOTBALL = new Set([1, 240, '1', '240', 'football', 'soccer']);
 
 function matchesSport(row, sport) {
   if (!sport) return true;
-  const sid = row._sportId;
+  const sid = row._sportId || row.sportId;
   const sportStr = norm(row.sport || '');
   if (sport === 'basketball') {
     return (
       SPORT_IDS_BASKETBALL.has(sid) ||
       SPORT_IDS_BASKETBALL.has(String(sid)) ||
+      SPORT_IDS_BASKETBALL.has(Number(sid)) ||
       sportStr.includes('כדורסל') ||
       sportStr.includes('basketball')
     );
@@ -272,6 +358,7 @@ function matchesSport(row, sport) {
     return (
       SPORT_IDS_FOOTBALL.has(sid) ||
       SPORT_IDS_FOOTBALL.has(String(sid)) ||
+      SPORT_IDS_FOOTBALL.has(Number(sid)) ||
       sportStr.includes('כדורגל') ||
       sportStr.includes('football') ||
       sportStr.includes('soccer')
@@ -280,8 +367,15 @@ function matchesSport(row, sport) {
   return true;
 }
 
+// ── Build reuvenSchedule into a flat searchable pool ──
+function flattenSchedule(feed) {
+  const schedule = feed.reuvenSchedule;
+  if (!Array.isArray(schedule)) return [];
+  return schedule.map((row) => normalizeScheduleRow({ ...row, _tab: 'schedule' }));
+}
+
 // ── Response builder ──
-function buildResponse(intent, type, matched, allRows, userType, message, date) {
+function buildResponse(intent, type, matched, allRows, scheduleRows, userType, message, date) {
   const isPremium = userType === 'premium';
   const limit = isPremium ? (intent.limit || 5) : Math.min(intent.limit || 3, 3);
   const sport = intent.sport;
@@ -293,14 +387,14 @@ function buildResponse(intent, type, matched, allRows, userType, message, date) 
   if (type === 'top_tips') {
     const pool = allRows
       .filter((r) => matchesSport(r, sport))
-      .filter((r) => r.odds || r.odds1 || r.oddsX || r.odds2)
+      .filter(hasAnyOdds)
       .map((r) => ({ row: r, score: scoreMatch(r) }))
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
 
     if (!pool.length) {
       return {
-        answer: `ראובן AI לא מצא משחקים מתאימים ב${sportLabel} ל${date === 'tomorrow' ? 'מחר' : 'היום'}. נסה שוב מאוחר יותר.`,
+        answer: `ראובן AI לא מצא משחקים מתאימים${sport ? ` ב${sportLabel}` : ''} ל${date === 'tomorrow' ? 'מחר' : 'היום'}. נסה שוב מאוחר יותר.`,
         matches: [],
         disclaimer: DISCLAIMER,
       };
@@ -308,7 +402,7 @@ function buildResponse(intent, type, matched, allRows, userType, message, date) 
 
     const cards = pool.map(({ row, score }) => buildCard(row, score));
     const whenLabel = date === 'tomorrow' ? 'למחר' : date === 'yesterday' ? 'לאתמול' : 'להיום';
-    const freeNote = !isPremium && cards.length < limit + 1 ? '' : !isPremium ? ' (פרימיום מציג ניתוח מלא)' : '';
+    const freeNote = !isPremium ? ' (פרימיום מציג ניתוח מלא + יותר משחקים)' : '';
     return {
       answer: `ראובן AI בחר ${cards.length} טיפים מובילים${sport ? ` ב${sportLabel}` : ''} ${whenLabel}${freeNote}:`,
       matches: cards,
@@ -328,6 +422,8 @@ function buildResponse(intent, type, matched, allRows, userType, message, date) 
         `ראובן AI מצא את המשחק ומנתח אותו.\n\n` +
         `משחק: ${best.home} נגד ${best.away}\n` +
         (best.league ? `ליגה: ${best.league}\n` : '') +
+        (best.day ? `תאריך: ${best.day}\n` : '') +
+        (best.time ? `שעה: ${best.time}\n` : '') +
         (best.recommendation ? `המלצה: ${best.recommendation}\n` : '') +
         (best.recommendedOdds ? `יחס: ${best.recommendedOdds}\n` : '') +
         `דירוג ראובן AI: ${best.rating}/10\n\n` +
@@ -336,12 +432,19 @@ function buildResponse(intent, type, matched, allRows, userType, message, date) 
       answer =
         `ראובן AI מצא את המשחק, אבל הוא לא נכנס כהמלצה חזקה.\n\n` +
         `משחק: ${best.home} נגד ${best.away}\n` +
+        (best.league ? `ליגה: ${best.league}\n` : '') +
+        (best.day ? `תאריך: ${best.day}\n` : '') +
+        (best.time ? `שעה: ${best.time}\n` : '') +
+        (best.recommendation ? `יחס זמין: ${best.recommendation} @ ${best.recommendedOdds || '?'}\n` : '') +
         `דירוג ראובן AI: ${best.rating}/10\n\n` +
         `הסיבה:\n${best.reason}`;
     } else {
       answer =
         `ראובן AI מצא את המשחק, אבל הדירוג נמוך – לא מתאים לאלגוריתם.\n\n` +
         `משחק: ${best.home} נגד ${best.away}\n` +
+        (best.league ? `ליגה: ${best.league}\n` : '') +
+        (best.day ? `תאריך: ${best.day}\n` : '') +
+        (best.recommendation ? `יחס זמין: ${best.recommendation} @ ${best.recommendedOdds || '?'}\n` : '') +
         `דירוג ראובן AI: ${best.rating}/10\n\n` +
         `הסיבה:\n${best.reason}`;
     }
@@ -350,15 +453,18 @@ function buildResponse(intent, type, matched, allRows, userType, message, date) 
     let alternatives = [];
     if (best.rating < 6.5) {
       alternatives = allRows
-        .filter((r) => r !== best && (r.odds || r.odds1 || r.oddsX || r.odds2))
+        .filter((r) => {
+          const isSame = norm(r.home) === norm(best.home) && norm(r.away) === norm(best.away);
+          return !isSame && hasAnyOdds(r);
+        })
         .map((r) => ({ row: r, score: scoreMatch(r) }))
-        .filter(({ score }) => score >= 7)
+        .filter(({ score }) => score >= 6)
         .sort((a, b) => b.score - a.score)
         .slice(0, 3)
         .map(({ row, score }) => buildCard(row, score));
 
       if (alternatives.length) {
-        answer += `\n\nבמקום זה, ראובן AI היה שוקל משחק אחר:`;
+        answer += `\n\nבמקום זה, ראובן AI היה שוקל:`;
       }
     }
 
@@ -369,21 +475,56 @@ function buildResponse(intent, type, matched, allRows, userType, message, date) 
     return { answer, matches: cards, alternatives, disclaimer: DISCLAIMER };
   }
 
-  // ── MATCH QUERY – no match found ──
+  // ── MATCH QUERY – not found in feed, search schedule ──
   if (type === 'match_query' && !matched.length) {
+    // Try the schedule pool (all 31 days from Winner)
+    const queryTokens = intent._queryTokens || [];
+    const scheduleMatches = scheduleRows
+      .filter(hasAnyOdds)
+      .map((r) => ({ row: r, hits: textMatchScore(r, queryTokens), score: scoreMatch(r) }))
+      .filter(({ hits }) => hits >= 1)
+      .sort((a, b) => b.hits - a.hits || b.score - a.score)
+      .slice(0, isPremium ? 5 : 3);
+
+    if (scheduleMatches.length) {
+      const cards = scheduleMatches.map(({ row, score }) => buildCard(row, score));
+      const best = cards[0];
+      return {
+        answer:
+          `ראובן AI מצא את המשחק בלוח Winner!\n\n` +
+          `משחק: ${best.home} נגד ${best.away}\n` +
+          (best.league ? `ליגה: ${best.league}\n` : '') +
+          (best.day ? `תאריך: ${best.day}\n` : '') +
+          (best.time ? `שעה: ${best.time}\n` : '') +
+          (best.recommendation ? `המלצה: ${best.recommendation} @ ${best.recommendedOdds || '?'}\n` : '') +
+          (best.outsideRange ? `⚠️ יחס מחוץ לטווח המועדף (1.40–1.90)\n` : '') +
+          `דירוג ראובן AI: ${best.rating}/10\n\n` +
+          `${best.reason}`,
+        matches: cards,
+        alternatives: [],
+        disclaimer: DISCLAIMER,
+      };
+    }
+
+    // Nothing found anywhere – suggest top available matches
     const suggestions = allRows
-      .filter((r) => r.odds || r.odds1 || r.oddsX || r.odds2)
+      .filter(hasAnyOdds)
+      .filter((r) => matchesSport(r, sport))
       .map((r) => ({ row: r, score: scoreMatch(r) }))
       .sort((a, b) => b.score - a.score)
       .slice(0, isPremium ? 5 : 3)
       .map(({ row, score }) => buildCard(row, score));
 
+    const searchedName = tokenize(message).filter(
+      (t) => !['היום', 'מחר', 'אתמול', 'today', 'tomorrow', 'yesterday', 'הלילה', 'tonight'].includes(t)
+    ).join(' ');
+
     return {
       answer:
-        `ראובן AI לא מצא כרגע את המשחק הזה במקורות הזמינים.\n\n` +
-        `ייתכן שהמשחק לא נמצא בפיד Winner כרגע, או שאין יחסים רשמיים.\n` +
-        `לכן לא נמצא יחס רשמי, והמשחק לא נכנס כהמלצה חזקה.\n\n` +
-        (suggestions.length ? `אבל מצאתי ${suggestions.length} משחקים דומים שיכולים להיות רלוונטיים:` : ''),
+        `ראובן AI חיפש את "${searchedName}" בפיד Winner הנוכחי ובלוח המשחקים לחודש הקרוב – לא נמצאה התאמה.\n\n` +
+        `ייתכן שהמשחק אינו בלוח Winner כרגע, או שהשם נרשם אחרת בפיד.\n` +
+        `נסה לכתוב את שם הקבוצה בדיוק כפי שמופיע ב-winner.co.il, למשל: "ריאל מדריד ברצלונה".\n\n` +
+        (suggestions.length ? `אלה המשחקים הזמינים${sport ? ` ב${sportLabel}` : ''} כרגע:` : ''),
       matches: [],
       alternatives: suggestions,
       disclaimer: DISCLAIMER,
@@ -393,7 +534,7 @@ function buildResponse(intent, type, matched, allRows, userType, message, date) 
   // ── GENERAL – show top tips ──
   const topGeneral = allRows
     .filter((r) => matchesSport(r, sport))
-    .filter((r) => r.odds || r.odds1 || r.oddsX || r.odds2)
+    .filter(hasAnyOdds)
     .map((r) => ({ row: r, score: scoreMatch(r) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, isPremium ? 5 : 3)
@@ -431,7 +572,6 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'message required' });
   }
 
-  // Premium guard for premium-only intents
   const tokens = tokenize(message);
   const intentType = detectIntent(tokens);
   const sport = detectSport(tokens);
@@ -450,25 +590,58 @@ module.exports = async function handler(req, res) {
     });
   }
 
+  // allRows: today/tomorrow/yesterday tabs (pre-processed recommendations)
   const allRows = flattenFeed(feed, date !== 'today' ? date : null);
-  // For today, include all tabs but weight today higher (just use all)
-  const fullPool = flattenFeed(feed);
+  const fullPool = flattenFeed(feed); // all tabs
+
+  // scheduleRows: ALL Winner matches for next 31 days (raw market data)
+  const scheduleRows = flattenSchedule(feed);
 
   const intent = { type: intentType, sport, date, limit };
 
   // Match search for match_query
   let matched = [];
+  let queryTokens = [];
   if (intentType === 'match_query') {
-    const queryTokens = tokens.filter(
-      (t) => !['היום', 'מחר', 'אתמול', 'today', 'tomorrow', 'yesterday', 'הלילה', 'tonight'].includes(t)
+    queryTokens = tokens.filter(
+      (t) => !['היום', 'מחר', 'אתמול', 'today', 'tomorrow', 'yesterday', 'הלילה', 'tonight', 'מה', 'יש', 'על', 'את', 'של'].includes(t)
     );
-    matched = fullPool
-      .filter((r) => r.odds || r.odds1 || r.oddsX || r.odds2)
-      .map((r) => ({ row: r, score: scoreMatch(r), hits: matchScore(r, queryTokens) }))
-      .filter(({ hits }) => hits > 0)
+    intent._queryTokens = queryTokens;
+
+    // Search across all tabs + schedule rows combined
+    const searchPool = [
+      ...fullPool,
+      // include schedule rows that aren't duplicates of fullPool dates
+      ...scheduleRows.filter((r) => {
+        const poolDates = new Set(fullPool.map((p) => p.day));
+        return !poolDates.has(r.day) || r.day > (feed.tabs?.today?.date || '');
+      }),
+    ];
+
+    matched = searchPool
+      .filter(hasAnyOdds)
+      .map((r) => ({
+        row: r,
+        score: scoreMatch(r),
+        hits: textMatchScore(r, queryTokens),
+      }))
+      .filter(({ hits }) => hits >= 2)   // require at least 2 token hits
       .sort((a, b) => b.hits - a.hits || b.score - a.score);
+
+    // If strict search (≥2 hits) found nothing, try looser (≥1 hit)
+    if (!matched.length) {
+      matched = searchPool
+        .filter(hasAnyOdds)
+        .map((r) => ({
+          row: r,
+          score: scoreMatch(r),
+          hits: textMatchScore(r, queryTokens),
+        }))
+        .filter(({ hits }) => hits >= 1)
+        .sort((a, b) => b.hits - a.hits || b.score - a.score);
+    }
   }
 
-  const response = buildResponse(intent, intentType, matched, allRows, userType, message, date);
+  const response = buildResponse(intent, intentType, matched, allRows, scheduleRows, userType, message, date);
   return res.status(200).json(response);
 };
