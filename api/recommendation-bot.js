@@ -1,5 +1,5 @@
 const { buildCachedWinnerFeedPayload } = require("./winner-feed");
-const { runRecommendationBot } = require("./recommendation-tracker");
+const { runRecommendationBot } = require("../lib/recommendation-tracker");
 
 function isAuthorized(req) {
   if (req.headers["x-vercel-cron"]) return true;
