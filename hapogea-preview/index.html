@@ -658,47 +658,88 @@
       overflow: hidden;
       display: grid;
       gap: 0;
+      border-color: rgba(255,200,87,.22);
+      background:
+        linear-gradient(180deg, rgba(255,200,87,.045), rgba(255,255,255,.018) 38%, rgba(255,255,255,.025)),
+        var(--panel);
     }
     .wc-banner {
-      min-height: 210px;
+      min-height: 196px;
       border: 0;
       background:
-        radial-gradient(circle at 86% 16%, rgba(255,255,255,.16), transparent 0 78px, transparent 79px),
-        radial-gradient(circle at 82% 18%, #d80a14 0 198px, transparent 199px),
-        radial-gradient(circle at 96% 38%, #a6ff00 0 150px, transparent 151px),
-        linear-gradient(120deg, #210047 0%, #4b00c9 50%, #180033 100%);
+        radial-gradient(circle at 83% 24%, rgba(255,200,87,.20), transparent 0 118px, transparent 119px),
+        radial-gradient(circle at 96% 76%, rgba(85,214,255,.16), transparent 0 120px, transparent 121px),
+        linear-gradient(135deg, rgba(14,24,23,.98) 0%, rgba(8,13,16,.98) 58%, rgba(31,24,9,.95) 100%);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 24px;
-      padding: 22px;
+      padding: 24px;
       cursor: pointer;
+      position: relative;
+      isolation: isolate;
+    }
+    .wc-banner:before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      pointer-events: none;
+      z-index: -1;
     }
     .wc-banner-copy {
       display: grid;
       gap: 10px;
-      max-width: 600px;
+      max-width: 660px;
     }
-    .wc-banner-copy h3 { margin: 0; font-size: clamp(26px, 4vw, 44px); line-height: 1.05; }
+    .wc-kicker {
+      width: fit-content;
+      border: 1px solid rgba(255,200,87,.26);
+      background: rgba(255,200,87,.08);
+      color: #ffe3a0;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .wc-banner-copy h3 { margin: 0; font-size: clamp(28px, 4vw, 48px); line-height: 1.02; text-wrap: balance; }
     .wc-banner-copy p { margin: 0; color: rgba(247,243,234,.86); font-size: 14px; line-height: 1.55; max-width: 560px; }
     .wc-enter {
       width: fit-content;
       border: 1px solid rgba(255,255,255,.24);
-      background: rgba(7,9,11,.66);
+      background: rgba(7,9,11,.58);
       color: white;
-      border-radius: 999px;
+      border-radius: 7px;
       min-height: 36px;
       padding: 0 14px;
       font-weight: 900;
+      transition: .18s ease;
+    }
+    .wc-enter:hover { border-color: rgba(255,200,87,.48); transform: translateY(-1px); }
+    .wc-enter:active { transform: translateY(0); }
+    .wc-premium-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 2px;
     }
     .wc-mark {
-      min-width: 210px;
+      min-width: 172px;
+      min-height: 172px;
+      border-radius: 26px;
+      border: 1px solid rgba(255,200,87,.24);
+      background: rgba(255,255,255,.045);
+      display: grid;
+      place-items: center;
       text-align: center;
       color: white;
-      font: 900 92px/.8 Heebo, Assistant, sans-serif;
+      font: 900 78px/.8 Heebo, Assistant, sans-serif;
       letter-spacing: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 20px 50px rgba(0,0,0,.22);
     }
-    .wc-mark span { display: block; font-size: 23px; margin-top: 8px; letter-spacing: 2px; }
+    .wc-mark span { display: block; font-size: 17px; margin-top: 9px; letter-spacing: 2px; color: #ffe3a0; }
     .wc-body {
       padding: 16px;
       display: grid;
@@ -715,18 +756,20 @@
     .wc-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
     .wc-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 10px;
     }
     .wc-card {
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,.09);
       border-radius: 8px;
-      background: rgba(255,255,255,.03);
+      background: rgba(255,255,255,.035);
       padding: 12px;
       display: grid;
-      gap: 9px;
+      gap: 10px;
+      transition: .18s ease;
     }
     .wc-card.compact { cursor: pointer; }
+    .wc-card.compact:hover { border-color: rgba(255,200,87,.34); background: rgba(255,255,255,.055); transform: translateY(-1px); }
     .wc-card strong { font-size: 15px; }
     .wc-score {
       display: flex;
@@ -743,18 +786,119 @@
       white-space: nowrap;
     }
     .wc-meta { color: var(--soft); font-size: 12px; line-height: 1.45; }
+    .wc-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.025);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .wc-day-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .wc-day-pill {
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.035);
+      color: var(--muted);
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .wc-day-pill.active {
+      color: #06100c;
+      background: var(--gold);
+      border-color: rgba(255,200,87,.92);
+    }
     .wc-match-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
       gap: 12px;
     }
     .wc-match {
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,.095);
       border-radius: 8px;
-      background: rgba(255,255,255,.03);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.050), rgba(255,255,255,.024)),
+        rgba(7,9,11,.42);
       padding: 13px;
       display: grid;
       gap: 12px;
+      min-width: 0;
+      transition: border-color .18s ease, transform .18s ease, background .18s ease;
+    }
+    .wc-match:hover {
+      border-color: rgba(85,214,255,.30);
+      transform: translateY(-1px);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.030)),
+        rgba(7,9,11,.46);
+    }
+    .wc-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+    }
+    .wc-stage {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #ffe3a0;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .wc-status {
+      border: 1px solid rgba(85,214,255,.30);
+      background: rgba(85,214,255,.10);
+      color: #d6f6ff;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .wc-status.finished { color: #d7dde3; border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.06); }
+    .wc-status.hit { color: #06100c; border-color: rgba(49,209,135,.72); background: var(--green); }
+    .wc-status.miss { color: #fff; border-color: rgba(239,83,80,.72); background: var(--red); }
+    .wc-date-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+    .wc-datebox {
+      min-width: 66px;
+      min-height: 58px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,200,87,.24);
+      background: rgba(255,200,87,.08);
+      display: grid;
+      place-items: center;
+      color: #ffe3a0;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+    .wc-datebox small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .wc-date-details {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
     }
     .wc-teams {
       display: grid;
@@ -770,16 +914,21 @@
       justify-items: center;
       text-align: center;
       min-width: 0;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.025);
+      border-radius: 8px;
+      padding: 10px 6px;
     }
     .wc-flag {
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
       border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,.05);
+      background: rgba(255,255,255,.08);
       display: grid;
       place-items: center;
       overflow: hidden;
+      box-shadow: 0 10px 22px rgba(0,0,0,.20);
     }
     .wc-flag img {
       width: 100%;
@@ -787,16 +936,20 @@
       object-fit: cover;
     }
     .wc-team b {
-      max-width: 120px;
+      max-width: min(150px, 34vw);
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 13px;
+      white-space: normal;
+      font-size: 14px;
+      line-height: 1.18;
+      min-height: 34px;
+      display: grid;
+      place-items: center;
     }
     .wc-prediction {
       display: grid;
       place-items: center;
-      min-width: 74px;
+      min-width: 76px;
       gap: 4px;
     }
     .wc-prediction b {
@@ -822,6 +975,9 @@
       color: var(--muted);
       font-size: 11px;
       font-weight: 900;
+      min-height: 58px;
+      display: grid;
+      place-items: center;
     }
     .wc-odd.selected {
       color: #bff8dc;
@@ -837,6 +993,10 @@
       color: var(--muted);
       font-size: 12px;
       line-height: 1.5;
+    }
+    .wc-why.neutral {
+      border-color: rgba(85,214,255,.18);
+      background: rgba(85,214,255,.055);
     }
     .wc-factors {
       display: flex;
@@ -1291,6 +1451,12 @@
       .odds-box, .result-score { width: 100%; }
       .card-topline { flex-direction: column; }
       .card-time-box { justify-items: start; }
+      .wc-match-grid { grid-template-columns: 1fr; }
+      .wc-teams { grid-template-columns: 1fr; }
+      .wc-prediction { min-width: 0; padding: 6px 0; }
+      .wc-odds { grid-template-columns: 1fr; }
+      .wc-date-row { grid-template-columns: 1fr; }
+      .wc-datebox { width: 100%; min-height: 50px; }
     }
     .debug-panel {
       display: none;
@@ -1336,8 +1502,8 @@
       .cards { grid-template-columns: 1fr; }
       .explain-grid { grid-template-columns: 1fr; }
       .wc-grid { grid-template-columns: 1fr; }
-      .wc-banner { min-height: 180px; align-items: start; }
-      .wc-mark { min-width: 92px; font-size: 48px; }
+      .wc-banner { min-height: 180px; align-items: start; flex-direction: column; padding: 18px; }
+      .wc-mark { min-width: 100%; min-height: 84px; font-size: 48px; border-radius: 12px; }
       .wc-mark span { font-size: 14px; }
       .wc-match-grid { grid-template-columns: 1fr; }
       .teams-line { gap: 8px; }
@@ -1401,9 +1567,13 @@
     <section class="panel wc-strip" id="worldCupSection">
       <div class="wc-banner" id="wcToggle" role="button" tabindex="0" aria-expanded="false">
         <div class="wc-banner-copy">
-          <h3>מונדיאל 2026: כל המשחקים והניתוחים</h3>
-          <p>לחץ כאן כדי להיכנס למשחקים. כל משחק מקבל דגלים, נתוני שוק כאשר הם זמינים, והסבר אלגוריתמי לפי איכות, ביתיות, עומק סגל, כושר ומגמות משחק.</p>
-          <button class="wc-enter" type="button">כניסה למשחקים</button>
+          <span class="wc-kicker">World Cup 2026 · אזור פרימיום</span>
+          <h3>מונדיאל 2026: לוח טורניר ברור, נקי ומאומת</h3>
+          <p>פתח תצוגת טורניר עם דגלי נבחרות, שלבי בתים, תאריך, שעה, סטטוס ויחסי Winner אמיתיים כשהם זמינים. אין יחסים מומצאים ואין תחזיות לפני מקור נתונים אמיתי.</p>
+          <div class="wc-premium-row">
+            <button class="wc-enter" type="button">כניסה למשחקים</button>
+            <span class="pill">דגלים · שלבים · Winner</span>
+          </div>
         </div>
         <div class="wc-mark">26<span>FIFA</span></div>
       </div>
@@ -2043,6 +2213,34 @@
       return `<span class="wc-flag">${imageWithFallback(`https://flagcdn.com/w160/${code}.png`, `דגל ${name}`, "flag")}</span>`;
     }
 
+    function wcDateLabel(value) {
+      const [year, month, day] = String(value || "").split("-");
+      if (!year || !month || !day) return { date: "לא נקבע", short: "TBD" };
+      return { date: `${day}.${month}.${year}`, short: `${day}.${month}` };
+    }
+
+    function wcTimeLabel(item) {
+      return item.time || "שעה תיקבע";
+    }
+
+    function wcStatus(item) {
+      const raw = String(item.status || "").toLowerCase();
+      if (["hit", "won", "תפס", "נתפס"].includes(raw)) return { label: "נתפס", cls: "hit" };
+      if (["miss", "lost", "נפל", "לא נתפס"].includes(raw)) return { label: "נפל", cls: "miss" };
+      if (["final", "finished", "ft", "הסתיים"].includes(raw)) return { label: "הסתיים", cls: "finished" };
+      return { label: "ממתין", cls: "wait" };
+    }
+
+    function wcStageGroups() {
+      const byStage = new Map();
+      WC2026_FIXTURES.forEach(item => {
+        const key = item.stage || "שלב בתים";
+        if (!byStage.has(key)) byStage.set(key, []);
+        byStage.get(key).push(item);
+      });
+      return [...byStage.entries()].map(([stage, rows]) => ({ stage, rows }));
+    }
+
     function wcPickLabel(item) {
       if (!item.pick) return "אין בחירה";
       if (item.pick === "draw") return "תיקו";
@@ -2050,13 +2248,13 @@
     }
 
     function wcFixtureOdds(item) {
-      if (!item.odds) return `<div class="wc-meta">אין יחס Winner פתוח כרגע. לא מוצג ניתוח שוק לפני שיש נתון אמיתי; בדיקת AI מלאה נפתחת 48 שעות לפני המשחק עם פציעות, סגלים, מאמנים וכושר.</div>`;
+      if (!item.odds) return `<div class="wc-why neutral"><b>יחסי Winner</b><br>אין יחס Winner פתוח כרגע. לא מוצג יחס מומצא ולא מוצגת תחזית לפני שיש נתון אמיתי. בדיקת AI מלאה נפתחת 48 שעות לפני המשחק עם פציעות, סגלים, מאמנים וכושר.</div>`;
       const selected = item.pick || "";
       return `
         <div class="wc-odds">
-          <div class="wc-odd ${selected === "home" ? "selected" : ""}">1<br><b>${item.odds.home.toFixed(2)}</b></div>
-          <div class="wc-odd ${selected === "draw" ? "selected" : ""}">X<br><b>${item.odds.draw.toFixed(2)}</b></div>
-          <div class="wc-odd ${selected === "away" ? "selected" : ""}">2<br><b>${item.odds.away.toFixed(2)}</b></div>
+          <div class="wc-odd ${selected === "home" ? "selected" : ""}"><span>${item.home}</span><b>${item.odds.home.toFixed(2)}</b></div>
+          <div class="wc-odd ${selected === "draw" ? "selected" : ""}"><span>תיקו</span><b>${item.odds.draw.toFixed(2)}</b></div>
+          <div class="wc-odd ${selected === "away" ? "selected" : ""}"><span>${item.away}</span><b>${item.odds.away.toFixed(2)}</b></div>
         </div>
       `;
     }
@@ -2064,9 +2262,46 @@
     function wcImportance() {
       return `
         <div class="wc-why">
-          <b>למה זה חשוב:</b>
-          במונדיאל לא מנחשים תוצאה חודשים מראש. הניתוח נפתח רק כשיש יחס Winner אמיתי, וב-48 השעות שלפני המשחק הוא משקלל פציעות, סגלים, מאמנים, כושר, עומס מסעות, לחץ משחקים, קצב אפקטיבי ויצירת מצבים.
+          <b>איך אזור המונדיאל עובד:</b>
+          המונדיאל מוצג כטורניר נפרד עם דגלים, שלבים ותאריך ברור. אין יחס מומצא ואין תחזית מוקדמת בלי שוק Winner אמיתי. ב-48 השעות שלפני משחק, כשיש נתוני Winner ומקורות ספורט זמינים, הניתוח משקלל פציעות, סגלים, מאמנים, כושר, עומס מסעות וקצב משחק.
         </div>
+      `;
+    }
+
+    function wcFixtureCard(item) {
+      const date = wcDateLabel(item.date);
+      const status = wcStatus(item);
+      return `
+        <article class="wc-match">
+          <div class="wc-card-top">
+            <span class="wc-stage">${item.stage || "שלב בתים"}</span>
+            <span class="wc-status ${status.cls}">${status.label}</span>
+          </div>
+          <div class="wc-date-row">
+            <div class="wc-datebox"><span>${date.short}</span><small>${wcTimeLabel(item)}</small></div>
+            <div class="wc-date-details">
+              <strong>${date.date}</strong>
+              <span>${item.venue}</span>
+            </div>
+          </div>
+          <div class="wc-teams">
+            <div class="wc-team">${flagImg(item.hc, item.home)}<b>${item.home}</b></div>
+            <div class="wc-prediction"><span>VS</span><b>${item.odds && item.pick ? formatOdds(item.odds[item.pick]) : "—"}</b><span>${item.odds ? "יחס" : "Winner"}</span></div>
+            <div class="wc-team">${flagImg(item.ac, item.away)}<b>${item.away}</b></div>
+          </div>
+          ${wcFixtureOdds(item)}
+          <div class="wc-why">
+            <b>${item.source} · ${date.date}</b><br>
+            סטטוס: ${status.label}. ${item.odds ? `הצד שנבדק הוא ${wcPickLabel(item)} לפי יחס Winner אמיתי.` : "המשחק שמור בלוח הטורניר, אבל ניתוח שוק ייפתח רק כשיש יחס Winner אמיתי ועדכני."}
+          </div>
+          <div class="wc-factors">
+            <span class="signal">שלב טורניר</span>
+            <span class="signal">דגלי נבחרות</span>
+            <span class="signal">תאריך ושעה</span>
+            <span class="signal">Winner בלבד</span>
+            <span class="signal">בדיקת 48 שעות</span>
+          </div>
+        </article>
       `;
     }
 
@@ -2078,17 +2313,24 @@
         target.innerHTML = `
           <div class="wc-head">
             <div>
-              <h3>תצוגה מהירה</h3>
-              <p>לחיצה על הבאנר פותחת את כל המשחקים עם דגלים, יחסים, הסברים ואלגוריתם מלא.</p>
+              <h3>תצוגת טורניר מהירה</h3>
+              <p>לחיצה על הבאנר פותחת אזור מונדיאל מלא עם דגלים, שלבים, תאריך, שעה, סטטוס ונתוני Winner כשהם זמינים.</p>
             </div>
-            <span class="pill">${WC2026_FIXTURES.length} משחקים</span>
+            <span class="pill">${WC2026_FIXTURES.length} משחקים · World Cup</span>
           </div>
           <div class="wc-grid">
             ${WC2026_FIXTURES.slice(0, 4).map(item => `
               <article class="wc-card compact" data-wc-open="true">
-                <strong>${item.home} נגד ${item.away}</strong>
-                <div class="wc-score"><span>${item.stage}</span><b>${item.date.slice(5)}</b></div>
-                <div class="wc-meta">${item.venue}. ${item.odds ? `נתון שוק ${item.odds[item.pick].toFixed(2)}` : "ניתוח ייפתח 48 שעות לפני המשחק כשיש יחס Winner אמיתי"}.</div>
+                <div class="wc-card-top">
+                  <span class="wc-stage">${item.stage}</span>
+                  <span class="wc-status ${wcStatus(item).cls}">${wcStatus(item).label}</span>
+                </div>
+                <div class="wc-teams">
+                  <div class="wc-team">${flagImg(item.hc, item.home)}<b>${item.home}</b></div>
+                  <div class="wc-prediction"><span>VS</span><b>${wcDateLabel(item.date).short}</b><span>${wcTimeLabel(item)}</span></div>
+                  <div class="wc-team">${flagImg(item.ac, item.away)}<b>${item.away}</b></div>
+                </div>
+                <div class="wc-meta">${item.venue}. ${item.odds && item.pick ? `יחס Winner ${formatOdds(item.odds[item.pick])}` : "אין יחס Winner פתוח כרגע; לא מוצג יחס מומצא"}.</div>
               </article>
             `).join("")}
           </div>
@@ -2098,33 +2340,33 @@
       target.innerHTML = `
         <div class="wc-head">
           <div>
+            <span class="wc-kicker">World Cup 2026 · Premium Tournament View</span>
             <h3>משחקי מונדיאל 2026</h3>
-            <p>האלגוריתם משקלל יחס שוק, הסתברות נגזרת, איכות סגל, ביתיות, כושר, קצב אפקטיבי ו-xG צפוי. הוא לא נותן בונוס לאיטיות.</p>
+            <p>תצוגת טורניר נקייה עם דגלים, שלב, תאריך, שעה, סטטוס ויחסי Winner בלבד כאשר הם זמינים. אין המצאת יחסים או תוצאות.</p>
           </div>
           <button class="wc-enter" type="button" data-wc-close="true">חזרה לתצוגה קצרה</button>
         </div>
         ${wcImportance()}
+        <div class="wc-toolbar">
+          <div class="wc-day-tabs">
+            <span class="wc-day-pill active">לוח מלא</span>
+            <span class="wc-day-pill">אתמול: יופיע בזמן הטורניר</span>
+            <span class="wc-day-pill">היום: יופיע בזמן הטורניר</span>
+            <span class="wc-day-pill">מחר: יופיע בזמן הטורניר</span>
+          </div>
+          <span class="pill">${wcStageGroups().length} שלבים/בתים</span>
+        </div>
         <div class="wc-match-grid">
-          ${WC2026_FIXTURES.map(item => `
-            <article class="wc-match">
-              <div class="wc-teams">
-                <div class="wc-team">${flagImg(item.hc, item.home)}<b>${item.home}</b></div>
-                <div class="wc-prediction"><span>${item.stage}</span><b>${item.date.slice(5)}</b><span>${item.venue}</span></div>
-                <div class="wc-team">${flagImg(item.ac, item.away)}<b>${item.away}</b></div>
+          ${wcStageGroups().map(group => `
+            <section class="sport-section">
+              <div class="sport-section-title">
+                <div class="sport-heading"><span class="sport-icon">WC</span>${group.stage}</div>
+                <span>${group.rows.length} משחקים</span>
               </div>
-              ${wcFixtureOdds(item)}
-              <div class="wc-why">
-                <b>${item.source} · ${item.date}</b><br>
-                אין הוראת פעולה ואין תוצאת תחזית כרגע. 48 שעות לפני המשחק, ורק כשיש יחס Winner אמיתי, ה-AI Sports Analyst יחשב פציעות, סגלים, מאמנים, כושר ויתרונות סטטיסטיים.
+              <div class="wc-match-grid">
+                ${group.rows.map(wcFixtureCard).join("")}
               </div>
-              <div class="wc-factors">
-                <span class="signal">שוק 1X2</span>
-                <span class="signal">לוח FIFA</span>
-                <span class="signal">ללא יחס מומצא</span>
-                <span class="signal">עומק סגל</span>
-                <span class="signal">חלון 48 שעות</span>
-              </div>
-            </article>
+            </section>
           `).join("")}
         </div>
       `;
