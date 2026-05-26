@@ -1143,6 +1143,66 @@
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
     .typing-dot { animation: blink 1.2s step-end infinite; }
+    .ai-thinking {
+      display: grid;
+      gap: 10px;
+      min-width: min(420px, 100%);
+    }
+    .thinking-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--text);
+      font-weight: 900;
+    }
+    .thinking-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--cyan);
+      box-shadow: 0 0 0 0 rgba(85,214,255,.45);
+      animation: pulse-ring 1.35s ease-out infinite;
+      flex: 0 0 auto;
+    }
+    .thinking-steps {
+      display: grid;
+      gap: 7px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .thinking-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: .62;
+      animation: thinking-step 3.6s ease-in-out infinite;
+    }
+    .thinking-step:nth-child(2) { animation-delay: .45s; }
+    .thinking-step:nth-child(3) { animation-delay: .9s; }
+    .thinking-step:nth-child(4) { animation-delay: 1.35s; }
+    .thinking-line {
+      height: 4px;
+      width: 42px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(85,214,255,.2), rgba(46,229,157,.7), rgba(85,214,255,.2));
+      background-size: 200% 100%;
+      animation: thinking-line 1.1s linear infinite;
+    }
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(85,214,255,.45); transform: scale(.9); }
+      70% { box-shadow: 0 0 0 9px rgba(85,214,255,0); transform: scale(1); }
+      100% { box-shadow: 0 0 0 0 rgba(85,214,255,0); transform: scale(.9); }
+    }
+    @keyframes thinking-line {
+      from { background-position: 0 0; }
+      to { background-position: 200% 0; }
+    }
+    @keyframes thinking-step {
+      0%, 100% { opacity: .45; transform: translateY(0); }
+      45% { opacity: 1; transform: translateY(-1px); }
+    }
     .history-rate { justify-content: space-between; flex-wrap: wrap; }
     .history-counts {
       display: flex;
@@ -2490,6 +2550,25 @@
       return `<div class="chat-message ${message.role === "user" ? "user" : "ai"}" style="white-space:pre-wrap">${image}${escapeHtml(message.text)}</div>`;
     }
 
+    function renderAiThinking() {
+      return `
+        <div class="chat-message ai">
+          <div class="ai-thinking" aria-live="polite" aria-label="AI Sports Analyst is thinking">
+            <div class="thinking-head">
+              <span>AI Sports Analyst חושב ומנתח</span>
+              <span class="thinking-pulse"></span>
+            </div>
+            <div class="thinking-steps">
+              <div class="thinking-step"><span class="thinking-line"></span><span>מחפש התאמה למשחק וליום הנכון</span></div>
+              <div class="thinking-step"><span class="thinking-line"></span><span>בודק שווקי Winner ויחסים זמינים</span></div>
+              <div class="thinking-step"><span class="thinking-line"></span><span>משווה הסתברות גלומה ויתרון סטטיסטי</span></div>
+              <div class="thinking-step"><span class="thinking-line"></span><span>מנסח תשובה בלי המלצת הימור</span></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderReubenAI() {
       const messages = state.reubenMessages.length
         ? state.reubenMessages
@@ -2507,7 +2586,7 @@
           </div>
           <div class="chat-log" id="reubenOutput">
             ${messages.map(renderChatMessage).join("")}
-            ${loading ? `<div class="chat-message ai" style="opacity:.6">ראובן מנתח<span class="typing-dot">...</span></div>` : ""}
+            ${loading ? renderAiThinking() : ""}
           </div>
           <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:4px">
             <textarea id="reubenInput" placeholder="כתוב משחק: קבוצה א' נגד קבוצה ב', היום / מחר" style="min-height:72px;resize:vertical" ${loading ? "disabled" : ""}></textarea>
@@ -3476,10 +3555,16 @@
         const question = (input?.value || "").trim();
         if (!question) return;
         state.reubenMessages.push({ role: "user", text: question });
-        state.reubenMessages.push({ role: "ai", text: analyzeReubenBet(question) });
+        state.reubenLoading = true;
         if (input) input.value = "";
         renderCards();
         scrollReuvenOutput();
+        window.setTimeout(() => {
+          state.reubenMessages.push({ role: "ai", text: analyzeReubenBet(question) });
+          state.reubenLoading = false;
+          renderCards();
+          scrollReuvenOutput();
+        }, 650);
         return;
       }
       const button = event.target.closest("[data-open]");
