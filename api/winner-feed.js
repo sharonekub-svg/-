@@ -3,6 +3,9 @@ const SNAPSHOT = require("./winner-snapshot.json");
 
 const ODDS_MIN = 1.4;
 const ODDS_MAX = 1.9;
+const SOFT_ODDS_MIN = 1.30;
+const SOFT_ODDS_MAX = 2.10;
+const MIN_PREMIUM_ROWS_PER_DAY = 15;
 // Basketball 2-way markets have different odds structure than football 3-way
 const BASKETBALL_ODDS_MIN = 1.25;
 const BASKETBALL_ODDS_MAX_MONEYLINE = 1.90;
@@ -168,7 +171,36 @@ function winnerHour(value) {
 
 function kickoffMs(dateKey, winnerTime) {
   const time = winnerHour(winnerTime);
-  return new Date(`${dateKey}T${time}:00+03:00`).getTime();
+  return zonedTimeToUtcMs(dateKey, time, "Asia/Jerusalem");
+}
+
+function zonedTimeToUtcMs(dateKey, time, timeZone = "Asia/Jerusalem") {
+  const [year, month, day] = String(dateKey || "").split("-").map(Number);
+  const [hour, minute] = String(time || "00:00").split(":").map(Number);
+  if (![year, month, day, hour, minute].every(Number.isFinite)) return NaN;
+  const targetAsUtc = Date.UTC(year, month - 1, day, hour, minute, 0);
+  const zoneParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(targetAsUtc));
+  const map = Object.fromEntries(zoneParts.map((part) => [part.type, part.value]));
+  const zoneAsUtc = Date.UTC(Number(map.year), Number(map.month) - 1, Number(map.day), Number(map.hour), Number(map.minute), Number(map.second || 0));
+  const offsetMs = zoneAsUtc - targetAsUtc;
+  return targetAsUtc - offsetMs;
+}
+
+function isOpenDisplayable(row, nowMs = Date.now()) {
+  if (!row || row.matchPhase === "final" || row.bettingStatus === "cancelled" || row.bettingStatus === "postponed") return false;
+  const kick = kickoffMs(row.day, row.time);
+  if (!Number.isFinite(kick)) return true;
+  const graceMs = Number(row.sportId) === WINNER_BASKETBALL_ID ? 2.5 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000;
+  return kick + graceMs >= nowMs;
 }
 
 function decimal(value) {
@@ -1348,10 +1380,36 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
     }
   }
 
-  return [...events.values()]
+  const candidates = [...events.values()]
     .filter((row) => row.status === "ממתין")
-    .filter((row) => !row.outsideRange && row.odds)
-    .filter((row) => hasSingleClearFavorite(row))
+    .filter((row) => isOpenDisplayable(row))
+    .filter((row) => hasSingleClearFavorite(row));
+  const strictCandidates = candidates.filter((row) => !row.outsideRange && row.odds);
+  const softCandidates = candidates
+    .filter((row) => row.outsideRange && row.oddsRaw >= SOFT_ODDS_MIN && row.oddsRaw <= SOFT_ODDS_MAX)
+    .map((row) => ({
+      ...row,
+      odds: row.oddsRaw,
+      outsideRange: false,
+      softRange: true,
+      recommendationReason: "soft-range",
+      score: Math.max(1, Math.round((row.score || 46) - 8)),
+      probability: row.normalizedProbability || row.probability || null,
+      signals: [
+        `יחס Winner ${Number(row.oddsRaw).toFixed(2)} — הרחבת טווח כדי להשלים יום פרימיום`,
+        `הסתברות שוק ${Math.round((row.normalizedProbability || 0) * 100)} אחוז`,
+        "מסומן כניתוח משלים, לא כטווח אידיאלי",
+      ],
+      explanation: [
+        "המשחק נכנס כניתוח משלים כי לא נמצאו מספיק משחקים בטווח האידיאלי.",
+        `יחס Winner הוא ${Number(row.oddsRaw).toFixed(2)} — קרוב לטווח המרכזי 1.40-1.90, ולכן נשמר רק אם יש פייבוריט ברור.`,
+        "היחס משמש כנתון שוק בלבד; אין כאן הוראת פעולה.",
+      ],
+    }));
+  const selectionPool = strictCandidates.length >= Math.min(MIN_PREMIUM_ROWS_PER_DAY, limit)
+    ? strictCandidates
+    : [...strictCandidates, ...softCandidates];
+  return selectionPool
     .map((row) => ({
       ...row,
       scoreBreakdown: scoreBreakdown(row),
@@ -1876,7 +1934,10 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   const tomorrow = israelDate(1);
   const [{ hashes, markets }, winnerResultEvents, scores365Events] = await Promise.all([
     getWinnerLine(),
-    getResults(yesterday, tomorrow),
+    getResults(yesterday, tomorrow).catch((error) => {
+      console.warn("Winner results unavailable; continuing with live line only:", error.message);
+      return [];
+    }),
     Promise.all([
       get365FootballResults(yesterday, yesterday),
       get365FootballResults(today, today),
@@ -2022,11 +2083,46 @@ function normalizeFallbackRows(payload) {
   return copy;
 }
 
+function expectedIsraelTabDates() {
+  return {
+    yesterday: israelDate(-1),
+    today: israelDate(0),
+    tomorrow: israelDate(1),
+  };
+}
+
+function payloadMatchesIsraelDates(payload) {
+  const expected = expectedIsraelTabDates();
+  return Boolean(
+    payload?.tabs?.yesterday?.date === expected.yesterday &&
+    payload?.tabs?.today?.date === expected.today &&
+    payload?.tabs?.tomorrow?.date === expected.tomorrow
+  );
+}
+
+function markStaleDatePayload(payload, reason) {
+  const copy = normalizeFallbackRows(payload || {});
+  const expected = expectedIsraelTabDates();
+  copy.ok = true;
+  copy.fallback = true;
+  copy.staleDate = true;
+  copy.fallbackReason = reason;
+  copy.expectedDates = expected;
+  copy.tabs = {
+    yesterday: { label: "אתמול", date: expected.yesterday, sports: { football: [], basketball: [] } },
+    today: { label: "היום", date: expected.today, sports: { football: [], basketball: [] } },
+    tomorrow: { label: "מחר", date: expected.tomorrow, sports: { football: [], basketball: [] } },
+  };
+  copy.lineStats = { football: { today: 0, tomorrow: 0 }, basketball: { today: 0, tomorrow: 0 }, total: { yesterday: 0, today: 0, tomorrow: 0 } };
+  return copy;
+}
+
 async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   const key = cacheKeyForToday();
   const cached = await kvGet(key);
+  const cachedMatchesDates = payloadMatchesIsraelDates(cached?.payload);
   // Fresh hit — serve immediately
-  if (!force && isFreshCache(cached, CACHE_TTL_MS.full)) {
+  if (!force && cachedMatchesDates && isFreshCache(cached, CACHE_TTL_MS.full)) {
     return {
       ...cached.payload,
       cache: { status: "hit", key, cachedAt: cached.cachedAt, ttlMs: CACHE_TTL_MS.full },
@@ -2035,7 +2131,7 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   // Stale but recent (< 20 min): serve immediately, let CDN stale-while-revalidate
   // trigger the background rebuild on the next CDN revalidation cycle.
   const staleAgeMs = cached?.cachedAt ? Date.now() - Number(cached.cachedAt) : Infinity;
-  if (!force && cached?.payload && staleAgeMs < 20 * 60 * 1000) {
+  if (!force && cachedMatchesDates && cached?.payload && staleAgeMs < 20 * 60 * 1000) {
     return {
       ...cached.payload,
       stale: true,
@@ -2047,8 +2143,11 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   try {
     payload = await buildWinnerFeedPayload({ withLogos: true });
   } catch (error) {
+    const snapshot = payloadMatchesIsraelDates(SNAPSHOT)
+      ? normalizeFallbackRows(SNAPSHOT)
+      : markStaleDatePayload(SNAPSHOT, "טעינת Winner נכשלה וה-snapshot המקומי שייך לתאריך אחר, לכן לא מוצגים משחקים ישנים בתור היום.");
     payload = {
-      ...normalizeFallbackRows(SNAPSHOT),
+      ...snapshot,
       ok: true,
       fallback: true,
       fallbackReason: "טעינת Winner נכשלה, לכן נשמר snapshot מאומת כ-cache שרת.",
@@ -2072,7 +2171,7 @@ module.exports = async function handler(req, res) {
   } catch (error) {
     try {
       const cached = await kvGet(cacheKeyForToday());
-      if (cached?.payload) {
+      if (cached?.payload && payloadMatchesIsraelDates(cached.payload)) {
         res.status(200).json({
           ...cached.payload,
           ok: true,
@@ -2083,8 +2182,11 @@ module.exports = async function handler(req, res) {
         });
         return;
       }
+      const snapshot = payloadMatchesIsraelDates(SNAPSHOT)
+        ? normalizeFallbackRows(SNAPSHOT)
+        : markStaleDatePayload(SNAPSHOT, "חיבור חי ל-Winner נחסם וה-snapshot המקומי שייך לתאריך אחר, לכן לא מוצגים משחקים ישנים בתור היום.");
       res.status(200).json({
-        ...normalizeFallbackRows(SNAPSHOT),
+        ...snapshot,
         ok: true,
         fallback: true,
         fallbackReason: "חיבור חי ל-Winner נחסם מסביבת השרת, לכן נטען snapshot מאומת שנמשך מ-Winner.",

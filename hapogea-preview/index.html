@@ -3267,7 +3267,7 @@
 
     function nextRefreshMs(feed = state.feed) {
       if (feed?.fallback) return 45 * 1000;
-      return pendingRowsNeedingResultCheck(feed).length ? 60 * 1000 : 5 * 60 * 1000;
+      return pendingRowsNeedingResultCheck(feed).length ? 60 * 1000 : 30 * 60 * 1000;
     }
 
     function scheduleRefresh(feed = state.feed) {
