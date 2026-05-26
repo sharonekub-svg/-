@@ -2447,7 +2447,7 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
     }
   }
   const entry = { cachedAt: Date.now(), payload };
-  await kvSet(key, entry, 2 * 60 * 60);
+  await kvSet(key, entry, 24 * 60 * 60);
   return {
     ...payload,
     cache: { status: "refresh", key, cachedAt: entry.cachedAt, ttlMs: CACHE_TTL_MS.full },
