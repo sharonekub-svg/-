@@ -1,6 +1,52 @@
 const crypto = require("crypto");
 const SNAPSHOT = require("./winner-snapshot.json");
 
+// ── The Odds API (fallback when Winner is blocked) ───────────────────────────
+const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
+const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
+// Full league pool — discoverActiveSports() filters to only leagues with upcoming events,
+// so off-season leagues cost 0 extra API requests.
+const ODDS_API_SPORTS = [
+  // דרום אמריקה — קופות (שלישי/חמישי) וליגות (שוטף כל השנה)
+  { key: "soccer_conmebol_copa_libertadores",    label: "קופה ליברטדורס",      sportId: 240 },
+  { key: "soccer_conmebol_copa_sudamericana",    label: "קופה סודאמריקאנה",    sportId: 240 },
+  { key: "soccer_brazil_campeonato",             label: "ברזילאית ראשונה",      sportId: 240 },
+  { key: "soccer_brazil_serie_b",               label: "ברזילאית שנייה",        sportId: 240 },
+  { key: "soccer_argentina_primera_division",    label: "ארגנטינאית ראשונה",   sportId: 240 },
+  { key: "soccer_colombia_primera_a",           label: "קולומביאנית ראשונה",   sportId: 240 },
+  { key: "soccer_chile_primera_division",       label: "צ'יליאנית ראשונה",     sportId: 240 },
+  // צפון אמריקה (אביב–סתיו)
+  { key: "soccer_usa_mls",                       label: "MLS",                   sportId: 240 },
+  { key: "soccer_usa_usl_championship",         label: "USL Championship",      sportId: 240 },
+  { key: "soccer_mexico_ligamx",                label: "ליגה MX",               sportId: 240 },
+  // אירופה — גביעים ו-UEFA
+  { key: "soccer_uefa_champs_league",            label: "ליגת האלופות",          sportId: 240 },
+  { key: "soccer_uefa_europa_league",            label: "ליגה אירופית",          sportId: 240 },
+  { key: "soccer_uefa_europa_conference_league", label: "ליגת הקונפרנס",        sportId: 240 },
+  // ליגות אירופאיות שמסיימות/פלייאוף במאי
+  { key: "soccer_turkey_super_league",          label: "טורקית ראשונה",          sportId: 240 },
+  { key: "soccer_greece_super_league",          label: "יוונית ראשונה",          sportId: 240 },
+  { key: "soccer_portugal_primeira_liga",       label: "פורטוגלית ראשונה",      sportId: 240 },
+  { key: "soccer_israel_premier_league",        label: "ליגת העל",               sportId: 240 },
+  { key: "soccer_belgium_first_div",            label: "בלגית ראשונה",           sportId: 240 },
+  // סקנדינביה (אפריל–נובמבר — פעיל בימי חול)
+  { key: "soccer_sweden_allsvenskan",           label: "שבדית ראשונה",           sportId: 240 },
+  { key: "soccer_norway_eliteserien",           label: "נורבגית ראשונה",         sportId: 240 },
+  { key: "soccer_denmark_superliga",            label: "דנית ראשונה",            sportId: 240 },
+  { key: "soccer_finland_veikkausliiga",        label: "פינית ראשונה",           sportId: 240 },
+  // אסיה (מרץ–נובמבר — לרוב שלישי/שישי)
+  { key: "soccer_south_korea_kleague1",         label: "K-League",              sportId: 240 },
+  { key: "soccer_japan_j_league",               label: "J-League",              sportId: 240 },
+  { key: "soccer_china_superleague",            label: "סינית ראשונה",           sportId: 240 },
+  { key: "soccer_australia_aleague",            label: "A-League",              sportId: 240 },
+  // כדורסל
+  { key: "basketball_nba",                       label: "NBA",                   sportId: 227 },
+  { key: "basketball_nbl",                      label: "NBL",                   sportId: 227 },
+  { key: "basketball_euroleague",                label: "יורוליג",               sportId: 227 },
+  { key: "basketball_ncaab",                    label: "NCAA",                  sportId: 227 },
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
 const ODDS_MIN = 1.4;
 const ODDS_MAX = 1.9;
 const SOFT_ODDS_MIN = 1.30;
@@ -86,14 +132,13 @@ async function fetchJson(url, options = {}) {
 }
 
 function israelDate(offsetDays = 0) {
-  const now = new Date();
-  now.setUTCDate(now.getUTCDate() + offsetDays);
+  const d = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000);
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Jerusalem",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(now);
+  }).formatToParts(d);
   const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${map.year}-${map.month}-${map.day}`;
 }
@@ -2063,9 +2108,295 @@ function normalizePredictionStatus(status) {
   return value || "ממתין";
 }
 
+// ── The Odds API integration ─────────────────────────────────────────────────
+
+// In-process cache for the /sports discovery result (6-hour TTL across warm lambdas)
+const oddsDiscoveryCache = globalThis.__ODDS_DISCOVERY_CACHE__ ||
+  (globalThis.__ODDS_DISCOVERY_CACHE__ = { at: 0, keys: null });
+
+// Returns a Set of currently-active sport keys (1 API request), or null on failure.
+// Callers fall back to querying the full candidate pool when null is returned.
+async function discoverActiveSports() {
+  if (oddsDiscoveryCache.keys && Date.now() - oddsDiscoveryCache.at < 6 * 60 * 60 * 1000) {
+    return oddsDiscoveryCache.keys;
+  }
+  try {
+    const data = await fetchJson(`${ODDS_API_BASE}/sports/?apiKey=${ODDS_API_KEY}`, {
+      retryAttempts: 1, retryBaseDelay: 500,
+    });
+    if (!Array.isArray(data)) return null;
+    const keys = new Set(data.map((s) => s.key));
+    oddsDiscoveryCache.keys = keys;
+    oddsDiscoveryCache.at   = Date.now();
+    return keys;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchOddsApiSport(sportKey, dateFrom, dateTo) {
+  // The Odds API requires UTC (Z) format — timezone offsets cause 422.
+  // Use uk,eu,us regions for broad coverage across European, American and South-American leagues.
+  const url =
+    `${ODDS_API_BASE}/sports/${sportKey}/odds` +
+    `?apiKey=${ODDS_API_KEY}` +
+    `&regions=uk,eu,us&markets=h2h&dateFormat=iso&oddsFormat=decimal` +
+    `&commenceTimeFrom=${dateFrom}T00:00:00Z` +
+    `&commenceTimeTo=${dateTo}T23:59:59Z`;
+  try {
+    const data = await fetchJson(url, { retryAttempts: 1, retryBaseDelay: 500 });
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    // Propagate quota errors so callers can fall back to snapshot
+    if (e.message?.includes("401:")) throw e;
+    return [];
+  }
+}
+
+function oddsApiEventToRow(event, sportMeta) {
+  const bookmaker =
+    event.bookmakers?.find((b) => ["bet365", "unibet", "williamhill", "betfair"].includes(b.key)) ||
+    event.bookmakers?.[0];
+  if (!bookmaker) return null;
+
+  const h2h = bookmaker.markets?.find((m) => m.key === "h2h");
+  if (!h2h?.outcomes?.length) return null;
+
+  const home = event.home_team;
+  const away = event.away_team;
+  const homeOdds = h2h.outcomes.find((o) => o.name === home)?.price || null;
+  const awayOdds = h2h.outcomes.find((o) => o.name === away)?.price || null;
+  const drawOdds = h2h.outcomes.find((o) => o.name === "Draw")?.price || null;
+
+  const commenceDate = new Date(event.commence_time);
+  const ilParts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Jerusalem",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    }).formatToParts(commenceDate).map((p) => [p.type, p.value])
+  );
+  const day  = `${ilParts.year}-${ilParts.month}-${ilParts.day}`;
+  const time = `${ilParts.hour}:${ilParts.minute}`;
+  // UTC date of the game (used for "tomorrow" matching — South American games start
+  // after Israel midnight but are still "tomorrow" on the international calendar)
+  const utcDay = event.commence_time ? event.commence_time.slice(0, 10) : day;
+
+  const isFootball = Number(sportMeta.sportId) === WINNER_FOOTBALL_ID;
+
+  // Collect all candidates regardless of odds range, then pick closest to Winner sweet spot.
+  // Winner typically recommends outcomes around 1.5–1.8 (high confidence).
+  const allCandidates = isFootball
+    ? [
+        homeOdds ? { name: home,    odds: homeOdds } : null,
+        drawOdds ? { name: "תיקו", odds: drawOdds } : null,
+        awayOdds ? { name: away,    odds: awayOdds } : null,
+      ].filter(Boolean)
+    : [
+        homeOdds ? { name: home, odds: homeOdds } : null,
+        awayOdds ? { name: away, odds: awayOdds } : null,
+      ].filter(Boolean);
+
+  if (!allCandidates.length) return null;
+
+  // Wide range: captures strong favourites (≥1.20) through mild underdogs (≤2.80).
+  // Narrower Winner-style range [1.40–1.90] would miss many valid picks.
+  const TARGET_MIN = 1.20, TARGET_MAX = 2.80;
+  const inRange = allCandidates.filter((c) => c.odds >= TARGET_MIN && c.odds <= TARGET_MAX);
+  const hasInRange = inRange.length > 0;
+  const pool = hasInRange ? inRange : allCandidates;
+  // Among valid candidates, pick the one closest to 1.65 (ideal confidence score ~61%)
+  const TARGET_ODDS = 1.65;
+  const pick = pool.sort((a, b) => Math.abs(a.odds - TARGET_ODDS) - Math.abs(b.odds - TARGET_ODDS))[0];
+  const prob  = 1 / pick.odds;
+  const score = Math.round(prob * 100);
+
+  return {
+    id:                 `odds-${event.id}`,
+    eventId:            event.id,
+    source:             "The Odds API",
+    utcDay,
+    day,
+    time,
+    sport:              isFootball ? "כדורגל" : "כדורסל",
+    sportId:            sportMeta.sportId,
+    league:             sportMeta.label,
+    match:              `${home} - ${away}`,
+    home,
+    away,
+    pick:               pick.name,
+    pickTeam:           pick.name,
+    winnerPick:         pick.name,
+    odds:               pick.odds,
+    oddsRaw:            pick.odds,
+    homeOdds:           homeOdds  || null,
+    drawOdds:           drawOdds  || null,
+    awayOdds:           awayOdds  || null,
+    probability:        prob,
+    recommendationScore:score,
+    score,
+    recommended:        hasInRange,   // only recommend if odds are in the 1.35–2.20 range
+    outsideRange:       !hasInRange,  // properly marks games outside the preferred range
+    status:             "ממתין",
+    matchPhase:         "scheduled",
+    bettingStatus:      "available",
+    riskLevel:          score >= 70 ? "נמוך" : score >= 50 ? "בינוני" : "גבוה",
+    resultKey:          `${sportMeta.sportId}:${day}:${normalizeMatchName(home)}:${normalizeMatchName(away)}`,
+    verifiedAt:         new Date().toISOString(),
+  };
+}
+
+async function buildOddsApiFeed() {
+  if (!ODDS_API_KEY) throw new Error("ODDS_API_KEY not set");
+
+  // Discover which leagues currently have upcoming events (1 API request).
+  // This prevents wasting quota on dead/off-season leagues.
+  const activeSportKeys = await discoverActiveSports();
+  const sportsToQuery = activeSportKeys
+    ? ODDS_API_SPORTS.filter((s) => activeSportKeys.has(s.key))
+    : ODDS_API_SPORTS;
+
+  const today    = israelDate(0);
+  const tomorrow = israelDate(1);
+  const dayPlus4 = israelDate(5);
+
+  // Query from yesterday (UTC) so Copa/South-American games starting at 22:00 UTC
+  // (= 01:00 AM Israel) are captured before they go in-play.
+  // The Israel-timezone day (row.day) filter below keeps only today-onwards.
+  const queryFrom = israelDate(-1);
+  const BATCH = 5;
+  const allRows = [];
+  for (let i = 0; i < sportsToQuery.length; i += BATCH) {
+    const batch = sportsToQuery.slice(i, i + BATCH);
+    const batchResults = await Promise.allSettled(
+      batch.map((sport) =>
+        fetchOddsApiSport(sport.key, queryFrom, dayPlus4).then((events) =>
+          events.map((e) => oddsApiEventToRow(e, sport)).filter(Boolean)
+        )
+      )
+    );
+    for (const r of batchResults) {
+      if (r.status === "rejected") {
+        if (r.reason?.message?.includes("401:")) {
+          throw new Error("Odds API quota exceeded: " + r.reason.message.slice(0, 120));
+        }
+        continue;
+      }
+      for (const row of r.value) {
+        if (row.day >= today) allRows.push(row);
+      }
+    }
+    if (i + BATCH < sportsToQuery.length) await sleep(300);
+  }
+
+  const sortByScore = (rows) =>
+    [...rows].sort((a, b) => (b.recommendationScore || 0) - (a.recommendationScore || 0));
+
+  const FOOTBALL_MIN = 15;
+
+  const todayRows    = allRows.filter((r) => r.day === today);
+  const tomorrowRows = allRows.filter((r) => r.day === tomorrow);
+
+  // Fill today: if recommended football < FOOTBALL_MIN, pull from nearest future days.
+  // Rows keep their original `day` so the UI shows the real date.
+  const todayFootballRec = todayRows.filter(
+    (r) => Number(r.sportId) === WINNER_FOOTBALL_ID && r.recommended
+  );
+  if (todayFootballRec.length < FOOTBALL_MIN) {
+    const todayIds = new Set(todayRows.map((r) => r.id));
+    const fill = allRows
+      .filter((r) => r.day > today && Number(r.sportId) === WINNER_FOOTBALL_ID && r.recommended && !todayIds.has(r.id))
+      .sort((a, b) => a.day.localeCompare(b.day) || (b.recommendationScore || 0) - (a.recommendationScore || 0))
+      .slice(0, FOOTBALL_MIN - todayFootballRec.length);
+    for (const row of fill) todayRows.push(row);
+  }
+
+  // Fill tomorrow similarly
+  const tomorrowFootballRec = tomorrowRows.filter(
+    (r) => Number(r.sportId) === WINNER_FOOTBALL_ID && r.recommended
+  );
+  if (tomorrowFootballRec.length < FOOTBALL_MIN) {
+    const tomorrowIds = new Set(tomorrowRows.map((r) => r.id));
+    const fill = allRows
+      .filter((r) => r.day > tomorrow && Number(r.sportId) === WINNER_FOOTBALL_ID && r.recommended && !tomorrowIds.has(r.id))
+      .sort((a, b) => a.day.localeCompare(b.day) || (b.recommendationScore || 0) - (a.recommendationScore || 0))
+      .slice(0, FOOTBALL_MIN - tomorrowFootballRec.length);
+    for (const row of fill) tomorrowRows.push(row);
+  }
+
+  const tomorrowDate = tomorrowRows.length > 0 ? tomorrow : israelDate(1);
+
+  const pickedToday    = sortByScore(todayRows).slice(0, TARGET_PICKS_PER_SPORT * 2);
+  const pickedTomorrow = sortByScore(tomorrowRows).slice(0, TARGET_PICKS_PER_SPORT * 2);
+
+  // Snapshot for yesterday only
+  const snapshotNorm = normalizeFallbackRows(SNAPSHOT);
+  const yesterdayTab = snapshotNorm.tabs?.yesterday || {
+    label: "אתמול", date: israelDate(-1), sports: { football: [], basketball: [] },
+  };
+
+  const now = new Date().toISOString();
+  return {
+    ok:           true,
+    generatedAt:  now,
+    oddsSource:   "The Odds API",
+    tabs: {
+      yesterday: { ...yesterdayTab, date: israelDate(-1) },
+      today:     { label: "היום",  date: today,        sports: splitBySport(pickedToday) },
+      tomorrow:  { label: "מחר",   date: tomorrowDate, sports: splitBySport(pickedTomorrow) },
+    },
+    reuvenSchedule: [],
+    audit:          {},
+    trackingResults:[],
+    faq:            [],
+  };
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function normalizeFallbackRows(payload) {
   const verifiedAt = payload.generatedAt || new Date().toISOString();
   const copy = JSON.parse(JSON.stringify(payload));
+
+  // Shift tabs if snapshot is stale relative to current Israeli date
+  const snapshotTodayDate = copy.tabs?.today?.date;
+  const currentDate = israelDate(0);
+  if (snapshotTodayDate && snapshotTodayDate !== currentDate) {
+    const snapshotMs = new Date(`${snapshotTodayDate}T00:00:00+03:00`).getTime();
+    const currentMs  = new Date(`${currentDate}T00:00:00+03:00`).getTime();
+    const daysDiff   = Math.round((currentMs - snapshotMs) / (24 * 60 * 60 * 1000));
+
+    const emptyTab = (label, date) => ({ label, date, sports: { football: [], basketball: [] } });
+
+    if (daysDiff === 1) {
+      // Snapshot 1 day old: snapshot.today (yesterday's games) → yesterday tab,
+      // snapshot.tomorrow (today's scheduled games) → today tab.
+      // Row dates already match tab dates — no re-labelling needed.
+      copy.tabs = {
+        yesterday: { ...copy.tabs.today,    label: "אתמול", date: israelDate(-1) },
+        today:     { ...copy.tabs.tomorrow, label: "היום",  date: currentDate },
+        tomorrow:  emptyTab("מחר", israelDate(1)),
+      };
+    } else if (daysDiff === 2) {
+      // Snapshot 2 days old: snapshot.tomorrow held yesterday's games (day = israelDate(-1)).
+      // today and tomorrow have no real data — show empty rather than fake dates.
+      copy.tabs = {
+        yesterday: { ...copy.tabs.tomorrow, label: "אתמול", date: israelDate(-1) },
+        today:     emptyTab("היום",  currentDate),
+        tomorrow:  emptyTab("מחר",   israelDate(1)),
+      };
+    } else {
+      // Snapshot 3+ days old: all stale — clear everything.
+      copy.tabs = {
+        yesterday: emptyTab("אתמול", israelDate(-1)),
+        today:     emptyTab("היום",  currentDate),
+        tomorrow:  emptyTab("מחר",  israelDate(1)),
+      };
+    }
+    // NOTE: row.day is NOT overwritten — each row keeps its original date.
+    // Overwriting caused stale games to masquerade as today's games.
+  }
+
+  // Normalize row fields
   for (const tab of Object.values(copy.tabs || {})) {
     for (const rows of Object.values(tab.sports || {})) {
       for (const row of rows || []) {
@@ -2142,20 +2473,72 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   let payload;
   try {
     payload = await buildWinnerFeedPayload({ withLogos: true });
-  } catch (error) {
+  } catch (winnerError) {
+    // Winner blocked — try The Odds API before falling back to a local snapshot.
+    try {
+      payload = await buildOddsApiFeed();
+    } catch (oddsError) {
+      const snapshot = payloadMatchesIsraelDates(SNAPSHOT)
+        ? normalizeFallbackRows(SNAPSHOT)
+        : markStaleDatePayload(SNAPSHOT, "טעינת Winner ו-The Odds API נכשלה וה-snapshot המקומי שייך לתאריך אחר, לכן לא מוצגים משחקים ישנים בתור היום.");
+      payload = {
+        ...snapshot,
+        ok: true,
+        fallback: true,
+        fallbackReason: "Winner ו-The Odds API לא זמינים, נטען snapshot רק אם הוא תואם לתאריך ישראל הנוכחי.",
+        liveError: winnerError.message,
+        oddsError: oddsError.message,
+      };
+    }
+  }
+
+  // If Winner has too few games for today/tomorrow, supplement from The Odds API
+  // without allowing stale snapshot dates to masquerade as current tabs.
+  const todayCount =
+    (payload.tabs?.today?.sports?.football?.length || 0) +
+    (payload.tabs?.today?.sports?.basketball?.length || 0);
+  const tomorrowCount =
+    (payload.tabs?.tomorrow?.sports?.football?.length || 0) +
+    (payload.tabs?.tomorrow?.sports?.basketball?.length || 0);
+  if ((todayCount < MIN_PREMIUM_ROWS_PER_DAY || tomorrowCount < MIN_PREMIUM_ROWS_PER_DAY) && !payload.fallback) {
+    try {
+      const oddsFeed = await buildOddsApiFeed();
+      const newTabs = { ...payload.tabs };
+      let usedOdds = false;
+      const oddsToday =
+        (oddsFeed.tabs?.today?.sports?.football?.length || 0) +
+        (oddsFeed.tabs?.today?.sports?.basketball?.length || 0);
+      const oddsTomorrow =
+        (oddsFeed.tabs?.tomorrow?.sports?.football?.length || 0) +
+        (oddsFeed.tabs?.tomorrow?.sports?.basketball?.length || 0);
+      if (todayCount < MIN_PREMIUM_ROWS_PER_DAY && oddsToday > todayCount && payloadMatchesIsraelDates(oddsFeed)) {
+        newTabs.today = oddsFeed.tabs.today;
+        usedOdds = true;
+      }
+      if (tomorrowCount < MIN_PREMIUM_ROWS_PER_DAY && oddsTomorrow > tomorrowCount && payloadMatchesIsraelDates(oddsFeed)) {
+        newTabs.tomorrow = oddsFeed.tabs.tomorrow;
+        usedOdds = true;
+      }
+      if (usedOdds) payload = { ...payload, tabs: newTabs, oddsSource: "The Odds API" };
+    } catch {
+      // Keep the Winner payload if Odds API is unavailable. Never use stale-date
+      // snapshots to fill today/tomorrow.
+    }
+  }
+
+  if (!payloadMatchesIsraelDates(payload)) {
     const snapshot = payloadMatchesIsraelDates(SNAPSHOT)
       ? normalizeFallbackRows(SNAPSHOT)
-      : markStaleDatePayload(SNAPSHOT, "טעינת Winner נכשלה וה-snapshot המקומי שייך לתאריך אחר, לכן לא מוצגים משחקים ישנים בתור היום.");
+      : markStaleDatePayload(payload, "המקור החזיר תאריכים שלא תואמים ל-Asia/Jerusalem, לכן הטאבים הפתוחים רוקנו כדי לא להציג משחקים ישנים בתור היום.");
     payload = {
       ...snapshot,
       ok: true,
       fallback: true,
-      fallbackReason: "טעינת Winner נכשלה, לכן נשמר snapshot מאומת כ-cache שרת.",
-      liveError: error.message,
+      fallbackReason: snapshot.fallbackReason || "payload date mismatch",
     };
   }
   const entry = { cachedAt: Date.now(), payload };
-  await kvSet(key, entry, 2 * 60 * 60);
+  await kvSet(key, entry, 24 * 60 * 60);
   return {
     ...payload,
     cache: { status: "refresh", key, cachedAt: entry.cachedAt, ttlMs: CACHE_TTL_MS.full },

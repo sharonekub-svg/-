@@ -1644,7 +1644,7 @@
       localStorage.setItem(TRACK_KEY, JSON.stringify(items.slice(-400)));
     }
 
-    const FEED_LS_KEY = "hapogea_feed_v3";
+    const FEED_LS_KEY = "hapogea_feed_v5";
     const FEED_LS_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
 
     function saveFeedLocally(feed) {
@@ -1659,6 +1659,14 @@
         if (!raw) return null;
         const { feed, at } = JSON.parse(raw);
         if (!feed?.ok || Date.now() - at > FEED_LS_MAX_AGE_MS) return null;
+        // Invalidate cache if the feed's today date no longer matches the current Israeli date
+        const currentDate = israelDayString();
+        if (feed.tabs?.today?.date && feed.tabs.today.date !== currentDate) return null;
+        // Invalidate if today has zero games — today should never stay cached as empty
+        // because games appear as the day progresses and a stale today=0 would persist
+        // even when the server now has real games (cache stays alive while tomorrow>0).
+        const todayCount = (feed.tabs?.today?.sports?.football?.length || 0) + (feed.tabs?.today?.sports?.basketball?.length || 0);
+        if (todayCount === 0) return null;
         return { feed, at };
       } catch (_) { return null; }
     }
@@ -3299,6 +3307,10 @@
         const currentIsraelDay = israelDayString();
         const feedDay = activeTodayDate();
         if (feedDay && currentIsraelDay !== feedDay) {
+          // Rotate day tab: tomorrow → today, today → yesterday
+          if (state.day === "tomorrow") state.day = "today";
+          else if (state.day === "today") state.day = "yesterday";
+          localStorage.removeItem(FEED_LS_KEY);
           loadFeed().finally(scheduleMidnightShift);
         } else {
           scheduleMidnightShift();
