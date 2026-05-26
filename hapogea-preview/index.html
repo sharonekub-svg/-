@@ -1443,9 +1443,100 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .daily-stats-section {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .daily-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .daily-stat-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.035);
+      padding: 12px;
+      min-height: 80px;
+    }
+    .daily-stat-card b {
+      display: block;
+      color: #fff;
+      font-size: 24px;
+      font-variant-numeric: tabular-nums;
+    }
+    .daily-stat-card span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .daily-filters {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .daily-filters select,
+    .daily-filters input {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 10px;
+      outline: none;
+    }
+    .daily-table { display: grid; gap: 7px; }
+    .daily-row {
+      display: grid;
+      grid-template-columns: 105px 1fr 105px 90px 88px;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.03);
+      padding: 10px;
+      font-size: 12px;
+    }
+    .daily-row.head {
+      color: var(--muted);
+      font-weight: 900;
+      background: rgba(255,255,255,.045);
+    }
+    .daily-row b { color: #fff; }
+    .daily-status {
+      display: inline-flex;
+      justify-content: center;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .daily-status.won { background: rgba(49,209,135,.16); color: #bff8dc; border: 1px solid rgba(49,209,135,.35); }
+    .daily-status.lost { background: rgba(239,83,80,.13); color: #ffc7c5; border: 1px solid rgba(239,83,80,.35); }
+    .daily-status.pending { background: rgba(255,200,87,.12); color: #ffe3a0; border: 1px solid rgba(255,200,87,.30); }
+    .daily-status.cancelled,
+    .daily-status.unknown { background: rgba(255,255,255,.07); color: var(--muted); border: 1px solid var(--line); }
+    .daily-report {
+      white-space: pre-wrap;
+      border: 1px solid rgba(85,214,255,.18);
+      background: rgba(85,214,255,.055);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
     @media (max-width: 620px) {
       .cards { grid-template-columns: 1fr; }
       .progress-grid { grid-template-columns: 1fr; }
+      .daily-stats-grid,
+      .daily-filters { grid-template-columns: 1fr; }
+      .daily-row { grid-template-columns: 1fr; }
       .card-head, .card-body { padding: 10px; }
       .pick-summary, .result-line { grid-template-columns: 1fr; }
       .odds-box, .result-score { width: 100%; }
@@ -1616,6 +1707,8 @@
 
     <section class="history-section shell progress-section" id="progressSection" style="display:none"></section>
 
+    <section class="history-section shell daily-stats-section" id="dailyStatsSection" style="display:none"></section>
+
     <section class="panel debug-panel" id="debugPanel">
       <div class="section-title">
         <div>
@@ -1661,6 +1754,9 @@
       reubenCandidates: [],
       reubenLastQuery: "",
       reubenLoading: false,
+      dailyStats: null,
+      dailyStatsLoading: false,
+      dailyFilters: { date: "", sport: "all", type: "all", status: "all" },
       debugMode: location.pathname.includes("debug")
     };
     let lastLoadTime = 0;
@@ -3087,6 +3183,137 @@
       `;
     }
 
+    function dailyStatusLabel(status) {
+      if (status === "won") return "נתפס";
+      if (status === "lost") return "נפל";
+      if (status === "cancelled") return "בוטל";
+      if (status === "unknown") return "לא ידוע";
+      return "ממתין";
+    }
+
+    function dailyStatsReport(stats, rows) {
+      const won = rows.filter(row => row.status === "won").slice(0, 8);
+      const lost = rows.filter(row => row.status === "lost").slice(0, 8);
+      const pending = rows.filter(row => row.status === "pending").slice(0, 8);
+      const line = row => `- ${row.match_name} — ניתוח: ${row.algorithm_pick || row.pick_team || "לא זמין"} — תוצאה: ${row.result || "אין עדיין"}`;
+      return [
+        `סיכום יומי - ${stats.stat_date}`,
+        `סה"כ המלצות: ${stats.total}`,
+        `נתפסו: ${stats.won}`,
+        `נפלו: ${stats.lost}`,
+        `ממתינים: ${stats.pending}`,
+        `אחוז הצלחה: ${stats.success_rate}%`,
+        `יחס ממוצע: ${Number(stats.average_odds || 0).toFixed(2)}`,
+        `רווח תאורטי לפי 100₪ למשחק: ${Number(stats.theoretical_profit_ils || 0) >= 0 ? "+" : ""}${stats.theoretical_profit_ils || 0}₪`,
+        "",
+        "משחקים שנתפסו:",
+        ...(won.length ? won.map(line) : ["- אין"]),
+        "",
+        "משחקים שנפלו:",
+        ...(lost.length ? lost.map(line) : ["- אין"]),
+        "",
+        "ממתינים:",
+        ...(pending.length ? pending.map(line) : ["- אין"]),
+      ].join("\n");
+    }
+
+    function renderDailyStats() {
+      const target = document.getElementById("dailyStatsSection");
+      if (!target) return;
+      const data = state.dailyStats;
+      target.style.display = "";
+      if (state.dailyStatsLoading && !data) {
+        target.innerHTML = `<div class="empty">טוען סטטיסטיקה יומית...</div>`;
+        return;
+      }
+      if (!data?.ok) {
+        target.innerHTML = `
+          <div class="section-title">
+            <div>
+              <h3>Daily Stats / סטטיסטיקה יומית</h3>
+              <p>הבוט עדיין לא שמר נתונים. הוא יתחיל לשמור המלצות מהרצת ה-cron הבאה.</p>
+            </div>
+            <span class="pill">Recommendation Bot</span>
+          </div>
+        `;
+        return;
+      }
+      const filters = state.dailyFilters;
+      const dates = data.dailyStats || [];
+      const selectedDate = filters.date || data.today || dates[0]?.stat_date || "";
+      state.dailyFilters.date = selectedDate;
+      const stat = dates.find(item => item.stat_date === selectedDate) || {
+        stat_date: selectedDate,
+        total: 0,
+        won: 0,
+        lost: 0,
+        pending: 0,
+        success_rate: 0,
+        average_odds: 0,
+        theoretical_profit_ils: 0,
+      };
+      const rows = (data.recommendations || []).filter(row => {
+        if (selectedDate && row.match_date !== selectedDate) return false;
+        if (filters.sport !== "all" && row.sport !== filters.sport) return false;
+        if (filters.type !== "all" && row.recommendation_type !== filters.type) return false;
+        if (filters.status !== "all" && row.status !== filters.status) return false;
+        return true;
+      });
+      target.innerHTML = `
+        <div class="section-title">
+          <div>
+            <h3>Daily Stats / סטטיסטיקה יומית</h3>
+            <p>מעקב שרת אחרי המלצות האלגוריתם, תוצאות סופיות ודוח יומי לפי Asia/Jerusalem. מקור אחסון: ${escapeHtml(data.mode || "db")}.</p>
+          </div>
+          <span class="pill">${rows.length} משחקים בטבלה</span>
+        </div>
+        <div class="daily-stats-grid">
+          <div class="daily-stat-card"><b>${stat.total || 0}</b><span>סה"כ המלצות</span></div>
+          <div class="daily-stat-card"><b>${stat.won || 0}</b><span>נתפסו</span></div>
+          <div class="daily-stat-card"><b>${stat.lost || 0}</b><span>נפלו</span></div>
+          <div class="daily-stat-card"><b>${stat.success_rate || 0}%</b><span>אחוז הצלחה</span></div>
+          <div class="daily-stat-card"><b>${Number(stat.average_odds || 0).toFixed(2)}</b><span>יחס ממוצע</span></div>
+          <div class="daily-stat-card"><b>${Number(stat.theoretical_profit_ils || 0) >= 0 ? "+" : ""}${stat.theoretical_profit_ils || 0}₪</b><span>רווח תאורטי 100₪</span></div>
+          <div class="daily-stat-card"><b>${stat.pending || 0}</b><span>ממתינים</span></div>
+          <div class="daily-stat-card"><b>${stat.cancelled || stat.unknown || 0}</b><span>בוטלו / לא ידוע</span></div>
+        </div>
+        <div class="daily-filters">
+          <select data-daily-filter="date">${dates.map(item => `<option value="${item.stat_date}" ${item.stat_date === selectedDate ? "selected" : ""}>${item.stat_date}</option>`).join("")}</select>
+          <select data-daily-filter="sport">
+            <option value="all" ${filters.sport === "all" ? "selected" : ""}>כל הספורטים</option>
+            <option value="football" ${filters.sport === "football" ? "selected" : ""}>כדורגל</option>
+            <option value="basketball" ${filters.sport === "basketball" ? "selected" : ""}>כדורסל</option>
+          </select>
+          <select data-daily-filter="type">
+            <option value="all" ${filters.type === "all" ? "selected" : ""}>פרימיום + רגיל</option>
+            <option value="premium" ${filters.type === "premium" ? "selected" : ""}>פרימיום</option>
+            <option value="regular" ${filters.type === "regular" ? "selected" : ""}>רגיל</option>
+          </select>
+          <select data-daily-filter="status">
+            <option value="all" ${filters.status === "all" ? "selected" : ""}>כל הסטטוסים</option>
+            <option value="won" ${filters.status === "won" ? "selected" : ""}>נתפס</option>
+            <option value="lost" ${filters.status === "lost" ? "selected" : ""}>נפל</option>
+            <option value="pending" ${filters.status === "pending" ? "selected" : ""}>ממתין</option>
+            <option value="cancelled" ${filters.status === "cancelled" ? "selected" : ""}>בוטל</option>
+            <option value="unknown" ${filters.status === "unknown" ? "selected" : ""}>לא ידוע</option>
+          </select>
+        </div>
+        <div class="daily-table">
+          <div class="daily-row head"><span>תאריך/שעה</span><span>משחק</span><span>ניתוח</span><span>יחס</span><span>סטטוס</span></div>
+          ${rows.length ? rows.map(row => `
+            <div class="daily-row">
+              <span>${row.match_date || ""}<br>${row.kickoff_time || ""}</span>
+              <span><b>${escapeHtml(row.match_name || "")}</b><br><span class="micro">${escapeHtml(row.sport || "")} · ${escapeHtml(row.league || "")} · ${escapeHtml(row.recommendation_type || "")}</span></span>
+              <span>${escapeHtml(row.algorithm_pick || row.pick_team || "")}</span>
+              <span>${formatOdds(row.odds_at_recommendation)}</span>
+              <span class="daily-status ${row.status || "pending"}">${dailyStatusLabel(row.status)}</span>
+            </div>
+          `).join("") : `<div class="empty">אין משחקים לפילטר הנוכחי.</div>`}
+        </div>
+        <div class="daily-report">${escapeHtml(dailyStatsReport(stat, rows))}</div>
+      `;
+    }
+
     function predictionStatusInfo(value) {
       const raw = String(value || "").trim();
       if (raw === "hit" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "תחזית התאימה", cls: "hit" };
@@ -3570,6 +3797,7 @@
       renderCards();
       renderHistory();
       renderProgressBoard();
+      renderDailyStats();
       renderDebug();
       applyLogosToCards();
     }
@@ -3683,6 +3911,22 @@
 
     function loadFeedThrottled() {
       if (Date.now() - lastLoadTime > 60 * 1000) loadFeed();
+    }
+
+    async function loadDailyStats() {
+      state.dailyStatsLoading = true;
+      try {
+        const response = await fetch(`/api/recommendation-stats?ts=${Date.now()}`);
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.detail || data.error || "טעינת סטטיסטיקה נכשלה");
+        state.dailyStats = data;
+        if (!state.dailyFilters.date) state.dailyFilters.date = data.today || data.dailyStats?.[0]?.stat_date || "";
+      } catch (error) {
+        state.dailyStats = state.dailyStats || { ok: false, error: error.message };
+      } finally {
+        state.dailyStatsLoading = false;
+        renderDailyStats();
+      }
     }
 
     function israelDayString(date = new Date()) {
@@ -3811,6 +4055,7 @@
         showRefreshBar(false);
         render();
         scheduleRefresh(state.feed);
+        loadDailyStats();
       }
     }
     document.addEventListener("visibilitychange", () => {
@@ -3839,6 +4084,12 @@
       renderCards();
     });
     document.getElementById("refresh").addEventListener("click", loadFeed);
+    document.getElementById("dailyStatsSection").addEventListener("change", event => {
+      const field = event.target.closest("[data-daily-filter]");
+      if (!field) return;
+      state.dailyFilters[field.dataset.dailyFilter] = field.value;
+      renderDailyStats();
+    });
     document.getElementById("worldCupSection").addEventListener("click", event => {
       if (event.target.closest("[data-wc-close]")) {
         state.wcOpen = false;

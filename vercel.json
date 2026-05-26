@@ -9,6 +9,8 @@
     "api/cron.js": { "maxDuration": 30 },
     "api/winner-cron.js": { "maxDuration": 30 },
     "api/winner-cron-midnight.js": { "maxDuration": 30 },
+    "api/recommendation-bot.js": { "maxDuration": 60 },
+    "api/recommendation-stats.js": { "maxDuration": 30 },
     "api/debug-odds.js": { "maxDuration": 60 }
   },
   "rewrites": [
@@ -16,6 +18,6 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/winner-cron-midnight", "schedule": "5 21 * * *" }
+    { "path": "/api/recommendation-bot", "schedule": "*/30 * * * *" }
   ]
 }
