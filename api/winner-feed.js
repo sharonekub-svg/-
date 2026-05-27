@@ -1930,19 +1930,14 @@ function finalOpenRows(rows) {
 }
 
 function finalOpenRowsByDay(rows) {
-  // Build each sport independently, then keep the daily board capped at 20 total.
-  // The frontend still renders football and basketball as separate sections.
+  // Each sport is capped independently inside finalOpenRows.
+  // No combined cap here — football and basketball render in separate tabs on the frontend.
   const football   = (rows || []).filter((r) => Number(r.sportId) === WINNER_FOOTBALL_ID);
   const basketball = (rows || []).filter((r) => Number(r.sportId) === WINNER_BASKETBALL_ID);
   return [
     ...finalOpenRows(football),
     ...finalOpenRows(basketball),
-  ].sort((a, b) => {
-    return (b.recommendationScore || 0) - (a.recommendationScore || 0)
-      || (b.probability || 0) - (a.probability || 0)
-      || (b.odds || 0) - (a.odds || 0)
-      || String(a.time).localeCompare(String(b.time));
-  }).slice(0, TARGET_PICKS_PER_SPORT);
+  ];
 }
 
 function finalResultRowsByDay(rows) {
