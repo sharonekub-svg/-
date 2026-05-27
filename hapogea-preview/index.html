@@ -1634,7 +1634,7 @@
       <nav class="nav" id="sportTabs">
         <button class="tab active" data-sport-tab="football">כדורגל</button>
         <button class="tab" data-sport-tab="basketball">כדורסל</button>
-        <button class="tab" data-sport-tab="reuben">AI Sports Analyst</button>
+        <button class="tab" data-sport-tab="reuben">הפוגע AI</button>
       </nav>
     </div>
   </header>
@@ -2290,7 +2290,7 @@
       const leagues = new Set(rows.map(row => row.league)).size;
       if (state.sportTab === "reuben") {
         document.getElementById("stats").innerHTML = [
-          ["Agent", "AI Sports Analyst"],
+          ["Agent", "הפוגע AI"],
           ["ספורט", "כדורגל/כדורסל"],
           ["גישה", "ניתוח נתונים"],
           ["מקור", "נתונים זמינים"]
@@ -2877,7 +2877,7 @@
       rating = Math.max(1, Math.min(10, rating));
 
       const oddsLine = odds
-        ? "Winner odds: " + formatOdds(odds) + " | Market: " + (selectedOutcome?.marketTitle || marketName) + " | Tested side: " + (selectedOutcome?.label || "user side") + " | Implied probability: " + implied.toFixed(1) + "% | AI Sports Analyst estimate: " + estimated + "%"
+        ? "Winner odds: " + formatOdds(odds) + " | Market: " + (selectedOutcome?.marketTitle || marketName) + " | Tested side: " + (selectedOutcome?.label || "user side") + " | Implied probability: " + implied.toFixed(1) + "% | הפוגע AI estimate: " + estimated + "%"
         : "מצאתי את המשחק, אבל אין כרגע שוק Winner פעיל עם יחס תקין לניתוח.";
       const valueLine = ev === null
         ? "Expected value cannot be estimated until there is an active Winner price."
@@ -2907,11 +2907,11 @@
           ? "כלל 1.40-1.90: זה טווח יחסים קצר, אז צריך יתרון סטטיסטי ממש ברור. היחס הוא נתון שוק בלבד, לא הוראת פעולה."
           : "מחוץ לטווח 1.40-1.90: חייבים לבדוק תנודתיות וערך בזהירות גבוהה יותר.";
         const hebrewOddsLine = odds
-          ? "יחס Winner: " + formatOdds(odds) + " | שוק: " + (selectedOutcome?.marketTitle || marketName) + " | צד שנבדק: " + (selectedOutcome?.label || "הצד שהזכרת") + " | הסתברות גלומה: " + implied.toFixed(1) + "% | הערכת AI Sports Analyst: " + estimated + "%"
+          ? "יחס Winner: " + formatOdds(odds) + " | שוק: " + (selectedOutcome?.marketTitle || marketName) + " | צד שנבדק: " + (selectedOutcome?.label || "הצד שהזכרת") + " | הסתברות גלומה: " + implied.toFixed(1) + "% | הערכת הפוגע AI: " + estimated + "%"
           : "מצאתי את המשחק, אבל אין כרגע שוק Winner פעיל עם יחס תקין לניתוח.";
         const guardrail = asksForBettingInstruction(value)
           ? "אני לא נותן המלצות הימורים או הוראות לשים כסף. לפי הנתונים הספורטיביים, אפשר לדבר רק על יתרון סטטיסטי, סיכונים ומגמות."
-          : "AI Sports Analyst מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.";
+          : "הפוגע AI מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.";
         const bottomLine = assessment.hasEdge
           ? `שורה תחתונה: קיים יתרון סטטיסטי מסוים בצד שנבדק (${exactSide}). דירוג יתרון סטטיסטי: ${rating}/10. זה אינו ייעוץ הימורים או הוראה לשים כסף.`
           : `שורה תחתונה: היתרון הסטטיסטי לא מספיק חד כרגע. דירוג יתרון סטטיסטי: ${rating}/10. זה אינו ייעוץ הימורים או הוראה לשים כסף.`;
@@ -2936,7 +2936,7 @@
       return [
         (asksForBettingInstruction(value)
           ? "I do not provide betting instructions or tell users where to put money. From a sports/statistical angle, I can discuss edges, risks, and matchup data."
-          : "AI Sports Analyst provides sports and statistical analysis only. This is not betting advice, not an instruction to stake money, and not a guarantee of results or profit."),
+          : "הפוגע AI provides sports and statistical analysis only. This is not betting advice, not an instruction to stake money, and not a guarantee of results or profit."),
         "Analysis Summary\n" + value + "\nMatched Winner game: " + matchedRow.match + "\nSport: " + sportName + " | Market: " + marketName,
         "Winner Feed Context\n" + winnerContext,
         "Data Access\n" + dataAccess,
@@ -2965,9 +2965,9 @@
     function renderAiThinking() {
       return `
         <div class="chat-message ai">
-          <div class="ai-thinking" aria-live="polite" aria-label="AI Sports Analyst is thinking">
+          <div class="ai-thinking" aria-live="polite" aria-label="הפוגע AI חושב">
             <div class="thinking-head">
-              <span>AI Sports Analyst חושב ומנתח</span>
+              <span>הפוגע AI מחפש ומנתח</span>
               <span class="thinking-pulse"></span>
             </div>
             <div class="thinking-steps">
@@ -2984,15 +2984,15 @@
     function renderReubenAI() {
       const messages = state.reubenMessages.length
         ? state.reubenMessages
-        : [{ role: "ai", text: "שלום! אני AI Sports Analyst.\n\nAI Sports Analyst מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.\n\nשאל אותי על משחקים, קבוצות, חוזקות, חולשות ונתונים סטטיסטיים. אעזור לך להבין את המשחק טוב יותר לפי נתונים, בלי לתת הוראות או המלצות להימור.\n\nדוגמה בטקסט: \"ברצלונה נגד ריאל מדריד, היום\"" }];
+        : [{ role: "ai", text: "שלום! אני הפוגע AI.\n\nהפוגע AI מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.\n\nשאל אותי על משחקים, קבוצות, חוזקות, חולשות ונתונים סטטיסטיים. אעזור לך להבין את המשחק טוב יותר לפי נתונים, בלי לתת הוראות או המלצות להימור.\n\nדוגמה בטקסט: \"ברצלונה נגד ריאל מדריד, היום\"" }];
       const loading = state.reubenLoading;
       return `
         <section class="reuben-panel">
           <div class="section-title" style="margin:0">
             <div>
-              <h3 style="display:flex;align-items:center;gap:8px">AI Sports Analyst <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:rgba(85,214,255,.15);color:var(--cyan)">BETA</span></h3>
-              <p><b>AI Sports Analyst מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.</b></p>
-              <p>שאל את ה-Agent על משחקים, קבוצות, חוזקות, חולשות ונתונים סטטיסטיים. ה-Agent יעזור לך להבין את המשחק טוב יותר לפי נתונים, בלי לתת הוראות או המלצות להימור.</p>
+              <h3 style="display:flex;align-items:center;gap:8px">הפוגע AI <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:rgba(85,214,255,.15);color:var(--cyan)">BETA</span></h3>
+              <p><b>הפוגע AI מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.</b></p>
+              <p>שאל את הפוגע AI על משחקים, קבוצות, חוזקות, חולשות ונתונים סטטיסטיים. הוא יעזור לך להבין את המשחק טוב יותר לפי נתונים, בלי לתת הוראות או המלצות להימור.</p>
             </div>
             <span class="pill">Winner · AI</span>
           </div>
@@ -3030,7 +3030,7 @@
       const title = document.getElementById("listTitle");
       const meta = document.getElementById("resultMeta");
       if (state.sportTab === "reuben") {
-        title.textContent = "AI Sports Analyst · ניתוח משחק לפי נתונים";
+        title.textContent = "הפוגע AI · ניתוח משחק לפי נתונים";
         meta.textContent = "סוכן ניתוח לכדורגל וכדורסל";
         cards.innerHTML = renderReubenAI();
         return;
@@ -3612,7 +3612,7 @@
 
     function shareTextForRow(row) {
       const odds = row.odds ? ` @ ${formatOdds(row.odds)}` : "";
-      return `${row.match} | ${explicitPickText(row)}${odds} | AI Sports Analyst`;
+      return `${row.match} | ${explicitPickText(row)}${odds} | הפוגע AI`;
     }
 
     function rowCard(row) {
@@ -4126,12 +4126,25 @@
         if (input) input.value = "";
         renderCards();
         scrollReuvenOutput();
-        window.setTimeout(() => {
+        // Wait for feed to be ready before analyzing — if feed is still loading
+        // (state.loading = true or state.feed = null) the match search returns empty.
+        // Poll up to 10 s, then run analysis even if feed is still not ready.
+        (async () => {
+          if (state.loading || !state.feed) {
+            const deadline = Date.now() + 10000;
+            await new Promise((resolve) => {
+              const tick = () => {
+                if ((!state.loading && state.feed) || Date.now() >= deadline) return resolve();
+                setTimeout(tick, 300);
+              };
+              setTimeout(tick, 300);
+            });
+          }
           state.reubenMessages.push({ role: "ai", text: analyzeReubenBet(question) });
           state.reubenLoading = false;
           renderCards();
           scrollReuvenOutput();
-        }, 240);
+        })();
         return;
       }
       const button = event.target.closest("[data-open]");
