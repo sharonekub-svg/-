@@ -1336,12 +1336,22 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      opacity: .62;
-      animation: thinking-step 3.6s ease-in-out infinite;
+      opacity: 0;
+      transform: translateY(5px);
+      transition: opacity .35s ease, transform .35s ease;
+      pointer-events: none;
     }
-    .thinking-step:nth-child(2) { animation-delay: .45s; }
-    .thinking-step:nth-child(3) { animation-delay: .9s; }
-    .thinking-step:nth-child(4) { animation-delay: 1.35s; }
+    .thinking-step.step-visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      animation: thinking-step 2.8s ease-in-out infinite;
+    }
+    .thinking-step.step-done {
+      opacity: .55;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
     .thinking-line {
       height: 4px;
       width: 42px;
@@ -2963,6 +2973,13 @@
     }
 
     function renderAiThinking() {
+      const currentStep = state.reubenThinkingStep || 0;
+      const steps = [
+        "מחפש התאמה למשחק וליום הנכון",
+        "בודק שווקי Winner ויחסים זמינים",
+        "מחשב פער מול השוק והיריבה הקרובה",
+        "בונה הסבר ברור למה הצד הזה מקבל יתרון",
+      ];
       return `
         <div class="chat-message ai">
           <div class="ai-thinking" aria-live="polite" aria-label="הפוגע AI חושב">
@@ -2971,10 +2988,10 @@
               <span class="thinking-pulse"></span>
             </div>
             <div class="thinking-steps">
-              <div class="thinking-step"><span class="thinking-line"></span><span>מחפש התאמה למשחק וליום הנכון</span></div>
-              <div class="thinking-step"><span class="thinking-line"></span><span>בודק שווקי Winner ויחסים זמינים</span></div>
-              <div class="thinking-step"><span class="thinking-line"></span><span>מחשב פער מול השוק והיריבה הקרובה</span></div>
-              <div class="thinking-step"><span class="thinking-line"></span><span>בונה הסבר ברור למה הצד הזה מקבל יתרון</span></div>
+              ${steps.map((text, i) => {
+                const cls = i < currentStep ? "thinking-step step-done" : i === currentStep ? "thinking-step step-visible" : "thinking-step";
+                return `<div class="${cls}"><span class="thinking-line"></span><span>${text}</span></div>`;
+              }).join("")}
             </div>
           </div>
         </div>
@@ -4126,10 +4143,38 @@
         if (input) input.value = "";
         renderCards();
         scrollReuvenOutput();
-        // Wait for feed to be ready before analyzing — if feed is still loading
-        // (state.loading = true or state.feed = null) the match search returns empty.
-        // Poll up to 10 s, then run analysis even if feed is still not ready.
+        // Show a 5-second thinking sequence with step-by-step reveal.
+        // Also waits for the feed to finish loading so match search works.
         (async () => {
+          const MIN_THINK_MS = 5000;
+          const startTime = Date.now();
+          const STEPS_COUNT = 4;
+          const stepEveryMs = Math.floor(MIN_THINK_MS / STEPS_COUNT); // ~1250ms per step
+
+          state.reubenThinkingStep = 0;
+          renderCards();
+          scrollReuvenOutput();
+
+          // Advance thinking steps every stepEveryMs
+          const stepTimer = setInterval(() => {
+            if ((state.reubenThinkingStep || 0) < STEPS_COUNT - 1) {
+              state.reubenThinkingStep = (state.reubenThinkingStep || 0) + 1;
+              const el = document.getElementById("reubenOutput");
+              if (el) {
+                // Fast in-place update — avoid full re-render during animation
+                const steps = el.querySelectorAll(".thinking-step");
+                steps.forEach((s, i) => {
+                  s.className = i < state.reubenThinkingStep
+                    ? "thinking-step step-done"
+                    : i === state.reubenThinkingStep
+                    ? "thinking-step step-visible"
+                    : "thinking-step";
+                });
+              }
+            }
+          }, stepEveryMs);
+
+          // Wait for feed to be ready (up to 10 s extra)
           if (state.loading || !state.feed) {
             const deadline = Date.now() + 10000;
             await new Promise((resolve) => {
@@ -4140,6 +4185,15 @@
               setTimeout(tick, 300);
             });
           }
+
+          // Ensure at least MIN_THINK_MS total thinking time
+          const elapsed = Date.now() - startTime;
+          if (elapsed < MIN_THINK_MS) {
+            await new Promise(resolve => setTimeout(resolve, MIN_THINK_MS - elapsed));
+          }
+
+          clearInterval(stepTimer);
+          state.reubenThinkingStep = 0;
           state.reubenMessages.push({ role: "ai", text: analyzeReubenBet(question) });
           state.reubenLoading = false;
           renderCards();
