@@ -1867,6 +1867,7 @@ function splitBySport(rows) {
 }
 
 function mergeRows(primary, secondary) {
+  const PHASE_RANK = { final: 4, cancelled: 3, postponed: 3, ht: 2, live: 1, scheduled: 0, "": 0 };
   const byEvent = new Map();
   for (const row of [...primary, ...secondary]) {
     const key = String(row.resultKey || row.eventId || row.id);
@@ -1875,7 +1876,10 @@ function mergeRows(primary, secondary) {
       byEvent.set(key, row);
       continue;
     }
-    const mergedPhase = current.matchPhase || row.matchPhase || "";
+    // Use the most advanced matchPhase from either row
+    const rankCurrent = PHASE_RANK[current.matchPhase] ?? 0;
+    const rankRow = PHASE_RANK[row.matchPhase] ?? 0;
+    const mergedPhase = rankCurrent >= rankRow ? current.matchPhase : row.matchPhase;
     const definitiveStatus = (s) => s && s !== "ממתין";
     byEvent.set(key, {
       ...row,
@@ -1883,7 +1887,12 @@ function mergeRows(primary, secondary) {
       liveScore: current.liveScore || row.liveScore || "",
       result: current.result || row.result || "",
       actualWinner: current.actualWinner || row.actualWinner || "",
-      matchPhase: mergedPhase,
+      matchPhase: mergedPhase || "",
+      // Prefer recommended:true from either row (so snapshot picks keep their recommendation)
+      recommended: current.recommended || row.recommended,
+      pick: current.pick || row.pick || "",
+      pickTeam: current.pickTeam || row.pickTeam || "",
+      winnerPick: current.winnerPick || row.winnerPick || "",
       // Propagate a definitive status (hit/miss/נסגר/בוטל) from either row
       status: definitiveStatus(current.status)
         ? current.status
@@ -2057,18 +2066,42 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       .map((r) => r.value)
   );
 
+  // Pull previously-recommended picks from snapshot to remember what was selected.
+  // Without this, finished games disappear from the live odds line and lose their hit/miss status.
+  const snapshotPicksForDay = (dateKey) => {
+    for (const key of ["yesterday", "today", "tomorrow"]) {
+      const tab = SNAPSHOT?.tabs?.[key];
+      if (tab?.date === dateKey) {
+        return [
+          ...(tab.sports?.football || []),
+          ...(tab.sports?.basketball || []),
+        ];
+      }
+    }
+    return [];
+  };
+
+  const yesterdayResultRows = [
+    ...buildResultRows(winnerResultEvents, yesterday),
+    ...build365FootballRows(scores365Events, yesterday),
+    ...build365BasketballRows(scores365Events, yesterday),
+  ];
+  // Primary: snapshot picks for yesterday (knows what was recommended + picked team)
+  // Secondary: live result rows (have actualWinner + matchPhase:final)
+  const snapshotYesterdayPicks = snapshotPicksForDay(yesterday);
   const yesterdayMerged = mergeRows(
-    buildResultRows(winnerResultEvents, yesterday),
-    [
-      ...build365FootballRows(scores365Events, yesterday),
-      ...build365BasketballRows(scores365Events, yesterday),
-    ]
+    snapshotYesterdayPicks.length > 0 ? snapshotYesterdayPicks : buildResultRows(winnerResultEvents, yesterday),
+    yesterdayResultRows
   );
+
+  const liveTodayPicks = [
+    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
+    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
+  ];
+  // Supplement live picks with snapshot picks for games that fell off the live line (already started)
+  const snapshotTodayPicks = snapshotPicksForDay(today);
   const todayCurrentRows = mergeRows(
-    [
-      ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
-      ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
-    ],
+    [...liveTodayPicks, ...snapshotTodayPicks],
     [
       ...buildResultRows(winnerResultEvents, today),
       ...build365FootballRows(scores365Events, today),

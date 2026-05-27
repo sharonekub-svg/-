@@ -1580,10 +1580,9 @@
       <div class="hero-main">
         <div class="hero-content">
           <span class="eyebrow">מקור Winner בלבד · יחסים אמיתיים בלבד · בלי המצאת נתונים</span>
-          <h2>אתמול, היום ומחר. כדורגל וכדורסל. ניתוחי Winner עם מעקב דיוק סטטיסטי חודשי.</h2>
+          <h2>אתמול, היום ומחר. כדורגל וכדורסל. ניתוחי Winner בזמן אמת.</h2>
           <p class="hero-copy">
-            היום ומחר מציגים משחקים עם יתרון סטטיסטי ויחס Winner פעיל כנתון שוק. אתמול בודק תחזיות מול תוצאה רשמית,
-            והסטטיסטיקה החודשית מתעדכנת לפי הניתוחים שהמערכת שמרה.
+            היום ומחר מציגים משחקים עם יתרון סטטיסטי ויחס Winner פעיל כנתון שוק. אתמול בודק תחזיות מול תוצאה רשמית.
           </p>
           <div class="stats" id="stats"></div>
         </div>
@@ -2254,9 +2253,7 @@
       }
       document.getElementById("stats").innerHTML = [
         [state.day === "yesterday" ? "נסגרו" : "פתוחים", rows.length],
-        ["ליגות", leagues],
-        ["דיוק תחזיות", performance.settled ? `${performance.hitRate}%` : "חדש"],
-        ["מדד יחסי", performance.settled ? `${performance.roiUnits >= 0 ? "+" : ""}${performance.roiUnits.toFixed(2)}u` : "חדש"]
+        ["ליגות", leagues]
       ].map(([label, value]) => `<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");
     }
 
@@ -2426,33 +2423,10 @@
     function renderDaily() {
       const tip = bestTip();
       const box = document.getElementById("dailyTip");
-      const performance = monthlyPerformance();
-      const features = state.feed?.win2goFeatures || [];
-      const performanceMarkup = `
-        <div class="daily-head">
-          <h3>דיוק תחזיות סטטיסטיות</h3>
-          <span class="pill">${activeTodayDate() || performance.month}</span>
-        </div>
-        <div class="metric-grid">
-          <div class="metric"><b>${performance.settled ? `${performance.hitRate}%` : "חדש"}</b><span>דיוק</span></div>
-          <div class="metric"><b>${performance.hits}/${performance.settled}</b><span>התאימו</span></div>
-          <div class="metric"><b>${performance.roiUnits >= 0 ? "+" : ""}${performance.roiUnits.toFixed(2)}u</b><span>מדד יחסי</span></div>
-          <div class="metric"><b>${performance.tracked}</b><span>נשמרו</span></div>
-        </div>
-        <div class="micro" style="margin-top:8px;color:var(--muted)">המדד היחסי הוא חישוב מוצר פנימי לבדיקת מודל, לא המלצה כספית.</div>
-      `;
-      const featuresMarkup = `
-        <div>
-          <div class="daily-head" style="margin-bottom:8px"><h3>Win2Go</h3><span class="pill">פיצ׳רים</span></div>
-          <div class="feature-list">${features.map(feature => `<span class="feature-chip">${feature}</span>`).join("")}</div>
-        </div>
-      `;
       if (!tip) {
         box.innerHTML = `
           <div class="daily-head"><h3>הניתוח המרכזי</h3><span class="pill">אין יתרון פתוח</span></div>
           <p class="hero-copy" style="font-size:14px">לא נמצא כרגע משחק בקטגוריה הזו עם יתרון סטטיסטי ויחס 1.40 עד 1.90 מתוך ווינר-ליין.</p>
-          ${performanceMarkup}
-          ${featuresMarkup}
         `;
         return;
       }
@@ -2474,8 +2448,6 @@
         <p class="hero-copy" style="font-size:14px">
           למה: ${(tip.explanation || [])[1] || "הצד שנבחר הוא פייבוריט סטטיסטי בשוק המנצח של Winner."}
         </p>
-        ${performanceMarkup}
-        ${featuresMarkup}
       `;
     }
 
@@ -3287,7 +3259,11 @@
       const actual = row.actualWinner || tracked?.actualWinner || "";
       let status = tracked?.status || "";
       if (!status || status === "pending") {
-        if (isVoidLikeRow(row)) status = row.status && String(row.status).includes("בוטל") ? "void" : "unverified";
+        // Also accept direct status from the server row (hit/miss/נתפס/נפל)
+        const serverStatus = String(row.status || "");
+        if (serverStatus === "hit" || serverStatus === "נתפס" || serverStatus === "תפס") status = "hit";
+        else if (serverStatus === "miss" || serverStatus === "נפל" || serverStatus === "לא נתפס") status = "miss";
+        else if (isVoidLikeRow(row)) status = serverStatus.includes("בוטל") ? "void" : "unverified";
         else if (!hasSavedPick && (row.matchPhase === "final" || actual)) status = row.verifiedAt ? "closed" : "unverified";
         else if (row.matchPhase === "final" && actual && guessed !== "לא נשמר") status = samePick(guessed, actual) ? "hit" : "miss";
         else status = "pending";
