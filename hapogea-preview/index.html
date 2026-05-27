@@ -64,11 +64,12 @@
       height: 44px;
       display: grid;
       place-items: center;
-      border-radius: 8px;
-      background: linear-gradient(135deg, var(--orange), var(--red));
+      border-radius: 10px;
+      background: linear-gradient(145deg, #ff7a45 0%, #e63946 100%);
       color: white;
       font-weight: 900;
-      box-shadow: 0 10px 30px rgba(255,122,69,.22);
+      box-shadow: 0 6px 20px rgba(230,57,70,.4), 0 0 0 1px rgba(255,255,255,.08);
+      flex: 0 0 auto;
     }
     h1, h2, h3, h4, p { margin-top: 0; }
     .brand h1 { margin: 0; font: 900 27px/1 Heebo, Assistant, sans-serif; }
@@ -1619,7 +1620,13 @@
 
   <!-- Full-screen loading overlay (first load only) -->
   <div id="loadingOverlay">
-    <div class="loading-logo">⚡</div>
+    <div class="loading-logo">
+      <svg width="48" height="48" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="13" cy="13" r="11" stroke="rgba(255,122,69,0.35)" stroke-width="1.5"/>
+        <path d="M15 4L9 14h5l-3 8 9-11h-5.5L15 4Z" fill="url(#lg)"/>
+        <defs><linearGradient id="lg" x1="9" y1="4" x2="18" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#ff7a45"/><stop offset="1" stop-color="#e63946"/></linearGradient></defs>
+      </svg>
+    </div>
     <div class="loading-title">הפוגע</div>
     <div class="loading-sub">מחפש משחקים ב-Winner...</div>
     <div class="progress-track">
@@ -1630,7 +1637,14 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="mark">1.7</div>
+        <div class="mark">
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Soccer ball stylized hit/strike icon -->
+            <circle cx="13" cy="13" r="11" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+            <!-- Lightning bolt — the "hit" -->
+            <path d="M15 4L9 14h5l-3 8 9-11h-5.5L15 4Z" fill="white"/>
+          </svg>
+        </div>
         <div>
           <h1>הפוגע</h1>
           <p>מנוע יחסים מבוסס Winner</p>
@@ -1684,7 +1698,7 @@
     <section class="toolbar panel">
       <div class="field">
         <label for="search">חיפוש קבוצה, ליגה או שוק</label>
-        <input id="search" type="search" placeholder="לדוגמה: ליגת Winner סל, פולנית, NBA" />
+        <input id="search" type="search" placeholder="לדוגמה: ליגת Winner סל, פולנית, NBA" autocomplete="off" />
       </div>
       <div class="field">
         <label for="sort">מיון</label>
@@ -3018,7 +3032,7 @@
             ${loading ? renderAiThinking() : ""}
           </div>
           <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:4px">
-            <textarea id="reubenInput" placeholder="כתוב משחק: קבוצה א' נגד קבוצה ב', היום / מחר" style="min-height:72px;resize:vertical" ${loading ? "disabled" : ""}></textarea>
+            <textarea id="reubenInput" placeholder="כתוב משחק: קבוצה א' נגד קבוצה ב', היום / מחר" style="min-height:72px;resize:vertical" autocomplete="off" spellcheck="false" ${loading ? "disabled" : ""}></textarea>
             <button class="open-game" type="button" id="reubenAnalyze" style="align-self:end;min-width:80px" ${loading ? "disabled style='opacity:.5'" : ""}>${loading ? "⏳" : "שלח ←"}</button>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
