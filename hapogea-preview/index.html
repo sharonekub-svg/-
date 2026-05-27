@@ -1355,13 +1355,6 @@
       0%, 100% { opacity: .45; transform: translateY(0); }
       45% { opacity: 1; transform: translateY(-1px); }
     }
-    .history-rate { justify-content: space-between; flex-wrap: wrap; }
-    .history-counts {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
     .sport-section {
       display: grid;
       gap: 10px;
@@ -1403,132 +1396,8 @@
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 12px;
     }
-    .progress-section {
-      display: grid;
-      gap: 12px;
-      margin-top: 18px;
-    }
-    .progress-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 10px;
-    }
-    .progress-item {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 10px;
-      align-items: center;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.025);
-      padding: 10px;
-      min-width: 0;
-    }
-    .progress-main {
-      min-width: 0;
-      display: grid;
-      gap: 3px;
-    }
-    .progress-main b,
-    .progress-main span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .daily-stats-section {
-      display: grid;
-      gap: 12px;
-      margin-top: 18px;
-    }
-    .daily-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .daily-stat-card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.035);
-      padding: 12px;
-      min-height: 80px;
-    }
-    .daily-stat-card b {
-      display: block;
-      color: #fff;
-      font-size: 24px;
-      font-variant-numeric: tabular-nums;
-    }
-    .daily-stat-card span {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 900;
-    }
-    .daily-filters {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.025);
-      border-radius: 8px;
-      padding: 10px;
-    }
-    .daily-filters select,
-    .daily-filters input {
-      width: 100%;
-      border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,.04);
-      color: var(--text);
-      border-radius: 7px;
-      padding: 10px;
-      outline: none;
-    }
-    .daily-table { display: grid; gap: 7px; }
-    .daily-row {
-      display: grid;
-      grid-template-columns: 105px 1fr 105px 90px 88px;
-      gap: 8px;
-      align-items: center;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.03);
-      padding: 10px;
-      font-size: 12px;
-    }
-    .daily-row.head {
-      color: var(--muted);
-      font-weight: 900;
-      background: rgba(255,255,255,.045);
-    }
-    .daily-row b { color: #fff; }
-    .daily-status {
-      display: inline-flex;
-      justify-content: center;
-      border-radius: 6px;
-      padding: 6px 8px;
-      font-weight: 900;
-      white-space: nowrap;
-    }
-    .daily-status.won { background: rgba(49,209,135,.16); color: #bff8dc; border: 1px solid rgba(49,209,135,.35); }
-    .daily-status.lost { background: rgba(239,83,80,.13); color: #ffc7c5; border: 1px solid rgba(239,83,80,.35); }
-    .daily-status.pending { background: rgba(255,200,87,.12); color: #ffe3a0; border: 1px solid rgba(255,200,87,.30); }
-    .daily-status.cancelled,
-    .daily-status.unknown { background: rgba(255,255,255,.07); color: var(--muted); border: 1px solid var(--line); }
-    .daily-report {
-      white-space: pre-wrap;
-      border: 1px solid rgba(85,214,255,.18);
-      background: rgba(85,214,255,.055);
-      color: var(--muted);
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 12px;
-      line-height: 1.6;
-    }
     @media (max-width: 620px) {
       .cards { grid-template-columns: 1fr; }
-      .progress-grid { grid-template-columns: 1fr; }
-      .daily-stats-grid,
-      .daily-filters { grid-template-columns: 1fr; }
-      .daily-row { grid-template-columns: 1fr; }
       .card-head, .card-body { padding: 10px; }
       .pick-summary, .result-line { grid-template-columns: 1fr; }
       .odds-box, .result-score { width: 100%; }
@@ -3125,41 +2994,6 @@
       `).join("") : `<div class="empty">No debug rows for this tab.</div>`;
     }
 
-    function progressRows() {
-      if (!state.feed?.tabs) return [];
-      return ["yesterday", "today", "tomorrow"].flatMap(dayKey => {
-        const tab = state.feed.tabs[dayKey];
-        return ["football", "basketball"].flatMap(sportKey =>
-          (tab?.sports?.[sportKey] || []).map(row => ({ ...row, progressDayLabel: tab?.label || dayKey, progressSportKey: sportKey }))
-        );
-      });
-    }
-
-    function progressStatus(row) {
-      if (row.matchPhase === "final") return "Finished";
-      if (row.matchPhase === "live") return "Live";
-      if (row.matchPhase === "ht") return "HT";
-      if (String(row.bettingStatus || "").includes("cancelled")) return "Cancelled";
-      if (String(row.bettingStatus || "").includes("postponed")) return "Postponed";
-      return "Upcoming";
-    }
-
-    function progressResult(row) {
-      const outcome = rowOutcome(row);
-      if (outcome.key === "hit") return "התאימה";
-      if (outcome.key === "miss") return "לא התאימה";
-      if (outcome.key === "void" || outcome.key === "unverified" || outcome.key === "closed") return "לא נספר";
-      return "—";
-    }
-
-    function dailyStatusLabel(status) {
-      if (status === "won") return "נתפס";
-      if (status === "lost") return "נפל";
-      if (status === "cancelled") return "בוטל";
-      if (status === "unknown") return "לא ידוע";
-      return "ממתין";
-    }
-
     function predictionStatusInfo(value) {
       const raw = String(value || "").trim();
       if (raw === "hit" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "תחזית התאימה", cls: "hit" };
@@ -3834,7 +3668,6 @@
         showRefreshBar(false);
         render();
         scheduleRefresh(state.feed);
-        loadDailyStats();
       }
     }
     document.addEventListener("visibilitychange", () => {
