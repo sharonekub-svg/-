@@ -43027,7 +43027,7 @@
             },
             "recommendationScore": 94,
             "nichePick": true,
-            "recommended": true,
+            "recommended": false,
             "recommendationReason": "top-20",
             "riskLevel": "נמוך",
             "homeAsset": {
@@ -43476,7 +43476,7 @@
             },
             "recommendationScore": 94,
             "nichePick": true,
-            "recommended": true,
+            "recommended": false,
             "recommendationReason": "top-20",
             "riskLevel": "נמוך",
             "homeAsset": {
@@ -44382,7 +44382,7 @@
             },
             "recommendationScore": 94,
             "nichePick": true,
-            "recommended": true,
+            "recommended": false,
             "recommendationReason": "top-20",
             "riskLevel": "נמוך",
             "homeAsset": {
