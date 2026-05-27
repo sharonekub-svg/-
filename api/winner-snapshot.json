@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-05-28T05:00:00.000Z",
+  "generatedAt": "2026-05-28T00:17:00.000Z",
   "serverVersion": "1779810504868",
   "oddsRange": {
     "min": 1.4,
@@ -39061,7 +39061,7 @@
   "tabs": {
     "yesterday": {
       "label": "אתמול",
-      "date": "2026-05-26",
+      "date": "2026-05-27",
       "sports": {
         "football": [
           {
@@ -58716,7 +58716,7 @@
     },
     "today": {
       "label": "היום",
-      "date": "2026-05-27",
+      "date": "2026-05-28",
       "sports": {
         "football": [
           {
@@ -78371,7 +78371,7 @@
     },
     "tomorrow": {
       "label": "מחר",
-      "date": "2026-05-28",
+      "date": "2026-05-29",
       "sports": {
         "football": [
           {
