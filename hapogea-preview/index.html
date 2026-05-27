@@ -64,12 +64,11 @@
       height: 44px;
       display: grid;
       place-items: center;
-      border-radius: 10px;
-      background: linear-gradient(145deg, #ff7a45 0%, #e63946 100%);
-      color: white;
-      font-weight: 900;
-      box-shadow: 0 6px 20px rgba(230,57,70,.4), 0 0 0 1px rgba(255,255,255,.08);
+      border-radius: 50%;
+      background: transparent;
+      padding: 0;
       flex: 0 0 auto;
+      filter: drop-shadow(0 0 8px rgba(85,214,255,.35)) drop-shadow(0 0 4px rgba(230,57,70,.3));
     }
     h1, h2, h3, h4, p { margin-top: 0; }
     .brand h1 { margin: 0; font: 900 27px/1 Heebo, Assistant, sans-serif; }
@@ -1487,19 +1486,40 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="mark">
-          <!-- הפוגע logo: bullet hitting target with neon ring -->
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <!-- outer ring (neon red) -->
-            <circle cx="14" cy="14" r="12" stroke="#e63946" stroke-width="1.2" stroke-opacity=".6"/>
-            <!-- target rings -->
-            <circle cx="14" cy="14" r="8" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
-            <circle cx="14" cy="14" r="4.5" fill="#e63946" fill-opacity=".35"/>
-            <!-- bullet/missile flying top-right to center -->
-            <path d="M20 6 L14.5 13.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M20 6 L18 9 L15.5 8 Z" fill="white"/>
+        <div class="mark" id="siteLogo">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="הפוגע">
+            <defs>
+              <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#1a2a3a"/>
+                <stop offset="100%" stop-color="#0d1820"/>
+              </radialGradient>
+              <linearGradient id="bulletGrad" x1="28" y1="8" x2="18" y2="22" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#85cfff"/>
+                <stop offset="100%" stop-color="#4a9fd4"/>
+              </linearGradient>
+            </defs>
+            <!-- background circle -->
+            <circle cx="22" cy="22" r="21" fill="url(#bgGrad)"/>
+            <!-- neon outer ring blue -->
+            <circle cx="22" cy="22" r="20.5" stroke="#55d6ff" stroke-width="0.8" stroke-opacity=".7"/>
+            <!-- neon inner ring red -->
+            <circle cx="22" cy="22" r="18.5" stroke="#e63946" stroke-width="0.7" stroke-opacity=".55"/>
+            <!-- target: outer -->
+            <circle cx="20" cy="22" r="11" stroke="#e63946" stroke-width="1.8" stroke-opacity=".5" fill="none"/>
+            <!-- target: mid -->
+            <circle cx="20" cy="22" r="7" stroke="#e63946" stroke-width="1.6" stroke-opacity=".65" fill="none"/>
+            <!-- target: inner -->
+            <circle cx="20" cy="22" r="3.5" fill="#e63946" fill-opacity=".8"/>
+            <!-- bullet body -->
+            <rect x="22" y="10" width="5.5" height="11" rx="2.5" fill="url(#bulletGrad)" transform="rotate(-42 22 10)"/>
+            <!-- bullet tip -->
+            <path d="M30 8 L33 12 L28.5 13.5 Z" fill="#c8e8ff"/>
             <!-- impact sparks -->
-            <circle cx="14" cy="14" r="1.8" fill="white"/>
+            <line x1="19" y1="22" x2="17" y2="19" stroke="white" stroke-width=".9" stroke-opacity=".8"/>
+            <line x1="21" y1="21" x2="23" y2="18" stroke="white" stroke-width=".9" stroke-opacity=".6"/>
+            <line x1="20" y1="23" x2="17" y2="25" stroke="white" stroke-width=".8" stroke-opacity=".7"/>
+            <line x1="21" y1="23" x2="23" y2="26" stroke="white" stroke-width=".8" stroke-opacity=".5"/>
+            <circle cx="20" cy="22" r="1.2" fill="white" fill-opacity=".9"/>
           </svg>
         </div>
         <div>
