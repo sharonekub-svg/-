@@ -2666,10 +2666,12 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
   try {
     payload = await buildWinnerFeedPayload({ withLogos: true });
   } catch (winnerError) {
+    console.error("[winner-feed] buildWinnerFeedPayload threw:", winnerError?.message, winnerError?.stack?.split("\n")[1]);
     // Winner blocked — try The Odds API before falling back to a local snapshot.
     try {
       payload = await buildOddsApiFeed();
     } catch (oddsError) {
+      console.error("[winner-feed] buildOddsApiFeed also threw:", oddsError?.message);
       const snapshotNorm1 = normalizeFallbackRows(SNAPSHOT);
       const snapshot = payloadMatchesIsraelDates(snapshotNorm1)
         ? snapshotNorm1
