@@ -1057,25 +1057,6 @@
       font-size: 11px; font-weight: 900;
     }
 
-    /* ── Results history section ── */
-    .history-section { margin-top: 22px; }
-    .history-rate {
-      display: flex; align-items: center; gap: 14px;
-      background: rgba(255,255,255,.03); border: 1px solid var(--line);
-      border-radius: 8px; padding: 12px 16px; margin-bottom: 12px;
-    }
-    .history-rate b { font-size: 24px; color: var(--green); }
-    .history-rate span { color: var(--muted); font-size: 12px; font-weight: 800; }
-    .history-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 8px; }
-    .history-item {
-      display: grid; grid-template-columns: auto 1fr auto; gap: 8px;
-      align-items: center; border: 1px solid var(--line); border-radius: 8px;
-      padding: 10px 12px; background: rgba(255,255,255,.02); font-size: 13px;
-    }
-    .history-item.hit  { border-color: rgba(49,209,135,.28); background: rgba(49,209,135,.05); }
-    .history-item.miss { border-color: rgba(239,83,80,.25);  background: rgba(239,83,80,.04); }
-    .h-pick { color: var(--muted); font-size: 11px; margin-top: 2px; }
-
     /* Cleaner prediction cards */
     .cards { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
     .card {
@@ -1727,12 +1708,6 @@
       </section>
     </section>
 
-    <section class="history-section shell" id="historySection" style="display:none"></section>
-
-    <section class="history-section shell progress-section" id="progressSection" style="display:none"></section>
-
-    <section class="history-section shell daily-stats-section" id="dailyStatsSection" style="display:none"></section>
-
     <section class="panel debug-panel" id="debugPanel">
       <div class="section-title">
         <div>
@@ -1778,9 +1753,6 @@
       reubenCandidates: [],
       reubenLastQuery: "",
       reubenLoading: false,
-      dailyStats: null,
-      dailyStatsLoading: false,
-      dailyFilters: { date: "", sport: "all", type: "all", status: "all" },
       debugMode: location.pathname.includes("debug")
     };
     let lastLoadTime = 0;
@@ -3180,169 +3152,12 @@
       return "—";
     }
 
-    function renderProgressBoard() {
-      const target = document.getElementById("progressSection");
-      if (!target) return;
-      const rows = progressRows();
-      if (!rows.length) {
-        target.style.display = "";
-        target.innerHTML = `<div class="empty">No games loaded yet. Refresh Winner data and try again.</div>`;
-        return;
-      }
-      target.style.display = "";
-      target.innerHTML = `
-        <div class="section-title">
-          <div>
-            <h3>Progress Bar</h3>
-            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">Yesterday, today and tomorrow · football and basketball · all loaded games.</p>
-          </div>
-          <span class="pill">${rows.length} games</span>
-        </div>
-        <div class="progress-grid">
-          ${rows.map(row => `
-            <div class="progress-item">
-              <span class="sport-icon">${sportIcon(row)}</span>
-              <div class="progress-main">
-                <span class="micro">${row.progressDayLabel || row.day} · ${row.sport || ""} · ${row.league || ""}</span>
-                <b>${escapeHtml(row.match || `${row.home || ""} - ${row.away || ""}`)}</b>
-                <span class="micro">${progressStatus(row)}${row.liveScore || row.result ? ` · ${escapeHtml(row.liveScore || row.result)}` : ""}</span>
-              </div>
-              <span class="badge ${progressResult(row) === "התאימה" ? "badge-won" : progressResult(row) === "לא התאימה" ? "badge-lost" : "badge-pending"}">${progressResult(row)}</span>
-            </div>
-          `).join("")}
-        </div>
-      `;
-    }
-
     function dailyStatusLabel(status) {
       if (status === "won") return "נתפס";
       if (status === "lost") return "נפל";
       if (status === "cancelled") return "בוטל";
       if (status === "unknown") return "לא ידוע";
       return "ממתין";
-    }
-
-    function dailyStatsReport(stats, rows) {
-      const won = rows.filter(row => row.status === "won").slice(0, 8);
-      const lost = rows.filter(row => row.status === "lost").slice(0, 8);
-      const pending = rows.filter(row => row.status === "pending").slice(0, 8);
-      const line = row => `- ${row.match_name} — ניתוח: ${row.algorithm_pick || row.pick_team || "לא זמין"} — תוצאה: ${row.result || "אין עדיין"}`;
-      return [
-        `סיכום יומי - ${stats.stat_date}`,
-        `סה"כ המלצות: ${stats.total}`,
-        `נתפסו: ${stats.won}`,
-        `נפלו: ${stats.lost}`,
-        `ממתינים: ${stats.pending}`,
-        `אחוז הצלחה: ${stats.success_rate}%`,
-        `יחס ממוצע: ${Number(stats.average_odds || 0).toFixed(2)}`,
-        `רווח תאורטי לפי 100₪ למשחק: ${Number(stats.theoretical_profit_ils || 0) >= 0 ? "+" : ""}${stats.theoretical_profit_ils || 0}₪`,
-        "",
-        "משחקים שנתפסו:",
-        ...(won.length ? won.map(line) : ["- אין"]),
-        "",
-        "משחקים שנפלו:",
-        ...(lost.length ? lost.map(line) : ["- אין"]),
-        "",
-        "ממתינים:",
-        ...(pending.length ? pending.map(line) : ["- אין"]),
-      ].join("\n");
-    }
-
-    function renderDailyStats() {
-      const target = document.getElementById("dailyStatsSection");
-      if (!target) return;
-      const data = state.dailyStats;
-      target.style.display = "";
-      if (state.dailyStatsLoading && !data) {
-        target.innerHTML = `<div class="empty">טוען סטטיסטיקה יומית...</div>`;
-        return;
-      }
-      if (!data?.ok) {
-        target.innerHTML = `
-          <div class="section-title">
-            <div>
-              <h3>Daily Stats / סטטיסטיקה יומית</h3>
-              <p>הבוט עדיין לא שמר נתונים. הוא יתחיל לשמור המלצות מהרצת ה-cron הבאה.</p>
-            </div>
-            <span class="pill">Recommendation Bot</span>
-          </div>
-        `;
-        return;
-      }
-      const filters = state.dailyFilters;
-      const dates = data.dailyStats || [];
-      const selectedDate = filters.date || data.today || dates[0]?.stat_date || "";
-      state.dailyFilters.date = selectedDate;
-      const stat = dates.find(item => item.stat_date === selectedDate) || {
-        stat_date: selectedDate,
-        total: 0,
-        won: 0,
-        lost: 0,
-        pending: 0,
-        success_rate: 0,
-        average_odds: 0,
-        theoretical_profit_ils: 0,
-      };
-      const rows = (data.recommendations || []).filter(row => {
-        if (selectedDate && row.match_date !== selectedDate) return false;
-        if (filters.sport !== "all" && row.sport !== filters.sport) return false;
-        if (filters.type !== "all" && row.recommendation_type !== filters.type) return false;
-        if (filters.status !== "all" && row.status !== filters.status) return false;
-        return true;
-      });
-      target.innerHTML = `
-        <div class="section-title">
-          <div>
-            <h3>Daily Stats / סטטיסטיקה יומית</h3>
-            <p>מעקב שרת אחרי המלצות האלגוריתם, תוצאות סופיות ודוח יומי לפי Asia/Jerusalem. מקור אחסון: ${escapeHtml(data.mode || "db")}.</p>
-          </div>
-          <span class="pill">${rows.length} משחקים בטבלה</span>
-        </div>
-        <div class="daily-stats-grid">
-          <div class="daily-stat-card"><b>${stat.total || 0}</b><span>סה"כ המלצות</span></div>
-          <div class="daily-stat-card"><b>${stat.won || 0}</b><span>נתפסו</span></div>
-          <div class="daily-stat-card"><b>${stat.lost || 0}</b><span>נפלו</span></div>
-          <div class="daily-stat-card"><b>${stat.success_rate || 0}%</b><span>אחוז הצלחה</span></div>
-          <div class="daily-stat-card"><b>${Number(stat.average_odds || 0).toFixed(2)}</b><span>יחס ממוצע</span></div>
-          <div class="daily-stat-card"><b>${Number(stat.theoretical_profit_ils || 0) >= 0 ? "+" : ""}${stat.theoretical_profit_ils || 0}₪</b><span>רווח תאורטי 100₪</span></div>
-          <div class="daily-stat-card"><b>${stat.pending || 0}</b><span>ממתינים</span></div>
-          <div class="daily-stat-card"><b>${stat.cancelled || stat.unknown || 0}</b><span>בוטלו / לא ידוע</span></div>
-        </div>
-        <div class="daily-filters">
-          <select data-daily-filter="date">${dates.map(item => `<option value="${item.stat_date}" ${item.stat_date === selectedDate ? "selected" : ""}>${item.stat_date}</option>`).join("")}</select>
-          <select data-daily-filter="sport">
-            <option value="all" ${filters.sport === "all" ? "selected" : ""}>כל הספורטים</option>
-            <option value="football" ${filters.sport === "football" ? "selected" : ""}>כדורגל</option>
-            <option value="basketball" ${filters.sport === "basketball" ? "selected" : ""}>כדורסל</option>
-          </select>
-          <select data-daily-filter="type">
-            <option value="all" ${filters.type === "all" ? "selected" : ""}>פרימיום + רגיל</option>
-            <option value="premium" ${filters.type === "premium" ? "selected" : ""}>פרימיום</option>
-            <option value="regular" ${filters.type === "regular" ? "selected" : ""}>רגיל</option>
-          </select>
-          <select data-daily-filter="status">
-            <option value="all" ${filters.status === "all" ? "selected" : ""}>כל הסטטוסים</option>
-            <option value="won" ${filters.status === "won" ? "selected" : ""}>נתפס</option>
-            <option value="lost" ${filters.status === "lost" ? "selected" : ""}>נפל</option>
-            <option value="pending" ${filters.status === "pending" ? "selected" : ""}>ממתין</option>
-            <option value="cancelled" ${filters.status === "cancelled" ? "selected" : ""}>בוטל</option>
-            <option value="unknown" ${filters.status === "unknown" ? "selected" : ""}>לא ידוע</option>
-          </select>
-        </div>
-        <div class="daily-table">
-          <div class="daily-row head"><span>תאריך/שעה</span><span>משחק</span><span>ניתוח</span><span>יחס</span><span>סטטוס</span></div>
-          ${rows.length ? rows.map(row => `
-            <div class="daily-row">
-              <span>${row.match_date || ""}<br>${row.kickoff_time || ""}</span>
-              <span><b>${escapeHtml(row.match_name || "")}</b><br><span class="micro">${escapeHtml(row.sport || "")} · ${escapeHtml(row.league || "")} · ${escapeHtml(row.recommendation_type || "")}</span></span>
-              <span>${escapeHtml(row.algorithm_pick || row.pick_team || "")}</span>
-              <span>${formatOdds(row.odds_at_recommendation)}</span>
-              <span class="daily-status ${row.status || "pending"}">${dailyStatusLabel(row.status)}</span>
-            </div>
-          `).join("") : `<div class="empty">אין משחקים לפילטר הנוכחי.</div>`}
-        </div>
-        <div class="daily-report">${escapeHtml(dailyStatsReport(stat, rows))}</div>
-      `;
     }
 
     function predictionStatusInfo(value) {
@@ -3708,54 +3523,6 @@
       `;
     }
 
-    function renderHistory() {
-      const target = document.getElementById("historySection");
-      if (!target) return;
-      const perf = monthlyPerformance();
-      const tracker = readTracker();
-      const items = tracker
-        .filter(item => (item.settledMonth || item.month || String(item.predictedDay || "").slice(0, 7)) === perf.month)
-        .sort((a, b) => String(b.resultVerifiedAt || b.settledDay || b.predictedDay || "").localeCompare(String(a.resultVerifiedAt || a.settledDay || a.predictedDay || "")));
-      if (!items.length) { target.style.display = "none"; return; }
-      target.style.display = "";
-      const rateText = perf.settled ? `${perf.hitRate}% — ${perf.hits}/${perf.settled} משחקים מאומתים` : "אין משחקים מאומתים עדיין";
-      const roiText = perf.settled ? `${perf.roiUnits >= 0 ? "+" : ""}${perf.roiUnits.toFixed(2)} יחידות (${perf.roiPercent >= 0 ? "+" : ""}${perf.roiPercent}%)` : "אין ROI מחושב עדיין";
-      target.innerHTML = `
-        <div class="section-title">
-          <div>
-            <h3>היסטוריית בדיקת תחזיות</h3>
-            <p style="margin:4px 0 0;color:var(--muted);font-size:13px">נוסחה: תחזיות שהתאימו / תחזיות מאומתות. ממתין, בוטל ולא אומת לא נספרים בדיוק.</p>
-          </div>
-        </div>
-        <div class="history-rate">
-          <b>${rateText}</b>
-          <span style="color:var(--muted);font-size:13px">מדד יחסי פנימי: ${roiText}</span>
-          <div class="history-counts">
-            <span class="badge badge-won">התאימו ${perf.hits}</span>
-            <span class="badge badge-lost">לא התאימו ${perf.misses}</span>
-            <span class="badge badge-pending">ממתין ${perf.pending}</span>
-            <span class="badge badge-unverified">בוטל/לא אומת ${perf.voided}</span>
-          </div>
-        </div>
-        <div class="history-grid">
-          ${items.map(item => {
-            const info = predictionStatusInfo(item.status);
-            const badgeClass = info.cls === "hit" ? "badge-won" : info.cls === "miss" ? "badge-lost" : info.cls === "unverified" ? "badge-unverified" : "badge-pending";
-            return `
-              <div class="history-item ${info.cls === "hit" ? "hit" : info.cls === "miss" ? "miss" : ""}">
-                <span class="badge ${badgeClass}">${info.label}</span>
-                <div>
-                  <div style="font-weight:800;font-size:12px">${escapeHtml(item.match || "")}</div>
-                  <div class="h-pick">צד שנבדק: ${escapeHtml(item.pick || "")} · יחס ${item.odds ? formatOdds(item.odds) : "—"}</div>
-                  <div class="h-pick">תוצאה: ${escapeHtml(item.result || item.actualWinner || "ממתין לאימות")}</div>
-                </div>
-                <div style="font-size:10px;color:var(--soft)">${item.settledDay || item.predictedDay || ""}</div>
-              </div>`;
-          }).join("")}
-        </div>
-      `;
-    }
-
     // ── Client-side logo loader ───────────────────────────────────────────────
     // Server-side (winner-feed.js) already seeds 365Scores logo URLs into the
     // feed JSON. Remaining placeholder logos are upgraded through /api/logo,
@@ -3826,9 +3593,6 @@
       renderWorldCup();
       renderDaily();
       renderCards();
-      renderHistory();
-      renderProgressBoard();
-      renderDailyStats();
       renderDebug();
       applyLogosToCards();
     }
@@ -3942,22 +3706,6 @@
 
     function loadFeedThrottled() {
       if (Date.now() - lastLoadTime > 60 * 1000) loadFeed();
-    }
-
-    async function loadDailyStats() {
-      state.dailyStatsLoading = true;
-      try {
-        const response = await fetch(`/api/recommendation-stats?ts=${Date.now()}`);
-        const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.detail || data.error || "טעינת סטטיסטיקה נכשלה");
-        state.dailyStats = data;
-        if (!state.dailyFilters.date) state.dailyFilters.date = data.today || data.dailyStats?.[0]?.stat_date || "";
-      } catch (error) {
-        state.dailyStats = state.dailyStats || { ok: false, error: error.message };
-      } finally {
-        state.dailyStatsLoading = false;
-        renderDailyStats();
-      }
     }
 
     function israelDayString(date = new Date()) {
@@ -4115,12 +3863,6 @@
       renderCards();
     });
     document.getElementById("refresh").addEventListener("click", loadFeed);
-    document.getElementById("dailyStatsSection").addEventListener("change", event => {
-      const field = event.target.closest("[data-daily-filter]");
-      if (!field) return;
-      state.dailyFilters[field.dataset.dailyFilter] = field.value;
-      renderDailyStats();
-    });
     document.getElementById("worldCupSection").addEventListener("click", event => {
       if (event.target.closest("[data-wc-close]")) {
         state.wcOpen = false;
