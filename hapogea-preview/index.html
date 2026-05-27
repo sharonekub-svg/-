@@ -2183,14 +2183,8 @@
       };
       const football = sortRows(filterRows(daySportRows(state.day, "football")));
       const basketball = sortRows(filterRows(daySportRows(state.day, "basketball")));
-      if (isYesterday) return { football, basketball };
-      const top = sortRows([...football, ...basketball]).slice(0, 20);
-      const topIds = new Set(top.map(row => row.id || `${row.eventId}:${row.marketId}:${row.outcomeId}`));
-      const inTop = row => topIds.has(row.id || `${row.eventId}:${row.marketId}:${row.outcomeId}`);
-      return {
-        football: football.filter(inTop),
-        basketball: basketball.filter(inTop),
-      };
+      // Each sport is already capped at 20 by the server — no combined cap here
+      return { football, basketball };
     }
 
     function sortRows(rows) {
