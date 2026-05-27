@@ -553,6 +553,37 @@
       font-size: 13px;
     }
     .outcome-row strong { color: var(--gold); }
+    .premium-lock-wrap { position: relative; }
+    .premium-lock-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: rgba(6,19,26,.82);
+      backdrop-filter: blur(6px);
+      border-radius: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .premium-lock-overlay .lock-icon { font-size: 28px; }
+    .premium-lock-overlay .lock-label {
+      font: 800 13px/1.3 Heebo,sans-serif;
+      color: rgba(255,255,255,.8);
+      text-align: center;
+    }
+    .premium-lock-overlay .lock-btn {
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: none;
+      background: linear-gradient(135deg, #55d6ff, #2196f3);
+      color: #06131a;
+      font: 800 12px/1 Heebo,sans-serif;
+      cursor: pointer;
+    }
+    .hidden { display: none !important; }
     .empty, .error {
       border: 1px dashed var(--line-strong);
       border-radius: 8px;
@@ -1537,6 +1568,10 @@
         <button class="tab" data-sport-tab="basketball">כדורסל</button>
         <button class="tab" data-sport-tab="reuben">הפוגע AI</button>
       </nav>
+      <button id="premiumHeaderBtn" onclick="isPremiumUser() ? deactivatePremium() : openPremiumModal()"
+        style="padding:6px 14px;border-radius:20px;border:none;background:linear-gradient(135deg,#55d6ff,#2196f3);color:#06131a;font:800 12px Heebo,sans-serif;cursor:pointer;white-space:nowrap">
+        🔒 פרימיום
+      </button>
     </div>
   </header>
 
@@ -1631,6 +1666,32 @@
   </div>
 
   <script>
+    const PREMIUM_LS_KEY = 'hapogea_premium_v2';
+    const PREMIUM_CODE   = 'HIT2026';
+    function isPremiumUser() { return localStorage.getItem(PREMIUM_LS_KEY) === 'active'; }
+    function activatePremium(code) {
+      if (code.trim().toUpperCase() === PREMIUM_CODE) {
+        localStorage.setItem(PREMIUM_LS_KEY, 'active');
+        state.isPremium = true;
+        render();
+        closePremiumModal();
+        return true;
+      }
+      return false;
+    }
+    function deactivatePremium() {
+      localStorage.removeItem(PREMIUM_LS_KEY);
+      state.isPremium = false;
+      state.reubenFreeUsed = 0;
+      render();
+    }
+    function openPremiumModal() {
+      document.getElementById('premiumModal').classList.remove('hidden');
+    }
+    function closePremiumModal() {
+      document.getElementById('premiumModal').classList.add('hidden');
+    }
+
     const TRACK_KEY = "hapogea_prediction_tracker_today_v1";
     const state = {
       feed: null,
@@ -1649,7 +1710,9 @@
       reubenCandidates: [],
       reubenLastQuery: "",
       reubenLoading: false,
-      debugMode: location.pathname.includes("debug")
+      debugMode: location.pathname.includes("debug"),
+      isPremium: localStorage.getItem('hapogea_premium_v2') === 'active',
+      reubenFreeUsed: 0
     };
     let lastLoadTime = 0;
     document.body.classList.toggle("debug-mode", state.debugMode);
@@ -2976,6 +3039,28 @@
       cards.innerHTML = banners + (rows.length
         ? rows.map(rowCard).join("")
         : `<div class="empty">${isOpenDay() ? "No valid games today that match the criteria." : "No finished games loaded for this date."}</div>`);
+
+      // Premium lock: blur/overlay all cards beyond the first for free users
+      if (!state.isPremium) {
+        const allCards = cards.querySelectorAll('article.card');
+        allCards.forEach((card, i) => {
+          if (i === 0) return; // first card is free
+          card.style.position = 'relative';
+          card.style.overflow = 'hidden';
+          if (!card.querySelector('.premium-lock-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.className = 'premium-lock-overlay';
+            overlay.innerHTML = '<span class="lock-icon">🔒</span><span class="lock-label">זמין למנויי פרימיום</span><button class="lock-btn" onclick="openPremiumModal()">קנה פרימיום</button>';
+            card.appendChild(overlay);
+          }
+        });
+        if (allCards.length > 1) {
+          const banner = document.createElement('div');
+          banner.style.cssText = 'text-align:center;padding:20px;color:rgba(255,255,255,.5);font-size:13px;font-weight:800';
+          banner.innerHTML = `🔒 ${allCards.length - 1} ניתוחים נוספים זמינים בפרימיום — <button onclick="openPremiumModal()" style="background:none;border:none;color:#55d6ff;cursor:pointer;font:800 13px Heebo,sans-serif;text-decoration:underline">פתח גישה</button>`;
+          cards.appendChild(banner);
+        }
+      }
     }
 
     function debugRows() {
@@ -3704,6 +3789,10 @@
 
     document.querySelectorAll("#dayTabs .tab").forEach(button => {
       button.addEventListener("click", () => {
+        if (button.dataset.day === 'tomorrow' && !state.isPremium) {
+          openPremiumModal();
+          return;
+        }
         state.day = button.dataset.day;
         render();
       });
@@ -3812,6 +3901,9 @@
           state.reubenThinkingStep = 0;
           state.reubenMessages.push({ role: "ai", text: analyzeReubenBet(question) });
           state.reubenLoading = false;
+          if (!state.isPremium) {
+            state.reubenFreeUsed = (state.reubenFreeUsed || 0) + 1;
+          }
           renderCards();
           scrollReuvenOutput();
         })();
