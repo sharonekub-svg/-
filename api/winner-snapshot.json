@@ -60534,865 +60534,6 @@
         ],
         "basketball": [
           {
-            "id": "winner-10480700",
-            "eventId": "10480700",
-            "source": "Winner",
-            "verifiedAt": "2026-05-26T15:49:12.093Z",
-            "bettingStatus": "available",
-            "day": "2026-05-28",
-            "time": "19:59",
-            "sport": "כדורסל",
-            "sportId": 227,
-            "league": "צרפתית ראשונה",
-            "country": "צרפת",
-            "match": "ליון וילרבאן - שולה",
-            "home": "ליון וילרבאן",
-            "away": "שולה",
-            "resultKey": "227:2026-05-28:ליון וילרבאן:שולה",
-            "market": "הימור יתרון - כולל הארכות אם יהיו",
-            "marketTier": "spread",
-            "isAlternativeMarket": false,
-            "marketId": 37140359,
-            "outcomeId": 339205173,
-            "pick": "שולה (+7.5)",
-            "pickTeam": "שולה",
-            "spread": 7.5,
-            "winnerPick": "שולה (+7.5)",
-            "odds": 1.6,
-            "oddsRaw": 1.6,
-            "outsideRange": false,
-            "oddsBook": {
-              "home": {
-                "desc": "ליון וילרבאן (-7.5)",
-                "team": "ליון וילרבאן",
-                "spread": -7.5,
-                "odds": 1.7,
-                "implied": 0.5882352941176471,
-                "noVigProbability": 0.4848484848484848
-              },
-              "draw": null,
-              "away": {
-                "desc": "שולה (+7.5)",
-                "team": "שולה",
-                "spread": 7.5,
-                "odds": 1.6,
-                "implied": 0.625,
-                "noVigProbability": 0.5151515151515151
-              },
-              "outcomes": [
-                {
-                  "desc": "ליון וילרבאן (-7.5)",
-                  "team": "ליון וילרבאן",
-                  "spread": -7.5,
-                  "odds": 1.7,
-                  "implied": 0.5882352941176471,
-                  "noVigProbability": 0.4848484848484848
-                },
-                {
-                  "desc": "שולה (+7.5)",
-                  "team": "שולה",
-                  "spread": 7.5,
-                  "odds": 1.6,
-                  "implied": 0.625,
-                  "noVigProbability": 0.5151515151515151
-                }
-              ],
-              "overround": 0.2132352941176472
-            },
-            "probability": 0.4533333333333333,
-            "normalizedProbability": 0.5151515151515151,
-            "marketGap": 0.03030303030303033,
-            "overround": 0.2132352941176472,
-            "globalAverageOdds": null,
-            "valueIndicator": null,
-            "fairOdds": 1.9411764705882353,
-            "proximityBonus": 8,
-            "score": 94,
-            "status": "ממתין",
-            "result": "",
-            "signals": [
-              "סבירות פגיעה 45 אחוז",
-              "יחס Winner 1.60",
-              "ציון משולב 94"
-            ],
-            "allMarkets": [
-              {
-                "marketId": 37140359,
-                "title": "הימור יתרון - כולל הארכות אם יהיו",
-                "category": "יתרון",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339205173,
-                  "desc": "שולה (+7.5)",
-                  "team": "שולה",
-                  "price": 1.6,
-                  "spread": 7.5,
-                  "probability": 0.55,
-                  "score": 67
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339205173,
-                    "desc": "שולה (+7.5)",
-                    "team": "שולה",
-                    "price": 1.6,
-                    "spread": 7.5,
-                    "probability": 0.55,
-                    "score": 67
-                  },
-                  {
-                    "outcomeId": 339205172,
-                    "desc": "ליון וילרבאן (-7.5)",
-                    "team": "ליון וילרבאן",
-                    "price": 1.7,
-                    "spread": -7.5,
-                    "probability": 0.5176470588235295,
-                    "score": 65
-                  }
-                ]
-              },
-              {
-                "marketId": 37140360,
-                "title": "מעל/מתחת נקודות - כולל הארכות אם יהיו",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339205170,
-                  "desc": "מעל 168.5",
-                  "team": "מעל 168.5",
-                  "price": 1.65,
-                  "spread": null,
-                  "probability": 0.5515151515151515,
-                  "score": 68
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339205170,
-                    "desc": "מעל 168.5",
-                    "team": "מעל 168.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 68
-                  },
-                  {
-                    "outcomeId": 339205171,
-                    "desc": "מתחת 168.5",
-                    "team": "מתחת 168.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 68
-                  }
-                ]
-              },
-              {
-                "marketId": 37303420,
-                "title": "הראשונה ל-20 נקודות - כולל הארכות אם יהיו",
-                "category": "שוק נוסף",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845373,
-                  "desc": "ליון וילרבאן",
-                  "team": "ליון וילרבאן",
-                  "price": 1.45,
-                  "spread": null,
-                  "probability": 0.496551724137931,
-                  "score": 61
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845373,
-                    "desc": "ליון וילרבאן",
-                    "team": "ליון וילרבאן",
-                    "price": 1.45,
-                    "spread": null,
-                    "probability": 0.496551724137931,
-                    "score": 61
-                  },
-                  {
-                    "outcomeId": 339845374,
-                    "desc": "שולה",
-                    "team": "שולה",
-                    "price": 1.9,
-                    "spread": null,
-                    "probability": 0.3789473684210526,
-                    "score": 53
-                  }
-                ]
-              },
-              {
-                "marketId": 37303422,
-                "title": "המנצח/ת - כולל הארכות אם יהיו",
-                "category": "מנצח",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845385,
-                  "desc": "ליון וילרבאן",
-                  "team": "ליון וילרבאן",
-                  "price": 1.2,
-                  "spread": null,
-                  "probability": 0.8083333333333333,
-                  "score": 86
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845385,
-                    "desc": "ליון וילרבאן",
-                    "team": "ליון וילרבאן",
-                    "price": 1.2,
-                    "spread": null,
-                    "probability": 0.8083333333333333,
-                    "score": 86
-                  },
-                  {
-                    "outcomeId": 339845386,
-                    "desc": "שולה",
-                    "team": "שולה",
-                    "price": 2.65,
-                    "spread": null,
-                    "probability": 0.36603773584905663,
-                    "score": 56
-                  }
-                ]
-              },
-              {
-                "marketId": 37303424,
-                "title": "מעל/מתחת נקודות - רבע ראשון",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845368,
-                  "desc": "מתחת 42.5",
-                  "team": "מתחת 42.5",
-                  "price": 1.6,
-                  "spread": null,
-                  "probability": 0.56875,
-                  "score": 69
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845368,
-                    "desc": "מתחת 42.5",
-                    "team": "מתחת 42.5",
-                    "price": 1.6,
-                    "spread": null,
-                    "probability": 0.56875,
-                    "score": 69
-                  },
-                  {
-                    "outcomeId": 339845367,
-                    "desc": "מעל 42.5",
-                    "team": "מעל 42.5",
-                    "price": 1.7,
-                    "spread": null,
-                    "probability": 0.5352941176470588,
-                    "score": 67
-                  }
-                ]
-              },
-              {
-                "marketId": 37303425,
-                "title": "מעל/מתחת נקודות - מחצית ראשונה",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845369,
-                  "desc": "מעל 83.5",
-                  "team": "מעל 83.5",
-                  "price": 1.6,
-                  "spread": null,
-                  "probability": 0.56875,
-                  "score": 69
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845369,
-                    "desc": "מעל 83.5",
-                    "team": "מעל 83.5",
-                    "price": 1.6,
-                    "spread": null,
-                    "probability": 0.56875,
-                    "score": 69
-                  },
-                  {
-                    "outcomeId": 339845370,
-                    "desc": "מתחת 83.5",
-                    "team": "מתחת 83.5",
-                    "price": 1.7,
-                    "spread": null,
-                    "probability": 0.5352941176470588,
-                    "score": 67
-                  }
-                ]
-              },
-              {
-                "marketId": 37303427,
-                "title": "הראשונה ל-10 נקודות - כולל הארכות אם יהיו",
-                "category": "שוק נוסף",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845371,
-                  "desc": "ליון וילרבאן",
-                  "team": "ליון וילרבאן",
-                  "price": 1.5,
-                  "spread": null,
-                  "probability": 0.48,
-                  "score": 60
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845371,
-                    "desc": "ליון וילרבאן",
-                    "team": "ליון וילרבאן",
-                    "price": 1.5,
-                    "spread": null,
-                    "probability": 0.48,
-                    "score": 60
-                  },
-                  {
-                    "outcomeId": 339845372,
-                    "desc": "שולה",
-                    "team": "שולה",
-                    "price": 1.85,
-                    "spread": null,
-                    "probability": 0.3891891891891891,
-                    "score": 53
-                  }
-                ]
-              },
-              {
-                "marketId": 37303428,
-                "title": "סל ראשון - כולל הארכות אם יהיו",
-                "category": "ראשון במשחק",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845396,
-                  "desc": "ליון וילרבאן",
-                  "team": "ליון וילרבאן",
-                  "price": 1.75,
-                  "spread": null,
-                  "probability": 0.41142857142857137,
-                  "score": 55
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845396,
-                    "desc": "ליון וילרבאן",
-                    "team": "ליון וילרבאן",
-                    "price": 1.75,
-                    "spread": null,
-                    "probability": 0.41142857142857137,
-                    "score": 55
-                  },
-                  {
-                    "outcomeId": 339845398,
-                    "desc": "שולה",
-                    "team": "שולה",
-                    "price": 1.85,
-                    "spread": null,
-                    "probability": 0.3891891891891891,
-                    "score": 53
-                  },
-                  {
-                    "outcomeId": 339845397,
-                    "desc": "קליעת עונשין",
-                    "team": "קליעת עונשין",
-                    "price": 7,
-                    "spread": null,
-                    "probability": 0.10285714285714284,
-                    "score": 34
-                  }
-                ]
-              },
-              {
-                "marketId": 37303429,
-                "title": "מחצית/סיום - ללא הארכות",
-                "category": "מחציות",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845387,
-                  "desc": "ליון וילרבאן - ליון וילרבאן",
-                  "team": "ליון וילרבאן - ליון וילרבאן",
-                  "price": 1.4,
-                  "spread": null,
-                  "probability": 0.5142857142857142,
-                  "score": 62
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845387,
-                    "desc": "ליון וילרבאן - ליון וילרבאן",
-                    "team": "ליון וילרבאן - ליון וילרבאן",
-                    "price": 1.4,
-                    "spread": null,
-                    "probability": 0.5142857142857142,
-                    "score": 62
-                  },
-                  {
-                    "outcomeId": 339845395,
-                    "desc": "שולה - שולה",
-                    "team": "שולה - שולה",
-                    "price": 3.4,
-                    "spread": null,
-                    "probability": 0.21176470588235294,
-                    "score": 41
-                  },
-                  {
-                    "outcomeId": 339845393,
-                    "desc": "שולה - ליון וילרבאן",
-                    "team": "שולה - ליון וילרבאן",
-                    "price": 3.85,
-                    "spread": null,
-                    "probability": 0.187012987012987,
-                    "score": 40
-                  },
-                  {
-                    "outcomeId": 339845389,
-                    "desc": "ליון וילרבאן - שולה",
-                    "team": "ליון וילרבאן - שולה",
-                    "price": 6.8,
-                    "spread": null,
-                    "probability": 0.10588235294117647,
-                    "score": 34
-                  },
-                  {
-                    "outcomeId": 339845391,
-                    "desc": "x - x",
-                    "team": "x - x",
-                    "price": 100,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 32
-                  },
-                  {
-                    "outcomeId": 339845392,
-                    "desc": "x - שולה",
-                    "team": "x - שולה",
-                    "price": 40,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 32
-                  },
-                  {
-                    "outcomeId": 339845394,
-                    "desc": "שולה - x",
-                    "team": "שולה - x",
-                    "price": 20,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 32
-                  },
-                  {
-                    "outcomeId": 339845388,
-                    "desc": "ליון וילרבאן - x",
-                    "team": "ליון וילרבאן - x",
-                    "price": 19,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 32
-                  },
-                  {
-                    "outcomeId": 339845390,
-                    "desc": "x - ליון וילרבאן",
-                    "team": "x - ליון וילרבאן",
-                    "price": 18,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 32
-                  }
-                ]
-              },
-              {
-                "marketId": 37303430,
-                "title": "הימור יתרון - רבע ראשון",
-                "category": "יתרון",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845375,
-                  "desc": "ליון וילרבאן (-1.5)",
-                  "team": "ליון וילרבאן",
-                  "price": 1.6,
-                  "spread": -1.5,
-                  "probability": 0.55,
-                  "score": 67
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845375,
-                    "desc": "ליון וילרבאן (-1.5)",
-                    "team": "ליון וילרבאן",
-                    "price": 1.6,
-                    "spread": -1.5,
-                    "probability": 0.55,
-                    "score": 67
-                  },
-                  {
-                    "outcomeId": 339845376,
-                    "desc": "שולה (+1.5)",
-                    "team": "שולה",
-                    "price": 1.7,
-                    "spread": 1.5,
-                    "probability": 0.5176470588235295,
-                    "score": 65
-                  }
-                ]
-              },
-              {
-                "marketId": 37303431,
-                "title": "הימור יתרון - מחצית ראשונה",
-                "category": "יתרון",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339845377,
-                  "desc": "ליון וילרבאן (-3.5)",
-                  "team": "ליון וילרבאן",
-                  "price": 1.65,
-                  "spread": -3.5,
-                  "probability": 0.5333333333333333,
-                  "score": 66
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339845377,
-                    "desc": "ליון וילרבאן (-3.5)",
-                    "team": "ליון וילרבאן",
-                    "price": 1.65,
-                    "spread": -3.5,
-                    "probability": 0.5333333333333333,
-                    "score": 66
-                  },
-                  {
-                    "outcomeId": 339845378,
-                    "desc": "שולה (+3.5)",
-                    "team": "שולה",
-                    "price": 1.65,
-                    "spread": 3.5,
-                    "probability": 0.5333333333333333,
-                    "score": 66
-                  }
-                ]
-              },
-              {
-                "marketId": 37305682,
-                "title": "מעל/מתחת שלשות - כולל הארכות אם יהיו",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339856423,
-                  "desc": "מעל 18",
-                  "team": "מעל 18",
-                  "price": 1.75,
-                  "spread": null,
-                  "probability": 0.52,
-                  "score": 66
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339856423,
-                    "desc": "מעל 18",
-                    "team": "מעל 18",
-                    "price": 1.75,
-                    "spread": null,
-                    "probability": 0.52,
-                    "score": 66
-                  },
-                  {
-                    "outcomeId": 339856425,
-                    "desc": "מתחת 18",
-                    "team": "מתחת 18",
-                    "price": 1.75,
-                    "spread": null,
-                    "probability": 0.52,
-                    "score": 66
-                  },
-                  {
-                    "outcomeId": 339856424,
-                    "desc": "בדיוק 18",
-                    "team": "בדיוק 18",
-                    "price": 9.5,
-                    "spread": null,
-                    "probability": 0.09578947368421052,
-                    "score": 37
-                  }
-                ]
-              }
-            ],
-            "explanation": [
-              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
-              "שולה (+7.5) מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. שולה (+7.5) מסומנת כפייבוריטית גם בחוץ, וזה בדרך כלל מצביע על פער איכות מול היריבה ולא רק על יתרון ביתיות. מול ליון וילרבאן (-7.5), השוק נותן ליריבה יחס 1.70, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: ליון וילרבאן (-7.5) 1.70.",
-              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
-            ],
-            "liveScore": "",
-            "actualWinner": "",
-            "matchPhase": "scheduled",
-            "scoreBreakdown": {
-              "hitProbability": 33,
-              "oddsValue": 7,
-              "marketGap": 1,
-              "reliability": 0,
-              "niche": 32,
-              "clearFavorite": 18,
-              "proximity": 8,
-              "overroundPenalty": -5,
-              "lowOddsPenalty": 0,
-              "extremeSpreadPenalty": 0,
-              "total": 94,
-              "labels": {
-                "hitProbability": "הסתברות מודל",
-                "oddsValue": "ערך יחס",
-                "marketGap": "פער שוק",
-                "reliability": "אמינות שוק",
-                "niche": "נישה",
-                "clearFavorite": "פייבוריטית ברורה",
-                "proximity": "קרבה לפתיחה",
-                "overroundPenalty": "מרווח בית",
-                "lowOddsPenalty": "יחס נמוך מדי",
-                "extremeSpreadPenalty": "ליין קיצוני"
-              }
-            },
-            "recommendationScore": 94,
-            "nichePick": true,
-            "recommended": true,
-            "recommendationReason": "top-20",
-            "riskLevel": "נמוך",
-            "homeAsset": {
-              "name": "ליון וילרבאן",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPtecPC90ZXh0Pjwvc3ZnPg==",
-              "initials": "ל",
-              "logoSource": "generated team badge",
-              "logoTier": 1
-            },
-            "awayAsset": {
-              "name": "שולה",
-              "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/548",
-              "initials": "ש",
-              "logoSource": "365Scores",
-              "logoTier": 1
-            },
-            "leagueAsset": {
-              "name": "צרפתית ראשונה",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XpjwvdGV4dD48L3N2Zz4=",
-              "initials": "צ",
-              "logoSource": "generated league badge"
-            },
-            "logoVerified": true
-          },
-          {
-            "id": "winner-10518753",
-            "eventId": "10518753",
-            "source": "Winner",
-            "verifiedAt": "2026-05-26T15:49:12.100Z",
-            "bettingStatus": "available",
-            "day": "2026-05-28",
-            "time": "20:29",
-            "sport": "כדורסל",
-            "sportId": 227,
-            "league": "הולנדית ראשונה",
-            "country": "הולנד",
-            "match": "כרונינגן - ליידן",
-            "home": "כרונינגן",
-            "away": "ליידן",
-            "resultKey": "227:2026-05-28:כרונינגן:ליידן",
-            "market": "הימור יתרון - כולל הארכות אם יהיו",
-            "marketTier": "spread",
-            "isAlternativeMarket": false,
-            "marketId": 37314239,
-            "outcomeId": 339889183,
-            "pick": "כרונינגן (-3.5)",
-            "pickTeam": "כרונינגן",
-            "spread": -3.5,
-            "winnerPick": "כרונינגן (-3.5)",
-            "odds": 1.6,
-            "oddsRaw": 1.6,
-            "outsideRange": false,
-            "oddsBook": {
-              "home": {
-                "desc": "כרונינגן (-3.5)",
-                "team": "כרונינגן",
-                "spread": -3.5,
-                "odds": 1.6,
-                "implied": 0.625,
-                "noVigProbability": 0.5151515151515151
-              },
-              "draw": null,
-              "away": {
-                "desc": "ליידן (+3.5)",
-                "team": "ליידן",
-                "spread": 3.5,
-                "odds": 1.7,
-                "implied": 0.5882352941176471,
-                "noVigProbability": 0.4848484848484848
-              },
-              "outcomes": [
-                {
-                  "desc": "כרונינגן (-3.5)",
-                  "team": "כרונינגן",
-                  "spread": -3.5,
-                  "odds": 1.6,
-                  "implied": 0.625,
-                  "noVigProbability": 0.5151515151515151
-                },
-                {
-                  "desc": "ליידן (+3.5)",
-                  "team": "ליידן",
-                  "spread": 3.5,
-                  "odds": 1.7,
-                  "implied": 0.5882352941176471,
-                  "noVigProbability": 0.4848484848484848
-                }
-              ],
-              "overround": 0.2132352941176472
-            },
-            "probability": 0.4533333333333333,
-            "normalizedProbability": 0.5151515151515151,
-            "marketGap": 0.03030303030303033,
-            "overround": 0.2132352941176472,
-            "globalAverageOdds": null,
-            "valueIndicator": null,
-            "fairOdds": 1.9411764705882353,
-            "proximityBonus": 8,
-            "score": 94,
-            "status": "ממתין",
-            "result": "",
-            "signals": [
-              "סבירות פגיעה 45 אחוז",
-              "יחס Winner 1.60",
-              "ציון משולב 94"
-            ],
-            "allMarkets": [
-              {
-                "marketId": 37314238,
-                "title": "מעל/מתחת נקודות - כולל הארכות אם יהיו",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339889181,
-                  "desc": "מעל 165.5",
-                  "team": "מעל 165.5",
-                  "price": 1.65,
-                  "spread": null,
-                  "probability": 0.5515151515151515,
-                  "score": 57
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339889181,
-                    "desc": "מעל 165.5",
-                    "team": "מעל 165.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 57
-                  },
-                  {
-                    "outcomeId": 339889182,
-                    "desc": "מתחת 165.5",
-                    "team": "מתחת 165.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 57
-                  }
-                ]
-              },
-              {
-                "marketId": 37314239,
-                "title": "הימור יתרון - כולל הארכות אם יהיו",
-                "category": "יתרון",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339889183,
-                  "desc": "כרונינגן (-3.5)",
-                  "team": "כרונינגן",
-                  "price": 1.6,
-                  "spread": -3.5,
-                  "probability": 0.55,
-                  "score": 57
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339889183,
-                    "desc": "כרונינגן (-3.5)",
-                    "team": "כרונינגן",
-                    "price": 1.6,
-                    "spread": -3.5,
-                    "probability": 0.55,
-                    "score": 57
-                  },
-                  {
-                    "outcomeId": 339889184,
-                    "desc": "ליידן (+3.5)",
-                    "team": "ליידן",
-                    "price": 1.7,
-                    "spread": 3.5,
-                    "probability": 0.5176470588235295,
-                    "score": 55
-                  }
-                ]
-              }
-            ],
-            "explanation": [
-              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
-              "כרונינגן (-3.5) מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. כרונינגן (-3.5) משחקת בבית, ולכן הצד שנבחן מקבל גם יתרון מגרש. מול ליידן (+3.5), השוק נותן ליריבה יחס 1.70, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: ליידן (+3.5) 1.70.",
-              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
-            ],
-            "liveScore": "",
-            "actualWinner": "",
-            "matchPhase": "scheduled",
-            "scoreBreakdown": {
-              "hitProbability": 33,
-              "oddsValue": 7,
-              "marketGap": 1,
-              "reliability": 0,
-              "niche": 32,
-              "clearFavorite": 18,
-              "proximity": 8,
-              "overroundPenalty": -5,
-              "lowOddsPenalty": 0,
-              "extremeSpreadPenalty": 0,
-              "total": 94,
-              "labels": {
-                "hitProbability": "הסתברות מודל",
-                "oddsValue": "ערך יחס",
-                "marketGap": "פער שוק",
-                "reliability": "אמינות שוק",
-                "niche": "נישה",
-                "clearFavorite": "פייבוריטית ברורה",
-                "proximity": "קרבה לפתיחה",
-                "overroundPenalty": "מרווח בית",
-                "lowOddsPenalty": "יחס נמוך מדי",
-                "extremeSpreadPenalty": "ליין קיצוני"
-              }
-            },
-            "recommendationScore": 94,
-            "nichePick": true,
-            "recommended": true,
-            "recommendationReason": "top-20",
-            "riskLevel": "נמוך",
-            "homeAsset": {
-              "name": "כרונינגן",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPtebPC90ZXh0Pjwvc3ZnPg==",
-              "initials": "כ",
-              "logoSource": "generated team badge",
-              "logoTier": 1
-            },
-            "awayAsset": {
-              "name": "ליידן",
-              "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/8675",
-              "initials": "ל",
-              "logoSource": "365Scores",
-              "logoTier": 1
-            },
-            "leagueAsset": {
-              "name": "הולנדית ראשונה",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XlDwvdGV4dD48L3N2Zz4=",
-              "initials": "ה",
-              "logoSource": "generated league badge"
-            },
-            "logoVerified": true
-          },
-          {
             "id": "winner-10558677",
             "eventId": "10558677",
             "source": "Winner",
@@ -62056,455 +61197,6 @@
             "logoVerified": true
           },
           {
-            "id": "winner-10441285",
-            "eventId": "10441285",
-            "source": "Winner",
-            "verifiedAt": "2026-05-26T15:49:12.089Z",
-            "bettingStatus": "available",
-            "day": "2026-05-28",
-            "time": "20:29",
-            "sport": "כדורסל",
-            "sportId": 227,
-            "league": "גרמנית שניה",
-            "country": "גרמניה",
-            "match": "פיניקס האגן - ברמרהאבן",
-            "home": "פיניקס האגן",
-            "away": "ברמרהאבן",
-            "resultKey": "227:2026-05-28:פיניקס האגן:ברמרהאבן",
-            "market": "הימור יתרון - כולל הארכות אם יהיו",
-            "marketTier": "spread",
-            "isAlternativeMarket": false,
-            "marketId": 36963460,
-            "outcomeId": 338512622,
-            "pick": "פיניקס האגן (-4.5)",
-            "pickTeam": "פיניקס האגן",
-            "spread": -4.5,
-            "winnerPick": "פיניקס האגן (-4.5)",
-            "odds": 1.65,
-            "oddsRaw": 1.65,
-            "outsideRange": false,
-            "oddsBook": {
-              "home": {
-                "desc": "פיניקס האגן (-4.5)",
-                "team": "פיניקס האגן",
-                "spread": -4.5,
-                "odds": 1.65,
-                "implied": 0.6060606060606061,
-                "noVigProbability": 0.5
-              },
-              "draw": null,
-              "away": {
-                "desc": "ברמרהאבן (+4.5)",
-                "team": "ברמרהאבן",
-                "spread": 4.5,
-                "odds": 1.65,
-                "implied": 0.6060606060606061,
-                "noVigProbability": 0.5
-              },
-              "outcomes": [
-                {
-                  "desc": "פיניקס האגן (-4.5)",
-                  "team": "פיניקס האגן",
-                  "spread": -4.5,
-                  "odds": 1.65,
-                  "implied": 0.6060606060606061,
-                  "noVigProbability": 0.5
-                },
-                {
-                  "desc": "ברמרהאבן (+4.5)",
-                  "team": "ברמרהאבן",
-                  "spread": 4.5,
-                  "odds": 1.65,
-                  "implied": 0.6060606060606061,
-                  "noVigProbability": 0.5
-                }
-              ],
-              "overround": 0.21212121212121215
-            },
-            "probability": 0.44,
-            "normalizedProbability": 0.5,
-            "marketGap": 0,
-            "overround": 0.21212121212121215,
-            "globalAverageOdds": null,
-            "valueIndicator": null,
-            "fairOdds": 2,
-            "proximityBonus": 8,
-            "score": 94,
-            "status": "ממתין",
-            "result": "",
-            "signals": [
-              "סבירות פגיעה 44 אחוז",
-              "יחס Winner 1.65",
-              "ציון משולב 94"
-            ],
-            "allMarkets": [
-              {
-                "marketId": 36963459,
-                "title": "מעל/מתחת נקודות - כולל הארכות אם יהיו",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 338512620,
-                  "desc": "מעל 169.5",
-                  "team": "מעל 169.5",
-                  "price": 1.65,
-                  "spread": null,
-                  "probability": 0.5515151515151515,
-                  "score": 66
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 338512620,
-                    "desc": "מעל 169.5",
-                    "team": "מעל 169.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 66
-                  },
-                  {
-                    "outcomeId": 338512621,
-                    "desc": "מתחת 169.5",
-                    "team": "מתחת 169.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 66
-                  }
-                ]
-              },
-              {
-                "marketId": 36963460,
-                "title": "הימור יתרון - כולל הארכות אם יהיו",
-                "category": "יתרון",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 338512622,
-                  "desc": "פיניקס האגן (-4.5)",
-                  "team": "פיניקס האגן",
-                  "price": 1.65,
-                  "spread": -4.5,
-                  "probability": 0.5333333333333333,
-                  "score": 64
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 338512622,
-                    "desc": "פיניקס האגן (-4.5)",
-                    "team": "פיניקס האגן",
-                    "price": 1.65,
-                    "spread": -4.5,
-                    "probability": 0.5333333333333333,
-                    "score": 64
-                  },
-                  {
-                    "outcomeId": 338512623,
-                    "desc": "ברמרהאבן (+4.5)",
-                    "team": "ברמרהאבן",
-                    "price": 1.65,
-                    "spread": 4.5,
-                    "probability": 0.5333333333333333,
-                    "score": 64
-                  }
-                ]
-              },
-              {
-                "marketId": 37306644,
-                "title": "מעל/מתחת נקודות - מחצית ראשונה",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339860054,
-                  "desc": "מעל 84.5",
-                  "team": "מעל 84.5",
-                  "price": 1.65,
-                  "spread": null,
-                  "probability": 0.5515151515151515,
-                  "score": 66
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339860054,
-                    "desc": "מעל 84.5",
-                    "team": "מעל 84.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 66
-                  },
-                  {
-                    "outcomeId": 339860055,
-                    "desc": "מתחת 84.5",
-                    "team": "מתחת 84.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 66
-                  }
-                ]
-              },
-              {
-                "marketId": 37306646,
-                "title": "הימור יתרון - רבע ראשון",
-                "category": "יתרון",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339860061,
-                  "desc": "ברמרהאבן (+1.5)",
-                  "team": "ברמרהאבן",
-                  "price": 1.6,
-                  "spread": 1.5,
-                  "probability": 0.55,
-                  "score": 65
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339860061,
-                    "desc": "ברמרהאבן (+1.5)",
-                    "team": "ברמרהאבן",
-                    "price": 1.6,
-                    "spread": 1.5,
-                    "probability": 0.55,
-                    "score": 65
-                  },
-                  {
-                    "outcomeId": 339860060,
-                    "desc": "פיניקס האגן (-1.5)",
-                    "team": "פיניקס האגן",
-                    "price": 1.7,
-                    "spread": -1.5,
-                    "probability": 0.5176470588235295,
-                    "score": 63
-                  }
-                ]
-              },
-              {
-                "marketId": 37306647,
-                "title": "מעל/מתחת נקודות - רבע ראשון",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339860053,
-                  "desc": "מתחת 42.5",
-                  "team": "מתחת 42.5",
-                  "price": 1.6,
-                  "spread": null,
-                  "probability": 0.56875,
-                  "score": 67
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339860053,
-                    "desc": "מתחת 42.5",
-                    "team": "מתחת 42.5",
-                    "price": 1.6,
-                    "spread": null,
-                    "probability": 0.56875,
-                    "score": 67
-                  },
-                  {
-                    "outcomeId": 339860052,
-                    "desc": "מעל 42.5",
-                    "team": "מעל 42.5",
-                    "price": 1.7,
-                    "spread": null,
-                    "probability": 0.5352941176470588,
-                    "score": 65
-                  }
-                ]
-              },
-              {
-                "marketId": 37306651,
-                "title": "הימור יתרון - מחצית ראשונה",
-                "category": "יתרון",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339860063,
-                  "desc": "ברמרהאבן (+2.5)",
-                  "team": "ברמרהאבן",
-                  "price": 1.6,
-                  "spread": 2.5,
-                  "probability": 0.55,
-                  "score": 65
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339860063,
-                    "desc": "ברמרהאבן (+2.5)",
-                    "team": "ברמרהאבן",
-                    "price": 1.6,
-                    "spread": 2.5,
-                    "probability": 0.55,
-                    "score": 65
-                  },
-                  {
-                    "outcomeId": 339860062,
-                    "desc": "פיניקס האגן (-2.5)",
-                    "team": "פיניקס האגן",
-                    "price": 1.7,
-                    "spread": -2.5,
-                    "probability": 0.5176470588235295,
-                    "score": 63
-                  }
-                ]
-              },
-              {
-                "marketId": 37306652,
-                "title": "מחצית/סיום - ללא הארכות",
-                "category": "מחציות",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 339860072,
-                  "desc": "פיניקס האגן - פיניקס האגן",
-                  "team": "פיניקס האגן - פיניקס האגן",
-                  "price": 1.6,
-                  "spread": null,
-                  "probability": 0.44999999999999996,
-                  "score": 56
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 339860072,
-                    "desc": "פיניקס האגן - פיניקס האגן",
-                    "team": "פיניקס האגן - פיניקס האגן",
-                    "price": 1.6,
-                    "spread": null,
-                    "probability": 0.44999999999999996,
-                    "score": 56
-                  },
-                  {
-                    "outcomeId": 339860080,
-                    "desc": "ברמרהאבן - ברמרהאבן",
-                    "team": "ברמרהאבן - ברמרהאבן",
-                    "price": 2.8,
-                    "spread": null,
-                    "probability": 0.2571428571428571,
-                    "score": 43
-                  },
-                  {
-                    "outcomeId": 339860078,
-                    "desc": "ברמרהאבן - פיניקס האגן",
-                    "team": "ברמרהאבן - פיניקס האגן",
-                    "price": 4.2,
-                    "spread": null,
-                    "probability": 0.1714285714285714,
-                    "score": 37
-                  },
-                  {
-                    "outcomeId": 339860074,
-                    "desc": "פיניקס האגן - ברמרהאבן",
-                    "team": "פיניקס האגן - ברמרהאבן",
-                    "price": 6,
-                    "spread": null,
-                    "probability": 0.12,
-                    "score": 33
-                  },
-                  {
-                    "outcomeId": 339860076,
-                    "desc": "x - x",
-                    "team": "x - x",
-                    "price": 100,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 31
-                  },
-                  {
-                    "outcomeId": 339860077,
-                    "desc": "x - ברמרהאבן",
-                    "team": "x - ברמרהאבן",
-                    "price": 30,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 31
-                  },
-                  {
-                    "outcomeId": 339860075,
-                    "desc": "x - פיניקס האגן",
-                    "team": "x - פיניקס האגן",
-                    "price": 20,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 31
-                  },
-                  {
-                    "outcomeId": 339860079,
-                    "desc": "ברמרהאבן - x",
-                    "team": "ברמרהאבן - x",
-                    "price": 17,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 31
-                  },
-                  {
-                    "outcomeId": 339860073,
-                    "desc": "פיניקס האגן - x",
-                    "team": "פיניקס האגן - x",
-                    "price": 16,
-                    "spread": null,
-                    "probability": 0.08,
-                    "score": 31
-                  }
-                ]
-              }
-            ],
-            "explanation": [
-              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
-              "פיניקס האגן (-4.5) מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. פיניקס האגן (-4.5) משחקת בבית, ולכן הצד שנבחן מקבל גם יתרון מגרש. מול ברמרהאבן (+4.5), השוק נותן ליריבה יחס 1.65, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: ברמרהאבן (+4.5) 1.65.",
-              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
-            ],
-            "scoreBreakdown": {
-              "hitProbability": 32,
-              "oddsValue": 9,
-              "marketGap": 0,
-              "reliability": 0,
-              "niche": 32,
-              "clearFavorite": 18,
-              "proximity": 8,
-              "overroundPenalty": -5,
-              "lowOddsPenalty": 0,
-              "extremeSpreadPenalty": 0,
-              "total": 94,
-              "labels": {
-                "hitProbability": "הסתברות מודל",
-                "oddsValue": "ערך יחס",
-                "marketGap": "פער שוק",
-                "reliability": "אמינות שוק",
-                "niche": "נישה",
-                "clearFavorite": "פייבוריטית ברורה",
-                "proximity": "קרבה לפתיחה",
-                "overroundPenalty": "מרווח בית",
-                "lowOddsPenalty": "יחס נמוך מדי",
-                "extremeSpreadPenalty": "ליין קיצוני"
-              }
-            },
-            "recommendationScore": 94,
-            "nichePick": true,
-            "recommended": true,
-            "recommendationReason": "top-20",
-            "riskLevel": "נמוך",
-            "homeAsset": {
-              "name": "פיניקס האגן",
-              "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/6352",
-              "initials": "פ",
-              "logoSource": "365Scores",
-              "logoTier": 1
-            },
-            "awayAsset": {
-              "name": "ברמרהאבן",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteRPC90ZXh0Pjwvc3ZnPg==",
-              "initials": "ב",
-              "logoSource": "generated team badge",
-              "logoTier": 1
-            },
-            "leagueAsset": {
-              "name": "גרמנית שניה",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XkjwvdGV4dD48L3N2Zz4=",
-              "initials": "ג",
-              "logoSource": "generated league badge"
-            },
-            "logoVerified": true
-          },
-          {
             "id": "winner-10481638",
             "eventId": "10481638",
             "eventId365": "4716071",
@@ -62994,185 +61686,6 @@
               "initials": "ט",
               "logoSource": "365Scores",
               "logoTier": 1
-            },
-            "logoVerified": true
-          },
-          {
-            "id": "winner-10313409",
-            "eventId": "10313409",
-            "source": "Winner",
-            "verifiedAt": "2026-05-26T15:49:12.252Z",
-            "bettingStatus": "available",
-            "day": "2026-05-28",
-            "time": "18:59",
-            "sport": "כדורסל",
-            "sportId": 227,
-            "league": "ליגה לאומית",
-            "country": "ישראל",
-            "match": "מכבי מעלה אדומים - מכבי פתח תקוה",
-            "home": "מכבי מעלה אדומים",
-            "away": "מכבי פתח תקוה",
-            "resultKey": "227:2026-05-28:מכבי מעלה אדומים:מכבי פתח תקוה",
-            "market": "המנצח/ת - כולל הארכות אם יהיו",
-            "marketTier": "primary",
-            "isAlternativeMarket": false,
-            "marketId": 36390424,
-            "outcomeId": 336265516,
-            "pick": "מכבי פתח תקוה",
-            "pickTeam": "מכבי פתח תקוה",
-            "spread": null,
-            "winnerPick": "מכבי פתח תקוה",
-            "odds": 1.5,
-            "oddsRaw": 1.5,
-            "outsideRange": false,
-            "oddsBook": {
-              "home": {
-                "desc": "מכבי מעלה אדומים",
-                "team": "מכבי מעלה אדומים",
-                "spread": null,
-                "odds": 1.85,
-                "implied": 0.5405405405405405,
-                "noVigProbability": 0.4477611940298507
-              },
-              "draw": null,
-              "away": {
-                "desc": "מכבי פתח תקוה",
-                "team": "מכבי פתח תקוה",
-                "spread": null,
-                "odds": 1.5,
-                "implied": 0.6666666666666666,
-                "noVigProbability": 0.5522388059701493
-              },
-              "outcomes": [
-                {
-                  "desc": "מכבי מעלה אדומים",
-                  "team": "מכבי מעלה אדומים",
-                  "spread": null,
-                  "odds": 1.85,
-                  "implied": 0.5405405405405405,
-                  "noVigProbability": 0.4477611940298507
-                },
-                {
-                  "desc": "מכבי פתח תקוה",
-                  "team": "מכבי פתח תקוה",
-                  "spread": null,
-                  "odds": 1.5,
-                  "implied": 0.6666666666666666,
-                  "noVigProbability": 0.5522388059701493
-                }
-              ],
-              "overround": 0.2072072072072071
-            },
-            "probability": 0.5356716417910448,
-            "normalizedProbability": 0.5522388059701493,
-            "marketGap": 0.10447761194029859,
-            "overround": 0.2072072072072071,
-            "globalAverageOdds": null,
-            "valueIndicator": null,
-            "fairOdds": 1.8108108108108107,
-            "proximityBonus": 0,
-            "score": 92,
-            "status": "ממתין",
-            "result": "",
-            "signals": [
-              "סבירות פגיעה 54 אחוז",
-              "יחס Winner 1.50",
-              "ציון משולב 92"
-            ],
-            "allMarkets": [
-              {
-                "marketId": 36390424,
-                "title": "המנצח/ת - כולל הארכות אם יהיו",
-                "category": "מנצח",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 336265516,
-                  "desc": "מכבי פתח תקוה",
-                  "team": "מכבי פתח תקוה",
-                  "price": 1.5,
-                  "spread": null,
-                  "probability": 0.6466666666666666,
-                  "score": 63
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 336265516,
-                    "desc": "מכבי פתח תקוה",
-                    "team": "מכבי פתח תקוה",
-                    "price": 1.5,
-                    "spread": null,
-                    "probability": 0.6466666666666666,
-                    "score": 63
-                  },
-                  {
-                    "outcomeId": 336265515,
-                    "desc": "מכבי מעלה אדומים",
-                    "team": "מכבי מעלה אדומים",
-                    "price": 1.85,
-                    "spread": null,
-                    "probability": 0.5243243243243242,
-                    "score": 55
-                  }
-                ]
-              }
-            ],
-            "explanation": [
-              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
-              "מכבי פתח תקוה מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. מכבי פתח תקוה מסומנת כפייבוריטית גם בחוץ, וזה בדרך כלל מצביע על פער איכות מול היריבה ולא רק על יתרון ביתיות. מול מכבי מעלה אדומים, השוק נותן ליריבה יחס 1.85, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: מכבי מעלה אדומים 1.85.",
-              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
-            ],
-            "liveScore": "",
-            "actualWinner": "",
-            "matchPhase": "scheduled",
-            "scoreBreakdown": {
-              "hitProbability": 39,
-              "oddsValue": 4,
-              "marketGap": 4,
-              "reliability": 0,
-              "niche": 32,
-              "clearFavorite": 18,
-              "proximity": 0,
-              "overroundPenalty": -5,
-              "lowOddsPenalty": 0,
-              "extremeSpreadPenalty": 0,
-              "total": 92,
-              "labels": {
-                "hitProbability": "הסתברות מודל",
-                "oddsValue": "ערך יחס",
-                "marketGap": "פער שוק",
-                "reliability": "אמינות שוק",
-                "niche": "נישה",
-                "clearFavorite": "פייבוריטית ברורה",
-                "proximity": "קרבה לפתיחה",
-                "overroundPenalty": "מרווח בית",
-                "lowOddsPenalty": "יחס נמוך מדי",
-                "extremeSpreadPenalty": "ליין קיצוני"
-              }
-            },
-            "recommendationScore": 92,
-            "nichePick": true,
-            "recommended": true,
-            "recommendationReason": "top-20",
-            "riskLevel": "נמוך",
-            "homeAsset": {
-              "name": "מכבי מעלה אדומים",
-              "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/68968",
-              "initials": "מ",
-              "logoSource": "365Scores",
-              "logoTier": 1
-            },
-            "awayAsset": {
-              "name": "מכבי פתח תקוה",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteePC90ZXh0Pjwvc3ZnPg==",
-              "initials": "מ",
-              "logoSource": "generated team badge",
-              "logoTier": 1
-            },
-            "leagueAsset": {
-              "name": "ליגה לאומית",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XnDwvdGV4dD48L3N2Zz4=",
-              "initials": "ל",
-              "logoSource": "generated league badge"
             },
             "logoVerified": true
           },
@@ -66248,217 +64761,6 @@
             "logoVerified": true
           },
           {
-            "id": "winner-10558571",
-            "eventId": "10558571",
-            "source": "Winner",
-            "verifiedAt": "2026-05-27T21:29:58.549Z",
-            "bettingStatus": "available",
-            "day": "2026-05-28",
-            "time": "19:59",
-            "sport": "כדורסל",
-            "sportId": 227,
-            "league": "גרמנית שניה",
-            "country": "גרמניה",
-            "match": "ברמרהאבן - פיניקס האגן",
-            "home": "ברמרהאבן",
-            "away": "פיניקס האגן",
-            "resultKey": "227:2026-05-28:ברמרהאבן:פיניקס האגן",
-            "market": "הימור יתרון - כולל הארכות אם יהיו",
-            "marketTier": "spread",
-            "isAlternativeMarket": false,
-            "marketId": 37492886,
-            "outcomeId": 340584820,
-            "pick": "ברמרהאבן (+2.5)",
-            "pickTeam": "ברמרהאבן",
-            "spread": 2.5,
-            "winnerPick": "ברמרהאבן (+2.5)",
-            "odds": 1.65,
-            "oddsRaw": 1.65,
-            "outsideRange": false,
-            "oddsBook": {
-              "home": {
-                "desc": "ברמרהאבן (+2.5)",
-                "team": "ברמרהאבן",
-                "spread": 2.5,
-                "odds": 1.65,
-                "implied": 0.6060606060606061,
-                "noVigProbability": 0.5
-              },
-              "draw": null,
-              "away": {
-                "desc": "פיניקס האגן (-2.5)",
-                "team": "פיניקס האגן",
-                "spread": -2.5,
-                "odds": 1.65,
-                "implied": 0.6060606060606061,
-                "noVigProbability": 0.5
-              },
-              "outcomes": [
-                {
-                  "desc": "ברמרהאבן (+2.5)",
-                  "team": "ברמרהאבן",
-                  "spread": 2.5,
-                  "odds": 1.65,
-                  "implied": 0.6060606060606061,
-                  "noVigProbability": 0.5
-                },
-                {
-                  "desc": "פיניקס האגן (-2.5)",
-                  "team": "פיניקס האגן",
-                  "spread": -2.5,
-                  "odds": 1.65,
-                  "implied": 0.6060606060606061,
-                  "noVigProbability": 0.5
-                }
-              ],
-              "overround": 0.21212121212121215
-            },
-            "probability": 0.44,
-            "normalizedProbability": 0.5,
-            "marketGap": 0,
-            "overround": 0.21212121212121215,
-            "globalAverageOdds": null,
-            "valueIndicator": null,
-            "fairOdds": 2,
-            "proximityBonus": 0,
-            "score": 86,
-            "status": "ממתין",
-            "result": "",
-            "signals": [
-              "סבירות פגיעה 44 אחוז",
-              "יחס Winner 1.65",
-              "ציון משולב 86"
-            ],
-            "allMarkets": [
-              {
-                "marketId": 37492886,
-                "title": "הימור יתרון - כולל הארכות אם יהיו",
-                "category": "יתרון",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 340584820,
-                  "desc": "ברמרהאבן (+2.5)",
-                  "team": "ברמרהאבן",
-                  "price": 1.65,
-                  "spread": 2.5,
-                  "probability": 0.5333333333333333,
-                  "score": 56
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 340584820,
-                    "desc": "ברמרהאבן (+2.5)",
-                    "team": "ברמרהאבן",
-                    "price": 1.65,
-                    "spread": 2.5,
-                    "probability": 0.5333333333333333,
-                    "score": 56
-                  },
-                  {
-                    "outcomeId": 340584821,
-                    "desc": "פיניקס האגן (-2.5)",
-                    "team": "פיניקס האגן",
-                    "price": 1.65,
-                    "spread": -2.5,
-                    "probability": 0.5333333333333333,
-                    "score": 56
-                  }
-                ]
-              },
-              {
-                "marketId": 37492887,
-                "title": "מעל/מתחת נקודות - כולל הארכות אם יהיו",
-                "category": "מעל/מתחת",
-                "bettable": true,
-                "best": {
-                  "outcomeId": 340584818,
-                  "desc": "מעל 169.5",
-                  "team": "מעל 169.5",
-                  "price": 1.65,
-                  "spread": null,
-                  "probability": 0.5515151515151515,
-                  "score": 57
-                },
-                "outcomes": [
-                  {
-                    "outcomeId": 340584818,
-                    "desc": "מעל 169.5",
-                    "team": "מעל 169.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 57
-                  },
-                  {
-                    "outcomeId": 340584819,
-                    "desc": "מתחת 169.5",
-                    "team": "מתחת 169.5",
-                    "price": 1.65,
-                    "spread": null,
-                    "probability": 0.5515151515151515,
-                    "score": 57
-                  }
-                ]
-              }
-            ],
-            "explanation": [
-              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
-              "ברמרהאבן (+2.5) מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. ברמרהאבן (+2.5) משחקת בבית, ולכן הצד שנבחן מקבל גם יתרון מגרש. מול פיניקס האגן (-2.5), השוק נותן ליריבה יחס 1.65, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: פיניקס האגן (-2.5) 1.65.",
-              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
-            ],
-            "scoreBreakdown": {
-              "hitProbability": 32,
-              "oddsValue": 9,
-              "marketGap": 0,
-              "reliability": 0,
-              "niche": 32,
-              "clearFavorite": 18,
-              "proximity": 0,
-              "overroundPenalty": -5,
-              "lowOddsPenalty": 0,
-              "extremeSpreadPenalty": 0,
-              "total": 86,
-              "labels": {
-                "hitProbability": "הסתברות מודל",
-                "oddsValue": "ערך יחס",
-                "marketGap": "פער שוק",
-                "reliability": "אמינות שוק",
-                "niche": "נישה",
-                "clearFavorite": "פייבוריטית ברורה",
-                "proximity": "קרבה לפתיחה",
-                "overroundPenalty": "מרווח בית",
-                "lowOddsPenalty": "יחס נמוך מדי",
-                "extremeSpreadPenalty": "ליין קיצוני"
-              }
-            },
-            "recommendationScore": 86,
-            "nichePick": true,
-            "recommended": true,
-            "recommendationReason": "top-20",
-            "riskLevel": "נמוך",
-            "homeAsset": {
-              "name": "ברמרהאבן",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteRPC90ZXh0Pjwvc3ZnPg==",
-              "initials": "ב",
-              "logoSource": "generated team badge",
-              "logoTier": 1
-            },
-            "awayAsset": {
-              "name": "פיניקס האגן",
-              "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/6352",
-              "initials": "פ",
-              "logoSource": "365Scores",
-              "logoTier": 1
-            },
-            "leagueAsset": {
-              "name": "גרמנית שניה",
-              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XkjwvdGV4dD48L3N2Zz4=",
-              "initials": "ג",
-              "logoSource": "generated league badge"
-            },
-            "logoVerified": true
-          },
-          {
             "id": "winner-10557362",
             "eventId": "10557362",
             "source": "Winner",
@@ -67755,6 +66057,1193 @@
               "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitions/106",
               "initials": "W",
               "logoSource": "365Scores"
+            },
+            "logoVerified": true
+          },
+          {
+            "id": "winner-9989433",
+            "eventId": "9989433",
+            "source": "Winner",
+            "verifiedAt": "2026-05-27T21:29:58.745Z",
+            "bettingStatus": "available",
+            "day": "2026-05-28",
+            "time": "10:29",
+            "sport": "כדורסל",
+            "sportId": 227,
+            "league": "ניו זילנדית ראשונה",
+            "country": "ניו זילנד",
+            "match": "טרנקי - מנאווטו",
+            "home": "טרנקי",
+            "away": "מנאווטו",
+            "resultKey": "227:2026-05-28:טרנקי:מנאווטו",
+            "market": "הימור יתרון - כולל הארכות אם יהיו",
+            "marketTier": "spread",
+            "isAlternativeMarket": false,
+            "marketId": 34943050,
+            "outcomeId": 330566890,
+            "pick": "טרנקי (+2.5)",
+            "pickTeam": "טרנקי",
+            "spread": 2.5,
+            "winnerPick": "טרנקי (+2.5)",
+            "odds": 1.65,
+            "oddsRaw": 1.65,
+            "outsideRange": false,
+            "oddsBook": {
+              "home": {
+                "desc": "טרנקי (+2.5)",
+                "team": "טרנקי",
+                "spread": 2.5,
+                "odds": 1.65,
+                "implied": 0.6060606060606061,
+                "noVigProbability": 0.5
+              },
+              "draw": null,
+              "away": {
+                "desc": "מנאווטו (-2.5)",
+                "team": "מנאווטו",
+                "spread": -2.5,
+                "odds": 1.65,
+                "implied": 0.6060606060606061,
+                "noVigProbability": 0.5
+              },
+              "outcomes": [
+                {
+                  "desc": "טרנקי (+2.5)",
+                  "team": "טרנקי",
+                  "spread": 2.5,
+                  "odds": 1.65,
+                  "implied": 0.6060606060606061,
+                  "noVigProbability": 0.5
+                },
+                {
+                  "desc": "מנאווטו (-2.5)",
+                  "team": "מנאווטו",
+                  "spread": -2.5,
+                  "odds": 1.65,
+                  "implied": 0.6060606060606061,
+                  "noVigProbability": 0.5
+                }
+              ],
+              "overround": 0.21212121212121215
+            },
+            "probability": 0.44,
+            "normalizedProbability": 0.5,
+            "marketGap": 0,
+            "overround": 0.21212121212121215,
+            "globalAverageOdds": null,
+            "valueIndicator": null,
+            "fairOdds": 2,
+            "proximityBonus": 0,
+            "score": 86,
+            "status": "ממתין",
+            "result": "",
+            "signals": [
+              "סבירות פגיעה 44 אחוז",
+              "יחס Winner 1.65",
+              "ציון משולב 86"
+            ],
+            "allMarkets": [
+              {
+                "marketId": 34943050,
+                "title": "הימור יתרון - כולל הארכות אם יהיו",
+                "category": "יתרון",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 330566890,
+                  "desc": "טרנקי (+2.5)",
+                  "team": "טרנקי",
+                  "price": 1.65,
+                  "spread": 2.5,
+                  "probability": 0.5333333333333333,
+                  "score": 54
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 330566890,
+                    "desc": "טרנקי (+2.5)",
+                    "team": "טרנקי",
+                    "price": 1.65,
+                    "spread": 2.5,
+                    "probability": 0.5333333333333333,
+                    "score": 54
+                  },
+                  {
+                    "outcomeId": 330566891,
+                    "desc": "מנאווטו (-2.5)",
+                    "team": "מנאווטו",
+                    "price": 1.65,
+                    "spread": -2.5,
+                    "probability": 0.5333333333333333,
+                    "score": 54
+                  }
+                ]
+              }
+            ],
+            "explanation": [
+              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
+              "טרנקי (+2.5) מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. טרנקי (+2.5) משחקת בבית, ולכן הצד שנבחן מקבל גם יתרון מגרש. מול מנאווטו (-2.5), השוק נותן ליריבה יחס 1.65, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: מנאווטו (-2.5) 1.65.",
+              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
+            ],
+            "scoreBreakdown": {
+              "hitProbability": 32,
+              "oddsValue": 9,
+              "marketGap": 0,
+              "reliability": 0,
+              "niche": 32,
+              "clearFavorite": 18,
+              "proximity": 0,
+              "overroundPenalty": -5,
+              "lowOddsPenalty": 0,
+              "extremeSpreadPenalty": 0,
+              "total": 86,
+              "labels": {
+                "hitProbability": "הסתברות מודל",
+                "oddsValue": "ערך יחס",
+                "marketGap": "פער שוק",
+                "reliability": "אמינות שוק",
+                "niche": "נישה",
+                "clearFavorite": "פייבוריטית ברורה",
+                "proximity": "קרבה לפתיחה",
+                "overroundPenalty": "מרווח בית",
+                "lowOddsPenalty": "יחס נמוך מדי",
+                "extremeSpreadPenalty": "ליין קיצוני"
+              }
+            },
+            "recommendationScore": 86,
+            "nichePick": true,
+            "recommended": true,
+            "recommendationReason": "top-20",
+            "riskLevel": "נמוך",
+            "homeAsset": {
+              "name": "טרנקי",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteYPC90ZXh0Pjwvc3ZnPg==",
+              "initials": "ט",
+              "logoSource": "generated team badge",
+              "logoTier": 1
+            },
+            "awayAsset": {
+              "name": "מנאווטו",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteePC90ZXh0Pjwvc3ZnPg==",
+              "initials": "מ",
+              "logoSource": "generated team badge",
+              "logoTier": 1
+            },
+            "leagueAsset": {
+              "name": "ניו זילנדית ראשונה",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XoDwvdGV4dD48L3N2Zz4=",
+              "initials": "נ",
+              "logoSource": "generated league badge"
+            },
+            "logoVerified": true
+          },
+          {
+            "id": "winner-8625173",
+            "eventId": "8625173",
+            "source": "Winner",
+            "verifiedAt": "2026-05-27T21:29:58.742Z",
+            "bettingStatus": "available",
+            "day": "2026-05-28",
+            "time": "13:44",
+            "sport": "כדורסל",
+            "sportId": 227,
+            "league": "ליגת Winner סל",
+            "country": "ישראל",
+            "match": "עירוני קרית אתא - עירוני נס ציונה",
+            "home": "עירוני קרית אתא",
+            "away": "עירוני נס ציונה",
+            "resultKey": "227:2026-05-28:עירוני קרית אתא:עירוני נס ציונה",
+            "market": "המנצח/ת - כולל הארכות אם יהיו",
+            "marketTier": "primary",
+            "isAlternativeMarket": false,
+            "marketId": 28834700,
+            "outcomeId": 306455362,
+            "pick": "עירוני נס ציונה",
+            "pickTeam": "עירוני נס ציונה",
+            "spread": null,
+            "winnerPick": "עירוני נס ציונה",
+            "odds": 1.45,
+            "oddsRaw": 1.45,
+            "outsideRange": false,
+            "oddsBook": {
+              "home": {
+                "desc": "עירוני קרית אתא",
+                "team": "עירוני קרית אתא",
+                "spread": null,
+                "odds": 1.9,
+                "implied": 0.5263157894736842,
+                "noVigProbability": 0.4328358208955224
+              },
+              "draw": null,
+              "away": {
+                "desc": "עירוני נס ציונה",
+                "team": "עירוני נס ציונה",
+                "spread": null,
+                "odds": 1.45,
+                "implied": 0.6896551724137931,
+                "noVigProbability": 0.5671641791044777
+              },
+              "outcomes": [
+                {
+                  "desc": "עירוני קרית אתא",
+                  "team": "עירוני קרית אתא",
+                  "spread": null,
+                  "odds": 1.9,
+                  "implied": 0.5263157894736842,
+                  "noVigProbability": 0.4328358208955224
+                },
+                {
+                  "desc": "עירוני נס ציונה",
+                  "team": "עירוני נס ציונה",
+                  "spread": null,
+                  "odds": 1.45,
+                  "implied": 0.6896551724137931,
+                  "noVigProbability": 0.5671641791044777
+                }
+              ],
+              "overround": 0.21597096188747722
+            },
+            "probability": 0.5501492537313434,
+            "normalizedProbability": 0.5671641791044777,
+            "marketGap": 0.13432835820895528,
+            "overround": 0.21597096188747722,
+            "globalAverageOdds": null,
+            "valueIndicator": null,
+            "fairOdds": 1.7631578947368418,
+            "proximityBonus": 0,
+            "score": 20,
+            "status": "ממתין",
+            "result": "",
+            "signals": [
+              "סבירות פגיעה 55 אחוז",
+              "יחס Winner 1.45",
+              "ציון משולב 20"
+            ],
+            "allMarkets": [
+              {
+                "marketId": 28834699,
+                "title": "מחצית/סיום - ללא הארכות",
+                "category": "מחציות",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 306455371,
+                  "desc": "עירוני נס ציונה - עירוני נס ציונה",
+                  "team": "עירוני נס ציונה - עירוני נס ציונה",
+                  "price": 1.75,
+                  "spread": null,
+                  "probability": 0.41142857142857137,
+                  "score": 44
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 306455371,
+                    "desc": "עירוני נס ציונה - עירוני נס ציונה",
+                    "team": "עירוני נס ציונה - עירוני נס ציונה",
+                    "price": 1.75,
+                    "spread": null,
+                    "probability": 0.41142857142857137,
+                    "score": 44
+                  },
+                  {
+                    "outcomeId": 306455363,
+                    "desc": "עירוני קרית אתא - עירוני קרית אתא",
+                    "team": "עירוני קרית אתא - עירוני קרית אתא",
+                    "price": 2.45,
+                    "spread": null,
+                    "probability": 0.29387755102040813,
+                    "score": 36
+                  },
+                  {
+                    "outcomeId": 306455365,
+                    "desc": "עירוני קרית אתא - עירוני נס ציונה",
+                    "team": "עירוני קרית אתא - עירוני נס ציונה",
+                    "price": 4.3,
+                    "spread": null,
+                    "probability": 0.16744186046511628,
+                    "score": 28
+                  },
+                  {
+                    "outcomeId": 306455369,
+                    "desc": "עירוני נס ציונה - עירוני קרית אתא",
+                    "team": "עירוני נס ציונה - עירוני קרית אתא",
+                    "price": 5.2,
+                    "spread": null,
+                    "probability": 0.13846153846153844,
+                    "score": 26
+                  },
+                  {
+                    "outcomeId": 306455367,
+                    "desc": "x - x",
+                    "team": "x - x",
+                    "price": 100,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 22
+                  },
+                  {
+                    "outcomeId": 306455366,
+                    "desc": "x - עירוני קרית אתא",
+                    "team": "x - עירוני קרית אתא",
+                    "price": 30,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 22
+                  },
+                  {
+                    "outcomeId": 306455368,
+                    "desc": "x - עירוני נס ציונה",
+                    "team": "x - עירוני נס ציונה",
+                    "price": 24,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 22
+                  },
+                  {
+                    "outcomeId": 306455364,
+                    "desc": "עירוני קרית אתא - x",
+                    "team": "עירוני קרית אתא - x",
+                    "price": 18,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 22
+                  },
+                  {
+                    "outcomeId": 306455370,
+                    "desc": "עירוני נס ציונה - x",
+                    "team": "עירוני נס ציונה - x",
+                    "price": 18,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 22
+                  }
+                ]
+              },
+              {
+                "marketId": 28834700,
+                "title": "המנצח/ת - כולל הארכות אם יהיו",
+                "category": "מנצח",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 306455362,
+                  "desc": "עירוני נס ציונה",
+                  "team": "עירוני נס ציונה",
+                  "price": 1.45,
+                  "spread": null,
+                  "probability": 0.6689655172413793,
+                  "score": 66
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 306455362,
+                    "desc": "עירוני נס ציונה",
+                    "team": "עירוני נס ציונה",
+                    "price": 1.45,
+                    "spread": null,
+                    "probability": 0.6689655172413793,
+                    "score": 66
+                  },
+                  {
+                    "outcomeId": 306455361,
+                    "desc": "עירוני קרית אתא",
+                    "team": "עירוני קרית אתא",
+                    "price": 1.9,
+                    "spread": null,
+                    "probability": 0.5105263157894736,
+                    "score": 56
+                  }
+                ]
+              }
+            ],
+            "explanation": [
+              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
+              "עירוני נס ציונה מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. עירוני נס ציונה מסומנת כפייבוריטית גם בחוץ, וזה בדרך כלל מצביע על פער איכות מול היריבה ולא רק על יתרון ביתיות. מול עירוני קרית אתא, השוק נותן ליריבה יחס 1.90, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: עירוני קרית אתא 1.90.",
+              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
+            ],
+            "liveScore": "",
+            "actualWinner": "",
+            "matchPhase": "scheduled",
+            "scoreBreakdown": {
+              "hitProbability": 40,
+              "oddsValue": 2,
+              "marketGap": 5,
+              "reliability": 0,
+              "niche": -40,
+              "clearFavorite": 18,
+              "proximity": 0,
+              "overroundPenalty": -5,
+              "lowOddsPenalty": 0,
+              "extremeSpreadPenalty": 0,
+              "total": 20,
+              "labels": {
+                "hitProbability": "הסתברות מודל",
+                "oddsValue": "ערך יחס",
+                "marketGap": "פער שוק",
+                "reliability": "אמינות שוק",
+                "niche": "נישה",
+                "clearFavorite": "פייבוריטית ברורה",
+                "proximity": "קרבה לפתיחה",
+                "overroundPenalty": "מרווח בית",
+                "lowOddsPenalty": "יחס נמוך מדי",
+                "extremeSpreadPenalty": "ליין קיצוני"
+              }
+            },
+            "recommendationScore": 20,
+            "nichePick": false,
+            "recommended": true,
+            "recommendationReason": "top-20",
+            "riskLevel": "גבוה",
+            "homeAsset": {
+              "name": "עירוני קרית אתא",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteiPC90ZXh0Pjwvc3ZnPg==",
+              "initials": "ע",
+              "logoSource": "generated team badge",
+              "logoTier": 1
+            },
+            "awayAsset": {
+              "name": "עירוני נס ציונה",
+              "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/686",
+              "initials": "ע",
+              "logoSource": "365Scores",
+              "logoTier": 1
+            },
+            "leagueAsset": {
+              "name": "ליגת Winner סל",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XnDwvdGV4dD48L3N2Zz4=",
+              "initials": "ל",
+              "logoSource": "generated league badge"
+            },
+            "logoVerified": true
+          },
+          {
+            "id": "winner-10481648",
+            "eventId": "10481648",
+            "source": "Winner",
+            "verifiedAt": "2026-05-27T21:29:58.749Z",
+            "bettingStatus": "available",
+            "day": "2026-05-28",
+            "time": "17:59",
+            "sport": "כדורסל",
+            "sportId": 227,
+            "league": "טורקית ראשונה",
+            "country": "טורקיה",
+            "match": "טורק טלקום - אנאדולו אפס",
+            "home": "טורק טלקום",
+            "away": "אנאדולו אפס",
+            "resultKey": "227:2026-05-28:טורק טלקום:אנאדולו אפס",
+            "market": "הימור יתרון - כולל הארכות אם יהיו",
+            "marketTier": "spread",
+            "isAlternativeMarket": false,
+            "marketId": 37144695,
+            "outcomeId": 339222171,
+            "pick": "אנאדולו אפס (-1.5)",
+            "pickTeam": "אנאדולו אפס",
+            "spread": -1.5,
+            "winnerPick": "אנאדולו אפס (-1.5)",
+            "odds": 1.6,
+            "oddsRaw": 1.6,
+            "outsideRange": false,
+            "oddsBook": {
+              "home": {
+                "desc": "טורק טלקום (+1.5)",
+                "team": "טורק טלקום",
+                "spread": 1.5,
+                "odds": 1.7,
+                "implied": 0.5882352941176471,
+                "noVigProbability": 0.4848484848484848
+              },
+              "draw": null,
+              "away": {
+                "desc": "אנאדולו אפס (-1.5)",
+                "team": "אנאדולו אפס",
+                "spread": -1.5,
+                "odds": 1.6,
+                "implied": 0.625,
+                "noVigProbability": 0.5151515151515151
+              },
+              "outcomes": [
+                {
+                  "desc": "טורק טלקום (+1.5)",
+                  "team": "טורק טלקום",
+                  "spread": 1.5,
+                  "odds": 1.7,
+                  "implied": 0.5882352941176471,
+                  "noVigProbability": 0.4848484848484848
+                },
+                {
+                  "desc": "אנאדולו אפס (-1.5)",
+                  "team": "אנאדולו אפס",
+                  "spread": -1.5,
+                  "odds": 1.6,
+                  "implied": 0.625,
+                  "noVigProbability": 0.5151515151515151
+                }
+              ],
+              "overround": 0.2132352941176472
+            },
+            "probability": 0.4533333333333333,
+            "normalizedProbability": 0.5151515151515151,
+            "marketGap": 0.03030303030303033,
+            "overround": 0.2132352941176472,
+            "globalAverageOdds": null,
+            "valueIndicator": null,
+            "fairOdds": 1.9411764705882353,
+            "proximityBonus": 0,
+            "score": 86,
+            "status": "ממתין",
+            "result": "",
+            "signals": [
+              "סבירות פגיעה 45 אחוז",
+              "יחס Winner 1.60",
+              "ציון משולב 86"
+            ],
+            "allMarkets": [
+              {
+                "marketId": 37144694,
+                "title": "מעל/מתחת נקודות - כולל הארכות אם יהיו",
+                "category": "מעל/מתחת",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 339222168,
+                  "desc": "מעל 166.5",
+                  "team": "מעל 166.5",
+                  "price": 1.65,
+                  "spread": null,
+                  "probability": 0.5515151515151515,
+                  "score": 63
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 339222168,
+                    "desc": "מעל 166.5",
+                    "team": "מעל 166.5",
+                    "price": 1.65,
+                    "spread": null,
+                    "probability": 0.5515151515151515,
+                    "score": 63
+                  },
+                  {
+                    "outcomeId": 339222169,
+                    "desc": "מתחת 166.5",
+                    "team": "מתחת 166.5",
+                    "price": 1.65,
+                    "spread": null,
+                    "probability": 0.5515151515151515,
+                    "score": 63
+                  }
+                ]
+              },
+              {
+                "marketId": 37144695,
+                "title": "הימור יתרון - כולל הארכות אם יהיו",
+                "category": "יתרון",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 339222171,
+                  "desc": "אנאדולו אפס (-1.5)",
+                  "team": "אנאדולו אפס",
+                  "price": 1.6,
+                  "spread": -1.5,
+                  "probability": 0.55,
+                  "score": 62
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 339222171,
+                    "desc": "אנאדולו אפס (-1.5)",
+                    "team": "אנאדולו אפס",
+                    "price": 1.6,
+                    "spread": -1.5,
+                    "probability": 0.55,
+                    "score": 62
+                  },
+                  {
+                    "outcomeId": 339222170,
+                    "desc": "טורק טלקום (+1.5)",
+                    "team": "טורק טלקום",
+                    "price": 1.7,
+                    "spread": 1.5,
+                    "probability": 0.5176470588235295,
+                    "score": 60
+                  }
+                ]
+              },
+              {
+                "marketId": 37519208,
+                "title": "הימור יתרון - רבע ראשון",
+                "category": "יתרון",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 340686132,
+                  "desc": "טורק טלקום (+0.5)",
+                  "team": "טורק טלקום",
+                  "price": 1.65,
+                  "spread": 0.5,
+                  "probability": 0.5333333333333333,
+                  "score": 61
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 340686132,
+                    "desc": "טורק טלקום (+0.5)",
+                    "team": "טורק טלקום",
+                    "price": 1.65,
+                    "spread": 0.5,
+                    "probability": 0.5333333333333333,
+                    "score": 61
+                  },
+                  {
+                    "outcomeId": 340686133,
+                    "desc": "אנאדולו אפס (-0.5)",
+                    "team": "אנאדולו אפס",
+                    "price": 1.65,
+                    "spread": -0.5,
+                    "probability": 0.5333333333333333,
+                    "score": 61
+                  }
+                ]
+              },
+              {
+                "marketId": 37519209,
+                "title": "הימור יתרון - מחצית ראשונה",
+                "category": "יתרון",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 340686135,
+                  "desc": "אנאדולו אפס (-0.5)",
+                  "team": "אנאדולו אפס",
+                  "price": 1.55,
+                  "spread": -0.5,
+                  "probability": 0.567741935483871,
+                  "score": 63
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 340686135,
+                    "desc": "אנאדולו אפס (-0.5)",
+                    "team": "אנאדולו אפס",
+                    "price": 1.55,
+                    "spread": -0.5,
+                    "probability": 0.567741935483871,
+                    "score": 63
+                  },
+                  {
+                    "outcomeId": 340686134,
+                    "desc": "טורק טלקום (+0.5)",
+                    "team": "טורק טלקום",
+                    "price": 1.75,
+                    "spread": 0.5,
+                    "probability": 0.5028571428571428,
+                    "score": 59
+                  }
+                ]
+              },
+              {
+                "marketId": 37519210,
+                "title": "מחצית/סיום - ללא הארכות",
+                "category": "מחציות",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 340686152,
+                  "desc": "אנאדולו אפס - אנאדולו אפס",
+                  "team": "אנאדולו אפס - אנאדולו אפס",
+                  "price": 1.85,
+                  "spread": null,
+                  "probability": 0.3891891891891891,
+                  "score": 48
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 340686152,
+                    "desc": "אנאדולו אפס - אנאדולו אפס",
+                    "team": "אנאדולו אפס - אנאדולו אפס",
+                    "price": 1.85,
+                    "spread": null,
+                    "probability": 0.3891891891891891,
+                    "score": 48
+                  },
+                  {
+                    "outcomeId": 340686144,
+                    "desc": "טורק טלקום - טורק טלקום",
+                    "team": "טורק טלקום - טורק טלקום",
+                    "price": 2.3,
+                    "spread": null,
+                    "probability": 0.3130434782608696,
+                    "score": 43
+                  },
+                  {
+                    "outcomeId": 340686146,
+                    "desc": "טורק טלקום - אנאדולו אפס",
+                    "team": "טורק טלקום - אנאדולו אפס",
+                    "price": 4.5,
+                    "spread": null,
+                    "probability": 0.15999999999999998,
+                    "score": 33
+                  },
+                  {
+                    "outcomeId": 340686150,
+                    "desc": "אנאדולו אפס - טורק טלקום",
+                    "team": "אנאדולו אפס - טורק טלקום",
+                    "price": 5.2,
+                    "spread": null,
+                    "probability": 0.13846153846153844,
+                    "score": 31
+                  },
+                  {
+                    "outcomeId": 340686148,
+                    "desc": "x - x",
+                    "team": "x - x",
+                    "price": 100,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 27
+                  },
+                  {
+                    "outcomeId": 340686147,
+                    "desc": "x - טורק טלקום",
+                    "team": "x - טורק טלקום",
+                    "price": 28,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 27
+                  },
+                  {
+                    "outcomeId": 340686149,
+                    "desc": "x - אנאדולו אפס",
+                    "team": "x - אנאדולו אפס",
+                    "price": 23,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 27
+                  },
+                  {
+                    "outcomeId": 340686145,
+                    "desc": "טורק טלקום - x",
+                    "team": "טורק טלקום - x",
+                    "price": 16,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 27
+                  },
+                  {
+                    "outcomeId": 340686151,
+                    "desc": "אנאדולו אפס - x",
+                    "team": "אנאדולו אפס - x",
+                    "price": 16,
+                    "spread": null,
+                    "probability": 0.08,
+                    "score": 27
+                  }
+                ]
+              }
+            ],
+            "explanation": [
+              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
+              "אנאדולו אפס (-1.5) מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. אנאדולו אפס (-1.5) מסומנת כפייבוריטית גם בחוץ, וזה בדרך כלל מצביע על פער איכות מול היריבה ולא רק על יתרון ביתיות. מול טורק טלקום (+1.5), השוק נותן ליריבה יחס 1.70, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: טורק טלקום (+1.5) 1.70.",
+              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
+            ],
+            "scoreBreakdown": {
+              "hitProbability": 33,
+              "oddsValue": 7,
+              "marketGap": 1,
+              "reliability": 0,
+              "niche": 32,
+              "clearFavorite": 18,
+              "proximity": 0,
+              "overroundPenalty": -5,
+              "lowOddsPenalty": 0,
+              "extremeSpreadPenalty": 0,
+              "total": 86,
+              "labels": {
+                "hitProbability": "הסתברות מודל",
+                "oddsValue": "ערך יחס",
+                "marketGap": "פער שוק",
+                "reliability": "אמינות שוק",
+                "niche": "נישה",
+                "clearFavorite": "פייבוריטית ברורה",
+                "proximity": "קרבה לפתיחה",
+                "overroundPenalty": "מרווח בית",
+                "lowOddsPenalty": "יחס נמוך מדי",
+                "extremeSpreadPenalty": "ליין קיצוני"
+              }
+            },
+            "recommendationScore": 86,
+            "nichePick": true,
+            "recommended": true,
+            "recommendationReason": "top-20",
+            "riskLevel": "נמוך",
+            "homeAsset": {
+              "name": "טורק טלקום",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteYPC90ZXh0Pjwvc3ZnPg==",
+              "initials": "ט",
+              "logoSource": "generated team badge",
+              "logoTier": 1
+            },
+            "awayAsset": {
+              "name": "אנאדולו אפס",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteQPC90ZXh0Pjwvc3ZnPg==",
+              "initials": "א",
+              "logoSource": "generated team badge",
+              "logoTier": 1
+            },
+            "leagueAsset": {
+              "name": "טורקית ראשונה",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XmDwvdGV4dD48L3N2Zz4=",
+              "initials": "ט",
+              "logoSource": "generated league badge"
+            },
+            "logoVerified": true
+          },
+          {
+            "id": "winner-10572737",
+            "eventId": "10572737",
+            "source": "Winner",
+            "verifiedAt": "2026-05-27T21:29:58.753Z",
+            "bettingStatus": "available",
+            "day": "2026-05-28",
+            "time": "20:29",
+            "sport": "כדורסל",
+            "sportId": 227,
+            "league": "הולנדית ראשונה",
+            "country": "הולנד",
+            "match": "זוולה - דן בוס",
+            "home": "זוולה",
+            "away": "דן בוס",
+            "resultKey": "227:2026-05-28:זוולה:דן בוס",
+            "market": "הימור יתרון - כולל הארכות אם יהיו",
+            "marketTier": "spread",
+            "isAlternativeMarket": false,
+            "marketId": 37557053,
+            "outcomeId": 340834211,
+            "pick": "דן בוס (+1.5)",
+            "pickTeam": "דן בוס",
+            "spread": 1.5,
+            "winnerPick": "דן בוס (+1.5)",
+            "odds": 1.6,
+            "oddsRaw": 1.6,
+            "outsideRange": false,
+            "oddsBook": {
+              "home": {
+                "desc": "זוולה (-1.5)",
+                "team": "זוולה",
+                "spread": -1.5,
+                "odds": 1.7,
+                "implied": 0.5882352941176471,
+                "noVigProbability": 0.4848484848484848
+              },
+              "draw": null,
+              "away": {
+                "desc": "דן בוס (+1.5)",
+                "team": "דן בוס",
+                "spread": 1.5,
+                "odds": 1.6,
+                "implied": 0.625,
+                "noVigProbability": 0.5151515151515151
+              },
+              "outcomes": [
+                {
+                  "desc": "זוולה (-1.5)",
+                  "team": "זוולה",
+                  "spread": -1.5,
+                  "odds": 1.7,
+                  "implied": 0.5882352941176471,
+                  "noVigProbability": 0.4848484848484848
+                },
+                {
+                  "desc": "דן בוס (+1.5)",
+                  "team": "דן בוס",
+                  "spread": 1.5,
+                  "odds": 1.6,
+                  "implied": 0.625,
+                  "noVigProbability": 0.5151515151515151
+                }
+              ],
+              "overround": 0.2132352941176472
+            },
+            "probability": 0.4533333333333333,
+            "normalizedProbability": 0.5151515151515151,
+            "marketGap": 0.03030303030303033,
+            "overround": 0.2132352941176472,
+            "globalAverageOdds": null,
+            "valueIndicator": null,
+            "fairOdds": 1.9411764705882353,
+            "proximityBonus": 0,
+            "score": 86,
+            "status": "ממתין",
+            "result": "",
+            "signals": [
+              "סבירות פגיעה 45 אחוז",
+              "יחס Winner 1.60",
+              "ציון משולב 86"
+            ],
+            "allMarkets": [
+              {
+                "marketId": 37557053,
+                "title": "הימור יתרון - כולל הארכות אם יהיו",
+                "category": "יתרון",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 340834211,
+                  "desc": "דן בוס (+1.5)",
+                  "team": "דן בוס",
+                  "price": 1.6,
+                  "spread": 1.5,
+                  "probability": 0.55,
+                  "score": 55
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 340834211,
+                    "desc": "דן בוס (+1.5)",
+                    "team": "דן בוס",
+                    "price": 1.6,
+                    "spread": 1.5,
+                    "probability": 0.55,
+                    "score": 55
+                  },
+                  {
+                    "outcomeId": 340834210,
+                    "desc": "זוולה (-1.5)",
+                    "team": "זוולה",
+                    "price": 1.7,
+                    "spread": -1.5,
+                    "probability": 0.5176470588235295,
+                    "score": 53
+                  }
+                ]
+              }
+            ],
+            "explanation": [
+              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
+              "דן בוס (+1.5) מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. דן בוס (+1.5) מסומנת כפייבוריטית גם בחוץ, וזה בדרך כלל מצביע על פער איכות מול היריבה ולא רק על יתרון ביתיות. מול זוולה (-1.5), השוק נותן ליריבה יחס 1.70, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: זוולה (-1.5) 1.70.",
+              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
+            ],
+            "scoreBreakdown": {
+              "hitProbability": 33,
+              "oddsValue": 7,
+              "marketGap": 1,
+              "reliability": 0,
+              "niche": 32,
+              "clearFavorite": 18,
+              "proximity": 0,
+              "overroundPenalty": -5,
+              "lowOddsPenalty": 0,
+              "extremeSpreadPenalty": 0,
+              "total": 86,
+              "labels": {
+                "hitProbability": "הסתברות מודל",
+                "oddsValue": "ערך יחס",
+                "marketGap": "פער שוק",
+                "reliability": "אמינות שוק",
+                "niche": "נישה",
+                "clearFavorite": "פייבוריטית ברורה",
+                "proximity": "קרבה לפתיחה",
+                "overroundPenalty": "מרווח בית",
+                "lowOddsPenalty": "יחס נמוך מדי",
+                "extremeSpreadPenalty": "ליין קיצוני"
+              }
+            },
+            "recommendationScore": 86,
+            "nichePick": true,
+            "recommended": true,
+            "recommendationReason": "top-20",
+            "riskLevel": "נמוך",
+            "homeAsset": {
+              "name": "זוולה",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPteWPC90ZXh0Pjwvc3ZnPg==",
+              "initials": "ז",
+              "logoSource": "generated team badge",
+              "logoTier": 1
+            },
+            "awayAsset": {
+              "name": "דן בוס",
+              "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/12956",
+              "initials": "ד",
+              "logoSource": "365Scores",
+              "logoTier": 1
+            },
+            "leagueAsset": {
+              "name": "הולנדית ראשונה",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XlDwvdGV4dD48L3N2Zz4=",
+              "initials": "ה",
+              "logoSource": "generated league badge"
+            },
+            "logoVerified": true
+          },
+          {
+            "id": "winner-10572743",
+            "eventId": "10572743",
+            "source": "Winner",
+            "verifiedAt": "2026-05-27T21:29:58.754Z",
+            "bettingStatus": "available",
+            "day": "2026-05-28",
+            "time": "20:59",
+            "sport": "כדורסל",
+            "sportId": 227,
+            "league": "הולנדית ראשונה",
+            "country": "הולנד",
+            "match": "ליידן - כרונינגן",
+            "home": "ליידן",
+            "away": "כרונינגן",
+            "resultKey": "227:2026-05-28:ליידן:כרונינגן",
+            "market": "הימור יתרון - כולל הארכות אם יהיו",
+            "marketTier": "spread",
+            "isAlternativeMarket": false,
+            "marketId": 37557073,
+            "outcomeId": 340834284,
+            "pick": "כרונינגן (+6.5)",
+            "pickTeam": "כרונינגן",
+            "spread": 6.5,
+            "winnerPick": "כרונינגן (+6.5)",
+            "odds": 1.6,
+            "oddsRaw": 1.6,
+            "outsideRange": false,
+            "oddsBook": {
+              "home": {
+                "desc": "ליידן (-6.5)",
+                "team": "ליידן",
+                "spread": -6.5,
+                "odds": 1.7,
+                "implied": 0.5882352941176471,
+                "noVigProbability": 0.4848484848484848
+              },
+              "draw": null,
+              "away": {
+                "desc": "כרונינגן (+6.5)",
+                "team": "כרונינגן",
+                "spread": 6.5,
+                "odds": 1.6,
+                "implied": 0.625,
+                "noVigProbability": 0.5151515151515151
+              },
+              "outcomes": [
+                {
+                  "desc": "ליידן (-6.5)",
+                  "team": "ליידן",
+                  "spread": -6.5,
+                  "odds": 1.7,
+                  "implied": 0.5882352941176471,
+                  "noVigProbability": 0.4848484848484848
+                },
+                {
+                  "desc": "כרונינגן (+6.5)",
+                  "team": "כרונינגן",
+                  "spread": 6.5,
+                  "odds": 1.6,
+                  "implied": 0.625,
+                  "noVigProbability": 0.5151515151515151
+                }
+              ],
+              "overround": 0.2132352941176472
+            },
+            "probability": 0.4533333333333333,
+            "normalizedProbability": 0.5151515151515151,
+            "marketGap": 0.03030303030303033,
+            "overround": 0.2132352941176472,
+            "globalAverageOdds": null,
+            "valueIndicator": null,
+            "fairOdds": 1.9411764705882353,
+            "proximityBonus": 0,
+            "score": 86,
+            "status": "ממתין",
+            "result": "",
+            "signals": [
+              "סבירות פגיעה 45 אחוז",
+              "יחס Winner 1.60",
+              "ציון משולב 86"
+            ],
+            "allMarkets": [
+              {
+                "marketId": 37557073,
+                "title": "הימור יתרון - כולל הארכות אם יהיו",
+                "category": "יתרון",
+                "bettable": true,
+                "best": {
+                  "outcomeId": 340834284,
+                  "desc": "כרונינגן (+6.5)",
+                  "team": "כרונינגן",
+                  "price": 1.6,
+                  "spread": 6.5,
+                  "probability": 0.55,
+                  "score": 55
+                },
+                "outcomes": [
+                  {
+                    "outcomeId": 340834284,
+                    "desc": "כרונינגן (+6.5)",
+                    "team": "כרונינגן",
+                    "price": 1.6,
+                    "spread": 6.5,
+                    "probability": 0.55,
+                    "score": 55
+                  },
+                  {
+                    "outcomeId": 340834283,
+                    "desc": "ליידן (-6.5)",
+                    "team": "ליידן",
+                    "price": 1.7,
+                    "spread": -6.5,
+                    "probability": 0.5176470588235295,
+                    "score": 53
+                  }
+                ]
+              }
+            ],
+            "explanation": [
+              "המשחק מופיע בווינר-ליין ולכן יש נתון שוק פעיל בזמן משיכת הנתונים.",
+              "כרונינגן (+6.5) מסומנת כבעלת יתרון סטטיסטי כי היא הפייבוריטית הברורה בשוק המנצח של Winner. כרונינגן (+6.5) מסומנת כפייבוריטית גם בחוץ, וזה בדרך כלל מצביע על פער איכות מול היריבה ולא רק על יתרון ביתיות. מול ליידן (-6.5), השוק נותן ליריבה יחס 1.70, כלומר Winner רואה אותה כפחות סבירה לניצחון. חלופות השוק: ליידן (-6.5) 1.70.",
+              "האלגוריתם משתמש ביחסי Winner לפני המשחק, ממיר אותם להסתברויות, מנכה את מרווח הבית, ואז מדרג לפי הסתברות מנורמלת ופער מול היריבה הקרובה. אין כאן המצאה של פציעות, הרכבים או מידע שלא חזר מהמקור."
+            ],
+            "liveScore": "",
+            "actualWinner": "",
+            "matchPhase": "scheduled",
+            "scoreBreakdown": {
+              "hitProbability": 33,
+              "oddsValue": 7,
+              "marketGap": 1,
+              "reliability": 0,
+              "niche": 32,
+              "clearFavorite": 18,
+              "proximity": 0,
+              "overroundPenalty": -5,
+              "lowOddsPenalty": 0,
+              "extremeSpreadPenalty": 0,
+              "total": 86,
+              "labels": {
+                "hitProbability": "הסתברות מודל",
+                "oddsValue": "ערך יחס",
+                "marketGap": "פער שוק",
+                "reliability": "אמינות שוק",
+                "niche": "נישה",
+                "clearFavorite": "פייבוריטית ברורה",
+                "proximity": "קרבה לפתיחה",
+                "overroundPenalty": "מרווח בית",
+                "lowOddsPenalty": "יחס נמוך מדי",
+                "extremeSpreadPenalty": "ליין קיצוני"
+              }
+            },
+            "recommendationScore": 86,
+            "nichePick": true,
+            "recommended": true,
+            "recommendationReason": "top-20",
+            "riskLevel": "נמוך",
+            "homeAsset": {
+              "name": "ליידן",
+              "logo": "https://imagecache.365scores.com/image/upload/f_png,w_200,h_200,c_limit/Competitors/8675",
+              "initials": "ל",
+              "logoSource": "365Scores",
+              "logoTier": 1
+            },
+            "awayAsset": {
+              "name": "כרונינגן",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA1MCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjUwIiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48cGF0aCBkPSJNMjIgMyBMMzkgMTEgTDM5IDI4IFEzOSA0MSAyMiA0NyBRNSA0MSA1IDI4IEw1IDExIFoiIGZpbGw9IiMxODIwMjciLz48cGF0aCBkPSJNMjIgOCBMMzUgMTQgTDM1IDI4IFEzNSAzOCAyMiA0MyBROSAzOCA5IDI4IEw5IDE0IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhYTZhZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1kYXNoYXJyYXk9IjQgMyIvPjx0ZXh0IHg9IjIyIiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNlOGVlZjIiPtebPC90ZXh0Pjwvc3ZnPg==",
+              "initials": "כ",
+              "logoSource": "generated team badge",
+              "logoTier": 1
+            },
+            "leagueAsset": {
+              "name": "הולנדית ראשונה",
+              "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCI+PHJlY3Qgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTAiIGZpbGw9IiMxMDE2MWIiLz48Y2lyY2xlIGN4PSIyMiIgY3k9IjIyIiByPSIxNyIgZmlsbD0iIzE4MjAyNyIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMjIiIHI9IjEzIiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZmI2YzkiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtZGFzaGFycmF5PSI0IDMiLz48dGV4dCB4PSIyMiIgeT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZThlZWYyIj7XlDwvdGV4dD48L3N2Zz4=",
+              "initials": "ה",
+              "logoSource": "generated league badge"
             },
             "logoVerified": true
           }
