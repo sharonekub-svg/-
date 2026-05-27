@@ -1454,9 +1454,8 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
   }
 
   const candidates = [...events.values()]
-    .filter((row) => row.status === "ממתין")
-    .filter((row) => isOpenDisplayable(row))
-    .filter((row) => hasSingleClearFavorite(row))
+    .filter((row) => isOpenDisplayable(row) || row.matchPhase === "final")
+    .filter((row) => row.matchPhase === "final" || hasSingleClearFavorite(row))
     // Motivation filter: exclude games where the favourite has no meaningful stake
     .filter((row) => {
       if (!row.motivationRisk) return true;
@@ -1876,13 +1875,21 @@ function mergeRows(primary, secondary) {
       byEvent.set(key, row);
       continue;
     }
+    const mergedPhase = current.matchPhase || row.matchPhase || "";
+    const definitiveStatus = (s) => s && s !== "ממתין";
     byEvent.set(key, {
       ...row,
       ...current,
       liveScore: current.liveScore || row.liveScore || "",
       result: current.result || row.result || "",
       actualWinner: current.actualWinner || row.actualWinner || "",
-      matchPhase: current.matchPhase || row.matchPhase || "",
+      matchPhase: mergedPhase,
+      // Propagate a definitive status (hit/miss/נסגר/בוטל) from either row
+      status: definitiveStatus(current.status)
+        ? current.status
+        : definitiveStatus(row.status)
+          ? row.status
+          : (current.status || "ממתין"),
     });
   }
   return [...byEvent.values()];
@@ -1890,7 +1897,7 @@ function mergeRows(primary, secondary) {
 
 function finalOpenRows(rows) {
   const sorted = (rows || [])
-    .filter((row) => row.recommended && row.odds)
+    .filter((row) => row.recommended && row.odds && (row.status === "ממתין" || row.matchPhase === "final" || row.matchPhase === "live" || row.matchPhase === "ht"))
     .sort((a, b) => {
       return (b.recommendationScore || 0) - (a.recommendationScore || 0)
         || (b.probability || 0) - (a.probability || 0)
@@ -2057,10 +2064,17 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       ...build365BasketballRows(scores365Events, yesterday),
     ]
   );
-  const todayCurrentRows = [
-    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
-    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
-  ];
+  const todayCurrentRows = mergeRows(
+    [
+      ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
+      ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
+    ],
+    [
+      ...buildResultRows(winnerResultEvents, today),
+      ...build365FootballRows(scores365Events, today),
+      ...build365BasketballRows(scores365Events, today),
+    ]
+  );
   const tomorrowCurrentRows = [
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
