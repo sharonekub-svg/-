@@ -1257,7 +1257,7 @@
       max-width: min(150px, 38vw);
       font-size: 12px;
     }
-    /* ─── REUBEN AI — PREMIUM REDESIGN ─── */
+    /* ─── REUBEN AI — SIDEBAR + CHAT LAYOUT ─── */
     .reuben-panel {
       grid-column: 1 / -1;
       background: linear-gradient(180deg, #0b1821 0%, #070f18 100%);
@@ -1265,49 +1265,164 @@
       border-radius: 20px;
       overflow: hidden;
       display: flex;
-      flex-direction: column;
-      min-height: 700px;
+      flex-direction: row;
+      min-height: 740px;
       box-shadow: 0 0 0 1px rgba(0,0,0,.5), 0 40px 120px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
       position: relative;
     }
     .reuben-panel-glow {
       position: absolute;
-      top: -60px; left: 50%; transform: translateX(-50%);
-      width: 70%; height: 180px;
+      top: -80px; right: 30%; transform: none;
+      width: 50%; height: 220px;
       background: radial-gradient(ellipse, rgba(85,214,255,.07) 0%, transparent 70%);
       pointer-events: none;
       z-index: 0;
     }
-    .reuben-header {
+    /* ── SIDEBAR ── */
+    .reuben-sidebar {
+      width: 256px;
+      flex: 0 0 256px;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0,0,0,.22);
+      border-inline-end: 1px solid rgba(255,255,255,.06);
+      position: relative;
+      z-index: 2;
+      transition: transform .28s cubic-bezier(.4,0,.2,1), opacity .28s ease;
+    }
+    .reuben-sidebar-top {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 18px 24px;
+      gap: 10px;
+      padding: 18px 16px 14px;
       border-bottom: 1px solid rgba(255,255,255,.055);
-      background: rgba(255,255,255,.015);
-      position: relative;
-      z-index: 1;
     }
-    .reuben-avatar {
-      width: 46px;
-      height: 46px;
-      border-radius: 14px;
+    .reuben-avatar-sm {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
       background: linear-gradient(135deg, #55d6ff 0%, #2ee99d 60%, #1a8bff 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 17px;
       flex: 0 0 auto;
-      box-shadow: 0 0 0 3px rgba(85,214,255,.15), 0 6px 20px rgba(85,214,255,.2);
+      box-shadow: 0 0 0 2px rgba(85,214,255,.2), 0 4px 12px rgba(85,214,255,.2);
       animation: avatar-glow 3s ease-in-out infinite;
     }
     @keyframes avatar-glow {
-      0%,100% { box-shadow: 0 0 0 3px rgba(85,214,255,.15), 0 6px 20px rgba(85,214,255,.2); }
-      50% { box-shadow: 0 0 0 4px rgba(85,214,255,.28), 0 8px 28px rgba(85,214,255,.32); }
+      0%,100% { box-shadow: 0 0 0 2px rgba(85,214,255,.2), 0 4px 12px rgba(85,214,255,.18); }
+      50% { box-shadow: 0 0 0 3px rgba(85,214,255,.32), 0 6px 20px rgba(85,214,255,.28); }
+    }
+    .reuben-sidebar-brand-name {
+      font: 900 14px/1 Heebo, sans-serif;
+      color: #fff;
+      flex: 1;
+      letter-spacing: -.01em;
+    }
+    .reuben-new-chat {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: all .18s;
+    }
+    .reuben-new-chat:hover { background: rgba(85,214,255,.1); border-color: rgba(85,214,255,.3); color: var(--cyan); }
+    .reuben-sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 10px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.1) transparent;
+    }
+    .reuben-sidebar-body::-webkit-scrollbar { width: 3px; }
+    .reuben-sidebar-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 2px; }
+    .reuben-sidebar-section {
+      font: 800 9.5px/1 Heebo, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: rgba(255,255,255,.28);
+      padding: 6px 8px 6px;
+      margin-top: 8px;
+    }
+    .reuben-sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,.55);
+      font: 600 12.5px/1.3 Heebo, Assistant, sans-serif;
+      cursor: pointer;
+      text-align: start;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .reuben-sidebar-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.88); }
+    .reuben-sidebar-item.active { background: rgba(85,214,255,.08); color: var(--cyan); }
+    .sidebar-item-emoji {
+      font-size: 14px;
+      flex: 0 0 auto;
+      line-height: 1;
+    }
+    .reuben-sidebar-footer {
+      padding: 12px 14px 16px;
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+    .reuben-sidebar-tip {
+      font-size: 10px;
+      color: rgba(255,255,255,.2);
+      line-height: 1.5;
+      text-align: center;
+    }
+    /* sidebar toggle btn (mobile) */
+    .reuben-sidebar-toggle {
+      display: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.55);
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: all .18s;
+    }
+    .reuben-sidebar-toggle:hover { background: rgba(85,214,255,.1); border-color: rgba(85,214,255,.3); color: var(--cyan); }
+    /* ── MAIN ── */
+    .reuben-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+    .reuben-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 22px;
+      border-bottom: 1px solid rgba(255,255,255,.055);
+      background: rgba(255,255,255,.012);
     }
     .reuben-header-info { flex: 1; min-width: 0; }
     .reuben-header-name {
-      font: 900 16px/1.2 Heebo, Assistant, sans-serif;
+      font: 900 15px/1.2 Heebo, Assistant, sans-serif;
       color: #fff;
       letter-spacing: -.01em;
     }
@@ -1315,9 +1430,9 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 3px;
+      margin-top: 2px;
       font-size: 11px;
-      color: rgba(255,255,255,.38);
+      color: rgba(255,255,255,.35);
     }
     .reuben-online-dot {
       width: 7px;
@@ -1347,33 +1462,32 @@
     }
     .reuben-header-actions { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
     .reuben-badge {
-      padding: 5px 11px;
+      padding: 4px 10px;
       border-radius: 6px;
-      font: 800 9.5px/1 Heebo, sans-serif;
+      font: 800 9px/1 Heebo, sans-serif;
       letter-spacing: .08em;
       text-transform: uppercase;
-      background: linear-gradient(135deg, rgba(85,214,255,.12), rgba(46,233,157,.08));
-      border: 1px solid rgba(85,214,255,.22);
+      background: linear-gradient(135deg, rgba(85,214,255,.1), rgba(46,233,157,.07));
+      border: 1px solid rgba(85,214,255,.2);
       color: var(--cyan);
     }
+    /* ── CHAT LOG ── */
     .chat-log {
       display: flex;
       flex-direction: column;
       flex: 1;
-      max-height: 600px;
-      min-height: 380px;
+      max-height: 580px;
+      min-height: 360px;
       overflow-y: auto;
-      padding: 24px 22px;
-      gap: 22px;
+      padding: 26px 24px;
+      gap: 24px;
       scroll-behavior: smooth;
       scrollbar-width: thin;
-      scrollbar-color: rgba(85,214,255,.18) transparent;
-      position: relative;
-      z-index: 1;
+      scrollbar-color: rgba(85,214,255,.15) transparent;
     }
     .chat-log::-webkit-scrollbar { width: 4px; }
     .chat-log::-webkit-scrollbar-track { background: transparent; }
-    .chat-log::-webkit-scrollbar-thumb { background: rgba(85,214,255,.18); border-radius: 2px; }
+    .chat-log::-webkit-scrollbar-thumb { background: rgba(85,214,255,.15); border-radius: 2px; }
     .chat-msg {
       display: flex;
       flex-direction: column;
@@ -1389,16 +1503,16 @@
       font: 800 10px/1 Heebo, sans-serif;
       letter-spacing: .05em;
       text-transform: uppercase;
-      color: rgba(255,255,255,.22);
+      color: rgba(255,255,255,.2);
       margin-bottom: 7px;
     }
-    .chat-msg.user .chat-msg-label { color: rgba(255,200,87,.32); }
+    .chat-msg.user .chat-msg-label { color: rgba(255,200,87,.3); }
     .chat-bubble-user {
       background: linear-gradient(135deg, rgba(255,200,87,.1), rgba(255,122,69,.06));
       border: 1px solid rgba(255,200,87,.18);
       border-radius: 20px 20px 6px 20px;
       padding: 13px 18px;
-      max-width: min(560px, 92%);
+      max-width: min(540px, 92%);
       color: rgba(255,245,220,.88);
       font-size: 14px;
       line-height: 1.65;
@@ -1406,6 +1520,7 @@
       word-break: break-word;
     }
     .chat-bubble-ai { width: 100%; }
+    /* ── AI SECTIONS ── */
     .ai-sections { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     .ai-section {
       border: 1px solid rgba(255,255,255,.07);
@@ -1440,22 +1555,11 @@
     .ai-section.analysis .ai-section-top-bar { background: linear-gradient(90deg,#a082ff,#55d6ff); }
     .ai-section.disclaimer { border-color: rgba(255,255,255,.04); background: transparent; }
     .ai-section.disclaimer .ai-section-top-bar { display: none; }
-    .ai-section-head {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      margin-bottom: 10px;
-    }
+    .ai-section-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
     .ai-section-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      flex: 0 0 auto;
-      background: rgba(255,255,255,.05);
+      width: 28px; height: 28px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex: 0 0 auto; background: rgba(255,255,255,.05);
     }
     .ai-section.verdict .ai-section-icon { background: rgba(85,214,255,.1); }
     .ai-section.value .ai-section-icon { background: rgba(255,200,87,.1); }
@@ -1465,8 +1569,7 @@
     .ai-section.analysis .ai-section-icon { background: rgba(160,130,255,.1); }
     .ai-section-title {
       font: 900 10.5px/1 Heebo, sans-serif;
-      text-transform: uppercase;
-      letter-spacing: .07em;
+      text-transform: uppercase; letter-spacing: .07em;
       color: rgba(255,255,255,.38);
     }
     .ai-section.verdict .ai-section-title { color: var(--cyan); }
@@ -1475,12 +1578,7 @@
     .ai-section.pros .ai-section-title { color: #2ee99d; }
     .ai-section.cons .ai-section-title { color: #ffaa00; }
     .ai-section.analysis .ai-section-title { color: #a082ff; }
-    .ai-section-body {
-      font-size: 13.5px;
-      line-height: 1.72;
-      color: rgba(247,243,234,.82);
-      white-space: pre-wrap;
-    }
+    .ai-section-body { font-size: 13.5px; line-height: 1.72; color: rgba(247,243,234,.82); white-space: pre-wrap; }
     .ai-section.disclaimer .ai-section-body { font-size: 11px; color: rgba(255,255,255,.27); }
     .risk-meter { margin-top: 12px; }
     .risk-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
@@ -1494,158 +1592,82 @@
     .risk-bar-fill.lvl4 { background: linear-gradient(90deg,#ff9a00,#ff6464); width: 80%; }
     .risk-bar-fill.lvl5 { background: linear-gradient(90deg,#ff6464,#ff0000); width: 100%; }
     .suggestion-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 14px;
-      padding-top: 14px;
+      display: flex; flex-wrap: wrap; gap: 7px;
+      margin-top: 14px; padding-top: 14px;
       border-top: 1px solid rgba(255,255,255,.05);
     }
     .suggestion-chip {
-      padding: 7px 15px;
-      border-radius: 50px;
-      border: 1px solid rgba(85,214,255,.2);
-      background: rgba(85,214,255,.04);
-      color: rgba(85,214,255,.8);
-      font: 700 11.5px Heebo, Assistant, sans-serif;
-      cursor: pointer;
-      transition: all .2s ease;
-      white-space: nowrap;
-      position: relative;
-      overflow: hidden;
+      padding: 7px 15px; border-radius: 50px;
+      border: 1px solid rgba(85,214,255,.2); background: rgba(85,214,255,.04);
+      color: rgba(85,214,255,.8); font: 700 11.5px Heebo, Assistant, sans-serif;
+      cursor: pointer; transition: all .2s ease; white-space: nowrap; overflow: hidden;
     }
     .suggestion-chip:hover {
-      border-color: rgba(85,214,255,.45);
-      color: var(--cyan);
-      background: rgba(85,214,255,.1);
-      transform: translateY(-1px);
+      border-color: rgba(85,214,255,.45); color: var(--cyan);
+      background: rgba(85,214,255,.1); transform: translateY(-1px);
       box-shadow: 0 4px 14px rgba(85,214,255,.12);
     }
     .suggestion-chip:active { transform: translateY(0); }
     @keyframes section-reveal { to { opacity: 1; transform: translateY(0); } }
+    /* ── INPUT AREA ── */
     .reuben-input-area {
       border-top: 1px solid rgba(255,255,255,.055);
       padding: 16px 22px 20px;
-      background: rgba(0,0,0,.08);
-      position: relative;
-      z-index: 1;
+      background: rgba(0,0,0,.07);
     }
     .reuben-input-frame {
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 16px;
-      background: rgba(255,255,255,.025);
-      transition: border-color .22s, box-shadow .22s;
+      border: 1px solid rgba(255,255,255,.1); border-radius: 16px;
+      background: rgba(255,255,255,.025); transition: border-color .22s, box-shadow .22s;
     }
     .reuben-input-frame:focus-within {
       border-color: rgba(85,214,255,.32);
       box-shadow: 0 0 0 3px rgba(85,214,255,.055), 0 8px 28px rgba(85,214,255,.05);
     }
     .reuben-input-row {
-      display: flex;
-      align-items: flex-end;
-      gap: 0;
-      padding: 4px 5px 5px 16px;
+      display: flex; align-items: flex-end; gap: 0; padding: 4px 5px 5px 16px;
     }
     .reuben-input-row textarea {
-      flex: 1;
-      min-height: 48px;
-      max-height: 160px;
-      resize: none;
-      border: none;
-      background: transparent;
-      color: var(--text);
-      padding: 12px 8px 12px 0;
-      font: 600 14px/1.55 Heebo, Assistant, sans-serif;
-      outline: none;
+      flex: 1; min-height: 48px; max-height: 160px; resize: none;
+      border: none; background: transparent; color: var(--text);
+      padding: 12px 8px 12px 0; font: 600 14px/1.55 Heebo, Assistant, sans-serif; outline: none;
     }
     .reuben-input-row textarea::placeholder { color: rgba(255,255,255,.28); font-weight: 400; }
     .reuben-send-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: 11px;
-      border: none;
-      background: linear-gradient(135deg, #55d6ff, #2ee99d);
-      color: #04111a;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex: 0 0 auto;
-      align-self: flex-end;
-      margin-bottom: 5px;
+      width: 42px; height: 42px; border-radius: 11px; border: none;
+      background: linear-gradient(135deg, #55d6ff, #2ee99d); color: #04111a;
+      font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex: 0 0 auto; align-self: flex-end; margin-bottom: 5px;
       transition: opacity .15s, transform .18s, box-shadow .18s;
       box-shadow: 0 4px 14px rgba(85,214,255,.22);
     }
     .reuben-send-btn:hover:not(:disabled) { transform: scale(1.07); box-shadow: 0 6px 22px rgba(85,214,255,.38); }
     .reuben-send-btn:active:not(:disabled) { transform: scale(.95); }
     .reuben-send-btn:disabled { opacity: .32; cursor: default; }
-    .reuben-input-footer {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
+    .reuben-input-footer { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
     .reuben-upload-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 12px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,.07);
-      background: rgba(255,255,255,.025);
-      color: rgba(255,255,255,.38);
-      font: 700 11px Heebo, sans-serif;
-      cursor: pointer;
-      transition: border-color .15s, color .15s;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.025);
+      color: rgba(255,255,255,.38); font: 700 11px Heebo, sans-serif;
+      cursor: pointer; transition: border-color .15s, color .15s;
     }
     .reuben-upload-label:hover { border-color: rgba(255,255,255,.14); color: rgba(255,255,255,.6); }
-    .reuben-disclaimer {
-      font-size: 10px;
-      color: rgba(255,255,255,.2);
-      margin-inline-start: auto;
-    }
+    .reuben-disclaimer { font-size: 10px; color: rgba(255,255,255,.2); margin-inline-start: auto; }
+    /* ── THINKING / LOADING ── */
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
     .typing-dot { animation: blink 1.2s step-end infinite; }
-    .ai-thinking {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      width: 100%;
-      animation: msg-appear .3s ease both;
-    }
-    .thinking-header {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-    }
+    .ai-thinking { display: flex; flex-direction: column; gap: 14px; width: 100%; animation: msg-appear .3s ease both; }
+    .thinking-header { display: flex; align-items: center; gap: 11px; }
     .thinking-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
+      width: 34px; height: 34px; border-radius: 10px;
       background: linear-gradient(135deg, #55d6ff, #2ee99d);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 17px;
-      flex: 0 0 auto;
-      animation: avatar-glow 1.5s ease-in-out infinite;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex: 0 0 auto; animation: avatar-glow 1.5s ease-in-out infinite;
     }
-    .thinking-title-text {
-      font: 800 13px/1 Heebo, sans-serif;
-      color: rgba(255,255,255,.55);
-    }
-    .thinking-dots {
-      display: flex;
-      gap: 4px;
-      margin-inline-start: auto;
-    }
+    .thinking-title-text { font: 800 13px/1 Heebo, sans-serif; color: rgba(255,255,255,.55); }
+    .thinking-dots { display: flex; gap: 4px; margin-inline-start: auto; }
     .thinking-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--cyan);
+      width: 6px; height: 6px; border-radius: 50%; background: var(--cyan);
       animation: tdot-bounce .9s ease-in-out infinite;
     }
     .thinking-dot:nth-child(1) { animation-delay: 0s; }
@@ -1656,87 +1678,63 @@
       40% { transform: scale(1.2); opacity: 1; }
     }
     .thinking-steps-card {
-      border: 1px solid rgba(255,255,255,.055);
-      border-radius: 13px;
-      background: rgba(255,255,255,.018);
-      padding: 13px 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
+      border: 1px solid rgba(255,255,255,.055); border-radius: 13px;
+      background: rgba(255,255,255,.018); padding: 13px 15px;
+      display: flex; flex-direction: column; gap: 7px;
     }
     .thinking-step {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      font: 700 12px/1.4 Heebo, sans-serif;
-      color: rgba(255,255,255,.3);
-      opacity: 0;
-      transform: translateY(4px);
+      display: flex; align-items: center; gap: 9px;
+      font: 700 12px/1.4 Heebo, sans-serif; color: rgba(255,255,255,.3);
+      opacity: 0; transform: translateY(4px);
       transition: opacity .3s ease, transform .3s ease, color .3s ease;
       pointer-events: none;
     }
-    .thinking-step.step-visible {
-      opacity: 1;
-      transform: translateY(0);
-      color: rgba(85,214,255,.75);
-      pointer-events: auto;
-    }
-    .thinking-step.step-done {
-      opacity: .55;
-      transform: translateY(0);
-      color: rgba(46,233,157,.55);
-      pointer-events: auto;
-    }
+    .thinking-step.step-visible { opacity: 1; transform: translateY(0); color: rgba(85,214,255,.75); pointer-events: auto; }
+    .thinking-step.step-done { opacity: .55; transform: translateY(0); color: rgba(46,233,157,.55); pointer-events: auto; }
     .thinking-step-dot {
-      width: 18px;
-      height: 18px;
-      border-radius: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      flex: 0 0 auto;
-      background: rgba(255,255,255,.04);
-      transition: background .3s;
+      width: 18px; height: 18px; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; flex: 0 0 auto; background: rgba(255,255,255,.04); transition: background .3s;
     }
     .thinking-step.step-visible .thinking-step-dot { background: rgba(85,214,255,.12); animation: thinking-step 1.6s ease-in-out infinite; }
     .thinking-step.step-done .thinking-step-dot { background: rgba(46,233,157,.1); }
-    .thinking-progress {
-      height: 2px;
-      border-radius: 1px;
-      background: rgba(255,255,255,.05);
-      margin-top: 6px;
-      overflow: hidden;
-    }
+    .thinking-progress { height: 2px; border-radius: 1px; background: rgba(255,255,255,.05); margin-top: 6px; overflow: hidden; }
     .thinking-progress-bar {
-      height: 100%;
-      border-radius: 1px;
+      height: 100%; border-radius: 1px;
       background: linear-gradient(90deg, transparent, #55d6ff, #2ee99d, transparent);
-      background-size: 200% 100%;
-      animation: thinking-line 1.8s linear infinite;
+      background-size: 200% 100%; animation: thinking-line 1.8s linear infinite;
     }
     @keyframes pulse-ring {
       0% { box-shadow: 0 0 0 0 rgba(85,214,255,.45); transform: scale(.9); }
       70% { box-shadow: 0 0 0 9px rgba(85,214,255,0); transform: scale(1); }
       100% { box-shadow: 0 0 0 0 rgba(85,214,255,0); transform: scale(.9); }
     }
-    @keyframes thinking-line {
-      from { background-position: 0 0; }
-      to { background-position: 200% 0; }
-    }
+    @keyframes thinking-line { from { background-position: 0 0; } to { background-position: 200% 0; } }
     @keyframes thinking-step {
       0%, 100% { opacity: .45; transform: translateY(0); }
       45% { opacity: 1; transform: translateY(-1px); }
     }
-    @media (max-width: 640px) {
-      .reuben-panel { border-radius: 14px; min-height: 580px; }
-      .reuben-header { padding: 14px 16px; }
-      .chat-log { padding: 16px 14px; max-height: 460px; min-height: 300px; gap: 16px; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .reuben-panel { flex-direction: column; min-height: 600px; border-radius: 14px; }
+      .reuben-sidebar {
+        width: 100%; flex: 0 0 auto; max-height: 0;
+        border-inline-end: none; border-bottom: 1px solid rgba(255,255,255,.06);
+        overflow: hidden; transition: max-height .3s ease;
+      }
+      .reuben-sidebar.open { max-height: 320px; }
+      .reuben-sidebar-toggle { display: flex; }
+      .chat-log { padding: 16px 14px; max-height: 420px; min-height: 280px; gap: 16px; }
+      .reuben-header { padding: 13px 16px; }
       .reuben-input-area { padding: 12px 14px 16px; }
       .ai-section-inner { padding: 12px 14px 14px; }
       .ai-section-body { font-size: 13px; }
       .reuben-disclaimer { display: none; }
       .reuben-badge { display: none; }
+    }
+    @media (max-width: 480px) {
+      .reuben-panel-glow { display: none; }
+      .chat-log { max-height: 380px; }
     }
     .sport-section {
       display: grid;
@@ -2062,6 +2060,7 @@
       reubenCandidates: [],
       reubenLastQuery: "",
       reubenLoading: false,
+      reubenSidebarOpen: false,
       debugMode: location.pathname.includes("debug"),
       isPremium: localStorage.getItem('hapogea_premium_v2') === 'active',
       reubenFreeUsed: 0
@@ -3757,49 +3756,87 @@
         ], suggestions: ["ארסנל נגד פריז", "ברצלונה נגד ריאל מדריד", "לייקרס נגד סלטיקס", "מנצ׳סטר סיטי היום"], text: "שלום! אני הפוגע AI." }];
       const loading = state.reubenLoading;
       const isLocked = !state.isPremium && (state.reubenFreeUsed || 0) >= 1;
+      const sidebarOpen = state.reubenSidebarOpen ? " open" : "";
       return `
         <section class="reuben-panel">
           <div class="reuben-panel-glow"></div>
-          <div class="reuben-header">
-            <div class="reuben-avatar">⚽</div>
-            <div class="reuben-header-info">
-              <div class="reuben-header-name">הפוגע AI</div>
-              <div class="reuben-header-status">
-                <span class="reuben-online-dot"></span>
-                מנתח משחקים · נתוני Winner בזמן אמת
-                <span class="reuben-live-badge">LIVE</span>
+
+          <!-- SIDEBAR -->
+          <div class="reuben-sidebar${sidebarOpen}" id="reubenSidebar">
+            <div class="reuben-sidebar-top">
+              <div class="reuben-avatar-sm">⚽</div>
+              <span class="reuben-sidebar-brand-name">הפוגע AI</span>
+              <button class="reuben-new-chat" id="reubenNewChat" title="שיחה חדשה" type="button">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <div class="reuben-sidebar-body">
+              <div class="reuben-sidebar-section">משחקים מהירים</div>
+              <button class="reuben-sidebar-item" data-chip="ארסנל נגד פריז" type="button"><span class="sidebar-item-emoji">⚽</span>ארסנל נגד פריז</button>
+              <button class="reuben-sidebar-item" data-chip="ברצלונה נגד ריאל מדריד" type="button"><span class="sidebar-item-emoji">⚽</span>ברצלונה נגד ריאל מדריד</button>
+              <button class="reuben-sidebar-item" data-chip="מנצ׳סטר סיטי נגד ליברפול" type="button"><span class="sidebar-item-emoji">⚽</span>מנצ׳סטר סיטי נגד ליברפול</button>
+              <button class="reuben-sidebar-item" data-chip="דורטמונד נגד לברקוזן" type="button"><span class="sidebar-item-emoji">⚽</span>דורטמונד נגד לברקוזן</button>
+              <button class="reuben-sidebar-item" data-chip="לייקרס נגד סלטיקס" type="button"><span class="sidebar-item-emoji">🏀</span>לייקרס נגד סלטיקס</button>
+              <button class="reuben-sidebar-item" data-chip="וורירס נגד נאגטס" type="button"><span class="sidebar-item-emoji">🏀</span>וורירס נגד נאגטס</button>
+              <div class="reuben-sidebar-section">שאלות חכמות</div>
+              <button class="reuben-sidebar-item" data-chip="יש פה Value?" type="button"><span class="sidebar-item-emoji">📊</span>יש פה Value?</button>
+              <button class="reuben-sidebar-item" data-chip="זה מלכודת?" type="button"><span class="sidebar-item-emoji">🚨</span>זה מלכודת?</button>
+              <button class="reuben-sidebar-item" data-chip="היית נכנס?" type="button"><span class="sidebar-item-emoji">🎯</span>היית נכנס?</button>
+              <button class="reuben-sidebar-item" data-chip="מה הסיכוי לתיקו?" type="button"><span class="sidebar-item-emoji">⚖️</span>מה הסיכוי לתיקו?</button>
+              <button class="reuben-sidebar-item" data-chip="מה הסיכוי לאנדרדוג?" type="button"><span class="sidebar-item-emoji">💫</span>מה הסיכוי לאנדרדוג?</button>
+            </div>
+            <div class="reuben-sidebar-footer">
+              <div class="reuben-sidebar-tip">ניתוח ספורטיבי בלבד<br>אין ייעוץ הימורים</div>
+            </div>
+          </div>
+
+          <!-- MAIN CHAT -->
+          <div class="reuben-main">
+            <div class="reuben-header">
+              <button class="reuben-sidebar-toggle" id="reubenSidebarToggle" type="button" title="תפריט">
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect y="0" width="16" height="1.8" rx=".9" fill="currentColor"/><rect y="5.1" width="16" height="1.8" rx=".9" fill="currentColor"/><rect y="10.2" width="10" height="1.8" rx=".9" fill="currentColor"/></svg>
+              </button>
+              <div class="reuben-header-info">
+                <div class="reuben-header-name">הפוגע AI</div>
+                <div class="reuben-header-status">
+                  <span class="reuben-online-dot"></span>
+                  מנתח משחקים · Winner בזמן אמת
+                  <span class="reuben-live-badge">LIVE</span>
+                </div>
+              </div>
+              <div class="reuben-header-actions">
+                <span class="reuben-badge">BETA</span>
               </div>
             </div>
-            <div class="reuben-header-actions">
-              <span class="reuben-badge">BETA</span>
+
+            <div class="chat-log" id="reubenOutput">
+              ${messages.map(renderChatMessage).join("")}
+              ${loading ? renderAiThinking() : ""}
             </div>
-          </div>
-          <div class="chat-log" id="reubenOutput">
-            ${messages.map(renderChatMessage).join("")}
-            ${loading ? renderAiThinking() : ""}
-          </div>
-          ${isLocked ? `
-          <div style="text-align:center;padding:28px 20px;border-top:1px solid rgba(255,255,255,.06)">
-            <div style="font-size:32px;margin-bottom:10px">🔒</div>
-            <p style="margin:0 0 6px;font-size:15px;font-weight:900;color:rgba(255,255,255,.85)">השתמשת בניתוח החינמי שלך</p>
-            <p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,.38)">פרימיום נותן גישה בלתי מוגבלת להפוגע AI</p>
-            <button onclick="openPremiumModal()" style="padding:13px 32px;border-radius:50px;border:none;background:linear-gradient(135deg,#55d6ff,#2196f3);color:#04111a;font:800 14px Heebo,sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(85,214,255,.3)">פתח פרימיום 🔓</button>
-          </div>
-          ` : `
-          <div class="reuben-input-area">
-            <div class="reuben-input-frame">
-              <div class="reuben-input-row">
-                <textarea id="reubenInput" placeholder="כתוב משחק: ארסנל נגד פריז, ברצלונה היום..." autocomplete="off" spellcheck="false" rows="2" ${loading ? "disabled" : ""}></textarea>
-                <button class="reuben-send-btn" type="button" id="reubenAnalyze" ${loading ? "disabled" : ""}>➤</button>
+
+            ${isLocked ? `
+            <div style="text-align:center;padding:28px 20px;border-top:1px solid rgba(255,255,255,.06)">
+              <div style="font-size:32px;margin-bottom:10px">🔒</div>
+              <p style="margin:0 0 6px;font-size:15px;font-weight:900;color:rgba(255,255,255,.85)">השתמשת בניתוח החינמי שלך</p>
+              <p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,.38)">פרימיום נותן גישה בלתי מוגבלת להפוגע AI</p>
+              <button onclick="openPremiumModal()" style="padding:13px 32px;border-radius:50px;border:none;background:linear-gradient(135deg,#55d6ff,#2196f3);color:#04111a;font:800 14px Heebo,sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(85,214,255,.3)">פתח פרימיום 🔓</button>
+            </div>
+            ` : `
+            <div class="reuben-input-area">
+              <div class="reuben-input-frame">
+                <div class="reuben-input-row">
+                  <textarea id="reubenInput" placeholder="כתוב משחק: ארסנל נגד פריז, ברצלונה היום..." autocomplete="off" spellcheck="false" rows="2" ${loading ? "disabled" : ""}></textarea>
+                  <button class="reuben-send-btn" type="button" id="reubenAnalyze" ${loading ? "disabled" : ""}>➤</button>
+                </div>
+              </div>
+              <div class="reuben-input-footer">
+                <input id="reubenSlipFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" ${loading ? "disabled" : ""}>
+                <label for="reubenSlipFile" class="reuben-upload-label" style="opacity:${loading ? ".45" : "1"}">📷 תמונה לניתוח</label>
+                <span class="reuben-disclaimer">ניתוח ספורטיבי בלבד · אין ייעוץ הימורים</span>
               </div>
             </div>
-            <div class="reuben-input-footer">
-              <input id="reubenSlipFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" ${loading ? "disabled" : ""}>
-              <label for="reubenSlipFile" class="reuben-upload-label" style="opacity:${loading ? ".45" : "1"}">📷 תמונה לניתוח</label>
-              <span class="reuben-disclaimer">ניתוח ספורטיבי בלבד · אין ייעוץ הימורים</span>
-            </div>
+            `}
           </div>
-          `}
         </section>
       `;
     }
@@ -4678,10 +4715,28 @@
         else navigator.clipboard?.writeText(text);
         return;
       }
-      const chip = event.target.closest(".suggestion-chip");
+      const chip = event.target.closest(".suggestion-chip, .reuben-sidebar-item");
       if (chip && chip.dataset.chip) {
         const input = document.getElementById("reubenInput");
         if (input) { input.value = chip.dataset.chip; input.focus(); }
+        if (state.reubenSidebarOpen) {
+          state.reubenSidebarOpen = false;
+          document.getElementById("reubenSidebar")?.classList.remove("open");
+        }
+        return;
+      }
+      if (event.target.closest("#reubenSidebarToggle")) {
+        state.reubenSidebarOpen = !state.reubenSidebarOpen;
+        document.getElementById("reubenSidebar")?.classList.toggle("open", state.reubenSidebarOpen);
+        return;
+      }
+      if (event.target.closest("#reubenNewChat")) {
+        state.reubenMessages = [];
+        state.reubenCandidates = [];
+        state.reubenLastQuery = "";
+        state.reubenLoading = false;
+        renderCards();
+        scrollReuvenOutput();
         return;
       }
       if (event.target.closest("#reubenAnalyze")) {
