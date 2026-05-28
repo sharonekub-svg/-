@@ -2070,7 +2070,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
         return [
           ...(tab.sports?.football || []),
           ...(tab.sports?.basketball || []),
-        ];
+        ].filter((r) => !r.day || r.day === dateKey);
       }
     }
     return [];
@@ -2586,6 +2586,14 @@ function normalizeFallbackRows(payload) {
     }
     // NOTE: row.day is NOT overwritten — each row keeps its original date.
     // Overwriting caused stale games to masquerade as today's games.
+  }
+
+  // Enforce row.day matches tab.date — removes rows that slipped into the wrong tab
+  for (const tab of Object.values(copy.tabs || {})) {
+    if (!tab.date) continue;
+    for (const sport of Object.keys(tab.sports || {})) {
+      tab.sports[sport] = (tab.sports[sport] || []).filter((r) => !r.day || r.day === tab.date);
+    }
   }
 
   // Normalize row fields
