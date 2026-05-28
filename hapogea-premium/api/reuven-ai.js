@@ -216,9 +216,35 @@ function buildReason(row, score, rec) {
   return parts.join(' · ') || 'ניתוח סטטיסטי';
 }
 
+// ── Compute result status from feed row ──
+// The main feed's applyResult() already sets row.status to "hit"/"miss"/"ממתין"/"בוטל"/"לא אומת"/"נסגר"
+// We normalise to the Hebrew labels used in the UI.
+function computeResultStatus(row) {
+  const s = String(row.status || '').trim();
+  if (s === 'hit')   return 'תפס';
+  if (s === 'miss')  return 'נפל';
+  if (s === 'בוטל')  return 'בוטל';
+  if (s === 'לא אומת') return 'לא אומת';
+
+  // Feed may say "נסגר" but not have computed hit/miss — do it ourselves
+  if (s === 'נסגר' || row.matchPhase === 'final' || row.bettingStatus === 'closed') {
+    const actual = norm(row.actualWinner || '');
+    const pick   = norm(row.winnerPick  || row.pick || row.pickTeam || '');
+    if (actual && pick) {
+      return (actual === pick || actual.includes(pick) || pick.includes(actual))
+        ? 'תפס' : 'נפל';
+    }
+    return 'נסגר';
+  }
+
+  if (row.matchPhase === 'live' || row.matchPhase === 'ht') return 'חי 🔴';
+  return 'ממתין';
+}
+
 // ── Build a card object from a row ──
 function buildCard(row, score) {
   const rec = recommendedOutcome(row);
+  const resultStatus = computeResultStatus(row);
   return {
     home: row.home || '?',
     away: row.away || '?',
@@ -231,7 +257,9 @@ function buildCard(row, score) {
     recommendedOdds: rec?.odds ? Number(rec.odds.toFixed(2)) : null,
     rating: score,
     reason: buildReason(row, score, rec),
-    status: row.status || '',
+    resultStatus,
+    actualWinner: row.actualWinner || '',
+    liveScore: row.liveScore || row.result || '',
     isPremium: Boolean(row.isPremium || row.premium),
     outsideRange: Boolean(row.outsideRange),
   };

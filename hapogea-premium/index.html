@@ -1018,14 +1018,35 @@
   function renderApiCard(card) {
     const stars = "★".repeat(Math.round(card.rating / 2)) + "☆".repeat(5 - Math.round(card.rating / 2));
     const ratingColor = card.rating >= 7.5 ? "var(--green)" : card.rating >= 5.5 ? "var(--gold)" : "var(--red)";
+
+    // Result status badge
+    const s = card.resultStatus || "ממתין";
+    const isTafas  = s === "תפס";
+    const isNafall = s === "נפל";
+    const isLive   = s.includes("חי");
+    const isWait   = s === "ממתין";
+    const statusColor = isTafas ? "var(--green)" : isNafall ? "var(--red)" : isLive ? "var(--cyan)" : "var(--soft)";
+    const statusBg    = isTafas ? "rgba(49,209,135,.13)" : isNafall ? "rgba(239,83,80,.13)" : isLive ? "rgba(85,214,255,.10)" : "rgba(255,255,255,.06)";
+    const statusBadge = `<span style="font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;color:${statusColor};background:${statusBg};border:1px solid ${statusColor}33;">${s}</span>`;
+
+    // Show actual result on closed cards
+    const resultLine = (isTafas || isNafall || s === "נסגר") && card.actualWinner
+      ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;">תוצאה: <b>${card.actualWinner}</b>${card.liveScore ? ` (${card.liveScore})` : ""}</div>`
+      : card.liveScore && isLive
+        ? `<div style="font-size:11px;color:var(--cyan);margin-top:4px;">תוצאה חיה: <b>${card.liveScore}</b></div>`
+        : "";
+
     return `
-      <div class="tip-card ${card.rating >= 8 ? "top1" : ""}">
+      <div class="tip-card ${card.rating >= 8 && isWait ? "top1" : ""}">
         <div class="tip-top">
           <div class="tip-meta">
             <span class="tip-league">${card.league || ""}</span>
             <span class="tip-match">${card.home} – ${card.away}</span>
           </div>
-          <span class="tip-time">${card.time || ""}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${statusBadge}
+            <span class="tip-time">${card.day ? card.day.slice(5) + " " : ""}${card.time || ""}</span>
+          </div>
         </div>
         <div class="tip-pick-row">
           ${card.recommendation ? `
@@ -1041,6 +1062,7 @@
           <div class="score-track"><div class="score-fill" style="width:${card.rating * 10}%"></div></div>
           <span class="score-label">ראובן AI</span>
         </div>
+        ${resultLine}
         ${card.reason ? `<div class="tip-why">${card.reason}</div>` : ""}
       </div>
     `;
