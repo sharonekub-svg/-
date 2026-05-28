@@ -1803,10 +1803,8 @@
     const statusClass = {
       "תפס": "hit",
       "נתפס": "hit",
-      "תחזית התאימה": "hit",
       "נפל": "miss",
       "לא נתפס": "miss",
-      "תחזית לא התאימה": "miss",
       "החזר": "unverified",
       "בוטל": "unverified",
       "לא אומת": "unverified",
@@ -1815,8 +1813,8 @@
     };
 
     function statusLabel(value) {
-      if (value === "hit" || value === "תפס" || value === "נתפס") return "תחזית התאימה";
-      if (value === "miss" || value === "נפל" || value === "לא נתפס") return "תחזית לא התאימה";
+      if (value === "hit" || value === "תפס" || value === "נתפס") return "נתפס";
+      if (value === "miss" || value === "נפל" || value === "לא נתפס") return "לא נתפס";
       if (value === "void" || value === "cancelled" || value === "בוטל") return "בוטל";
       if (value === "unverified" || value === "לא אומת" || value === "החזר") return "לא אומת";
       return value || "ממתין";
@@ -3143,8 +3141,8 @@
 
     function progressResult(row) {
       const outcome = rowOutcome(row);
-      if (outcome.key === "hit") return "התאימה";
-      if (outcome.key === "miss") return "לא התאימה";
+      if (outcome.key === "hit") return "נתפס";
+      if (outcome.key === "miss") return "לא נתפס";
       if (outcome.key === "void" || outcome.key === "unverified" || outcome.key === "closed") return "לא נספר";
       return "—";
     }
@@ -3176,7 +3174,7 @@
                 <b>${escapeHtml(row.match || `${row.home || ""} - ${row.away || ""}`)}</b>
                 <span class="micro">${progressStatus(row)}${row.liveScore || row.result ? ` · ${escapeHtml(row.liveScore || row.result)}` : ""}</span>
               </div>
-              <span class="badge ${progressResult(row) === "התאימה" ? "badge-won" : progressResult(row) === "לא התאימה" ? "badge-lost" : "badge-pending"}">${progressResult(row)}</span>
+              <span class="badge ${progressResult(row) === "נתפס" ? "badge-won" : progressResult(row) === "לא נתפס" ? "badge-lost" : "badge-pending"}">${progressResult(row)}</span>
             </div>
           `).join("")}
         </div>
@@ -3316,12 +3314,12 @@
 
     function predictionStatusInfo(value) {
       const raw = String(value || "").trim();
-      if (raw === "hit" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "תחזית התאימה", cls: "hit" };
-      if (raw === "miss" || raw === "נפל" || raw === "לא נתפס") return { key: "miss", label: "תחזית לא התאימה", cls: "miss" };
+      if (raw === "hit" || raw === "תפס" || raw === "נתפס") return { key: "hit", label: "נתפס", cls: "hit" };
+      if (raw === "miss" || raw === "נפל" || raw === "לא נתפס") return { key: "miss", label: "לא נתפס", cls: "miss" };
       if (raw === "void" || raw === "cancelled" || raw === "בוטל") return { key: "void", label: "בוטל", cls: "unverified" };
       if (raw === "unverified" || raw === "לא אומת" || raw === "החזר") return { key: "unverified", label: "לא אומת", cls: "unverified" };
       if (raw === "closed" || raw === "נסגר") return { key: "closed", label: "נסגר", cls: "closed" };
-      return { key: "pending", label: "ממתין לתוצאה", cls: "wait" };
+      return { key: "pending", label: "ממתין", cls: "wait" };
     }
 
     function matchStatusInfo(row) {
@@ -3700,8 +3698,8 @@
           <b>${rateText}</b>
           <span style="color:var(--muted);font-size:13px">מדד יחסי פנימי: ${roiText}</span>
           <div class="history-counts">
-            <span class="badge badge-won">התאימו ${perf.hits}</span>
-            <span class="badge badge-lost">לא התאימו ${perf.misses}</span>
+            <span class="badge badge-won">נתפסו ${perf.hits}</span>
+            <span class="badge badge-lost">לא נתפסו ${perf.misses}</span>
             <span class="badge badge-pending">ממתין ${perf.pending}</span>
             <span class="badge badge-unverified">בוטל/לא אומת ${perf.voided}</span>
           </div>
