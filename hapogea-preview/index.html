@@ -1257,245 +1257,463 @@
       max-width: min(150px, 38vw);
       font-size: 12px;
     }
+    /* ─── REUBEN AI — PREMIUM REDESIGN ─── */
     .reuben-panel {
       grid-column: 1 / -1;
-      background: #0a1a24;
-      border: 1px solid rgba(85,214,255,.18);
-      border-radius: 16px;
+      background: linear-gradient(180deg, #0b1821 0%, #070f18 100%);
+      border: 1px solid rgba(85,214,255,.13);
+      border-radius: 20px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      min-height: 700px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.5), 0 40px 120px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+      position: relative;
+    }
+    .reuben-panel-glow {
+      position: absolute;
+      top: -60px; left: 50%; transform: translateX(-50%);
+      width: 70%; height: 180px;
+      background: radial-gradient(ellipse, rgba(85,214,255,.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
     }
     .reuben-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 16px 20px;
-      border-bottom: 1px solid rgba(255,255,255,.07);
-      background: rgba(85,214,255,.04);
+      gap: 14px;
+      padding: 18px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.055);
+      background: rgba(255,255,255,.015);
+      position: relative;
+      z-index: 1;
     }
     .reuben-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg,#55d6ff,#2ee99d);
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #55d6ff 0%, #2ee99d 60%, #1a8bff 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
       flex: 0 0 auto;
+      box-shadow: 0 0 0 3px rgba(85,214,255,.15), 0 6px 20px rgba(85,214,255,.2);
+      animation: avatar-glow 3s ease-in-out infinite;
     }
-    .reuben-header-info { flex: 1; }
+    @keyframes avatar-glow {
+      0%,100% { box-shadow: 0 0 0 3px rgba(85,214,255,.15), 0 6px 20px rgba(85,214,255,.2); }
+      50% { box-shadow: 0 0 0 4px rgba(85,214,255,.28), 0 8px 28px rgba(85,214,255,.32); }
+    }
+    .reuben-header-info { flex: 1; min-width: 0; }
     .reuben-header-name {
-      font-weight: 900;
-      font-size: 15px;
-      color: var(--text);
-      line-height: 1.2;
+      font: 900 16px/1.2 Heebo, Assistant, sans-serif;
+      color: #fff;
+      letter-spacing: -.01em;
     }
     .reuben-header-status {
-      font-size: 11px;
-      color: #2ee99d;
       display: flex;
       align-items: center;
-      gap: 5px;
-      margin-top: 2px;
+      gap: 6px;
+      margin-top: 3px;
+      font-size: 11px;
+      color: rgba(255,255,255,.38);
     }
     .reuben-online-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #2ee99d;
       flex: 0 0 auto;
+      position: relative;
+    }
+    .reuben-online-dot::after {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: rgba(46,233,157,.25);
       animation: pulse-ring 2s ease-out infinite;
+    }
+    .reuben-live-badge {
+      font: 800 9px/1 Heebo, sans-serif;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: rgba(46,233,157,.1);
+      border: 1px solid rgba(46,233,157,.22);
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: #2ee99d;
+    }
+    .reuben-header-actions { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
+    .reuben-badge {
+      padding: 5px 11px;
+      border-radius: 6px;
+      font: 800 9.5px/1 Heebo, sans-serif;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, rgba(85,214,255,.12), rgba(46,233,157,.08));
+      border: 1px solid rgba(85,214,255,.22);
+      color: var(--cyan);
     }
     .chat-log {
       display: flex;
       flex-direction: column;
-      gap: 0;
-      max-height: 580px;
+      flex: 1;
+      max-height: 600px;
+      min-height: 380px;
       overflow-y: auto;
-      padding: 20px 16px;
+      padding: 24px 22px;
+      gap: 22px;
       scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(85,214,255,.18) transparent;
+      position: relative;
+      z-index: 1;
     }
+    .chat-log::-webkit-scrollbar { width: 4px; }
+    .chat-log::-webkit-scrollbar-track { background: transparent; }
+    .chat-log::-webkit-scrollbar-thumb { background: rgba(85,214,255,.18); border-radius: 2px; }
     .chat-msg {
       display: flex;
       flex-direction: column;
-      margin-bottom: 14px;
+      animation: msg-appear .32s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes msg-appear {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .chat-msg.user { align-items: flex-end; }
     .chat-msg.ai { align-items: flex-start; width: 100%; }
+    .chat-msg-label {
+      font: 800 10px/1 Heebo, sans-serif;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.22);
+      margin-bottom: 7px;
+    }
+    .chat-msg.user .chat-msg-label { color: rgba(255,200,87,.32); }
     .chat-bubble-user {
-      background: rgba(255,200,87,.13);
-      border: 1px solid rgba(255,200,87,.25);
-      border-radius: 18px 18px 4px 18px;
-      padding: 10px 16px;
-      max-width: min(520px, 88%);
-      color: var(--text);
+      background: linear-gradient(135deg, rgba(255,200,87,.1), rgba(255,122,69,.06));
+      border: 1px solid rgba(255,200,87,.18);
+      border-radius: 20px 20px 6px 20px;
+      padding: 13px 18px;
+      max-width: min(560px, 92%);
+      color: rgba(255,245,220,.88);
       font-size: 14px;
-      line-height: 1.55;
+      line-height: 1.65;
       white-space: pre-wrap;
       word-break: break-word;
     }
     .chat-bubble-ai { width: 100%; }
-    .ai-sections { display: grid; gap: 10px; }
+    .ai-sections { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     .ai-section {
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 12px;
-      padding: 14px 16px;
-      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 14px;
+      padding: 0;
+      background: rgba(255,255,255,.018);
+      overflow: hidden;
       opacity: 0;
-      transform: translateY(8px);
-      animation: section-reveal .4s ease forwards;
+      transform: translateY(10px);
+      animation: section-reveal .5s cubic-bezier(.34,1.56,.64,1) forwards;
     }
+    .ai-section-top-bar { height: 3px; background: rgba(255,255,255,.06); }
+    .ai-section-inner { padding: 14px 17px 16px; }
     .ai-section:nth-child(1) { animation-delay: 0s; }
-    .ai-section:nth-child(2) { animation-delay: .09s; }
-    .ai-section:nth-child(3) { animation-delay: .18s; }
-    .ai-section:nth-child(4) { animation-delay: .27s; }
-    .ai-section:nth-child(5) { animation-delay: .36s; }
-    .ai-section:nth-child(6) { animation-delay: .45s; }
-    .ai-section:nth-child(7) { animation-delay: .54s; }
-    .ai-section.verdict { border-color: rgba(85,214,255,.35); background: rgba(85,214,255,.06); }
-    .ai-section.value { border-color: rgba(255,200,87,.3); background: rgba(255,200,87,.04); }
-    .ai-section.risk { border-color: rgba(255,107,107,.25); background: rgba(255,107,107,.04); }
-    .ai-section.disclaimer { border-color: rgba(255,255,255,.05); background: transparent; }
+    .ai-section:nth-child(2) { animation-delay: .1s; }
+    .ai-section:nth-child(3) { animation-delay: .2s; }
+    .ai-section:nth-child(4) { animation-delay: .3s; }
+    .ai-section:nth-child(5) { animation-delay: .4s; }
+    .ai-section:nth-child(6) { animation-delay: .5s; }
+    .ai-section:nth-child(7) { animation-delay: .6s; }
+    .ai-section.verdict { border-color: rgba(85,214,255,.18); background: rgba(85,214,255,.035); }
+    .ai-section.verdict .ai-section-top-bar { background: linear-gradient(90deg,#55d6ff,#2ee99d); }
+    .ai-section.value { border-color: rgba(255,200,87,.18); background: rgba(255,200,87,.025); }
+    .ai-section.value .ai-section-top-bar { background: linear-gradient(90deg,#ffc857,#ff9a00); }
+    .ai-section.risk { border-color: rgba(255,100,100,.18); background: rgba(255,100,100,.025); }
+    .ai-section.risk .ai-section-top-bar { background: linear-gradient(90deg,#ff6464,#ff9966); }
+    .ai-section.pros { border-color: rgba(46,233,157,.14); background: rgba(46,233,157,.02); }
+    .ai-section.pros .ai-section-top-bar { background: linear-gradient(90deg,#2ee99d,#00c471); }
+    .ai-section.cons { border-color: rgba(255,155,0,.14); background: rgba(255,155,0,.02); }
+    .ai-section.cons .ai-section-top-bar { background: linear-gradient(90deg,#ff9b00,#ffc800); }
+    .ai-section.analysis { border-color: rgba(160,130,255,.14); background: rgba(160,130,255,.02); }
+    .ai-section.analysis .ai-section-top-bar { background: linear-gradient(90deg,#a082ff,#55d6ff); }
+    .ai-section.disclaimer { border-color: rgba(255,255,255,.04); background: transparent; }
+    .ai-section.disclaimer .ai-section-top-bar { display: none; }
     .ai-section-head {
       display: flex;
       align-items: center;
-      gap: 7px;
-      margin-bottom: 8px;
-      font-size: 11px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--muted);
+      gap: 9px;
+      margin-bottom: 10px;
     }
-    .ai-section.verdict .ai-section-head { color: var(--cyan); }
-    .ai-section.value .ai-section-head { color: #ffc857; }
-    .ai-section.risk .ai-section-head { color: #ff7777; }
+    .ai-section-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex: 0 0 auto;
+      background: rgba(255,255,255,.05);
+    }
+    .ai-section.verdict .ai-section-icon { background: rgba(85,214,255,.1); }
+    .ai-section.value .ai-section-icon { background: rgba(255,200,87,.1); }
+    .ai-section.risk .ai-section-icon { background: rgba(255,100,100,.1); }
+    .ai-section.pros .ai-section-icon { background: rgba(46,233,157,.1); }
+    .ai-section.cons .ai-section-icon { background: rgba(255,155,0,.1); }
+    .ai-section.analysis .ai-section-icon { background: rgba(160,130,255,.1); }
+    .ai-section-title {
+      font: 900 10.5px/1 Heebo, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: rgba(255,255,255,.38);
+    }
+    .ai-section.verdict .ai-section-title { color: var(--cyan); }
+    .ai-section.value .ai-section-title { color: #ffc857; }
+    .ai-section.risk .ai-section-title { color: #ff7777; }
+    .ai-section.pros .ai-section-title { color: #2ee99d; }
+    .ai-section.cons .ai-section-title { color: #ffaa00; }
+    .ai-section.analysis .ai-section-title { color: #a082ff; }
     .ai-section-body {
       font-size: 13.5px;
-      line-height: 1.65;
-      color: var(--text);
+      line-height: 1.72;
+      color: rgba(247,243,234,.82);
       white-space: pre-wrap;
     }
-    .ai-section.disclaimer .ai-section-body { font-size: 12px; color: var(--soft); }
-    .risk-meter { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-    .risk-dots { display: flex; gap: 4px; }
-    .risk-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.12);
-    }
-    .risk-dot.active { background: #ff7777; }
-    .risk-dot.active.low { background: #2ee99d; }
-    .risk-dot.active.medium { background: #ffc857; }
-    .risk-label { font-size: 12px; color: var(--muted); }
+    .ai-section.disclaimer .ai-section-body { font-size: 11px; color: rgba(255,255,255,.27); }
+    .risk-meter { margin-top: 12px; }
+    .risk-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .risk-label { font-size: 12px; color: rgba(255,255,255,.45); }
+    .risk-value-label { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.55); margin-inline-start: auto; }
+    .risk-bar-track { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.07); overflow: hidden; }
+    .risk-bar-fill { height: 100%; border-radius: 3px; transition: width .7s cubic-bezier(.22,1,.36,1); }
+    .risk-bar-fill.lvl1 { background: linear-gradient(90deg,#2ee99d,#00c471); width: 20%; }
+    .risk-bar-fill.lvl2 { background: linear-gradient(90deg,#2ee99d,#c8e000); width: 40%; }
+    .risk-bar-fill.lvl3 { background: linear-gradient(90deg,#ffc857,#ff9a00); width: 60%; }
+    .risk-bar-fill.lvl4 { background: linear-gradient(90deg,#ff9a00,#ff6464); width: 80%; }
+    .risk-bar-fill.lvl5 { background: linear-gradient(90deg,#ff6464,#ff0000); width: 100%; }
     .suggestion-chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 12px;
+      gap: 7px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,.05);
     }
     .suggestion-chip {
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid rgba(85,214,255,.3);
-      background: rgba(85,214,255,.06);
-      color: var(--cyan);
-      font-size: 12px;
-      font-weight: 700;
+      padding: 7px 15px;
+      border-radius: 50px;
+      border: 1px solid rgba(85,214,255,.2);
+      background: rgba(85,214,255,.04);
+      color: rgba(85,214,255,.8);
+      font: 700 11.5px Heebo, Assistant, sans-serif;
       cursor: pointer;
-      transition: background .15s, border-color .15s;
+      transition: all .2s ease;
       white-space: nowrap;
+      position: relative;
+      overflow: hidden;
     }
-    .suggestion-chip:hover { background: rgba(85,214,255,.14); border-color: rgba(85,214,255,.6); }
+    .suggestion-chip:hover {
+      border-color: rgba(85,214,255,.45);
+      color: var(--cyan);
+      background: rgba(85,214,255,.1);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(85,214,255,.12);
+    }
+    .suggestion-chip:active { transform: translateY(0); }
     @keyframes section-reveal { to { opacity: 1; transform: translateY(0); } }
     .reuben-input-area {
-      border-top: 1px solid rgba(255,255,255,.07);
-      padding: 14px 16px;
-      display: grid;
-      gap: 10px;
+      border-top: 1px solid rgba(255,255,255,.055);
+      padding: 16px 22px 20px;
+      background: rgba(0,0,0,.08);
+      position: relative;
+      z-index: 1;
+    }
+    .reuben-input-frame {
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px;
+      background: rgba(255,255,255,.025);
+      transition: border-color .22s, box-shadow .22s;
+    }
+    .reuben-input-frame:focus-within {
+      border-color: rgba(85,214,255,.32);
+      box-shadow: 0 0 0 3px rgba(85,214,255,.055), 0 8px 28px rgba(85,214,255,.05);
     }
     .reuben-input-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      align-items: end;
+      display: flex;
+      align-items: flex-end;
+      gap: 0;
+      padding: 4px 5px 5px 16px;
     }
     .reuben-input-row textarea {
+      flex: 1;
       min-height: 48px;
-      max-height: 120px;
+      max-height: 160px;
       resize: none;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 12px;
-      background: rgba(255,255,255,.04);
-      color: var(--text);
-      padding: 10px 14px;
-      font: 700 14px/1.5 Heebo,Assistant,sans-serif;
-      transition: border-color .15s;
-    }
-    .reuben-input-row textarea:focus { border-color: rgba(85,214,255,.45); outline: none; }
-    .reuben-send-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
       border: none;
-      background: linear-gradient(135deg,#55d6ff,#2ee99d);
-      color: #06131a;
-      font-size: 18px;
+      background: transparent;
+      color: var(--text);
+      padding: 12px 8px 12px 0;
+      font: 600 14px/1.55 Heebo, Assistant, sans-serif;
+      outline: none;
+    }
+    .reuben-input-row textarea::placeholder { color: rgba(255,255,255,.28); font-weight: 400; }
+    .reuben-send-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      border: none;
+      background: linear-gradient(135deg, #55d6ff, #2ee99d);
+      color: #04111a;
+      font-size: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       flex: 0 0 auto;
-      transition: opacity .15s;
+      align-self: flex-end;
+      margin-bottom: 5px;
+      transition: opacity .15s, transform .18s, box-shadow .18s;
+      box-shadow: 0 4px 14px rgba(85,214,255,.22);
     }
-    .reuben-send-btn:disabled { opacity: .4; cursor: default; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
-    .typing-dot { animation: blink 1.2s step-end infinite; }
-    .ai-thinking { display: grid; gap: 10px; width: 100%; }
-    .thinking-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--text);
-      font-weight: 900;
-    }
-    .thinking-pulse {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--cyan);
-      box-shadow: 0 0 0 0 rgba(85,214,255,.45);
-      animation: pulse-ring 1.35s ease-out infinite;
-      flex: 0 0 auto;
-    }
-    .thinking-steps { display: grid; gap: 7px; color: var(--soft); font-size: 12px; font-weight: 800; }
-    .thinking-step {
+    .reuben-send-btn:hover:not(:disabled) { transform: scale(1.07); box-shadow: 0 6px 22px rgba(85,214,255,.38); }
+    .reuben-send-btn:active:not(:disabled) { transform: scale(.95); }
+    .reuben-send-btn:disabled { opacity: .32; cursor: default; }
+    .reuben-input-footer {
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .reuben-upload-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.025);
+      color: rgba(255,255,255,.38);
+      font: 700 11px Heebo, sans-serif;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .reuben-upload-label:hover { border-color: rgba(255,255,255,.14); color: rgba(255,255,255,.6); }
+    .reuben-disclaimer {
+      font-size: 10px;
+      color: rgba(255,255,255,.2);
+      margin-inline-start: auto;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .typing-dot { animation: blink 1.2s step-end infinite; }
+    .ai-thinking {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      animation: msg-appear .3s ease both;
+    }
+    .thinking-header {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+    .thinking-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #55d6ff, #2ee99d);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex: 0 0 auto;
+      animation: avatar-glow 1.5s ease-in-out infinite;
+    }
+    .thinking-title-text {
+      font: 800 13px/1 Heebo, sans-serif;
+      color: rgba(255,255,255,.55);
+    }
+    .thinking-dots {
+      display: flex;
+      gap: 4px;
+      margin-inline-start: auto;
+    }
+    .thinking-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      animation: tdot-bounce .9s ease-in-out infinite;
+    }
+    .thinking-dot:nth-child(1) { animation-delay: 0s; }
+    .thinking-dot:nth-child(2) { animation-delay: .16s; }
+    .thinking-dot:nth-child(3) { animation-delay: .32s; }
+    @keyframes tdot-bounce {
+      0%,80%,100% { transform: scale(.55); opacity: .3; }
+      40% { transform: scale(1.2); opacity: 1; }
+    }
+    .thinking-steps-card {
+      border: 1px solid rgba(255,255,255,.055);
+      border-radius: 13px;
+      background: rgba(255,255,255,.018);
+      padding: 13px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .thinking-step {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font: 700 12px/1.4 Heebo, sans-serif;
+      color: rgba(255,255,255,.3);
       opacity: 0;
-      transform: translateY(5px);
-      transition: opacity .35s ease, transform .35s ease;
+      transform: translateY(4px);
+      transition: opacity .3s ease, transform .3s ease, color .3s ease;
       pointer-events: none;
     }
     .thinking-step.step-visible {
       opacity: 1;
       transform: translateY(0);
+      color: rgba(85,214,255,.75);
       pointer-events: auto;
-      animation: thinking-step 2.8s ease-in-out infinite;
     }
-    .thinking-step.step-done { opacity: .55; transform: translateY(0); pointer-events: auto; }
-    .thinking-line {
-      height: 4px;
-      width: 42px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(85,214,255,.2), rgba(46,229,157,.7), rgba(85,214,255,.2));
+    .thinking-step.step-done {
+      opacity: .55;
+      transform: translateY(0);
+      color: rgba(46,233,157,.55);
+      pointer-events: auto;
+    }
+    .thinking-step-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex: 0 0 auto;
+      background: rgba(255,255,255,.04);
+      transition: background .3s;
+    }
+    .thinking-step.step-visible .thinking-step-dot { background: rgba(85,214,255,.12); animation: thinking-step 1.6s ease-in-out infinite; }
+    .thinking-step.step-done .thinking-step-dot { background: rgba(46,233,157,.1); }
+    .thinking-progress {
+      height: 2px;
+      border-radius: 1px;
+      background: rgba(255,255,255,.05);
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .thinking-progress-bar {
+      height: 100%;
+      border-radius: 1px;
+      background: linear-gradient(90deg, transparent, #55d6ff, #2ee99d, transparent);
       background-size: 200% 100%;
-      animation: thinking-line 1.1s linear infinite;
+      animation: thinking-line 1.8s linear infinite;
     }
     @keyframes pulse-ring {
       0% { box-shadow: 0 0 0 0 rgba(85,214,255,.45); transform: scale(.9); }
@@ -1509,6 +1727,16 @@
     @keyframes thinking-step {
       0%, 100% { opacity: .45; transform: translateY(0); }
       45% { opacity: 1; transform: translateY(-1px); }
+    }
+    @media (max-width: 640px) {
+      .reuben-panel { border-radius: 14px; min-height: 580px; }
+      .reuben-header { padding: 14px 16px; }
+      .chat-log { padding: 16px 14px; max-height: 460px; min-height: 300px; gap: 16px; }
+      .reuben-input-area { padding: 12px 14px 16px; }
+      .ai-section-inner { padding: 12px 14px 14px; }
+      .ai-section-body { font-size: 13px; }
+      .reuben-disclaimer { display: none; }
+      .reuben-badge { display: none; }
     }
     .sport-section {
       display: grid;
@@ -3451,55 +3679,65 @@
     function renderChatMessage(message) {
       if (message.role === "user") {
         const image = message.image
-          ? `<img src="${escapeHtml(message.image)}" alt="תמונה שהועלתה" style="max-width:200px;width:100%;border-radius:8px;margin-bottom:6px;display:block">`
+          ? `<img src="${escapeHtml(message.image)}" alt="תמונה שהועלתה" style="max-width:200px;width:100%;border-radius:8px;margin-bottom:7px;display:block">`
           : "";
-        return `<div class="chat-msg user"><div class="chat-bubble-user">${image}${escapeHtml(message.text || "")}</div></div>`;
+        return `<div class="chat-msg user"><div class="chat-msg-label">אתה</div><div class="chat-bubble-user">${image}${escapeHtml(message.text || "")}</div></div>`;
       }
       if (message.sections && message.sections.length) {
         const sectionsHtml = message.sections.map(section => {
           const riskMeter = section.riskLevel != null ? (() => {
             const lvl = section.riskLevel;
-            const lbl = lvl <= 1 ? "נמוך" : lvl <= 2 ? "נמוך-בינוני" : lvl === 3 ? "בינוני" : lvl === 4 ? "גבוה" : "גבוה מאוד";
-            const dc = lvl <= 2 ? " low" : lvl === 3 ? " medium" : "";
-            const dots = Array.from({length:5}, (_,i) => `<span class="risk-dot${i < lvl ? " active"+dc : ""}"></span>`).join("");
-            return `<div class="risk-meter"><div class="risk-dots">${dots}</div><span class="risk-label">${lbl}</span></div>`;
+            const labels = ["", "נמוך", "נמוך-בינוני", "בינוני", "גבוה", "גבוה מאוד"];
+            return `<div class="risk-meter"><div class="risk-bar-row"><span class="risk-label">סיכון</span><div class="risk-bar-track"><div class="risk-bar-fill lvl${lvl}"></div></div><span class="risk-value-label">${labels[lvl] || ""} ${lvl}/5</span></div></div>`;
           })() : "";
           const formatted = escapeHtml(section.content || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
           return `<div class="ai-section ${section.type || ""}">
-            <div class="ai-section-head"><span>${section.icon || ""}</span>${escapeHtml(section.title || "")}</div>
-            <div class="ai-section-body">${formatted}${riskMeter}</div>
+            <div class="ai-section-top-bar"></div>
+            <div class="ai-section-inner">
+              <div class="ai-section-head">
+                <div class="ai-section-icon">${section.icon || ""}</div>
+                <span class="ai-section-title">${escapeHtml(section.title || "")}</span>
+              </div>
+              <div class="ai-section-body">${formatted}${riskMeter}</div>
+            </div>
           </div>`;
         }).join("");
         const chipsHtml = (message.suggestions || []).length
           ? `<div class="suggestion-chips">${(message.suggestions || []).map(s => `<button class="suggestion-chip" data-chip="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}</div>`
           : "";
-        return `<div class="chat-msg ai"><div class="chat-bubble-ai"><div class="ai-sections">${sectionsHtml}</div>${chipsHtml}</div></div>`;
+        return `<div class="chat-msg ai"><div class="chat-msg-label">הפוגע AI</div><div class="chat-bubble-ai"><div class="ai-sections">${sectionsHtml}</div>${chipsHtml}</div></div>`;
       }
-      return `<div class="chat-msg ai"><div class="chat-bubble-user" style="background:rgba(85,214,255,.06);border-color:rgba(85,214,255,.18);border-radius:18px 18px 18px 4px;max-width:100%;color:var(--muted)">${escapeHtml(message.text || "")}</div></div>`;
+      return `<div class="chat-msg ai"><div class="chat-msg-label">הפוגע AI</div><div class="chat-bubble-user" style="background:rgba(85,214,255,.05);border-color:rgba(85,214,255,.14);border-radius:20px 20px 20px 6px;max-width:100%;color:rgba(247,243,234,.8)">${escapeHtml(message.text || "")}</div></div>`;
     }
 
     function renderAiThinking() {
       const currentStep = state.reubenThinkingStep || 0;
       const steps = [
-        "מזהה קבוצות, ענף ורמת משחק",
-        "מחשב פער רמה ויתרון ביתי",
-        "בודק שווקי Winner ויחסים בזמן אמת",
-        "מנתח מוטיבציה, H2H ומלכודות שוק",
-        "מחשב הסתברות, Value ורמת סיכון",
-        "בונה ניתוח מלא עם המלצה",
+        { icon: "🔍", text: "מזהה קבוצות, ענף ורמת משחק" },
+        { icon: "📊", text: "מחשב פער רמה ויתרון ביתי" },
+        { icon: "🎯", text: "בודק שווקי Winner ויחסים בזמן אמת" },
+        { icon: "🧠", text: "מנתח מוטיבציה, H2H ומלכודות שוק" },
+        { icon: "💡", text: "מחשב הסתברות, Value ורמת סיכון" },
+        { icon: "✍️", text: "בונה ניתוח מלא עם המלצה" },
       ];
       return `
         <div class="chat-msg ai">
           <div class="ai-thinking" aria-live="polite" aria-label="הפוגע AI חושב">
-            <div class="thinking-head">
-              <span>הפוגע AI מחפש ומנתח</span>
-              <span class="thinking-pulse"></span>
+            <div class="thinking-header">
+              <div class="thinking-avatar">⚽</div>
+              <span class="thinking-title-text">הפוגע AI מנתח</span>
+              <div class="thinking-dots">
+                <div class="thinking-dot"></div>
+                <div class="thinking-dot"></div>
+                <div class="thinking-dot"></div>
+              </div>
             </div>
-            <div class="thinking-steps">
-              ${steps.map((text, i) => {
+            <div class="thinking-steps-card">
+              ${steps.map((s, i) => {
                 const cls = i < currentStep ? "thinking-step step-done" : i === currentStep ? "thinking-step step-visible" : "thinking-step";
-                return `<div class="${cls}"><span class="thinking-line"></span><span>${text}</span></div>`;
+                return `<div class="${cls}"><div class="thinking-step-dot">${s.icon}</div><span>${s.text}</span></div>`;
               }).join("")}
+              <div class="thinking-progress"><div class="thinking-progress-bar"></div></div>
             </div>
           </div>
         </div>
@@ -3521,35 +3759,44 @@
       const isLocked = !state.isPremium && (state.reubenFreeUsed || 0) >= 1;
       return `
         <section class="reuben-panel">
+          <div class="reuben-panel-glow"></div>
           <div class="reuben-header">
             <div class="reuben-avatar">⚽</div>
             <div class="reuben-header-info">
               <div class="reuben-header-name">הפוגע AI</div>
-              <div class="reuben-header-status"><span class="reuben-online-dot"></span>מנתח משחקים · נתוני Winner בזמן אמת</div>
+              <div class="reuben-header-status">
+                <span class="reuben-online-dot"></span>
+                מנתח משחקים · נתוני Winner בזמן אמת
+                <span class="reuben-live-badge">LIVE</span>
+              </div>
             </div>
-            <span class="pill">BETA</span>
+            <div class="reuben-header-actions">
+              <span class="reuben-badge">BETA</span>
+            </div>
           </div>
           <div class="chat-log" id="reubenOutput">
             ${messages.map(renderChatMessage).join("")}
             ${loading ? renderAiThinking() : ""}
           </div>
           ${isLocked ? `
-          <div style="text-align:center;padding:24px 16px;border-top:1px solid rgba(255,255,255,.07)">
-            <div style="font-size:28px;margin-bottom:8px">🔒</div>
-            <p style="margin:0 0 8px;font-size:14px;font-weight:800;color:rgba(255,255,255,.8)">השתמשת בניתוח החינמי שלך</p>
-            <p style="margin:0 0 16px;font-size:12px;color:rgba(255,255,255,.45)">פרימיום נותן גישה בלתי מוגבלת להפוגע AI</p>
-            <button onclick="openPremiumModal()" style="padding:12px 28px;border-radius:20px;border:none;background:linear-gradient(135deg,#55d6ff,#2196f3);color:#06131a;font:800 14px Heebo,sans-serif;cursor:pointer">פתח פרימיום 🔓</button>
+          <div style="text-align:center;padding:28px 20px;border-top:1px solid rgba(255,255,255,.06)">
+            <div style="font-size:32px;margin-bottom:10px">🔒</div>
+            <p style="margin:0 0 6px;font-size:15px;font-weight:900;color:rgba(255,255,255,.85)">השתמשת בניתוח החינמי שלך</p>
+            <p style="margin:0 0 18px;font-size:12px;color:rgba(255,255,255,.38)">פרימיום נותן גישה בלתי מוגבלת להפוגע AI</p>
+            <button onclick="openPremiumModal()" style="padding:13px 32px;border-radius:50px;border:none;background:linear-gradient(135deg,#55d6ff,#2196f3);color:#04111a;font:800 14px Heebo,sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(85,214,255,.3)">פתח פרימיום 🔓</button>
           </div>
           ` : `
           <div class="reuben-input-area">
-            <div class="reuben-input-row">
-              <textarea id="reubenInput" placeholder="כתוב משחק: ארסנל נגד פריז, ברצלונה היום..." autocomplete="off" spellcheck="false" rows="2" ${loading ? "disabled" : ""}></textarea>
-              <button class="reuben-send-btn" type="button" id="reubenAnalyze" ${loading ? "disabled" : ""}>➤</button>
+            <div class="reuben-input-frame">
+              <div class="reuben-input-row">
+                <textarea id="reubenInput" placeholder="כתוב משחק: ארסנל נגד פריז, ברצלונה היום..." autocomplete="off" spellcheck="false" rows="2" ${loading ? "disabled" : ""}></textarea>
+                <button class="reuben-send-btn" type="button" id="reubenAnalyze" ${loading ? "disabled" : ""}>➤</button>
+              </div>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div class="reuben-input-footer">
               <input id="reubenSlipFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" ${loading ? "disabled" : ""}>
-              <label for="reubenSlipFile" class="open-game" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:32px;font-size:12px;opacity:${loading ? ".5" : "1"}">📷 תמונה לניתוח</label>
-              <span class="micro">ניתוח ספורטיבי וסטטיסטי בלבד · אין ייעוץ הימורים</span>
+              <label for="reubenSlipFile" class="reuben-upload-label" style="opacity:${loading ? ".45" : "1"}">📷 תמונה לניתוח</label>
+              <span class="reuben-disclaimer">ניתוח ספורטיבי בלבד · אין ייעוץ הימורים</span>
             </div>
           </div>
           `}
