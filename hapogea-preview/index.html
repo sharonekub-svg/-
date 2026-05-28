@@ -1507,7 +1507,12 @@
       .debug-row { grid-template-columns: 1fr; }
     }
 
-    /* ══ Premium Match Cards ══ */
+    /* ══ Premium Match Cards — full-width strip ══ */
+    #matchCardsSection{width:100%;background:var(--panel-soft);border-top:1px solid var(--line);padding:0 0 40px;box-sizing:border-box;margin:0}
+    .mc-full-inner{max-width:1420px;margin:0 auto;padding:20px 24px 0;box-sizing:border-box}
+    .mc-full-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+    .mc-full-datebar{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+    .mc-full-content{padding:0 24px;box-sizing:border-box}
     .no-scroll{overflow:hidden}
     .mc-sec{margin-bottom:18px}
     .mc-lg-head{display:flex;align-items:center;gap:8px;padding:6px 2px;margin-bottom:10px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none}
@@ -1516,7 +1521,7 @@
     .mc-lg-head-count{font-size:10px;color:var(--soft);font-weight:800;flex-shrink:0}
     .mc-lg-chev{color:var(--soft);font-size:10px;transition:transform .18s;flex-shrink:0}
     .mc-lg-head.collapsed .mc-lg-chev{transform:rotate(-90deg)}
-    .mc-lg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+    .mc-lg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
     .mc-lg-grid.collapsed{display:none}
     .mcard{background:#0e1319;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:visible;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;position:relative}
     .mcard:hover{transform:translateY(-3px);box-shadow:0 18px 52px rgba(0,0,0,.55);border-color:rgba(56,217,245,.22)}
@@ -1790,19 +1795,22 @@
       <div class="debug-grid" id="debugRows"></div>
     </section>
 
-    <!-- Premium Match Cards Section -->
-    <section class="panel" id="matchCardsSection" style="margin-top:18px;padding:16px 18px 18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap">
+  </main>
+
+  <!-- Premium Match Cards Section — full-width, outside shell -->
+  <section id="matchCardsSection">
+    <div class="mc-full-inner">
+      <div class="mc-full-header">
         <div>
           <h3 style="margin:0;font-size:20px">⚡ כרטיסייות משחקים</h3>
           <p id="mcSumTxt" style="margin:4px 0 0;color:var(--muted);font-size:12px">טוען...</p>
         </div>
         <span class="pill" id="mcPremBadge">🔒 ניתוח פרימיום</span>
       </div>
-      <div id="mcDateBar" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap"></div>
-      <div id="mcContent"></div>
-    </section>
-  </main>
+      <div id="mcDateBar" class="mc-full-datebar"></div>
+    </div>
+    <div id="mcContent" class="mc-full-content"></div>
+  </section>
 
   <footer class="footer">
     הדמו מיועד להצגת מוצר ושיטת דירוג ספורטיבי. הוא אינו ייעוץ הימורים, אינו המלצה לשים כסף ואינו מבטיח תוצאה או רווח. כאשר ממשק ציבורי אינו מחזיר נתון, הדמו מציין זאת ואינו משלים נתונים באופן מלאכותי.
