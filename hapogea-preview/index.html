@@ -2771,116 +2771,369 @@
       return { home: parts[0] || clean, away: parts[1] || "" };
     }
 
+    function reuvenDetectIntent(query) {
+      const q = normalizeReuvenText(query);
+      if (/value|כדאי|שווה|יש פה|יש בכלל|ערך|שווי|כמה שווה/.test(q)) return "value";
+      if (/מלכודת|trap|סכנה|מסוכן|להיזהר|red flag|דגל אדום|חשוד/.test(q)) return "trap";
+      if (/היית|הייתי|תיכנס|נכנס|כנסת|לשים|שים|take it|would you|bet it/.test(q)) return "would_you";
+      if (/אנדרדוג|underdog|החלש|הקטן|הפתעה|surprise|יכול לנצח|יכולים לנצח/.test(q)) return "underdog";
+      if (/למה.*יפסיד|יכול להפסיד|פייבוריט.*יפסיד|ניפול|fall|collapse|ייפול/.test(q)) return "fav_fall";
+      if (/ירד.*יחס|עלה.*יחס|movement|למה.*ירד|נע.*שוק|תנועת|odds.*move/.test(q)) return "odds_move";
+      if (/תיקו|draw|x2|1x|שני הצדדים|both sides/.test(q)) return "draw";
+      return "match";
+    }
+
+    function reuvenIntentResponse(intent, lastQuery, currentQuery) {
+      const isHe = reuvenPrefersHebrew(currentQuery) || reuvenPrefersHebrew(lastQuery);
+      const { home, away } = reuvenParseTeams(lastQuery);
+      const homeTier = reuvenTeamTier(home);
+      const awayTier = reuvenTeamTier(away);
+      const tierGap = homeTier - awayTier;
+      const gapAbs = Math.abs(tierGap);
+      const isHomeWin = tierGap >= 0;
+      const favored = isHomeWin ? home : away;
+      const underdog = isHomeWin ? (away || "") : home;
+      const basePct = (isHomeWin ? 55 : 48) + (gapAbs >= 2 ? 13 : gapAbs === 1 ? 7 : 0);
+      const winPct = Math.min(72, basePct);
+      const valueOdds = (100 / winPct).toFixed(2);
+      const matchHe = away ? `${home} נגד ${away}` : home;
+      const matchEn = away ? `${home} vs ${away}` : home;
+      const sections = [];
+      const suggestions = [];
+
+      if (isHe) {
+        if (intent === "value") {
+          sections.push({ type: "verdict", icon: "💰", title: "יש פה Value?",
+            content: [
+              `**Value** = כשהיחס המוצע גבוה **יותר** מההסתברות האמיתית של האירוע.`,
+              ``,
+              `עבור ${matchHe}:`,
+              `→ הסתברות מודל ל-**${favored}**: ~${winPct}%`,
+              `→ כדי שיהיה Value — היחס צריך להיות מעל **${valueOdds}**`,
+              ``,
+              gapAbs >= 2
+                ? `**${favored}** הוא פייבוריט ברור. בדרך כלל ייסחרו ב-1.30-1.55.\nאם תמצא אותם **מעל 1.60** — שם Value אמיתי מתחיל להופיע.`
+                : gapAbs === 1
+                  ? `פער קטן — שני הצדדים קרובים. כאן Value מופיע לרוב **בצד החלש** כשהשוק מתמחר יתר על המידה את הפייבוריט.\nגם תיקו (X) בטווח 3.0-3.5 שווה בדיקה.`
+                  : `משחק שיוויוני — Value מופיע לרוב ב-**תיקו (X)** או **סיכוי כפול (1X/X2)**.\nשוק ממוצע מתמחר תיקו ב-3.2, אבל ב-50/50 ריאלי זה נותן Value.`,
+            ].join("\n") });
+          sections.push({ type: "analysis", icon: "🧠", title: "איך מזהים Value בפועל",
+            content: [
+              "1️⃣ מצא את המשחק ב-Winner",
+              `2️⃣ בדוק: יחס ל-**${favored}** גבוה מ-**${valueOdds}**?`,
+              "3️⃣ אם כן — יש Value פוטנציאלי. אם לא — השוק כבר תמחר.",
+              "",
+              "⚠️ Value לא מבטיח ניצחון — הוא אומר שהמחיר אטרקטיבי **לאורך זמן**, לא בהכרח היום."
+            ].join("\n") });
+          sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: `${gapAbs >= 2 ? 2 : 3}/5`, riskLevel: gapAbs >= 2 ? 2 : 3 });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה", content: "ניתוח סטטיסטי בלבד — אין ייעוץ הימורים." });
+          suggestions.push("זה מלכודת?", `היית נכנס ל-${favored}?`, "מה הסיכוי לתיקו?", `נתח שוב: ${matchHe}`);
+        }
+
+        else if (intent === "trap") {
+          const isTrap = gapAbs <= 1 && !isHomeWin;
+          sections.push({ type: "verdict", icon: "🚨", title: "זה מלכודת?",
+            content: isTrap
+              ? `**יש כאן פוטנציאל למלכודת.**\n\nכשהפייבוריט הוא צד חוץ עם יתרון קטן בלבד, השוק לפעמים מתמחר יתר — הציבור "אוהב" את הקבוצה הגדולה, המחיר מתקצר, והערך האמיתי נעלם.`
+              : gapAbs === 0
+                ? `**שים לב — משחק שיוויוני.** אין כאן פייבוריט ברור. מלכודת קלאסית היא כשהשוק נוטה לצד אחד בגלל "שם" ולא בגלל נתונים.`
+                : `לא נראה כמלכודת קלאסית — **${favored}** נתמך על ידי פער רמה ממשי, לא רק תחושת ציבור.\n\nאבל תמיד יש גורמים שיכולים לשנות: עייפות, חוסר מוטיבציה, פציעה בדקה ה-90 לפני המשחק.`
+          });
+          sections.push({ type: "analysis", icon: "🧠", title: "5 סימני מלכודת לבדוק",
+            content: [
+              `❓ הפייבוריט אחרי 3+ משחקים ב-10 ימים? (עייפות)`,
+              `❓ המשחק חסר משמעות ליגתית? (חוסר מוטיבציה)`,
+              `❓ יש כרטיסים מצטברים לשחקני מפתח?`,
+              `❓ היחס ירד מהר מאוד? (כסף ציבורי, לאו דווקא חכם)`,
+              `❓ ה-H2H מצביע על דפוס מפתיע לטובת ${underdog || "האנדרדוג"}?`,
+              "",
+              "אם 3+ מהגורמים האלה מתקיימים — שקול מחדש לגמרי."
+            ].join("\n") });
+          sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: `${isTrap ? 4 : gapAbs === 0 ? 4 : 3}/5`, riskLevel: isTrap ? 4 : gapAbs === 0 ? 4 : 3 });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה", content: "ניתוח סטטיסטי בלבד — אין ייעוץ הימורים." });
+          suggestions.push("יש פה Value?", `למה ${underdog || "האנדרדוג"} יכול להפתיע?`, `היית נכנס ל-${favored}?`, `נתח שוב: ${matchHe}`);
+        }
+
+        else if (intent === "would_you") {
+          sections.push({ type: "verdict", icon: "🎯", title: "האם הייתי נכנס?",
+            content: gapAbs >= 2
+              ? `**כן — עם יחס נכון.**\n\nהפער ל-**${favored}** ברור מספיק. הייתי נכנס — אבל רק אם היחס **מעל ${valueOdds}**. מתחת לזה, אין Value — גם אם ${favored} ינצח.`
+              : gapAbs === 1
+                ? `**אולי — תלוי ביחס.**\n\nיש יתרון קל ל-**${favored}**, אבל לא מספיק ברור כדי לפעול בעיניים עצומות. הייתי מחפש יחס מעל **${valueOdds}** — אחרת עובר הלאה.`
+                : `**כנראה לא ישירות.**\n\nמשחק שיוויוני — הייתי מחפש **שוק חכם יותר**: סיכוי כפול (1X), Under 2.5, או תיקו בטווח נדיב. ניצחון ישיר לאחד הצדדים בפריים שיוויוני? לא בשבילי.`
+          });
+          sections.push({ type: "analysis", icon: "🧠", title: "הקריטריונים שלי לכניסה",
+            content: [
+              "אני לא נכנס לכל משחק שיש בו יתרון קל. הכניסה מצדיקה את עצמה רק כש:",
+              "",
+              `✅ יחס מעל **${valueOdds}** (Value חיובי)`,
+              `✅ אין עומס/פציעה משמעותית ל-**${favored}**`,
+              `✅ מוטיבציה ברורה לשני הצדדים`,
+              `✅ H2H לא מצביע על דפוס מפתיע ל-**${underdog || "האנדרדוג"}**`,
+              "",
+              "כשכל ה-4 מתקיימים — אז כן, הייתי שוקל."
+            ].join("\n") });
+          sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: `${gapAbs >= 2 ? 2 : gapAbs === 1 ? 3 : 4}/5`, riskLevel: gapAbs >= 2 ? 2 : gapAbs === 1 ? 3 : 4 });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה", content: "ניתוח סטטיסטי בלבד — לא ייעוץ הימורים." });
+          suggestions.push("יש פה Value?", "זה מלכודת?", `נתח שוב: ${matchHe}`, "מה הסיכוי לתיקו?");
+        }
+
+        else if (intent === "underdog") {
+          const udPct = 100 - winPct;
+          sections.push({ type: "verdict", icon: "💫", title: `יכול ${underdog || "האנדרדוג"} להפתיע?`,
+            content: [
+              `הסתברות סטטיסטית ל-**${underdog || "האנדרדוג"}**: ~${udPct}%`,
+              "",
+              gapAbs >= 2
+                ? `פער הרמה גדול — להפתעה יש ~${udPct}% סיכוי. נמוך, אבל **לא אפס**.\n\nבכל עונת ליגה אירופאית, ~27-32% ממשחקי הליגה מסתיימים בהפתעה. הפייבוריטים לא תמיד מנצחים.`
+                : `**כאן הסיפור הרבה יותר מעניין.** פער רמה קטן = ~${udPct}% ל-${underdog || "האנדרדוג"}. זה כמעט מטבע.`
+            ].join("\n") });
+          sections.push({ type: "analysis", icon: "🧠", title: "מה גורם להפתעות בספורט",
+            content: [
+              `📌 **עייפות** — הפייבוריט לאחר 3+ משחקים בשבוע`,
+              `📌 **פציעת מפתח** — שחקן יצא ב-48 שעות האחרונות`,
+              `📌 **מוטיבציה של האנדרדוג** — משחק הישרדות, גביע, כבוד`,
+              `📌 **H2H** — לפעמים קיימים דפוסים לא הגיוניים (A תמיד מנצח B)`,
+              `📌 **טקטיקה** — בלוק נמוך + קאונטר ממוקד מתאים בדיוק להפתיע`,
+              `📌 **יחסים ארוכים מדי** — ${underdog || "האנדרדוג"} בפריים 4.0+ = Value אמיתי`,
+              "",
+              `→ אם ${underdog || "האנדרדוג"} מציג 2+ מהגורמים — שקול סיכוי כפול (X2) או Asian Handicap.`
+            ].join("\n") });
+          sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: `${gapAbs >= 2 ? 5 : 4}/5`, riskLevel: gapAbs >= 2 ? 5 : 4 });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה", content: "ניתוח סטטיסטי בלבד — אין ייעוץ הימורים." });
+          suggestions.push("יש Value לאנדרדוג?", "זה מלכודת?", `נתח שוב: ${matchHe}`, `למה ${favored} יכול ליפול?`);
+        }
+
+        else if (intent === "fav_fall") {
+          sections.push({ type: "verdict", icon: "💥", title: `למה ${favored} יכול להפסיד`,
+            content: `כל פייבוריט יכול ליפול — אפילו הגדולים ביותר. ספורט הוא לא מתמטיקה.` });
+          sections.push({ type: "analysis", icon: "🧠", title: "7 הסיבות הנפוצות לנפילת פייבוריטים",
+            content: [
+              `1. **עומס לוח שנה** — 3+ משחקים ב-10 ימים, שחקנים עייפים ופציועים`,
+              `2. **פציעת שחקן מפתח** — יצא ב-24-48 שעות לפני המשחק`,
+              `3. **חוסר מוטיבציה** — הליגה כבר נשגבת, המאמן מסובב שחקנים`,
+              `4. **טקטיקה של האנדרדוג** — בלוק עמוק + קאונטר מהיר = כאב ראש`,
+              `5. **כרטיסים מצטברים** — בלי מגן/תוקף מרכזי`,
+              `6. **פסיכולוגיה** — ציפיות גבוהות מדי + לחץ הבית = טעויות`,
+              `7. **יחס קצר מדי** — כשכולם על אותו צד, הערך נעלם והסיכון גדל`,
+              "",
+              `בדוק אם **${favored}** נמצאים עם 2+ גורמים עכשיו. אם כן — שקול מחדש.`
+            ].join("\n") });
+          sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: "3/5", riskLevel: 3 });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה", content: "ניתוח סטטיסטי בלבד — אין ייעוץ הימורים." });
+          suggestions.push(`יש Value ל-${underdog || "האנדרדוג"}?`, "זה מלכודת?", `נתח שוב: ${matchHe}`, "מה הסיכוי לתיקו?");
+        }
+
+        else if (intent === "draw") {
+          const drawPct = Math.round(100 - winPct - (100 - winPct) * 0.55);
+          sections.push({ type: "verdict", icon: "⚖️", title: "מה הסיכוי לתיקו?",
+            content: [
+              `הסתברות סטטיסטית לתיקו במשחק ${matchHe}: **~${drawPct}%**`,
+              "",
+              gapAbs === 0
+                ? `משחק שיוויוני — תיקו הוא תוצאה **ריאלית מאוד** פה. שוק ממוצע מתמחר ב-3.0-3.4, ובסיכוי ריאלי של ${drawPct}% זה **Value טוב**.`
+                : gapAbs === 1
+                  ? `יש יתרון קל לאחד הצדדים, אבל תיקו עדיין ריאלי ב-~${drawPct}%.\nבבדיקת שוק: אם תיקו מעל 3.3 — שקול.`
+                  : `פער רמה גדול — תיקו פחות סביר (~${drawPct}%). אבל לא בלתי אפשרי, במיוחד במשחקים עם מוטיבציה נמוכה לשני הצדדים.`
+            ].join("\n") });
+          sections.push({ type: "analysis", icon: "🧠", title: "מתי תיקו הוא Value אמיתי",
+            content: [
+              "📌 שני הצדדים ברמה דומה (גבוה ביותר)",
+              "📌 אחד הצדדים לא צריך לנצח (ה-Draw מספיק)",
+              "📌 יחסי אחרון: 0-0, 1-1 — קבוצה שמוכרת לשחק 'סגור'",
+              "📌 שחקן תוקע מרכזי חסר",
+              "",
+              "סיכוי כפול (1X או X2) הוא גרסה 'בטוחה יותר' של תיקו — מכסה גם תוצאת ניצחון."
+            ].join("\n") });
+          sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: `${gapAbs >= 2 ? 4 : 3}/5`, riskLevel: gapAbs >= 2 ? 4 : 3 });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה", content: "ניתוח סטטיסטי בלבד." });
+          suggestions.push("יש Value בתיקו?", `נתח שוב: ${matchHe}`, "זה מלכודת?", `היית נכנס ל-${favored}?`);
+        }
+
+        else {
+          return analyzeReuvenGenericMatch(lastQuery);
+        }
+
+      } else {
+        // English versions
+        if (intent === "value") {
+          sections.push({ type: "verdict", icon: "💰", title: "Is There Value Here?",
+            content: [`**Value** = when the offered price is **above** the real probability.`, ``, `For ${matchEn}:`, `→ Model probability for **${favored}**: ~${winPct}%`, `→ For Value, look for odds above **${valueOdds}**`, ``, gapAbs >= 2 ? `${favored} is a clear favorite — typically priced 1.30-1.55. **Above 1.60** is where value starts.` : `Equal match — value typically appears on the underdog side or the draw.`].join("\n") });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "Note", content: "Statistical analysis only — not betting advice." });
+          suggestions.push("Is this a trap?", `Would you take ${favored}?`, "Draw probability?", `Re-analyze: ${matchEn}`);
+        } else if (intent === "trap") {
+          const isTrap = gapAbs <= 1 && !isHomeWin;
+          sections.push({ type: "verdict", icon: "🚨", title: "Is This a Trap?",
+            content: isTrap ? `**Potential trap.** Away favorite with a small tier gap — public money may be inflating the price above real value.` : gapAbs === 0 ? `**Caution — equal match.** No clear favorite. Classic trap: market leans one way because of name recognition, not data.` : `Not a classic trap — **${favored}** is backed by a real tier gap, not just perception.\n\nBut always check: fixture fatigue, motivation, key injuries.` });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "Note", content: "Statistical analysis only." });
+          suggestions.push("Is there Value?", `Why could ${underdog || "underdog"} surprise?`, `Re-analyze: ${matchEn}`);
+        } else if (intent === "would_you") {
+          sections.push({ type: "verdict", icon: "🎯", title: "Would I Take It?",
+            content: gapAbs >= 2 ? `**Yes — at the right price.** The tier gap for **${favored}** is clear enough. But only if the price is above **${valueOdds}** — below that, no value even if they win.` : gapAbs === 1 ? `**Maybe — price-dependent.** Slight edge for **${favored}**, but not convincing enough for blind entry. I'd want odds above **${valueOdds}** — otherwise I'd pass.` : `**Probably not directly.** Equal match — I'd look for a smarter market: double chance, Under 2.5, or draw at a good price.` });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "Note", content: "Statistical analysis only — not betting advice." });
+          suggestions.push("Is there Value?", "Is this a trap?", `Re-analyze: ${matchEn}`);
+        } else if (intent === "fav_fall") {
+          sections.push({ type: "verdict", icon: "💥", title: `Why Could ${favored} Lose?`,
+            content: `Every favorite can fall. Football is not mathematics.` });
+          sections.push({ type: "analysis", icon: "🧠", title: "7 Reasons Favorites Fail",
+            content: ["1. **Fixture congestion** — 3+ games in 10 days", "2. **Key injury** — star player out 24-48h before kickoff", "3. **Low motivation** — league already won/lost", "4. **Underdog tactics** — deep block + fast counter", "5. **Accumulated cards** — key defenders suspended", "6. **Psychological pressure** — high expectations = errors", "7. **Short price** — everyone on same side, no value left", "", `Check if **${favored}** shows 2+ of these factors.`].join("\n") });
+          sections.push({ type: "disclaimer", icon: "ℹ️", title: "Note", content: "Statistical analysis only." });
+          suggestions.push(`Value on ${underdog || "underdog"}?`, "Is this a trap?", `Re-analyze: ${matchEn}`);
+        } else {
+          return analyzeReuvenGenericMatch(lastQuery);
+        }
+      }
+
+      const plainText = sections.map(s => `${s.title}\n${s.content}`).join("\n\n");
+      return { text: plainText, sections, suggestions };
+    }
+
     function analyzeReuvenGenericMatch(query) {
-      const hebrewAnswer = reuvenPrefersHebrew(query);
+      const isHe = reuvenPrefersHebrew(query);
       const { home, away } = reuvenParseTeams(query);
       const homeTier = reuvenTeamTier(home);
       const awayTier = reuvenTeamTier(away);
       const tierGap = homeTier - awayTier;
       const gapAbs = Math.abs(tierGap);
-      const isBasketball = /basketball|nba|euroleague|כדורסל/i.test(query);
-
-      let favored, underdog, favoredTier, isHomeWin;
-      if (!away || tierGap >= 1) { favored = home; underdog = away; favoredTier = homeTier; isHomeWin = true; }
-      else if (tierGap <= -1) { favored = away; underdog = home; favoredTier = awayTier; isHomeWin = false; }
-      else { favored = home; underdog = away; favoredTier = homeTier; isHomeWin = true; }
-
-      let winPct = isHomeWin ? 55 : 48;
-      if (gapAbs >= 2) winPct += 13;
-      else if (gapAbs === 1) winPct += 7;
-      winPct = Math.min(72, winPct);
+      const isBball = /basketball|nba|euroleague|כדורסל/i.test(query);
+      const isHomeWin = tierGap >= 0;
+      const favored = isHomeWin ? home : away;
+      const underdog = isHomeWin ? (away || "") : home;
+      const favoredTier = isHomeWin ? homeTier : awayTier;
+      const basePct = (isHomeWin ? 55 : 48) + (gapAbs >= 2 ? 13 : gapAbs === 1 ? 7 : 0);
+      const winPct = Math.min(72, basePct);
       const riskLevel = gapAbs >= 2 ? 2 : gapAbs === 1 ? 3 : 4;
-      const rating = gapAbs >= 2 ? 7 : gapAbs === 1 ? 6 : 5;
-
-      const tierLabelHe = t => t >= 5 ? "עילית עולמית" : t === 4 ? "סוג א׳ גבוה" : t === 3 ? "סוג א׳ בינוני" : t === 2 ? "סוג ב׳" : "סוג ג׳";
-      const tierLabelEn = t => t >= 5 ? "World Elite" : t === 4 ? "Top-tier" : t === 3 ? "Mid-tier" : "Lower-tier";
-
+      const valueOdds = (100 / winPct).toFixed(2);
       const sections = [];
       const suggestions = [];
 
-      if (hebrewAnswer) {
+      const tierHe = t => t >= 5 ? "עילית עולמית" : t === 4 ? "סוג א׳ גבוה" : t === 3 ? "סוג א׳ בינוני" : "סוג ב׳ ומטה";
+      const tierEn = t => t >= 5 ? "World Elite" : t === 4 ? "Top-tier" : t === 3 ? "Mid-tier" : "Lower-tier";
+
+      if (isHe) {
         const matchTitle = away ? `${home} נגד ${away}` : home;
-        const rec = gapAbs >= 2 ? "בעד חזק ✅" : gapAbs === 1 ? "בעד בזהירות 🟡" : "יתרון ביתי קל 🟡";
 
-        sections.push({ type: "verdict", icon: "🎯", title: "מה הייתי בוחר",
-          content: [`משחק: **${matchTitle}**`, "", `הצד המועדף: **${favored}**`, `קריאה: **${rec}** · הסתברות סטטיסטית: ~${winPct}%`, "", "⚠️ ניתוח זה מבוסס על דירוגי קבוצות, היסטוריה ויתרון ביתי — ללא יחסי Winner בזמן אמת."].join("\n") });
+        // Verdict — natural language
+        const verdictLines = [];
+        if (!away) {
+          verdictLines.push(`מדבר על **${home}** (${tierHe(homeTier)}) — שאל אותי על משחק ספציפי כדי שאוכל לנתח לעומק.`);
+        } else if (gapAbs >= 2) {
+          verdictLines.push(`אם הייתי צריך לבחור עכשיו — **${favored}**.`);
+          verdictLines.push(`הסיבה פשוטה: פער רמה משמעותי. **${favored}** (${tierHe(favoredTier)}) מול **${underdog}** — זה לא מאבק שיוויוני.`);
+          verdictLines.push(`בהיעדר גורם שמשנה את התמונה (פציעה מרכזית, עייפות קיצונית, חוסר מוטיבציה) — הייתי על הצד הזה.`);
+        } else if (gapAbs === 1) {
+          verdictLines.push(`הייתי הולך על **${favored}** — אבל לא בקלות.`);
+          verdictLines.push(`הפרש רמה קטן, ו${isHomeWin ? "יתרון הבית מוסיף משהו חשוב" : `${favored} ב-${tierHe(favoredTier)} מנסה לנצח בחוץ`}. זה לא הצד הבטוח ביותר, אבל הנתונים מצביעים לכיוון הזה.`);
+        } else {
+          verdictLines.push(`משחק 50/50 אמיתי — **שני הצדדים ברמה דומה**.`);
+          verdictLines.push(`אם חייב לבחור — **${home}** (יתרון ביתי), אבל כאן הייתי מחפש שוק חכם יותר: סיכוי כפול, תיקו ביחס טוב, או Under.`);
+        }
+        verdictLines.push(``, `הסתברות סטטיסטית: **~${winPct}%** ל-${favored}`);
+        verdictLines.push(`⚠️ ניתוח מבוסס דירוגי קבוצות, יתרון ביתי והיסטוריה — ללא יחסי Winner בזמן אמת.`);
+        sections.push({ type: "verdict", icon: "🎯", title: "מה הייתי בוחר", content: verdictLines.join("\n") });
 
-        sections.push({ type: "analysis", icon: "📊", title: "ניתוח המשחק",
-          content: [
-            away ? `${home} (${tierLabelHe(homeTier)}) מול ${away} (${tierLabelHe(awayTier)})` : `${home} (${tierLabelHe(homeTier)})`,
-            "",
-            `פער דירוג: ${gapAbs === 0 ? "אין פער — שיוויון סטטיסטי" : `${gapAbs} דרגות לטובת ${favored}`}`,
-            isBasketball ? "ענף: כדורסל · מנתח Moneyline, ספרד, קצב, עומק ספסל." : "ענף: כדורגל · מנתח ניצחון/תיקו, Over/Under, סיכוי כפול, שערים ראשון.",
-          ].join("\n") });
+        // Chain of thought
+        const cotLines = [`**ניתוח שלב אחרי שלב:**`, ``];
+        const gap1 = gapAbs === 0 ? `⚠️ אין פער — שיוויון סטטיסטי` : gapAbs === 1 ? `✅ ${gapAbs} דרגה לטובת ${favored}` : `✅ ${gapAbs} דרגות לטובת ${favored} — פייבוריט ברור`;
+        cotLines.push(`🔹 **פער איכות** — ${home} (${tierHe(homeTier)}) מול ${away} (${tierHe(awayTier)}) → ${gap1}`);
+        cotLines.push(isHomeWin ? `🔹 **יתרון ביתי** — ${home} בבית → ✅ ~60% ניצחון/תיקו לבית סטטיסטית` : `🔹 **חוץ** — ${favored} משחק בחוץ → ⚠️ מאתגר, אבל הרמה מפצה`);
+        cotLines.push(`🔹 **מוטיבציה** → ⚠️ לא ידוע [בדוק: ליגה? גביע? מיקום בטבלה?]`);
+        cotLines.push(`🔹 **פציעות/הרכב** → ⚠️ לא ידוע [גורם קריטי — בדוק ב-Winner ובחדשות ספורט]`);
+        cotLines.push(`🔹 **H2H היסטורי** → ⚠️ לא ידוע [ניתן לבדוק ב-fbref.com / Sofascore]`);
+        cotLines.push(`🔹 **Value ביחסים** → ⚠️ חפש את המשחק ב-Winner — צריך יחס מעל **${valueOdds}** ל-Value`);
+        sections.push({ type: "analysis", icon: "🔍", title: "שרשרת חשיבה", content: cotLines.join("\n") });
 
-        const pros = [
-          away ? `- **${favored}** מדורג ${tierLabelHe(favoredTier)}${gapAbs >= 2 ? " — פער איכות ברור" : gapAbs === 1 ? " — יתרון מסוים" : " — שיוויון רמות"}.` : `- ${home} מדורג ${tierLabelHe(homeTier)}.`,
-          isHomeWin && away ? "- יתרון ביתי: סטטיסטית ~60% מהמשחקים מסתיימים בניצחון/תיקו לקבוצת הבית." : `- גם כצד חוץ, ${favored} מציג רמה שמכריחה תוצאה.`,
-          gapAbs >= 2 ? `- פער דירוג של ${gapAbs} דרגות — הגורם המשמעותי ביותר בחיזוי תוצאות.` : "",
-          isBasketball ? "- בכדורסל הפרש רמה מתורגם ישירות לפרשי ניקוד וסיכוי ריאלי." : "- בכדורגל הפרש רמה משפיע על שליטה, עומק סגל ואפשרויות כניסה.",
-        ].filter(Boolean);
-        sections.push({ type: "pros", icon: "✅", title: "יתרונות", content: pros.join("\n") });
+        // Pros
+        const pros = [];
+        if (away) {
+          pros.push(`→ **${favored}** (${tierHe(favoredTier)}) ${gapAbs >= 2 ? "— פער איכות ברור מספיק כדי לצפות לתוצאה" : gapAbs === 1 ? "— יתרון רמה קל" : "— שיוויון רמות"}.`);
+        }
+        if (isHomeWin && away) pros.push(`→ יתרון ביתי: סטטיסטית ~60% מהמשחקים מסתיימים בניצחון/תיקו לקבוצת הבית — נתון לא מבוטל.`);
+        else if (!isHomeWin) pros.push(`→ גם כצד חוץ, **${favored}** ברמה ${tierHe(favoredTier)} — מצפים ממנו להכתיב קצב.`);
+        if (gapAbs >= 2) pros.push(`→ פער של ${gapAbs} דרגות — בדרך כלל הגורם המשמעותי ביותר בחיזוי תוצאות.`);
+        pros.push(isBball ? `→ בכדורסל, פער רמה מתורגם ישירות לפרשי ניקוד וסיכוי ריאלי.` : `→ בכדורגל, פער רמה = עומק סגל, שליטה כדור, ואפשרויות הכניסה.`);
+        sections.push({ type: "pros", icon: "✅", title: "למה כן", content: pros.join("\n") });
 
-        const cons = [
-          "- ניתוח זה לא כולל נתוני פציעות, הרכב, מוטיבציה, טקטיקה או קצב נוכחי.",
-          away ? `- ${underdog} לא חסרי אפשרויות — בספורט תמיד יש הפתעות.` : "- חסר נתוני יריב להשוואה מלאה.",
-          gapAbs === 0 ? "- כשהרמות שקולות, הגורמים שלא ניתן לדעת מראש קובעים יותר." : "",
-          isBasketball ? "- בכדורסל: רוטציות, פציעות וגארבג׳ טיים יכולים לשנות את כל התמונה." : "- בכדורגל: כדור אחד, קלפים אדומים ומזג אוויר יכולים לבטל כל ניתוח.",
-        ].filter(Boolean);
-        sections.push({ type: "cons", icon: "⚠️", title: "חסרונות וסיכונים", content: cons.join("\n") });
+        // Cons
+        const cons = [];
+        cons.push(`→ **אין נתוני פציעות, הרכב, מוטיבציה או טקטיקה** — הגורמים שמשנים משחקים.`);
+        if (away) cons.push(`→ **${underdog}** לא חסרי אפשרויות. ${gapAbs >= 2 ? `~${100 - winPct}% מהמשחקים מסתיימים בהפתעה גם מול פייבוריט ברור.` : `ב-~${100 - winPct}% מהמקרים, הצד הזה מנצח.`}`);
+        if (gapAbs === 0) cons.push(`→ כשהרמות שקולות, הגורמים שלא ניתן לדעת — מוטיבציה, פסיכולוגיה, קצב — קובעים יותר מהנתונים.`);
+        cons.push(isBball ? `→ בכדורסל: רוטציות, פציעות ב-warm-up, וגארבג׳ טיים יכולים להפוך את כל הניתוח.` : `→ בכדורגל: כדור אחד, כרטיס אדום, ומזג אוויר יכולים לבטל שעה של ניתוח.`);
+        sections.push({ type: "cons", icon: "⚠️", title: "מה יכול לשבש", content: cons.join("\n") });
 
-        sections.push({ type: "value", icon: "💰", title: "Value ביחס לשוק",
-          content: [`אין יחסי Winner בזמן אמת למשחק זה.`, "", `לבדיקת Value אמיתי: מצא את המשחק ב-Winner ובדוק שהיחס המוצע גבוה מ-${(100/winPct).toFixed(2)} (${winPct}% הסתברות מודל).`, gapAbs >= 2 ? "פייבוריט ברור — חפש יחס בטווח 1.30-1.60 לניתוח." : "ממליץ לבדוק גם סיכוי כפול כדי להוריד סיכון."].join("\n") });
+        // Value + trap detection
+        const isTrap = gapAbs <= 1 && !isHomeWin;
+        const valueLines = [];
+        valueLines.push(`**אין יחסי Winner בזמן אמת.** כדי לבדוק Value:`);
+        valueLines.push(`→ חפש את המשחק ב-Winner`);
+        valueLines.push(`→ יחס ל-**${favored}** מעל **${valueOdds}** = Value פוטנציאלי`);
+        if (isTrap) valueLines.push(``, `🚨 **שים לב למלכודת:** ${favored} כצד חוץ עם יתרון קטן — השוק לפעמים מתמחר יתר בגלל "שם". בדוק שהיחס לא קצר מדי.`);
+        else if (gapAbs === 0) valueLines.push(``, `💡 **טיפ:** במשחק שיוויוני, **תיקו** ו**סיכוי כפול** לרוב עדיפים על ניצחון ישיר.`);
+        else valueLines.push(``, isBball ? `💡 **טיפ:** בכדורסל, גם **Spread** ו-**Total** יכולים להציע Value יותר טוב מ-Moneyline.` : `💡 **טיפ:** בדוק גם **Over/Under** ו-**BTTS** — לפעמים שם נמצא ה-Value האמיתי.`);
+        sections.push({ type: "value", icon: "💰", title: "Value ומלכודת שוק", content: valueLines.join("\n") });
 
         sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: `${riskLevel}/5`, riskLevel });
-
         sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה",
-          content: "ניתוח סטטיסטי כללי מבוסס דירוגי קבוצות והיסטוריה — ללא יחסי Winner בזמן אמת. אין ייעוץ הימורים, המלצה לשים כסף, או הבטחת תוצאה." });
+          content: "ניתוח סטטיסטי כללי — ללא יחסי Winner בזמן אמת. אין ייעוץ הימורים, המלצה לשים כסף, או הבטחת תוצאה." });
 
-        if (away) suggestions.push(`${home} נגד ${away} ב-Winner`, `סטטיסטיקות של ${home}`, isBasketball ? "ספרד או Moneyline?" : "Over 2.5?", "מה הסיכוי לתיקו?");
-        else suggestions.push(`ספר לי עוד על ${home}`, "דוגמה לניתוח מלא", "ברצלונה נגד ריאל מדריד");
+        if (away) suggestions.push("יש פה Value?", "זה מלכודת?", `היית נכנס ל-${favored}?`, isBball ? "ספרד או Moneyline?" : "מה הסיכוי לתיקו?");
+        else suggestions.push(`ספר לי עוד על ${home}`, "ברצלונה נגד ריאל מדריד", "ארסנל נגד מנצ׳סטר סיטי", "לייקרס נגד סלטיקס");
 
       } else {
         const matchTitle = away ? `${home} vs ${away}` : home;
-        const rec = gapAbs >= 2 ? "Strongly Favor ✅" : gapAbs === 1 ? "Slight Edge 🟡" : "Statistical Toss-up — Home Advantage 🟡";
 
-        sections.push({ type: "verdict", icon: "🎯", title: "What I Would Pick",
-          content: [`Match: **${matchTitle}**`, "", `Statistically favored: **${favored}**`, `Model read: **${rec}** · Statistical probability: ~${winPct}%`, "", "⚠️ This analysis is based on team tiers, historical data, and home advantage — no live Winner odds."].join("\n") });
+        const verdictLines = [];
+        if (!away) {
+          verdictLines.push(`Analyzing **${home}** (${tierEn(homeTier)}) — ask me about a specific matchup for a deeper analysis.`);
+        } else if (gapAbs >= 2) {
+          verdictLines.push(`If I had to pick right now — **${favored}**.`);
+          verdictLines.push(`The tier gap is significant: **${favored}** (${tierEn(favoredTier)}) vs **${underdog}** — not a level playing field.`);
+        } else if (gapAbs === 1) {
+          verdictLines.push(`I'd lean **${favored}** — but not with high conviction.`);
+          verdictLines.push(`Small tier edge, ${isHomeWin ? "plus home advantage" : "even away"}. Not the safest pick, but data points this way.`);
+        } else {
+          verdictLines.push(`**True 50/50** — both sides at similar tier.`);
+          verdictLines.push(`If forced to pick — **${home}** (home advantage), but I'd look for a smarter market here.`);
+        }
+        verdictLines.push(``, `Statistical probability: **~${winPct}%** for ${favored}`);
+        verdictLines.push(`⚠️ Analysis based on team tiers, home advantage and historical data — no live Winner odds.`);
+        sections.push({ type: "verdict", icon: "🎯", title: "What I Would Pick", content: verdictLines.join("\n") });
 
-        sections.push({ type: "analysis", icon: "📊", title: "Match Analysis",
+        const cotLines = [`**Step-by-step analysis:**`, ``];
+        cotLines.push(`🔹 **Quality gap** — ${home} (${tierEn(homeTier)}) vs ${away} (${tierEn(awayTier)}) → ${gapAbs === 0 ? "⚠️ Equal tier — statistical toss-up" : `✅ ${gapAbs} level(s) in favor of ${favored}`}`);
+        cotLines.push(isHomeWin ? `🔹 **Home advantage** — ${home} at home → ✅ ~60% win/draw for home teams statistically` : `🔹 **Away side** — ${favored} traveling → ⚠️ Challenging, quality must compensate`);
+        cotLines.push(`🔹 **Motivation** → ⚠️ Unknown [check: league position? cup? must-win?]`);
+        cotLines.push(`🔹 **Injuries/lineup** → ⚠️ Unknown [critical factor — check Winner + sports news]`);
+        cotLines.push(`🔹 **H2H history** → ⚠️ Unknown [check fbref.com / Sofascore]`);
+        cotLines.push(`🔹 **Value check** → ⚠️ Find on Winner — need odds above **${valueOdds}** for value`);
+        sections.push({ type: "analysis", icon: "🔍", title: "Chain of Thought", content: cotLines.join("\n") });
+
+        sections.push({ type: "pros", icon: "✅", title: "Strengths",
           content: [
-            away ? `${home} (${tierLabelEn(homeTier)}) vs ${away} (${tierLabelEn(awayTier)})` : `${home} (${tierLabelEn(homeTier)})`,
-            "",
-            `Tier gap: ${gapAbs === 0 ? "None — statistical toss-up" : `${gapAbs} level(s) in favor of ${favored}`}`,
-            isBasketball ? "Sport: Basketball · Analyzing Moneyline, spread, pace, bench depth." : "Sport: Football · Analyzing win/draw, Over/Under, double chance, first goal.",
-          ].join("\n") });
+            away ? `→ **${favored}** (${tierEn(favoredTier)}) ${gapAbs >= 2 ? "— clear quality gap" : gapAbs === 1 ? "— slight tier edge" : "— equal tiers"}.` : `→ ${home} rated ${tierEn(homeTier)}.`,
+            isHomeWin && away ? `→ Home advantage: ~60% of matches end home win or draw.` : `→ Even away, ${favored} at ${tierEn(favoredTier)} dictates the tempo.`,
+            gapAbs >= 2 ? `→ Tier gap of ${gapAbs} levels — the strongest single predictor.` : "",
+            isBball ? `→ In basketball, tier gap = direct point differential.` : `→ In football, tier = squad depth, ball control, sub options.`,
+          ].filter(Boolean).join("\n") });
 
-        const pros = [
-          away ? `- **${favored}** is rated ${tierLabelEn(favoredTier)}${gapAbs >= 2 ? " — clear quality gap" : gapAbs === 1 ? " — slight edge" : " — equal tier"}.` : `- ${home} is rated ${tierLabelEn(homeTier)}.`,
-          isHomeWin && away ? "- Home advantage: statistically ~60% of matches end in home win or draw." : `- Even away, ${favored} shows enough class to force a result.`,
-          gapAbs >= 2 ? `- Tier gap of ${gapAbs} levels — the single most significant predictor in outcome modeling.` : "",
-          isBasketball ? "- In basketball, tier gap directly translates to point differentials." : "- In football, tier gap drives squad depth, substitution options, and game control.",
-        ].filter(Boolean);
-        sections.push({ type: "pros", icon: "✅", title: "Strengths", content: pros.join("\n") });
+        sections.push({ type: "cons", icon: "⚠️", title: "What Could Go Wrong",
+          content: [
+            `→ **No live injuries, lineup, motivation or tactical data** — the factors that actually decide matches.`,
+            away ? `→ **${underdog}** can always punch above their weight. ~${100 - winPct}% of matches end in an upset.` : "",
+            gapAbs === 0 ? `→ Equal tiers — unmeasurable factors (momentum, psychology) decide more than stats.` : "",
+            isBball ? `→ Basketball: rotations, warm-up injuries, and garbage time can flip everything.` : `→ Football: one red card and everything changes.`,
+          ].filter(Boolean).join("\n") });
 
-        const cons = [
-          "- No live injury, lineup, motivation, or tactical data included.",
-          away ? `- ${underdog} always has a puncher's chance — upsets happen.` : "- Missing opponent for full comparison.",
-          gapAbs === 0 ? "- When tiers are equal, unmeasurable factors decide the outcome." : "",
-          isBasketball ? "- Basketball: rotations, injuries, and garbage time can flip everything." : "- Football: one ball, red cards, and weather can override any model.",
-        ].filter(Boolean);
-        sections.push({ type: "cons", icon: "⚠️", title: "Weaknesses & Risks", content: cons.join("\n") });
-
-        sections.push({ type: "value", icon: "💰", title: "Value Analysis",
-          content: [`No live Winner odds for this match.`, "", `To check real Value: find this match on Winner and verify the offered price is above ${(100/winPct).toFixed(2)} (${winPct}% model probability).`, gapAbs >= 2 ? "Clear favorite — look for odds in the 1.30-1.60 range for analysis." : "Consider double chance to reduce risk on this one."].join("\n") });
+        sections.push({ type: "value", icon: "💰", title: "Value & Market Trap",
+          content: [`**No live Winner odds.** To check Value:`, `→ Find the match on Winner`, `→ ${favored} odds above **${valueOdds}** = potential Value`, ``, gapAbs === 0 ? `💡 In equal matches, **Draw** and **Double Chance** often offer better value than outright win.` : `💡 Check **Over/Under** and **BTTS** — that's often where real value hides.`].join("\n") });
 
         sections.push({ type: "risk", icon: "🔥", title: "Risk Level", content: `${riskLevel}/5`, riskLevel });
-
         sections.push({ type: "disclaimer", icon: "ℹ️", title: "Note",
-          content: "General statistical analysis based on team tiers and historical patterns — no live Winner odds. Not betting advice, no instruction to stake money, no guaranteed result." });
+          content: "General statistical analysis — no live Winner odds. Not betting advice, no instruction to stake money, no guaranteed result." });
 
-        if (away) suggestions.push(`${home} vs ${away} on Winner`, `${home} stats`, isBasketball ? "Spread or Moneyline?" : "Over 2.5?", "Draw probability?");
-        else suggestions.push(`Tell me more about ${home}`, "Full match analysis example", "Real Madrid vs Barcelona");
+        if (away) suggestions.push("Is there Value?", "Is this a trap?", `Would you take ${favored}?`, isBball ? "Spread or Moneyline?" : "Draw probability?");
+        else suggestions.push(`Tell me about ${home}`, "Real Madrid vs Barcelona", "Arsenal vs PSG", "Lakers vs Celtics");
       }
 
       const plainText = sections.map(s => `${s.title}\n${s.content}`).join("\n\n");
@@ -2918,8 +3171,13 @@
 
       const matches = findReuvenMatches(value);
 
-      // Follow-up: if no new game found but we have a single stored candidate, treat as a follow-up question on that game
+      // Follow-up: if no new game found but we have a single stored candidate
       if (!matches.length && state.reubenCandidates.length === 1) {
+        const intent = reuvenDetectIntent(value);
+        if (intent !== "match") {
+          const lastQ = state.reubenLastQuery || `${state.reubenCandidates[0].home || ""} נגד ${state.reubenCandidates[0].away || ""}`;
+          return reuvenIntentResponse(intent, lastQ, value);
+        }
         return analyzeReuvenResolvedMatch(value, state.reubenCandidates[0]);
       }
 
@@ -2941,10 +3199,16 @@
       }
 
       state.reubenCandidates = matches;
-      state.reubenLastQuery = value;
       if (!matches.length) {
+        // Intent detection: follow-up questions about the last analyzed match
+        const intent = reuvenDetectIntent(value);
+        if (intent !== "match" && state.reubenLastQuery) {
+          return reuvenIntentResponse(intent, state.reubenLastQuery, value);
+        }
+        state.reubenLastQuery = value;
         return analyzeReuvenGenericMatch(value);
       }
+      state.reubenLastQuery = value;
       if (matches.length > 1) {
         return [
           `מצאתי ${matches.length} משחקים אפשריים בחודש הקרוב. לאיזה אחד אתה מתכוון?`,
@@ -3217,10 +3481,12 @@
     function renderAiThinking() {
       const currentStep = state.reubenThinkingStep || 0;
       const steps = [
-        "מחפש התאמה למשחק וליום הנכון",
-        "בודק שווקי Winner ויחסים זמינים",
-        "מחשב פער מול השוק והיריבה הקרובה",
-        "בונה הסבר ברור למה הצד הזה מקבל יתרון",
+        "מזהה קבוצות, ענף ורמת משחק",
+        "מחשב פער רמה ויתרון ביתי",
+        "בודק שווקי Winner ויחסים בזמן אמת",
+        "מנתח מוטיבציה, H2H ומלכודות שוק",
+        "מחשב הסתברות, Value ורמת סיכון",
+        "בונה ניתוח מלא עם המלצה",
       ];
       return `
         <div class="chat-msg ai">
@@ -3243,7 +3509,14 @@
     function renderReubenAI() {
       const messages = state.reubenMessages.length
         ? state.reubenMessages
-        : [{ role: "ai", text: "שלום! אני הפוגע AI — מנתח משחקים מקצועי.\n\nאני עובד עם נתוני Winner בזמן אמת: יחסים, שווקים, הסתברויות.\n\nשאל אותי על כל משחק — ואני אנתח יתרונות, חסרונות, Value ואיפה הייתי הולך.\n\nדוגמה: \"ארסנל נגד פריז\" או \"ברצלונה היום\"" }];
+        : [{ role: "ai", sections: [
+          { type: "verdict", icon: "🎯", title: "שלום, אני הפוגע AI",
+            content: "מנתח משחקים מקצועי — חושב כמו אנליסט ספורט, מדבר כמו בן אדם.\n\nאני מנתח כל משחק בעולם: כדורגל, כדורסל, כל ליגה.\nעובד עם נתוני Winner בזמן אמת + סטטיסטיקות היסטוריות." },
+          { type: "analysis", icon: "🔍", title: "מה אני יכול לנתח",
+            content: "🏆 כל משחק — גם בלי Winner (נתח לפי דירוגים + היסטוריה)\n📊 יחסים ו-Value — האם המחיר שווה?\n🚨 מלכודות שוק — מתי פייבוריט מסוכן?\n💫 אנדרדוג — מתי הקטן יכול להפתיע?\n⚖️ תיקו — מתי זה Value אמיתי?" },
+          { type: "disclaimer", icon: "💬", title: "תשאל אותי",
+            content: "\"ארסנל נגד פריז\" · \"ברצלונה נגד ריאל מדריד\" · \"יש פה Value?\" · \"זה מלכודת?\" · \"היית נכנס?\"" }
+        ], suggestions: ["ארסנל נגד פריז", "ברצלונה נגד ריאל מדריד", "לייקרס נגד סלטיקס", "מנצ׳סטר סיטי היום"], text: "שלום! אני הפוגע AI." }];
       const loading = state.reubenLoading;
       const isLocked = !state.isPremium && (state.reubenFreeUsed || 0) >= 1;
       return `
@@ -4178,7 +4451,7 @@
         (async () => {
           const MIN_THINK_MS = 5000;
           const startTime = Date.now();
-          const STEPS_COUNT = 4;
+          const STEPS_COUNT = 6;
           const stepEveryMs = Math.floor(MIN_THINK_MS / STEPS_COUNT); // ~1250ms per step
 
           state.reubenThinkingStep = 0;
