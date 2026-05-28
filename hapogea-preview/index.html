@@ -1492,6 +1492,126 @@
       .debug-row { grid-template-columns: 1fr; }
     }
 
+    /* ══ Premium Match Cards ══ */
+    .no-scroll{overflow:hidden}
+    .mc-sec{margin-bottom:18px}
+    .mc-lg-head{display:flex;align-items:center;gap:8px;padding:6px 2px;margin-bottom:10px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none}
+    .mc-lg-head-icon{font-size:14px;flex-shrink:0}
+    .mc-lg-head-name{font-size:11px;font-weight:900;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mc-lg-head-count{font-size:10px;color:var(--soft);font-weight:800;flex-shrink:0}
+    .mc-lg-chev{color:var(--soft);font-size:10px;transition:transform .18s;flex-shrink:0}
+    .mc-lg-head.collapsed .mc-lg-chev{transform:rotate(-90deg)}
+    .mc-lg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+    .mc-lg-grid.collapsed{display:none}
+    .mcard{background:#0e1319;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:visible;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;position:relative}
+    .mcard:hover{transform:translateY(-3px);box-shadow:0 18px 52px rgba(0,0,0,.55);border-color:rgba(56,217,245,.22)}
+    .mcard.mc-live{border-color:rgba(240,79,80,.28);animation:mc-card-pulse 2.5s ease infinite}
+    @keyframes mc-card-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,79,80,0)}50%{box-shadow:0 0 18px 2px rgba(240,79,80,.12)}}
+    .mcard.mc-hit{border-color:rgba(46,204,138,.28)}
+    .mcard.mc-miss{border-color:rgba(240,79,80,.18)}
+    .mc-hdr{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.018);border-radius:14px 14px 0 0}
+    .mc-sport-ic{font-size:13px;flex-shrink:0}
+    .mc-league-lbl{font-size:10px;font-weight:900;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+    .mc-hdr-r{flex-shrink:0;display:flex;align-items:center;gap:5px}
+    .mc-time-lbl{font:900 13px/1 Heebo,sans-serif;color:var(--text)}
+    .mc-live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(240,79,80,.12);border:1px solid rgba(240,79,80,.3);border-radius:999px;padding:3px 8px;font:900 10px/1 Heebo,sans-serif;color:#ff8888}
+    .mc-sbadge{display:inline-flex;align-items:center;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:900;white-space:nowrap}
+    .mc-sb-hit{background:rgba(46,204,138,.12);border:1px solid rgba(46,204,138,.3);color:#31d187}
+    .mc-sb-miss{background:rgba(240,79,80,.10);border:1px solid rgba(240,79,80,.25);color:#f07070}
+    .mc-sb-closed{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--soft)}
+    .mc-teams{display:grid;grid-template-columns:1fr 80px 1fr;align-items:center;gap:6px;padding:16px 12px 12px}
+    .mc-team{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .mc-logo-outer{position:relative;width:62px;height:62px}
+    .mc-logo-box{width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);display:grid;place-items:center;overflow:hidden;font:900 18px/1 Heebo,sans-serif;color:var(--muted);transition:border-color .2s,box-shadow .2s;position:relative}
+    .mc-logo-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:11%}
+    .mc-logo-box.fav{border-color:rgba(245,190,48,.65);box-shadow:0 0 0 3px rgba(245,190,48,.12),0 0 20px rgba(245,190,48,.18)}
+    .mc-crown{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:12px;z-index:3;filter:drop-shadow(0 1px 4px rgba(0,0,0,.7))}
+    .mc-tname{font:800 11px/1.3 Heebo,sans-serif;color:var(--text);text-align:center;max-width:115px;word-break:break-word}
+    .mc-tname.fav{color:#f5be30}
+    .mc-fav-tag{font-size:9px;font-weight:900;color:#f5be30;background:rgba(245,190,48,.10);border:1px solid rgba(245,190,48,.22);border-radius:999px;padding:1px 6px;white-space:nowrap}
+    .mc-fav-ph{height:16px}
+    .mc-center{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
+    .mc-score-txt{font:900 24px/1 Heebo,sans-serif;letter-spacing:2px;color:var(--text)}
+    .mc-score-txt.live{color:#ff9090;text-shadow:0 0 16px rgba(240,79,80,.45)}
+    .mc-vs-txt{font:700 11px/1 Heebo,sans-serif;color:var(--soft)}
+    .mc-min-dot{display:flex;align-items:center;gap:4px;font:900 10px/1 Heebo,sans-serif;color:#ff8888}
+    .t-live-dot{width:6px;height:6px;border-radius:50%;background:#f04f50;animation:mc-pulse-dot 1.3s ease infinite;flex-shrink:0;display:inline-block}
+    @keyframes mc-pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(240,79,80,.5)}60%{box-shadow:0 0 0 5px rgba(240,79,80,0)}}
+    .mc-odds-chip{background:rgba(245,190,48,.10);border:1px solid rgba(245,190,48,.28);border-radius:8px;padding:5px 8px;font:900 15px/1 Heebo,sans-serif;color:#f5be30;text-align:center;min-width:52px;white-space:nowrap}
+    .mc-probs{padding:10px 12px 11px;border-top:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.012)}
+    .mc-prob-row{display:grid;grid-template-columns:32px 1fr 30px;align-items:center;gap:8px;margin-bottom:6px}
+    .mc-prob-row:last-child{margin-bottom:0}
+    .mc-prob-lbl{font-size:10px;color:var(--soft);font-weight:800;text-align:right}
+    .mc-prob-track{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+    .mc-prob-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+    .mc-prob-fill.home{background:linear-gradient(90deg,#38d9f5,#4a9bff)}
+    .mc-prob-fill.draw{background:rgba(140,155,165,.5)}
+    .mc-prob-fill.away{background:linear-gradient(90deg,#f07840,#f04f50)}
+    .mc-prob-pct{font:900 11px/1 Heebo,sans-serif;color:var(--soft);text-align:left}
+    .mc-prob-row.winner .mc-prob-pct{color:var(--text)}
+    .mc-prob-row.winner .mc-prob-fill{filter:brightness(1.15)}
+    .mc-foot{padding:9px 12px 10px;border-top:1px solid rgba(255,255,255,.06)}
+    .mc-pick-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+    .mc-pick-lbl{font-size:10px;color:var(--soft);font-weight:900;flex-shrink:0}
+    .mc-pick-val{font:900 12px/1.3 Heebo,sans-serif;color:#55d6ff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mc-pick-val.hit{color:#31d187}
+    .mc-pick-val.miss{color:#f07070}
+    .mc-res-badge{display:inline-flex;align-items:center;border-radius:999px;padding:3px 9px;font-size:10px;font-weight:900;flex-shrink:0}
+    .mc-res-badge.hit{background:#31d187;color:#04120a}
+    .mc-res-badge.miss{background:#f04f50;color:#fff}
+    .mc-ex{margin-top:6px;font-size:11px;color:var(--muted);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    /* Match Drawer */
+    .mc-overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,8,.8);opacity:0;pointer-events:none;transition:opacity .22s ease}
+    .mc-overlay.open{opacity:1;pointer-events:all}
+    .mc-drawer{position:fixed;top:0;bottom:0;inset-inline-end:0;z-index:51;width:min(480px,100vw);background:#0e1319;border-inline-start:1px solid rgba(255,255,255,.14);transform:translateX(-100%);transition:transform .26s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column}
+    .mc-drawer.open{transform:translateX(0)}
+    .mcd-head{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);position:sticky;top:0;z-index:2;backdrop-filter:blur(8px)}
+    .mcd-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .mcd-league-row{display:flex;align-items:center;gap:7px;min-width:0}
+    .mcd-league-row span{font-size:11px;font-weight:900;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mcd-close{width:30px;height:30px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:var(--muted);display:grid;place-items:center;font-size:16px;flex-shrink:0;cursor:pointer}
+    .mcd-match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;direction:ltr}
+    .mcd-team{display:flex;flex-direction:column;align-items:center;gap:6px;direction:rtl}
+    .mcd-logo{width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);display:grid;place-items:center;overflow:hidden;font:900 16px/1 Heebo,sans-serif;color:var(--muted);position:relative}
+    .mcd-logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10%}
+    .mcd-team-name{font-size:12px;font-weight:900;text-align:center;line-height:1.2;max-width:110px}
+    .mcd-center{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+    .mcd-score{font:900 38px/1 Heebo,sans-serif;letter-spacing:3px}
+    .mcd-score.live{color:#ff9090;text-shadow:0 0 20px rgba(240,79,80,.35)}
+    .mcd-score.pending{font-size:18px;color:var(--soft);letter-spacing:0}
+    .mcd-score-sub{font-size:10px;color:var(--soft);font-weight:800;text-align:center}
+    .mcd-live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(240,79,80,.12);border:1px solid rgba(240,79,80,.28);border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;color:#ff8888}
+    .mcd-pick-box{margin:14px 0 0;padding:10px 12px;border-radius:8px;border:1px solid rgba(56,217,245,.22);background:rgba(56,217,245,.06);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .mcd-pick-box .dp-label{font-size:10px;color:var(--soft);font-weight:900;flex-shrink:0}
+    .mcd-pick-box .dp-pick{font-size:13px;font-weight:900;color:#55d6ff;flex:1;min-width:0}
+    .mcd-pick-box.hit{border-color:rgba(46,204,138,.3);background:rgba(46,204,138,.07)}
+    .mcd-pick-box.hit .dp-pick{color:#31d187}
+    .mcd-pick-box.miss{border-color:rgba(240,79,80,.25);background:rgba(240,79,80,.06)}
+    .mcd-pick-box.miss .dp-pick{color:#f07070}
+    .mcd-dp-odds{font:900 18px/1 Heebo,sans-serif;color:#f5be30;flex-shrink:0}
+    .mcd-dp-badge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:900}
+    .mcd-dp-badge.hit{background:#31d187;color:#06100c}
+    .mcd-dp-badge.miss{background:#f04f50;color:#fff}
+    .mcd-tabs{display:flex;gap:2px;margin-top:12px;background:rgba(255,255,255,.04);border-radius:7px;padding:3px}
+    .mcd-tab{flex:1;border:none;background:transparent;color:var(--muted);border-radius:5px;padding:6px;font-size:11px;font-weight:900;transition:.13s ease;text-align:center;cursor:pointer}
+    .mcd-tab.on{background:#131920;color:var(--text)}
+    .mcd-body{padding:14px 16px;flex:1;display:grid;gap:14px;align-content:start}
+    .mcd-sec h4{font-size:10px;font-weight:900;color:var(--soft);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;margin-top:0}
+    .mcd-mkt-group{margin-bottom:12px}
+    .mcd-mkt-title{font-size:10px;color:var(--soft);font-weight:900;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+    .mcd-mkt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:5px}
+    .mcd-mkt-btn{border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:7px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(255,255,255,.03);transition:.13s ease;cursor:default}
+    .mcd-mkt-btn.sel{border-color:rgba(46,204,138,.5);background:rgba(46,204,138,.09)}
+    .mcd-mkt-lbl{font-size:9px;color:var(--soft);font-weight:900;text-align:center;line-height:1.2}
+    .mcd-mkt-val{font:900 14px/1 Heebo,sans-serif;color:#f5be30}
+    .mcd-mkt-btn.sel .mcd-mkt-val{color:#31d187}
+    @media(max-width:700px){
+      .mc-lg-grid{grid-template-columns:1fr}
+      .mc-teams{grid-template-columns:1fr 70px 1fr;padding:12px 10px 10px}
+      .mc-logo-box,.mc-logo-outer{width:50px;height:50px}
+      .mc-score-txt{font-size:20px}
+      .mc-odds-chip{font-size:13px;padding:4px 7px}
+    }
   </style>
 </head>
 <body>
@@ -1650,6 +1770,17 @@
       <div class="debug-grid" id="debugRows"></div>
     </section>
 
+    <!-- Premium Match Cards Section -->
+    <section class="panel" id="matchCardsSection" style="margin-top:18px;padding:16px 18px 18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0;font-size:20px">⚡ כרטיסיות משחקים</h3>
+          <p id="mcSumTxt" style="margin:4px 0 0;color:var(--muted);font-size:12px">טוען...</p>
+        </div>
+        <span class="pill" id="mcPremBadge">🔒 ניתוח פרימיום</span>
+      </div>
+      <div id="mcContent"></div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -3526,9 +3657,12 @@
       renderDaily();
       renderCards();
       renderDebug();
+      renderMatchCards();
       applyLogosToCards();
       const premBtn = document.getElementById('premiumHeaderBtn');
       if (premBtn) premBtn.textContent = state.isPremium ? '✓ פרימיום' : '🔒 פרימיום';
+      const mcBadge = document.getElementById('mcPremBadge');
+      if (mcBadge) mcBadge.textContent = state.isPremium ? '✓ פרימיום' : '🔒 ניתוח פרימיום';
     }
 
     function scrollReuvenOutput() {
@@ -3933,9 +4067,401 @@
       }
     });
 
+    /* ════ Premium Match Cards ════ */
+    let mcDrawerTab = 'overview';
+    let mcActiveId  = null;
+
+    function mcMatchStatus(r) {
+      if (r.matchPhase === 'in_progress' || (r.liveScore && r.liveScore !== '' && r.bettingStatus === 'available')) return 'live';
+      if (r.bettingStatus === 'closed' || r.matchPhase === 'final') return 'closed';
+      return 'upcoming';
+    }
+
+    function mcPickResult(r) {
+      if (r.bettingStatus !== 'closed' && r.matchPhase !== 'final') return 'pending';
+      if (!r.actualWinner) return 'pending';
+      const pb = (r.winnerPick || r.pick || '').replace(/\s*\(.*\)$/, '').trim();
+      const ac = (r.actualWinner || '').trim();
+      if (!pb || !ac) return 'pending';
+      return pb === ac ? 'hit' : 'miss';
+    }
+
+    function fmtMcOdds(o) { return o != null ? (+o).toFixed(2) : null; }
+
+    function mcTeamInit(name) { return (name || '?').trim().substring(0, 2).toUpperCase(); }
+
+    function getMcProbs(r) {
+      const ob = r.oddsBook;
+      if (!ob?.home) return null;
+      const hp = ob.home.noVigProbability || 0;
+      const dp = ob.draw?.noVigProbability || 0;
+      const ap = ob.away?.noVigProbability || 0;
+      const total = hp + dp + ap;
+      if (!total) return null;
+      return {
+        home: Math.round(hp / total * 100),
+        draw: dp > 0.01 ? Math.round(dp / total * 100) : null,
+        away: Math.round(ap / total * 100)
+      };
+    }
+
+    function getMcFav(r) {
+      const ob = r.oddsBook;
+      if (ob?.home) {
+        return (ob.home.noVigProbability || 0) >= (ob.away?.noVigProbability || 0) ? 'home' : 'away';
+      }
+      const pick = (r.winnerPick || r.pick || '').replace(/\s*\(.*\)$/, '').trim();
+      if (pick === r.home) return 'home';
+      if (pick === r.away) return 'away';
+      return 'home';
+    }
+
+    function mcLogoBox(asset, name, favFlag) {
+      const src  = asset?.logo || '';
+      const init = asset?.initials || mcTeamInit(name);
+      return `<div class="mc-logo-box${favFlag ? ' fav' : ''}">${escapeHtml(init)}${src ? `<img src="${escapeHtml(src)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}</div>`;
+    }
+
+    function mcSportIco(r) {
+      return (r.sport || '').includes('כדורסל') || String(r.sportId || '').includes('227') ? '🏀' : '⚽';
+    }
+
+    function matchCardHTML(r, cardIndex) {
+      const isFree = cardIndex === 0 || state.isPremium;
+      const st   = mcMatchStatus(r);
+      const res  = mcPickResult(r);
+      const odds = fmtMcOdds(r.odds);
+      const pick = r.winnerPick || r.pick || '';
+      const score = (st === 'live' || st === 'closed') ? (r.liveScore || r.result || '') : '';
+      const probs = getMcProbs(r);
+      const fav  = getMcFav(r);
+      const isFH = fav === 'home';
+      const isFA = fav === 'away';
+      const rid  = escapeHtml(String(r.id || r.eventId || ''));
+
+      // Header badge
+      let sHdr;
+      if (st === 'live') {
+        sHdr = `<span class="mc-live-badge"><span class="t-live-dot"></span> חי${r.matchMinute ? ' · ' + r.matchMinute + "'" : ''}</span>`;
+      } else if (st === 'closed') {
+        if (res === 'hit')       sHdr = `<span class="mc-sbadge mc-sb-hit">נתפס ✓</span>`;
+        else if (res === 'miss') sHdr = `<span class="mc-sbadge mc-sb-miss">לא נתפס</span>`;
+        else                     sHdr = `<span class="mc-sbadge mc-sb-closed">נסגר</span>`;
+      } else {
+        sHdr = `<span class="mc-time-lbl">${(r.time || '').substring(0, 5)}</span>`;
+      }
+
+      const cardCls  = st === 'live' ? ' mc-live' : res === 'hit' ? ' mc-hit' : res === 'miss' ? ' mc-miss' : '';
+      const pickCls  = res === 'hit' ? ' hit' : res === 'miss' ? ' miss' : '';
+      const resBadge = res === 'hit'
+        ? `<span class="mc-res-badge hit">נתפס ✓</span>`
+        : res === 'miss' ? `<span class="mc-res-badge miss">לא נתפס</span>` : '';
+
+      const exArr = Array.isArray(r.explanation) ? r.explanation : (r.explanation ? [r.explanation] : []);
+      const exRaw = exArr[1] || exArr[0] || '';
+
+      // Probability bars
+      let probsHTML = '';
+      if (probs) {
+        const hw = probs.home > (probs.away || 0);
+        const aw = (probs.away || 0) > probs.home;
+        probsHTML = `<div class="mc-probs">
+          <div class="mc-prob-row${hw ? ' winner' : ''}">
+            <span class="mc-prob-lbl">בית</span>
+            <div class="mc-prob-track"><div class="mc-prob-fill home" data-pw="${probs.home}" style="width:0"></div></div>
+            <span class="mc-prob-pct">${probs.home}%</span>
+          </div>
+          ${probs.draw !== null ? `<div class="mc-prob-row"><span class="mc-prob-lbl">תיקו</span><div class="mc-prob-track"><div class="mc-prob-fill draw" data-pw="${probs.draw}" style="width:0"></div></div><span class="mc-prob-pct">${probs.draw}%</span></div>` : ''}
+          <div class="mc-prob-row${aw ? ' winner' : ''}">
+            <span class="mc-prob-lbl">חוץ</span>
+            <div class="mc-prob-track"><div class="mc-prob-fill away" data-pw="${probs.away}" style="width:0"></div></div>
+            <span class="mc-prob-pct">${probs.away}%</span>
+          </div>
+        </div>`;
+      }
+
+      const onClickAttr = isFree ? `onclick="openMcDrawer('${rid}')"` : `onclick="openPremiumModal()"`;
+
+      const cardInner = `<div class="mcard${cardCls}" data-mcid="${rid}" ${onClickAttr}>
+        <div class="mc-hdr">
+          <span class="mc-sport-ic">${mcSportIco(r)}</span>
+          <span class="mc-league-lbl">${escapeHtml(r.league || '')}</span>
+          <div class="mc-hdr-r">${sHdr}</div>
+        </div>
+        <div class="mc-teams">
+          <div class="mc-team">
+            <div class="mc-logo-outer">
+              ${isFH ? '<span class="mc-crown">⭐</span>' : ''}
+              ${mcLogoBox(r.homeAsset, r.home, isFH)}
+            </div>
+            <div class="mc-tname${isFH ? ' fav' : ''}">${escapeHtml(r.home || '')}</div>
+            ${isFH ? '<div class="mc-fav-tag">פייבוריטית</div>' : '<div class="mc-fav-ph"></div>'}
+          </div>
+          <div class="mc-center">
+            ${score ? `<div class="mc-score-txt${st === 'live' ? ' live' : ''}">${escapeHtml(score)}</div>` : '<div class="mc-vs-txt">נגד</div>'}
+            ${st === 'live' && r.matchMinute ? `<div class="mc-min-dot"><span class="t-live-dot"></span>${r.matchMinute}'</div>` : ''}
+            ${odds ? `<div class="mc-odds-chip">@${odds}</div>` : ''}
+          </div>
+          <div class="mc-team">
+            <div class="mc-logo-outer">
+              ${isFA ? '<span class="mc-crown">⭐</span>' : ''}
+              ${mcLogoBox(r.awayAsset, r.away, isFA)}
+            </div>
+            <div class="mc-tname${isFA ? ' fav' : ''}">${escapeHtml(r.away || '')}</div>
+            ${isFA ? '<div class="mc-fav-tag">פייבוריטית</div>' : '<div class="mc-fav-ph"></div>'}
+          </div>
+        </div>
+        ${probsHTML}
+        <div class="mc-foot">
+          <div class="mc-pick-row">
+            <span class="mc-pick-lbl">הימרנו:</span>
+            <span class="mc-pick-val${pickCls}">${escapeHtml(pick)}</span>
+            ${resBadge}
+          </div>
+          ${exRaw ? `<div class="mc-ex">${escapeHtml(exRaw)}</div>` : ''}
+        </div>
+      </div>`;
+
+      if (!isFree) {
+        return `<div class="premium-lock-wrap" style="border-radius:14px">
+          ${cardInner}
+          <div class="premium-lock-overlay" onclick="openPremiumModal()">
+            <span class="lock-icon">🔒</span>
+            <span class="lock-label">ניתוח פרימיום</span>
+            <button class="lock-btn">קנה פרימיום</button>
+          </div>
+        </div>`;
+      }
+      return cardInner;
+    }
+
+    function mcAnimateProbs() {
+      document.querySelectorAll('#matchCardsSection .mc-prob-fill[data-pw]').forEach(el => {
+        el.style.width = (el.dataset.pw || 0) + '%';
+      });
+    }
+
+    function renderMatchCards() {
+      const section = document.getElementById('matchCardsSection');
+      const content = document.getElementById('mcContent');
+      const sumTxt  = document.getElementById('mcSumTxt');
+      if (!section || !content) return;
+      if (!state.feed) { if (sumTxt) sumTxt.textContent = 'טוען...'; return; }
+
+      const tab = state.feed.tabs?.[state.day];
+      const sp  = state.sportTab === 'reuben' ? null : state.sportTab;
+      let rows;
+      if (sp) {
+        rows = tab?.sports?.[sp] || [];
+      } else {
+        rows = [...(tab?.sports?.football || []), ...(tab?.sports?.basketball || [])];
+      }
+      rows = rows.filter(r => r.recommended || r.odds);
+
+      if (sumTxt) {
+        const freeCount = Math.min(1, rows.length);
+        const lockedCount = Math.max(0, rows.length - 1);
+        sumTxt.textContent = state.isPremium
+          ? `${rows.length} משחקים · גישת פרימיום מלאה`
+          : `${freeCount} משחק חופשי · ${lockedCount > 0 ? lockedCount + ' נעולים לפרימיום' : ''}`;
+      }
+
+      if (!rows.length) {
+        content.innerHTML = `<div class="empty" style="border:1px dashed rgba(255,255,255,.12);border-radius:8px;padding:32px;text-align:center;color:var(--muted)">אין משחקים להצגה</div>`;
+        return;
+      }
+
+      // Group by league, track global card index for freemium
+      const groups = {};
+      rows.forEach(r => {
+        const key = r.league || 'לא ידוע';
+        if (!groups[key]) groups[key] = { league: r.league, rows: [], sport: r.sport };
+        groups[key].rows.push(r);
+      });
+
+      let globalIdx = 0;
+      const html = Object.values(groups).map(g => {
+        const cards = g.rows.map(r => matchCardHTML(r, globalIdx++)).join('');
+        const icon  = (g.sport || '').includes('כדורסל') ? '🏀' : '⚽';
+        return `<div class="mc-sec">
+          <div class="mc-lg-head" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed')">
+            <span class="mc-lg-head-icon">${icon}</span>
+            <span class="mc-lg-head-name">${escapeHtml(g.league || '')}</span>
+            <span class="mc-lg-head-count">${g.rows.length} משחקים</span>
+            <span class="mc-lg-chev">▾</span>
+          </div>
+          <div class="mc-lg-grid">${cards}</div>
+        </div>`;
+      }).join('');
+
+      content.innerHTML = html;
+
+      if (!state.isPremium && rows.length > 1) {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'text-align:center;padding:18px 0 4px;color:rgba(255,255,255,.5);font-size:13px;font-weight:800';
+        banner.innerHTML = `🔒 ${rows.length - 1} ניתוחים נוספים זמינים בפרימיום &mdash; <button onclick="openPremiumModal()" style="background:none;border:none;color:#55d6ff;cursor:pointer;font:800 13px Heebo,sans-serif;text-decoration:underline">פתח גישה</button>`;
+        content.appendChild(banner);
+      }
+
+      requestAnimationFrame(() => requestAnimationFrame(mcAnimateProbs));
+    }
+
+    /* ── Match Drawer ── */
+    function mcFindRow(id) {
+      if (!state.feed?.tabs) return null;
+      for (const tab of Object.values(state.feed.tabs)) {
+        for (const rows of Object.values(tab.sports || {})) {
+          const r = rows.find(x => x.id === id || String(x.eventId) === id);
+          if (r) return r;
+        }
+      }
+      return null;
+    }
+
+    function openMcDrawer(id) {
+      const r = mcFindRow(id);
+      if (!r) return;
+      mcActiveId  = id;
+      mcDrawerTab = 'overview';
+      document.body.classList.add('no-scroll');
+      document.getElementById('mcOverlay').classList.add('open');
+      document.getElementById('mcDrawer').classList.add('open');
+      buildMcDrawer(r, 'overview');
+    }
+
+    function closeMcDrawer() {
+      document.body.classList.remove('no-scroll');
+      document.getElementById('mcOverlay').classList.remove('open');
+      document.getElementById('mcDrawer').classList.remove('open');
+      mcActiveId = null;
+    }
+
+    function buildMcDrawer(r, tab) {
+      const st    = mcMatchStatus(r);
+      const res   = mcPickResult(r);
+      const score = r.liveScore || r.result || '';
+      const pick  = r.winnerPick || r.pick || '';
+      const odds  = fmtMcOdds(r.odds);
+      const rid   = escapeHtml(String(r.id || r.eventId || ''));
+
+      const scoreHTML = score
+        ? `<span class="mcd-score${st === 'live' ? ' live' : ''}">${escapeHtml(score)}</span>`
+        : `<span class="mcd-score pending">נגד</span>`;
+      const scoreSub = score && st === 'live' && r.matchPhase ? r.matchPhase : (!score ? (r.time || '').substring(0, 5) : '');
+
+      function dLogo(asset, name) {
+        const src  = asset?.logo || '';
+        const init = asset?.initials || mcTeamInit(name);
+        return `<div class="mcd-logo">${escapeHtml(init)}${src ? `<img src="${escapeHtml(src)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}</div>`;
+      }
+
+      const dpCls  = res === 'hit' ? ' hit' : res === 'miss' ? ' miss' : '';
+      const rBadge = res === 'hit'
+        ? `<span class="mcd-dp-badge hit">נתפס ✓</span>`
+        : res === 'miss' ? `<span class="mcd-dp-badge miss">לא נתפס</span>` : '';
+
+      document.getElementById('mcDrawer').innerHTML = `
+        <div class="mcd-head">
+          <div class="mcd-top">
+            <div class="mcd-league-row">
+              <span>${mcSportIco(r)}</span>
+              <span>${escapeHtml(r.league || '')}${r.country ? ' · ' + escapeHtml(r.country) : ''}</span>
+            </div>
+            <button class="mcd-close" onclick="closeMcDrawer()">✕</button>
+          </div>
+          <div class="mcd-match">
+            <div class="mcd-team">${dLogo(r.homeAsset, r.home)}<span class="mcd-team-name">${escapeHtml(r.home || '')}</span></div>
+            <div class="mcd-center">
+              ${scoreHTML}
+              ${scoreSub ? `<span class="mcd-score-sub">${escapeHtml(scoreSub)}</span>` : ''}
+              ${st === 'live' ? `<div class="mcd-live-badge"><span class="t-live-dot"></span> חי</div>` : ''}
+            </div>
+            <div class="mcd-team">${dLogo(r.awayAsset, r.away)}<span class="mcd-team-name">${escapeHtml(r.away || '')}</span></div>
+          </div>
+          <div class="mcd-pick-box${dpCls}">
+            <span class="dp-label">הימרנו</span>
+            <span class="dp-pick">${escapeHtml(pick)}</span>
+            ${odds ? `<span class="mcd-dp-odds">@${odds}</span>` : ''}
+            ${rBadge}
+          </div>
+          <div class="mcd-tabs">
+            <button class="mcd-tab${tab === 'overview' ? ' on' : ''}" onclick="switchMcTab(this,'overview','${rid}')">סקירה</button>
+            <button class="mcd-tab${tab === 'markets' ? ' on' : ''}" onclick="switchMcTab(this,'markets','${rid}')">שוקים</button>
+            <button class="mcd-tab${tab === 'signals' ? ' on' : ''}" onclick="switchMcTab(this,'signals','${rid}')">סיגנלים</button>
+          </div>
+        </div>
+        <div class="mcd-body" id="mcdBody">${buildMcDrawerTab(r, tab)}</div>
+      `;
+    }
+
+    function switchMcTab(el, tab, id) {
+      mcDrawerTab = tab;
+      document.querySelectorAll('.mcd-tab').forEach(b => b.classList.toggle('on', b === el));
+      const r = mcFindRow(id);
+      if (r) document.getElementById('mcdBody').innerHTML = buildMcDrawerTab(r, tab);
+    }
+
+    function buildMcDrawerTab(r, tab) {
+      const cell = (val, label, color) =>
+        `<div style="border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:10px;text-align:center;background:rgba(255,255,255,.02)"><b style="font:900 20px/1 Heebo,sans-serif;color:${color}">${val}</b><div style="font-size:10px;color:var(--soft);margin-top:4px;font-weight:800">${label}</div></div>`;
+
+      if (tab === 'overview') {
+        const exArr  = Array.isArray(r.explanation) ? r.explanation : (r.explanation ? [r.explanation] : []);
+        const exHTML = exArr.length
+          ? `<div class="mcd-sec"><h4>ניתוח אלגוריתמי</h4>${exArr.map(s => `<div style="font-size:12px;color:var(--muted);line-height:1.6;border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:10px;background:rgba(255,255,255,.02);margin-bottom:6px">${escapeHtml(s)}</div>`).join('')}</div>` : '';
+        const sigs   = r.signals || [];
+        const sigHTML = sigs.length
+          ? `<div class="mcd-sec"><h4>סיגנלים</h4><div style="display:flex;gap:6px;flex-wrap:wrap">${sigs.map(s => `<span style="border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:3px 8px;font-size:10px;color:var(--muted);font-weight:800">📊 ${escapeHtml(s)}</span>`).join('')}</div></div>` : '';
+        const sc     = r.scoreBreakdown || {};
+        const scE    = Object.entries(sc).filter(([k, v]) => k !== 'labels' && k !== 'total' && v);
+        const lbls   = sc.labels || {};
+        const scHTML = scE.length
+          ? `<div class="mcd-sec"><h4>פירוט ציון</h4><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">${scE.slice(0, 8).map(([k, v]) => cell(`${v > 0 ? '+' : ''}${v}`, escapeHtml(lbls[k] || k), v >= 0 ? 'var(--cyan)' : 'var(--red)')).join('')}</div></div>` : '';
+        return [exHTML, sigHTML, scHTML].filter(Boolean).join('') ||
+          `<div style="color:var(--soft);font-size:13px;text-align:center;padding:24px 0">אין נתונים נוספים</div>`;
+      }
+
+      if (tab === 'markets') {
+        const allM = r.allMarkets || [];
+        if (!allM.length) return `<div style="color:var(--soft);font-size:13px;text-align:center;padding:24px 0">אין שוקים</div>`;
+        return allM.slice(0, 5).map(m => `
+          <div class="mcd-mkt-group">
+            <div class="mcd-mkt-title">${escapeHtml(m.title || m.marketName || '')}</div>
+            <div class="mcd-mkt-grid">${(m.outcomes || []).slice(0, 6).map(o => `
+              <div class="mcd-mkt-btn${(r.pick || '').includes(o.desc || '') ? ' sel' : ''}">
+                <span class="mcd-mkt-lbl">${escapeHtml(o.desc || '')}</span>
+                <span class="mcd-mkt-val">${o.price ? (+o.price).toFixed(2) : '–'}</span>
+              </div>`).join('')}
+            </div>
+          </div>`).join('');
+      }
+
+      if (tab === 'signals') {
+        const prob  = r.normalizedProbability || r.probability;
+        const score = r.recommendationScore || r.score || 0;
+        return `<div class="mcd-sec"><h4>מדדי מודל</h4>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+            ${score ? cell(typeof score === 'number' ? score.toFixed(0) : score, 'ציון מודל', 'var(--gold)') : ''}
+            ${prob  ? cell((+prob * 100).toFixed(0) + '%', 'הסתברות', 'var(--cyan)') : ''}
+            ${r.riskLevel ? cell(escapeHtml(r.riskLevel), 'סיכון', 'var(--muted)') : ''}
+            ${r.odds ? cell((+r.odds).toFixed(2), 'יחס Winner', 'var(--gold)') : ''}
+          </div></div>
+          ${(r.signals || []).length ? `<div class="mcd-sec"><h4>סיגנלים</h4><div style="display:grid;gap:5px">${r.signals.map(s => `<div style="border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:7px 10px;background:rgba(255,255,255,.02);font-size:12px;color:var(--muted);font-weight:700">📊 ${escapeHtml(s)}</div>`).join('')}</div></div>` : ''}`;
+      }
+      return '';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeMcDrawer();
+    });
+
     loadFeed();
     scheduleMidnightShift();
   </script>
+
+  <!-- Match Card Overlay + Drawer -->
+  <div class="mc-overlay" id="mcOverlay" onclick="closeMcDrawer()"></div>
+  <aside class="mc-drawer" id="mcDrawer"></aside>
 
   <!-- Premium Modal -->
   <div id="premiumModal" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
