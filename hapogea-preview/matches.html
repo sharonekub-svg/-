@@ -3,1823 +3,1013 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>הפוגע | עמוד משחקים</title>
+  <title>הפוגע | משחקים</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Heebo:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #060810;
+      --bg: #07090b;
       --panel: #0e1319;
       --panel-2: #131920;
-      --panel-3: #181f27;
       --line: rgba(255,255,255,.08);
-      --line-strong: rgba(255,255,255,.14);
+      --line-s: rgba(255,255,255,.14);
       --text: #f0eee8;
       --muted: #8fa3ae;
-      --soft: #5a6e78;
+      --soft: #546470;
       --green: #2ecc8a;
-      --green-glow: rgba(46,204,138,.22);
       --red: #f04f50;
-      --red-glow: rgba(240,79,80,.22);
       --gold: #f5be30;
-      --gold-glow: rgba(245,190,48,.18);
       --cyan: #38d9f5;
-      --cyan-glow: rgba(56,217,245,.18);
       --violet: #8b5cf6;
-      --violet-glow: rgba(139,92,246,.20);
       --orange: #f07840;
-      --shadow-sm: 0 4px 16px rgba(0,0,0,.28);
-      --shadow-md: 0 12px 40px rgba(0,0,0,.38);
-      --shadow-lg: 0 24px 80px rgba(0,0,0,.50);
-      --r: 10px;
+      --shadow: 0 8px 32px rgba(0,0,0,.36);
     }
-    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
     body {
-      min-height: 100vh;
+      min-height:100vh;
       background:
-        radial-gradient(ellipse 80% 40% at 5% 0%, rgba(56,217,245,.07), transparent),
-        radial-gradient(ellipse 60% 35% at 95% 8%, rgba(139,92,246,.08), transparent),
-        linear-gradient(175deg, #060810 0%, #0a0f16 50%, #060810 100%);
-      color: var(--text);
-      font-family: Assistant, Heebo, Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
+        radial-gradient(ellipse 70% 30% at 5% 0%, rgba(56,217,245,.06), transparent),
+        radial-gradient(ellipse 55% 28% at 95% 5%, rgba(139,92,246,.07), transparent),
+        #07090b;
+      color:var(--text);
+      font-family:Assistant,Heebo,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
     }
-    button, input, select { font: inherit; cursor: pointer; }
-    a { text-decoration: none; color: inherit; }
-    img { display: block; }
+    button,input,select { font:inherit; cursor:pointer; }
+    a { text-decoration:none; color:inherit; }
 
-    /* ══════════════════ TOPBAR ══════════════════ */
+    /* ── TOPBAR ── */
     .topbar {
-      position: sticky;
-      top: 0; z-index: 40;
-      background: rgba(6,8,16,.90);
-      backdrop-filter: blur(20px) saturate(1.4);
-      border-bottom: 1px solid var(--line);
+      position:sticky; top:0; z-index:40;
+      background:rgba(7,9,11,.90);
+      backdrop-filter:blur(18px);
+      border-bottom:1px solid var(--line);
     }
     .topbar-inner {
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 0 20px;
-      min-height: 64px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      max-width:1360px; margin:0 auto; padding:0 18px;
+      min-height:62px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
     }
-    .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .brand { display:flex; align-items:center; gap:10px; flex-shrink:0; }
     .brand-icon {
-      width: 40px; height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #2ecc8a, #38d9f5);
-      display: grid; place-items: center;
-      font-size: 20px;
-      box-shadow: 0 0 0 1px rgba(46,204,138,.3), 0 6px 18px rgba(46,204,138,.25);
-      flex-shrink: 0;
+      width:38px; height:38px; border-radius:9px; flex-shrink:0;
+      background:linear-gradient(135deg,#2ecc8a,#38d9f5);
+      display:grid; place-items:center; font-size:18px;
+      box-shadow:0 0 0 1px rgba(46,204,138,.3),0 4px 14px rgba(46,204,138,.2);
     }
-    .brand-text { line-height: 1; }
-    .brand-text h1 { font: 900 22px/1 Heebo, sans-serif; letter-spacing: -0.5px; }
-    .brand-text span { font-size: 11px; color: var(--muted); font-weight: 700; }
-    .topbar-nav { display: flex; gap: 4px; margin-inline-start: auto; }
-    .tnav-btn {
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--muted);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-weight: 800;
-      font-size: 13px;
-      transition: .15s ease;
-      white-space: nowrap;
+    .brand h1 { font:900 21px/1 Heebo,sans-serif; letter-spacing:-.5px; }
+    .brand span { font-size:11px; color:var(--muted); font-weight:700; display:block; margin-top:2px; }
+
+    .topbar-nav { display:flex; gap:4px; margin-inline-start:auto; }
+    .tnav {
+      border:1px solid transparent; background:transparent;
+      color:var(--muted); border-radius:7px; padding:7px 11px;
+      font-weight:800; font-size:12px; transition:.14s ease; white-space:nowrap;
     }
-    .tnav-btn:hover { color: var(--text); background: rgba(255,255,255,.06); }
-    .tnav-btn.active { color: var(--cyan); background: rgba(56,217,245,.1); border-color: rgba(56,217,245,.25); }
-    .topbar-actions { display: flex; gap: 8px; align-items: center; margin-inline-start: 8px; }
-    .search-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .search-icon {
-      position: absolute;
-      inset-inline-end: 10px;
-      color: var(--soft);
-      pointer-events: none;
-      font-size: 14px;
-    }
+    .tnav:hover { color:var(--text); background:rgba(255,255,255,.06); }
+    .tnav.on { color:var(--cyan); background:rgba(56,217,245,.09); border-color:rgba(56,217,245,.22); }
+
+    .search-wrap { position:relative; display:flex; align-items:center; }
+    .search-wrap svg { position:absolute; inset-inline-end:9px; color:var(--soft); pointer-events:none; }
     .search-input {
-      background: rgba(255,255,255,.05);
-      border: 1px solid var(--line-strong);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 8px 32px 8px 12px;
-      width: 180px;
-      outline: none;
-      font-size: 13px;
-      transition: .15s ease;
+      background:rgba(255,255,255,.05); border:1px solid var(--line-s);
+      color:var(--text); border-radius:7px; padding:7px 28px 7px 10px;
+      width:160px; outline:none; font-size:12px; transition:.14s ease;
     }
-    .search-input::placeholder { color: var(--soft); }
-    .search-input:focus { border-color: rgba(56,217,245,.4); background: rgba(56,217,245,.05); width: 220px; }
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(240,79,80,.12);
-      border: 1px solid rgba(240,79,80,.3);
-      color: #ff8080;
-      border-radius: 999px;
-      padding: 5px 10px;
-      font-size: 12px;
-      font-weight: 900;
-      white-space: nowrap;
+    .search-input::placeholder { color:var(--soft); }
+    .search-input:focus { border-color:rgba(56,217,245,.38); background:rgba(56,217,245,.04); width:200px; }
+
+    /* ── DAY TABS + SPORT FILTER ── */
+    .tab-bar {
+      background:rgba(7,9,11,.72);
+      border-bottom:1px solid var(--line);
+      backdrop-filter:blur(10px);
+      position:sticky; top:62px; z-index:39;
     }
-    .live-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--red);
-      box-shadow: 0 0 0 0 rgba(240,79,80,.5);
-      animation: pulse-red 1.4s ease infinite;
+    .tab-bar-inner {
+      max-width:1360px; margin:0 auto; padding:0 18px;
+      min-height:48px; display:flex; align-items:center; gap:10px;
+      overflow-x:auto; scrollbar-width:none;
     }
-    @keyframes pulse-red {
-      0%,100% { box-shadow: 0 0 0 0 rgba(240,79,80,.5); }
-      60% { box-shadow: 0 0 0 6px rgba(240,79,80,0); }
+    .tab-bar-inner::-webkit-scrollbar { display:none; }
+    .day-tab {
+      border:none; background:transparent; color:var(--muted);
+      padding:6px 12px; font-weight:900; font-size:13px;
+      border-bottom:2px solid transparent; transition:.14s ease;
+      white-space:nowrap; flex-shrink:0;
+    }
+    .day-tab:hover { color:var(--text); }
+    .day-tab.on { color:var(--text); border-bottom-color:var(--cyan); }
+    .v-sep { width:1px; height:20px; background:var(--line); flex-shrink:0; }
+    .sport-tab {
+      border:1px solid var(--line); background:rgba(255,255,255,.04);
+      color:var(--muted); border-radius:999px; padding:5px 11px;
+      font-size:11px; font-weight:900; transition:.14s ease; white-space:nowrap; flex-shrink:0;
+    }
+    .sport-tab:hover { color:var(--text); }
+    .sport-tab.on { color:#06100c; background:var(--cyan); border-color:rgba(56,217,245,.7); }
+    .sort-sel {
+      background:rgba(255,255,255,.04); border:1px solid var(--line-s);
+      color:var(--muted); border-radius:6px; padding:5px 8px;
+      font-size:11px; font-weight:800; outline:none; margin-inline-start:auto; flex-shrink:0;
     }
 
-    /* ══════════════════ SPORT FILTER BAR ══════════════════ */
-    .filter-bar {
-      background: rgba(6,8,16,.70);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(12px);
-      position: sticky;
-      top: 64px; z-index: 39;
+    /* ── SHELL ── */
+    .shell { max-width:1360px; margin:0 auto; padding:16px 18px 60px; }
+
+    /* ── SUMMARY ROW ── */
+    .summary-row {
+      display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;
     }
-    .filter-bar-inner {
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-height: 52px;
-      overflow-x: auto;
-      scrollbar-width: none;
+    .summary-stat {
+      display:flex; align-items:center; gap:6px;
+      font-size:12px; font-weight:800; color:var(--muted);
     }
-    .filter-bar-inner::-webkit-scrollbar { display: none; }
-    .sport-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,.04);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-weight: 800;
-      font-size: 12px;
-      white-space: nowrap;
-      transition: .15s ease;
-      flex-shrink: 0;
+    .summary-stat b { color:var(--text); font-size:14px; }
+    .summary-stat .dot {
+      width:8px; height:8px; border-radius:50%; flex-shrink:0;
     }
-    .sport-pill:hover { color: var(--text); background: rgba(255,255,255,.07); }
-    .sport-pill.active { color: #06100c; background: var(--cyan); border-color: rgba(56,217,245,.7); }
-    .sport-pill .sport-icon { font-size: 14px; }
-    .divider-v { width: 1px; height: 24px; background: var(--line); flex-shrink: 0; }
-    .status-filter {
-      display: flex;
-      gap: 4px;
-      flex-shrink: 0;
+    .dot-green { background:var(--green); box-shadow:0 0 6px rgba(46,204,138,.5); }
+    .dot-red   { background:var(--red); }
+    .dot-gold  { background:var(--gold); }
+    .dot-soft  { background:var(--soft); }
+    .spacer { flex:1; }
+
+    /* ── LEAGUE GROUP ── */
+    .league-group { margin-bottom:10px; }
+    .league-head {
+      display:flex; align-items:center; gap:8px;
+      padding:7px 10px; border-radius:7px;
+      background:rgba(255,255,255,.028); border:1px solid var(--line);
+      cursor:pointer; user-select:none; transition:.14s ease;
     }
-    .status-pill {
-      border: 1px solid var(--line);
-      background: transparent;
-      color: var(--muted);
-      border-radius: 6px;
-      padding: 5px 10px;
-      font-size: 11px;
-      font-weight: 900;
-      transition: .15s ease;
-      white-space: nowrap;
+    .league-head:hover { background:rgba(255,255,255,.04); }
+    .league-flag { font-size:15px; flex-shrink:0; }
+    .league-title { font-size:12px; font-weight:900; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .league-sport-badge {
+      font-size:10px; font-weight:900; padding:2px 6px; border-radius:4px;
+      background:rgba(255,255,255,.06); color:var(--muted); flex-shrink:0;
     }
-    .status-pill:hover { color: var(--text); }
-    .status-pill.active-live { color: #ff8080; background: rgba(240,79,80,.12); border-color: rgba(240,79,80,.3); }
-    .status-pill.active-upcoming { color: #a5d8ff; background: rgba(56,130,245,.12); border-color: rgba(56,130,245,.3); }
-    .status-pill.active-finished { color: var(--muted); background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
-    .status-pill.active-all { color: var(--cyan); background: rgba(56,217,245,.1); border-color: rgba(56,217,245,.25); }
-    .sort-select {
-      background: rgba(255,255,255,.04);
-      border: 1px solid var(--line-strong);
-      color: var(--muted);
-      border-radius: 7px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 800;
-      outline: none;
-      margin-inline-start: auto;
-      flex-shrink: 0;
+    .league-count { font-size:11px; color:var(--soft); font-weight:800; flex-shrink:0; }
+    .chevron { color:var(--soft); font-size:11px; transition:transform .18s ease; flex-shrink:0; }
+    .league-head.collapsed .chevron { transform:rotate(-90deg); }
+    .league-rows { display:grid; gap:4px; padding:4px 0 0 0; }
+    .league-rows.collapsed { display:none; }
+
+    /* ── MATCH ROW ── */
+    .mrow {
+      background:rgba(14,19,25,.80);
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:9px 11px;
+      display:grid;
+      grid-template-columns: 42px 1fr auto;
+      align-items:center;
+      gap:10px;
+      cursor:pointer;
+      transition:.14s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .mrow::before {
+      content:"";
+      position:absolute; top:0; bottom:0; inset-inline-start:0;
+      width:3px; border-radius:0 2px 2px 0;
+      background:var(--line-s);
+      transition:.14s ease;
+    }
+    .mrow:hover { border-color:rgba(56,217,245,.22); background:rgba(56,217,245,.025); }
+    .mrow:hover::before { background:var(--cyan); }
+    .mrow.closed::before  { background:var(--soft); }
+    .mrow.hit::before     { background:var(--green); }
+    .mrow.miss::before    { background:var(--red); }
+    .mrow.live-row::before { background:var(--red); animation:blink-bar 1.2s ease infinite; }
+    @keyframes blink-bar { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* TIME COL */
+    .mrow-time { text-align:center; }
+    .mrow-time .t-hour { font:900 12px/1 Heebo,sans-serif; color:var(--text); }
+    .mrow-time .t-live {
+      display:inline-flex; align-items:center; gap:3px;
+      font-size:10px; font-weight:900; color:#ff8888; margin-top:2px;
+    }
+    .t-live-dot {
+      width:6px; height:6px; border-radius:50%; background:var(--red);
+      animation:pulse-dot 1.3s ease infinite; flex-shrink:0;
+    }
+    @keyframes pulse-dot {
+      0%,100%{box-shadow:0 0 0 0 rgba(240,79,80,.5)}
+      60%{box-shadow:0 0 0 5px rgba(240,79,80,0)}
+    }
+    .t-done { font-size:10px; color:var(--soft); font-weight:800; margin-top:2px; }
+
+    /* MAIN COL */
+    .mrow-main { display:grid; gap:4px; min-width:0; }
+    .mrow-teams {
+      display:flex; align-items:center; gap:7px;
+      font-size:13px; font-weight:800; color:var(--text);
+      white-space:nowrap; overflow:hidden;
+    }
+    .team-logo-sm {
+      width:16px; height:16px; border-radius:50%;
+      background:rgba(255,255,255,.07); border:1px solid var(--line-s);
+      overflow:hidden; display:grid; place-items:center;
+      font-size:8px; color:var(--soft); font-weight:900; flex-shrink:0;
+    }
+    .team-logo-sm img { width:80%; height:80%; object-fit:contain; }
+    .vs-sep { color:var(--soft); font-size:11px; font-weight:700; flex-shrink:0; }
+    .team-name { overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+    .score-inline { font:900 13px/1 Heebo,sans-serif; color:var(--gold); flex-shrink:0; }
+    .score-inline.live { color:#ff9090; }
+    .score-inline.hit  { color:var(--green); }
+    .pick-row {
+      display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    }
+    .pick-label { font-size:10px; color:var(--soft); font-weight:900; flex-shrink:0; }
+    .pick-badge {
+      display:inline-flex; align-items:center; gap:5px;
+      border-radius:5px; padding:2px 7px;
+      font-size:11px; font-weight:900;
+      border:1px solid rgba(56,217,245,.25);
+      background:rgba(56,217,245,.08);
+      color:var(--cyan);
+      max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .pick-badge.hit  { border-color:rgba(46,204,138,.35); background:rgba(46,204,138,.10); color:var(--green); }
+    .pick-badge.miss { border-color:rgba(240,79,80,.3);   background:rgba(240,79,80,.08);   color:#f07070; }
+    .pick-odds { font-size:11px; font-weight:900; color:var(--gold); flex-shrink:0; }
+    .market-tag {
+      font-size:10px; color:var(--soft); font-weight:800;
+      border:1px solid var(--line); border-radius:4px; padding:1px 5px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;
+      flex-shrink:0;
     }
 
-    /* ══════════════════ SHELL ══════════════════ */
-    .shell {
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 20px 20px 60px;
+    /* STATUS COL */
+    .mrow-status { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+    .status-badge {
+      display:inline-flex; align-items:center; gap:4px;
+      border-radius:5px; padding:3px 8px;
+      font-size:10px; font-weight:900; white-space:nowrap;
     }
-
-    /* ══════════════════ SECTION HEADER ══════════════════ */
-    .section-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .section-head h2 {
-      font: 900 17px/1 Heebo, sans-serif;
-      color: var(--text);
-    }
-    .section-head .count-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 24px;
-      height: 20px;
-      border-radius: 999px;
-      padding: 0 6px;
-      font-size: 11px;
-      font-weight: 900;
-      background: rgba(255,255,255,.08);
-      color: var(--muted);
-    }
-    .section-head .count-badge.live { background: rgba(240,79,80,.18); color: #ff8080; }
-    .section-head .spacer { flex: 1; }
-    .see-all-btn {
-      border: 1px solid var(--line);
-      background: transparent;
-      color: var(--muted);
-      border-radius: 6px;
-      padding: 5px 10px;
-      font-size: 11px;
-      font-weight: 800;
-      transition: .15s ease;
-    }
-    .see-all-btn:hover { color: var(--text); border-color: var(--line-strong); }
-
-    /* ══════════════════ LIVE STRIP (horizontal scroll) ══════════════════ */
-    .live-section { margin-bottom: 28px; }
-    .live-strip {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,.1) transparent;
-    }
-    .live-strip::-webkit-scrollbar { height: 4px; }
-    .live-strip::-webkit-scrollbar-track { background: transparent; }
-    .live-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
-
-    /* ══════════════════ MATCH CARD ══════════════════ */
-    .mcard {
-      background: rgba(14,19,25,.85);
-      border: 1px solid var(--line);
-      border-radius: var(--r);
-      overflow: hidden;
-      transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
-      position: relative;
-      cursor: pointer;
-      animation: card-in .35s ease both;
-    }
-    .mcard:hover {
-      border-color: rgba(56,217,245,.28);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 36px rgba(0,0,0,.35), 0 0 0 1px rgba(56,217,245,.08);
-    }
-    .mcard.live-card {
-      border-color: rgba(240,79,80,.28);
-      background: rgba(14,19,25,.92);
-    }
-    .mcard.live-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--red), var(--orange), var(--red));
-      background-size: 200% 100%;
-      animation: slide-bar 2s linear infinite;
-    }
-    @keyframes slide-bar {
-      0% { background-position: 100% 0; }
-      100% { background-position: -100% 0; }
-    }
-    .mcard.fav-card { border-color: rgba(245,190,48,.28); }
-    @keyframes card-in {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Card in live strip */
-    .live-strip .mcard {
-      flex: 0 0 280px;
-      min-width: 280px;
-    }
-
-    /* Card in main grid */
-    .match-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 10px;
-    }
-
-    /* CARD TOP */
-    .mcard-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 9px 11px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,.025);
-    }
-    .league-info { display: flex; align-items: center; gap: 6px; min-width: 0; }
-    .league-icon { font-size: 13px; flex-shrink: 0; }
-    .league-name {
-      font-size: 11px;
-      font-weight: 900;
-      color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .card-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .time-label { font-size: 11px; font-weight: 800; color: var(--soft); }
-    .match-status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      border-radius: 5px;
-      padding: 3px 7px;
-      font-size: 10px;
-      font-weight: 900;
-      white-space: nowrap;
-    }
-    .match-status-badge.live-st {
-      background: rgba(240,79,80,.15);
-      border: 1px solid rgba(240,79,80,.3);
-      color: #ff8888;
-    }
-    .match-status-badge.upcoming-st {
-      background: rgba(56,130,245,.1);
-      border: 1px solid rgba(56,130,245,.25);
-      color: #80b4ff;
-    }
-    .match-status-badge.finished-st {
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.12);
-      color: var(--muted);
-    }
-    .min-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      background: rgba(240,79,80,.18);
-      border-radius: 4px;
-      padding: 2px 5px;
-      font-size: 10px;
-      font-weight: 900;
-      color: #ff8888;
-    }
+    .sb-wait    { border:1px solid rgba(56,130,245,.25); background:rgba(56,130,245,.09); color:#80b4ff; }
+    .sb-closed  { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:var(--muted); }
+    .sb-live    { border:1px solid rgba(240,79,80,.28); background:rgba(240,79,80,.10); color:#ff8888; }
+    .sb-hit     { border:1px solid rgba(46,204,138,.35); background:rgba(46,204,138,.10); color:var(--green); }
+    .sb-miss    { border:1px solid rgba(240,79,80,.3);  background:rgba(240,79,80,.08);  color:#f07070; }
     .fav-btn {
-      background: transparent;
-      border: none;
-      color: var(--soft);
-      font-size: 14px;
-      padding: 2px;
-      transition: color .15s ease, transform .15s ease;
-      flex-shrink: 0;
+      background:transparent; border:none; color:var(--soft);
+      font-size:14px; transition:color .14s ease, transform .14s ease; padding:0;
     }
-    .fav-btn:hover { color: var(--gold); transform: scale(1.15); }
-    .fav-btn.active { color: var(--gold); }
+    .fav-btn:hover { color:var(--gold); transform:scale(1.2); }
+    .fav-btn.on { color:var(--gold); }
 
-    /* CARD BODY */
-    .mcard-body { padding: 12px; }
-    .teams-row {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 8px;
-      direction: ltr;
-      margin-bottom: 10px;
+    /* ── DETAIL DRAWER ── */
+    .overlay {
+      position:fixed; inset:0; z-index:50;
+      background:rgba(0,0,8,.78);
+      opacity:0; pointer-events:none; transition:opacity .22s ease;
     }
-    .team-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      direction: rtl;
-      min-width: 0;
-    }
-    .team-logo {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,.06);
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      flex-shrink: 0;
-      font-weight: 900;
-      font-size: 13px;
-      color: var(--muted);
-      transition: .18s ease;
-    }
-    .team-logo img { width: 70%; height: 70%; object-fit: contain; }
-    .team-col.winner-side .team-logo {
-      border-color: rgba(46,204,138,.7);
-      box-shadow: 0 0 0 3px rgba(46,204,138,.15);
-    }
-    .team-name-card {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--muted);
-      text-align: center;
-      max-width: 100px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      line-height: 1.2;
-    }
-    .team-col.winner-side .team-name-card { color: #bff8dc; }
-    .score-center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      flex-shrink: 0;
-    }
-    .score-display {
-      font: 900 26px/1 Heebo, sans-serif;
-      color: var(--text);
-      letter-spacing: 1px;
-      white-space: nowrap;
-    }
-    .score-display.live-score { color: #ff9090; text-shadow: 0 0 16px rgba(240,79,80,.4); }
-    .vs-label { font-size: 12px; color: var(--soft); font-weight: 700; }
-    .score-time { font-size: 10px; color: var(--soft); font-weight: 800; }
-
-    /* ODDS ROW */
-    .odds-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      margin-bottom: 8px;
-    }
-    .odd-btn {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      border-radius: 7px;
-      padding: 7px 5px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      transition: .15s ease;
-      cursor: pointer;
-    }
-    .odd-btn:hover { border-color: var(--gold); background: rgba(245,190,48,.08); }
-    .odd-btn.selected { border-color: rgba(46,204,138,.7); background: rgba(46,204,138,.12); }
-    .odd-btn.selected .odd-val { color: var(--green); }
-    .odd-label { font-size: 9px; color: var(--soft); font-weight: 900; text-transform: uppercase; }
-    .odd-val { font: 900 14px/1 Heebo, sans-serif; color: var(--gold); }
-    .odd-val.up { color: #5edb8a; }
-    .odd-val.down { color: #f07575; }
-    .odd-arrow { font-size: 9px; }
-    .odd-arrow.up { color: #5edb8a; }
-    .odd-arrow.down { color: #f07575; }
-
-    /* CARD FOOTER */
-    .mcard-footer {
-      border-top: 1px solid var(--line);
-      padding: 7px 11px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .stat-mini { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--soft); font-weight: 800; }
-    .stat-mini-icon { font-size: 12px; }
-    .open-detail-btn {
-      border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,.04);
-      color: var(--muted);
-      border-radius: 6px;
-      padding: 4px 9px;
-      font-size: 11px;
-      font-weight: 900;
-      transition: .15s ease;
-      white-space: nowrap;
-    }
-    .open-detail-btn:hover { color: var(--text); background: rgba(255,255,255,.07); }
-
-    /* ══════════════════ GROUPS / LEAGUES ══════════════════ */
-    .league-group { margin-bottom: 28px; }
-    .league-group-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      background: rgba(255,255,255,.025);
-      border: 1px solid var(--line);
-      margin-bottom: 10px;
-      cursor: pointer;
-    }
-    .league-group-head .league-icon-lg { font-size: 16px; }
-    .league-group-head .league-title { font-size: 13px; font-weight: 900; color: var(--text); }
-    .league-group-head .league-sub { font-size: 11px; color: var(--muted); margin-inline-start: auto; }
-    .league-group-head .chevron { color: var(--soft); transition: transform .2s ease; font-size: 12px; }
-    .league-group-head.collapsed .chevron { transform: rotate(-90deg); }
-    .league-group-body { display: grid; gap: 8px; }
-    .league-group-body.collapsed { display: none; }
-
-    /* Compact match row (for grouped view) */
-    .match-row {
-      background: rgba(14,19,25,.80);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 12px;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-      transition: .15s ease;
-    }
-    .match-row:hover { border-color: rgba(56,217,245,.22); background: rgba(56,217,245,.03); }
-    .match-row.live-row { border-color: rgba(240,79,80,.22); }
-    .match-time-col { text-align: center; min-width: 44px; }
-    .match-time-col .match-time { font-size: 12px; font-weight: 900; color: var(--muted); }
-    .match-time-col .match-min { font-size: 10px; color: #ff8888; font-weight: 900; }
-    .match-teams-col { display: grid; gap: 4px; min-width: 0; }
-    .match-team-row { display: flex; align-items: center; gap: 7px; }
-    .match-team-logo { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,.06); border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; font-size: 9px; color: var(--soft); font-weight: 900; flex-shrink: 0; }
-    .match-team-logo img { width: 80%; height: 80%; object-fit: contain; }
-    .match-team-name { font-size: 12px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .match-team-name.winner { color: #bff8dc; }
-    .match-odds-col { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
-    .mini-odd {
-      width: 42px;
-      height: 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1px;
-      border: 1px solid var(--line);
-      border-radius: 5px;
-      background: rgba(255,255,255,.03);
-      transition: .12s ease;
-    }
-    .mini-odd:hover { border-color: var(--gold); background: rgba(245,190,48,.07); }
-    .mini-odd.selected { border-color: rgba(46,204,138,.5); background: rgba(46,204,138,.08); }
-    .mini-odd-label { font-size: 8px; color: var(--soft); font-weight: 900; }
-    .mini-odd-val { font-size: 11px; font-weight: 900; color: var(--gold); line-height: 1; }
-    .mini-odd.selected .mini-odd-val { color: var(--green); }
-    .match-score-col { display: flex; gap: 4px; align-items: center; min-width: 44px; justify-content: flex-end; }
-    .row-score { font: 900 15px/1 Heebo, sans-serif; color: var(--text); letter-spacing: 1px; }
-    .row-score.live { color: #ff9090; }
-
-    /* ══════════════════ DETAIL DRAWER ══════════════════ */
-    .drawer-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: rgba(0,0,8,.78);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .25s ease;
-    }
-    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .overlay.open { opacity:1; pointer-events:all; }
     .drawer {
-      position: fixed;
-      top: 0; bottom: 0;
-      inset-inline-end: 0;
-      z-index: 51;
-      width: min(520px, 100vw);
-      background: var(--panel);
-      border-inline-start: 1px solid var(--line-strong);
-      transform: translateX(100%);
-      transition: transform .28s cubic-bezier(.32,.72,0,1);
-      overflow-y: auto;
-      overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
+      position:fixed; top:0; bottom:0; inset-inline-end:0;
+      z-index:51; width:min(480px,100vw);
+      background:var(--panel);
+      border-inline-start:1px solid var(--line-s);
+      transform:translateX(100%); transition:transform .26s cubic-bezier(.32,.72,0,1);
+      overflow-y:auto; display:flex; flex-direction:column;
     }
-    html[dir="rtl"] .drawer { transform: translateX(-100%); }
-    .drawer.open { transform: translateX(0); }
-    html[dir="rtl"] .drawer.open { transform: translateX(0); }
+    html[dir="rtl"] .drawer { transform:translateX(-100%); }
+    html[dir="rtl"] .drawer.open { transform:translateX(0); }
+    .drawer.open { transform:translateX(0); }
 
-    .drawer-head {
-      padding: 16px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,.02);
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      backdrop-filter: blur(10px);
+    /* drawer header */
+    .dhead {
+      padding:14px 16px; border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.02); position:sticky; top:0; z-index:2;
+      backdrop-filter:blur(8px);
     }
-    .drawer-head-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
+    .dhead-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+    .dleague { display:flex; align-items:center; gap:7px; min-width:0; }
+    .dleague span { font-size:11px; font-weight:900; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dclose {
+      width:30px; height:30px; border-radius:7px;
+      border:1px solid var(--line-s); background:rgba(255,255,255,.05);
+      color:var(--muted); display:grid; place-items:center; font-size:16px;
+      flex-shrink:0; transition:.14s ease;
     }
-    .drawer-league { display: flex; align-items: center; gap: 8px; }
-    .drawer-league-icon { font-size: 16px; }
-    .drawer-league-name { font-size: 12px; font-weight: 900; color: var(--muted); }
-    .drawer-close {
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,.05);
-      color: var(--muted);
-      display: grid;
-      place-items: center;
-      font-size: 16px;
-      transition: .15s ease;
-    }
-    .drawer-close:hover { color: var(--text); border-color: var(--line-strong); }
+    .dclose:hover { color:var(--text); }
 
-    /* Big match display in drawer */
-    .drawer-match {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 12px;
-      direction: ltr;
+    /* big match display */
+    .dmatch {
+      display:grid; grid-template-columns:1fr auto 1fr;
+      align-items:center; gap:10px; direction:ltr;
     }
-    .drawer-team {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      direction: rtl;
+    .dteam { display:flex; flex-direction:column; align-items:center; gap:6px; direction:rtl; }
+    .dlogo {
+      width:54px; height:54px; border-radius:50%;
+      border:1.5px solid var(--line-s); background:rgba(255,255,255,.07);
+      display:grid; place-items:center; overflow:hidden;
+      font:900 16px/1 Heebo,sans-serif; color:var(--muted);
     }
-    .drawer-logo {
-      width: 60px; height: 60px;
-      border-radius: 50%;
-      border: 1.5px solid var(--line-strong);
-      background: rgba(255,255,255,.07);
-      display: grid;
-      place-items: center;
-      font-size: 22px;
-      color: var(--muted);
-      font-weight: 900;
-      overflow: hidden;
-    }
-    .drawer-logo img { width: 72%; height: 72%; object-fit: contain; }
-    .drawer-team-name { font-size: 13px; font-weight: 900; color: var(--text); text-align: center; line-height: 1.2; }
-    .drawer-center { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .drawer-score {
-      font: 900 42px/1 Heebo, sans-serif;
-      letter-spacing: 3px;
-      color: var(--text);
-    }
-    .drawer-score.live { color: #ff9090; text-shadow: 0 0 24px rgba(240,79,80,.4); }
-    .drawer-score-sub { font-size: 11px; color: var(--soft); font-weight: 800; text-align: center; }
-    .drawer-live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(240,79,80,.14);
-      border: 1px solid rgba(240,79,80,.3);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: 900;
-      color: #ff8888;
+    .dlogo img { width:72%; height:72%; object-fit:contain; }
+    .dteam-name { font-size:12px; font-weight:900; text-align:center; line-height:1.2; max-width:110px; }
+    .dcenter { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; }
+    .dscore { font:900 38px/1 Heebo,sans-serif; letter-spacing:3px; }
+    .dscore.live { color:#ff9090; text-shadow:0 0 20px rgba(240,79,80,.35); }
+    .dscore.pending { font-size:18px; color:var(--soft); letter-spacing:0; }
+    .dscore-sub { font-size:10px; color:var(--soft); font-weight:800; text-align:center; }
+    .dlive-badge {
+      display:inline-flex; align-items:center; gap:5px;
+      background:rgba(240,79,80,.12); border:1px solid rgba(240,79,80,.28);
+      border-radius:999px; padding:3px 8px; font-size:10px; font-weight:900; color:#ff8888;
     }
 
-    /* DRAWER TABS */
-    .drawer-tabs {
-      display: flex;
-      gap: 2px;
-      margin-top: 14px;
-      border-radius: 8px;
-      background: rgba(255,255,255,.04);
-      padding: 3px;
+    /* drawer pick box */
+    .dpick-box {
+      margin:14px 0 0;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid rgba(56,217,245,.22);
+      background:rgba(56,217,245,.06);
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
     }
-    .drawer-tab {
-      flex: 1;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      border-radius: 6px;
-      padding: 7px 8px;
-      font-size: 11px;
-      font-weight: 900;
-      transition: .15s ease;
-      text-align: center;
+    .dpick-box .dp-label { font-size:10px; color:var(--soft); font-weight:900; flex-shrink:0; }
+    .dpick-box .dp-pick  { font-size:13px; font-weight:900; color:var(--cyan); flex:1; min-width:0; }
+    .dpick-box.hit  { border-color:rgba(46,204,138,.3); background:rgba(46,204,138,.07); }
+    .dpick-box.hit .dp-pick { color:var(--green); }
+    .dpick-box.miss { border-color:rgba(240,79,80,.25); background:rgba(240,79,80,.06); }
+    .dpick-box.miss .dp-pick { color:#f07070; }
+    .dp-odds { font:900 18px/1 Heebo,sans-serif; color:var(--gold); flex-shrink:0; }
+    .dp-result-badge {
+      padding:3px 9px; border-radius:999px; font-size:11px; font-weight:900;
     }
-    .drawer-tab.active { background: var(--panel-3); color: var(--text); }
-    .drawer-tab:hover:not(.active) { color: var(--text); }
+    .dp-result-badge.hit  { background:var(--green); color:#06100c; }
+    .dp-result-badge.miss { background:var(--red);   color:#fff; }
 
-    /* DRAWER BODY */
-    .drawer-body { padding: 16px; flex: 1; display: grid; gap: 16px; align-content: start; }
-    .drawer-section h4 { font-size: 12px; font-weight: 900; color: var(--muted); margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+    /* drawer tabs */
+    .dtabs {
+      display:flex; gap:2px; margin-top:12px;
+      background:rgba(255,255,255,.04); border-radius:7px; padding:3px;
+    }
+    .dtab {
+      flex:1; border:none; background:transparent; color:var(--muted);
+      border-radius:5px; padding:6px 6px; font-size:11px; font-weight:900;
+      transition:.13s ease; text-align:center;
+    }
+    .dtab.on { background:var(--panel-2,#131920); color:var(--text); }
+    .dtab:hover:not(.on) { color:var(--text); }
 
-    /* Stats bars */
-    .stat-bar-row {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+    /* drawer body */
+    .dbody { padding:14px 16px; flex:1; display:grid; gap:14px; align-content:start; }
+    .dsec h4 {
+      font-size:10px; font-weight:900; color:var(--soft);
+      margin-bottom:8px; text-transform:uppercase; letter-spacing:.5px;
     }
-    .stat-bar-wrap { height: 6px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
-    .stat-bar-fill { height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.4,0,.2,1); }
-    .stat-bar-fill.home-fill { background: linear-gradient(90deg, var(--cyan), var(--violet)); }
-    .stat-bar-fill.away-fill { background: linear-gradient(90deg, var(--orange), var(--red)); float: right; }
-    .stat-bar-label { font-size: 10px; color: var(--soft); font-weight: 900; text-align: center; white-space: nowrap; }
-    .stat-bar-val { font-size: 12px; font-weight: 900; color: var(--text); text-align: center; }
 
-    .stat-bar-row .left-val { font-size: 12px; font-weight: 900; color: var(--text); text-align: start; }
-    .stat-bar-row .right-val { font-size: 12px; font-weight: 900; color: var(--text); text-align: end; }
+    /* stat bars */
+    .stat-row { display:grid; gap:4px; margin-bottom:9px; }
+    .stat-row-top { display:flex; justify-content:space-between; font-size:11px; }
+    .stat-row-top .sv { font-weight:900; }
+    .stat-row-top .sl { color:var(--soft); font-weight:800; text-align:center; }
+    .bar-pair { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+    .bar-track { height:5px; border-radius:999px; background:rgba(255,255,255,.07); overflow:hidden; }
+    .bar-fill { height:100%; border-radius:999px; transition:width .55s cubic-bezier(.4,0,.2,1); }
+    .bf-home { background:linear-gradient(90deg,var(--cyan),var(--violet)); }
+    .bf-away { background:linear-gradient(90deg,var(--orange),var(--red)); float:right; }
 
-    /* Possession circle */
-    .possession-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.025);
-      margin-bottom: 12px;
+    /* possession ring */
+    .poss-wrap {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 12px; border:1px solid var(--line); border-radius:8px;
+      background:rgba(255,255,255,.02); margin-bottom:10px;
     }
-    .poss-ring { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
-    .poss-ring svg { transform: rotate(-90deg); }
-    .poss-ring-text { position: absolute; inset: 0; display: grid; place-items: center; font: 900 14px/1 Heebo, sans-serif; color: var(--text); }
-    .poss-details { display: grid; gap: 4px; flex: 1; min-width: 0; }
-    .poss-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; }
-    .poss-label { color: var(--muted); font-weight: 700; }
-    .poss-val { font-weight: 900; color: var(--text); }
-    .poss-home { color: var(--cyan); }
-    .poss-away { color: var(--orange); }
+    .pring { position:relative; width:54px; height:54px; flex-shrink:0; }
+    .pring svg { transform:rotate(-90deg); }
+    .pring-val { position:absolute; inset:0; display:grid; place-items:center; font:900 12px/1 Heebo,sans-serif; }
+    .poss-labels { display:grid; gap:4px; flex:1; min-width:0; }
+    .poss-lrow { display:flex; justify-content:space-between; font-size:11px; }
+    .poss-lrow .pl { color:var(--muted); font-weight:700; }
+    .poss-lrow .pv { font-weight:900; }
+    .pv-home { color:var(--cyan); }
+    .pv-away { color:var(--orange); }
 
-    /* Market odds grid */
-    .market-section { margin-top: 4px; }
-    .market-group { margin-bottom: 12px; }
-    .market-group-title {
-      font-size: 11px;
-      font-weight: 900;
-      color: var(--soft);
-      margin-bottom: 7px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    /* markets */
+    .mkt-group { margin-bottom:12px; }
+    .mkt-title { font-size:10px; color:var(--soft); font-weight:900; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+    .mkt-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(80px,1fr)); gap:5px; }
+    .mkt-btn {
+      border:1px solid var(--line); border-radius:6px; padding:7px 5px;
+      display:flex; flex-direction:column; align-items:center; gap:2px;
+      background:rgba(255,255,255,.03); transition:.13s ease; cursor:pointer;
     }
-    .market-outcomes {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-      gap: 5px;
-    }
-    .market-outcome {
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 8px 6px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      background: rgba(255,255,255,.03);
-      cursor: pointer;
-      transition: .15s ease;
-    }
-    .market-outcome:hover { border-color: var(--gold); background: rgba(245,190,48,.07); }
-    .market-outcome.selected { border-color: rgba(46,204,138,.6); background: rgba(46,204,138,.1); }
-    .market-outcome .mo-label { font-size: 10px; color: var(--muted); font-weight: 800; text-align: center; line-height: 1.2; }
-    .market-outcome .mo-val { font: 900 15px/1 Heebo, sans-serif; color: var(--gold); }
-    .market-outcome.selected .mo-val { color: var(--green); }
+    .mkt-btn:hover { border-color:var(--gold); background:rgba(245,190,48,.07); }
+    .mkt-btn.sel { border-color:rgba(46,204,138,.5); background:rgba(46,204,138,.09); }
+    .mkt-lbl { font-size:9px; color:var(--soft); font-weight:900; text-align:center; line-height:1.2; }
+    .mkt-val { font:900 14px/1 Heebo,sans-serif; color:var(--gold); }
+    .mkt-btn.sel .mkt-val { color:var(--green); }
 
-    /* Timeline */
-    .timeline-list { display: grid; gap: 8px; }
-    .timeline-item {
-      display: grid;
-      grid-template-columns: 36px 1fr;
-      gap: 10px;
-      align-items: start;
-    }
-    .timeline-min {
-      display: grid;
-      place-items: center;
-      font: 900 12px/1 Heebo, sans-serif;
-      color: var(--muted);
-      padding-top: 2px;
-      text-align: center;
-    }
-    .timeline-content {
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 7px 9px;
-      background: rgba(255,255,255,.025);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .timeline-icon { font-size: 14px; flex-shrink: 0; }
-    .timeline-text { font-size: 12px; color: var(--text); font-weight: 700; }
-    .timeline-sub { font-size: 11px; color: var(--muted); }
+    /* h2h */
+    .h2h-boxes { display:flex; gap:7px; margin-bottom:12px; }
+    .h2h-box { flex:1; text-align:center; padding:9px 6px; border:1px solid var(--line); border-radius:7px; }
+    .h2h-box b { display:block; font:900 22px/1 Heebo,sans-serif; margin-bottom:3px; }
+    .h2h-box span { font-size:9px; color:var(--muted); font-weight:800; }
+    .h2h-box.w { border-color:rgba(46,204,138,.3); background:rgba(46,204,138,.06); }
+    .h2h-box.w b { color:var(--green); }
+    .h2h-box.d { border-color:rgba(56,217,245,.22); background:rgba(56,217,245,.04); }
+    .h2h-box.d b { color:var(--cyan); }
+    .h2h-box.l { border-color:rgba(240,79,80,.25); background:rgba(240,79,80,.05); }
+    .h2h-box.l b { color:var(--red); }
+    .h2h-match { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid var(--line); font-size:11px; }
+    .h2h-match:last-child { border-bottom:none; }
+    .h2h-match .teams { color:var(--muted); font-weight:700; flex:1; }
+    .h2h-match .sc { background:rgba(255,255,255,.06); border-radius:4px; padding:2px 6px; font:900 11px/1.4 Heebo,sans-serif; color:var(--text); }
+    .h2h-match .dt { color:var(--soft); font-size:10px; font-weight:800; }
 
-    /* H2H */
-    .h2h-record {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 12px;
-    }
-    .h2h-box {
-      flex: 1;
-      text-align: center;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-    }
-    .h2h-box b { display: block; font: 900 24px/1 Heebo, sans-serif; color: var(--text); margin-bottom: 3px; }
-    .h2h-box span { font-size: 10px; color: var(--muted); font-weight: 800; }
-    .h2h-box.wins { border-color: rgba(46,204,138,.3); background: rgba(46,204,138,.06); }
-    .h2h-box.wins b { color: var(--green); }
-    .h2h-box.draws { border-color: rgba(56,217,245,.25); background: rgba(56,217,245,.05); }
-    .h2h-box.draws b { color: var(--cyan); }
-    .h2h-box.losses { border-color: rgba(240,79,80,.25); background: rgba(240,79,80,.05); }
-    .h2h-box.losses b { color: var(--red); }
-    .h2h-match {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--line);
-      font-size: 12px;
-    }
-    .h2h-match:last-child { border-bottom: none; }
-    .h2h-match .teams { color: var(--muted); font-weight: 700; flex: 1; }
-    .h2h-match .score-badge {
-      background: rgba(255,255,255,.06);
-      border-radius: 4px;
-      padding: 2px 7px;
-      font: 900 11px/1.4 Heebo, sans-serif;
-      color: var(--text);
-    }
-    .h2h-match .date { color: var(--soft); font-size: 10px; font-weight: 800; }
+    /* timeline */
+    .tl-list { display:grid; gap:6px; }
+    .tl-item { display:grid; grid-template-columns:30px 1fr; gap:8px; align-items:start; }
+    .tl-min { font:900 11px/1 Heebo,sans-serif; color:var(--muted); text-align:center; padding-top:3px; }
+    .tl-ev { border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:rgba(255,255,255,.025); display:flex; align-items:center; gap:7px; }
+    .tl-icon { font-size:13px; flex-shrink:0; }
+    .tl-txt { font-size:12px; font-weight:700; }
+    .tl-sub { font-size:10px; color:var(--muted); }
 
-    /* ══════════════════ EMPTY / LOADING ══════════════════ */
-    .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 48px 24px;
-      color: var(--muted);
-      border: 1px dashed var(--line-strong);
-      border-radius: var(--r);
+    /* ── EMPTY / LOADING ── */
+    .empty {
+      text-align:center; padding:40px 20px; color:var(--muted);
+      border:1px dashed var(--line-s); border-radius:8px;
     }
-    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .empty-state p { font-size: 14px; }
-
-    /* SKELETON LOADERS */
+    .empty .ei { font-size:36px; margin-bottom:10px; }
+    .empty p { font-size:13px; }
     .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.04) 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 4px;
+      background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);
+      background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:4px;
     }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skel-row { height:62px; border-radius:8px; margin-bottom:4px; }
 
-    /* ══════════════════ REFRESH BAR ══════════════════ */
-    #refreshBar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      z-index: 100;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity .2s;
+    /* ── REFRESH BAR ── */
+    #rfbar {
+      position:fixed; top:0; left:0; right:0; height:3px; z-index:100;
+      overflow:hidden; opacity:0; transition:opacity .2s;
     }
-    #refreshBar.active { opacity: 1; }
-    #refreshBar::after {
-      content: "";
-      display: block;
-      height: 100%;
-      background: linear-gradient(90deg, var(--cyan), var(--violet), var(--cyan));
-      background-size: 200% 100%;
-      animation: slide-bar 1.4s linear infinite;
+    #rfbar.on { opacity:1; }
+    #rfbar::after {
+      content:""; display:block; height:100%;
+      background:linear-gradient(90deg,var(--cyan),var(--violet),var(--cyan));
+      background-size:200% 100%;
+      animation:rfslide 1.4s linear infinite;
     }
+    @keyframes rfslide { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
 
-    /* ══════════════════ RESPONSIVE ══════════════════ */
-    @media (max-width: 768px) {
-      .topbar-nav { display: none; }
-      .search-input { width: 140px; }
-      .search-input:focus { width: 160px; }
-      .match-grid { grid-template-columns: 1fr; }
-      .drawer { width: 100vw; }
-      .live-strip .mcard { flex: 0 0 260px; min-width: 260px; }
-      .match-odds-col { display: none; }
-      .filter-bar-inner { gap: 7px; }
-    }
-    @media (max-width: 480px) {
-      .topbar-inner { gap: 10px; padding: 0 12px; }
-      .shell { padding: 14px 12px 60px; }
-      .brand-text span { display: none; }
-    }
+    .no-scroll { overflow:hidden; }
 
-    /* ══════════════════ MISC ══════════════════ */
-    .tab-pane { display: none; }
-    .tab-pane.active { display: block; }
-    .pulse-live {
-      display: inline-block;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--red);
-      box-shadow: 0 0 0 0 rgba(240,79,80,.5);
-      animation: pulse-red 1.4s ease infinite;
+    @media(max-width:700px) {
+      .topbar-nav { display:none; }
+      .search-input { width:120px; }
+      .search-input:focus { width:150px; }
+      .mrow { grid-template-columns:36px 1fr auto; gap:7px; }
+      .team-name { max-width:90px; }
+      .market-tag { display:none; }
     }
-    .transition-all { transition: all .2s ease; }
-    .no-scroll { overflow: hidden; }
-
-    /* Tooltip */
-    [data-tip] { position: relative; }
-    [data-tip]:hover::after {
-      content: attr(data-tip);
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1e2830;
-      border: 1px solid var(--line-strong);
-      color: var(--text);
-      font-size: 11px;
-      font-weight: 800;
-      padding: 4px 8px;
-      border-radius: 5px;
-      white-space: nowrap;
-      pointer-events: none;
-      z-index: 100;
+    @media(max-width:420px) {
+      .topbar-inner { padding:0 12px; gap:10px; }
+      .shell { padding:12px 12px 60px; }
     }
   </style>
 </head>
 <body>
 
-<div id="refreshBar"></div>
+<div id="rfbar"></div>
 
-<!-- ═══════════════════════════════════════════
-     TOPBAR
-════════════════════════════════════════════ -->
+<!-- ── TOPBAR ── -->
 <header class="topbar">
   <div class="topbar-inner">
     <a href="index.html" class="brand">
       <div class="brand-icon">⚡</div>
-      <div class="brand-text">
+      <div>
         <h1>הפוגע</h1>
         <span>Winner Odds Engine</span>
       </div>
     </a>
-
     <nav class="topbar-nav">
-      <a href="index.html" class="tnav-btn">ראשי</a>
-      <a href="matches.html" class="tnav-btn active">משחקים</a>
+      <a href="index.html" class="tnav">ראשי</a>
+      <a href="matches.html" class="tnav on">משחקים</a>
     </nav>
-
-    <div class="topbar-actions">
-      <div class="live-badge" id="liveBadge">
-        <span class="live-dot"></span>
-        <span id="liveCount">0</span> חי
-      </div>
-      <div class="search-wrap">
-        <input class="search-input" type="text" id="searchInput" placeholder="חיפוש משחק..." autocomplete="off" />
-        <span class="search-icon">🔍</span>
-      </div>
+    <div class="search-wrap" style="margin-inline-start:auto">
+      <input class="search-input" id="searchInput" type="text" placeholder="חיפוש..." autocomplete="off">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     </div>
   </div>
 </header>
 
-<!-- ═══════════════════════════════════════════
-     FILTER BAR
-════════════════════════════════════════════ -->
-<div class="filter-bar">
-  <div class="filter-bar-inner">
-    <!-- Sport tabs -->
-    <button class="sport-pill active" data-sport="all" onclick="setSport(this,'all')">
-      <span class="sport-icon">🏆</span> הכל
-    </button>
-    <button class="sport-pill" data-sport="football" onclick="setSport(this,'football')">
-      <span class="sport-icon">⚽</span> כדורגל
-    </button>
-    <button class="sport-pill" data-sport="basketball" onclick="setSport(this,'basketball')">
-      <span class="sport-icon">🏀</span> כדורסל
-    </button>
-    <button class="sport-pill" data-sport="tennis" onclick="setSport(this,'tennis')">
-      <span class="sport-icon">🎾</span> טניס
-    </button>
-    <button class="sport-pill" data-sport="hockey" onclick="setSport(this,'hockey')">
-      <span class="sport-icon">🏒</span> הוקי
-    </button>
-
-    <div class="divider-v"></div>
-
-    <!-- Status filters -->
-    <div class="status-filter">
-      <button class="status-pill active-all" data-status="all" onclick="setStatus(this,'all')">הכל</button>
-      <button class="status-pill" data-status="live" onclick="setStatus(this,'live')">🔴 לייב</button>
-      <button class="status-pill" data-status="upcoming" onclick="setStatus(this,'upcoming')">🕐 קרוב</button>
-      <button class="status-pill" data-status="finished" onclick="setStatus(this,'finished')">✓ נגמר</button>
-      <button class="status-pill" data-status="fav" onclick="setStatus(this,'fav')">⭐ מועדפים</button>
-    </div>
-
-    <select class="sort-select" id="sortSelect" onchange="renderAll()">
+<!-- ── TAB BAR ── -->
+<div class="tab-bar">
+  <div class="tab-bar-inner">
+    <button class="day-tab" data-day="yesterday" onclick="setDay(this,'yesterday')">אתמול</button>
+    <button class="day-tab on" data-day="today" onclick="setDay(this,'today')">היום</button>
+    <button class="day-tab" data-day="tomorrow" onclick="setDay(this,'tomorrow')">מחר</button>
+    <div class="v-sep"></div>
+    <button class="sport-tab on" data-sp="all" onclick="setSport(this,'all')">🏆 הכל</button>
+    <button class="sport-tab" data-sp="football" onclick="setSport(this,'football')">⚽ כדורגל</button>
+    <button class="sport-tab" data-sp="basketball" onclick="setSport(this,'basketball')">🏀 כדורסל</button>
+    <select class="sort-sel" id="sortSel" onchange="render()">
       <option value="time">לפי שעה</option>
       <option value="league">לפי ליגה</option>
-      <option value="live">לייב ראשון</option>
+      <option value="score">ציון מודל</option>
     </select>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     MAIN SHELL
-════════════════════════════════════════════ -->
+<!-- ── SHELL ── -->
 <main class="shell">
-
-  <!-- LIVE SECTION -->
-  <section class="live-section" id="liveSection">
-    <div class="section-head">
-      <span class="pulse-live"></span>
-      <h2>משחקים חיים</h2>
-      <span class="count-badge live" id="liveSectionCount">0</span>
-      <div class="spacer"></div>
-    </div>
-    <div class="live-strip" id="liveStrip"></div>
-  </section>
-
-  <!-- UPCOMING TODAY -->
-  <section id="upcomingSection" style="margin-bottom:28px">
-    <div class="section-head">
-      <h2>היום</h2>
-      <span class="count-badge" id="upcomingCount">0</span>
-      <div class="spacer"></div>
-      <button class="see-all-btn" onclick="setStatus(document.querySelector('[data-status=upcoming]'),'upcoming')">כל המשחקים</button>
-    </div>
-    <div id="upcomingGrid" class="match-grid"></div>
-  </section>
-
-  <!-- FINISHED TODAY -->
-  <section id="finishedSection" style="margin-bottom:28px">
-    <div class="section-head">
-      <h2>תוצאות היום</h2>
-      <span class="count-badge" id="finishedCount">0</span>
-      <div class="spacer"></div>
-    </div>
-    <div id="finishedGrid" class="match-grid"></div>
-  </section>
-
-  <!-- SEARCH RESULTS / FILTERED VIEW -->
-  <section id="filteredSection" style="display:none; margin-bottom:28px">
-    <div class="section-head">
-      <h2 id="filteredTitle">תוצאות</h2>
-      <span class="count-badge" id="filteredCount">0</span>
-    </div>
-    <div id="filteredGrid" class="match-grid"></div>
-  </section>
-
+  <div class="summary-row" id="summaryRow"></div>
+  <div id="content"></div>
 </main>
 
-<!-- ═══════════════════════════════════════════
-     DETAIL DRAWER
-════════════════════════════════════════════ -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-<aside class="drawer" id="matchDrawer">
-  <!-- filled by JS -->
-</aside>
+<!-- ── DRAWER ── -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"></aside>
 
 <script>
-/* ═══════════════════════════════════════════
-   DATA
-══════════════════════════════════════════ */
-const today = new Date();
-const pad = n => String(n).padStart(2,'0');
-const fmtTime = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-const addMin = (base, m) => { const d = new Date(base); d.setMinutes(d.getMinutes()+m); return d; };
-
-const NOW = new Date();
-
-const MATCHES = [
-  // LIVE MATCHES
-  {
-    id:1, sport:'football', league:'ליגת העל', leagueIcon:'⚽', region:'ישראל',
-    home:'מכבי ת"א', away:'הפועל ב"ש',
-    homeLogo:'https://upload.wikimedia.org/wikipedia/he/thumb/7/71/Maccabi_Tel_Aviv_FC.png/60px-Maccabi_Tel_Aviv_FC.png',
-    awayLogo:'https://upload.wikimedia.org/wikipedia/he/thumb/2/27/Hapoel_Be%27er_Sheva_FC.png/60px-Hapoel_Be%27er_Sheva_FC.png',
-    status:'live', minute:67, score:{home:1,away:0},
-    odds:{home:1.55, draw:3.80, away:5.20},
-    stats:{possession:[58,42], shots:[12,7], shotsOnTarget:[5,2], corners:[6,3], yellowCards:[1,2], redCards:[0,0]},
-    timeline:[
-      {min:23, type:'goal', team:'home', player:'גולן'},
-      {min:34, type:'yellow', team:'away', player:'אוביאנה'},
-      {min:51, type:'yellow', team:'home', player:'מויסה'},
-    ],
-    h2h:{ homeWins:8, draws:4, awayWins:3,
-      recent:[{home:'מכבי ת"א', away:'הפועל ב"ש', score:'2-1', date:'מרץ 24'},
-              {home:'הפועל ב"ש', away:'מכבי ת"א', score:'0-0', date:'נוב 23'},
-              {home:'מכבי ת"א', away:'הפועל ב"ש', score:'3-1', date:'אפר 23'}] }
-  },
-  {
-    id:2, sport:'football', league:'פרמייר ליג', leagueIcon:'⚽', region:'אנגליה',
-    home:'ארסנל', away:'מנצ׳סטר סיטי',
-    homeLogo:'', awayLogo:'',
-    status:'live', minute:34, score:{home:0,away:1},
-    odds:{home:2.60, draw:3.20, away:2.40},
-    stats:{possession:[47,53], shots:[8,11], shotsOnTarget:[3,5], corners:[4,7], yellowCards:[2,1], redCards:[0,0]},
-    timeline:[
-      {min:18, type:'goal', team:'away', player:'האלנד'},
-      {min:28, type:'yellow', team:'home', player:'פארטי'},
-    ],
-    h2h:{ homeWins:5, draws:6, awayWins:9,
-      recent:[{home:'מנצ׳סטר סיטי', away:'ארסנל', score:'1-1', date:'מרץ 24'},
-              {home:'ארסנל', away:'מנצ׳סטר סיטי', score:'0-1', date:'ינו 24'}] }
-  },
-  {
-    id:3, sport:'basketball', league:'NBA', leagueIcon:'🏀', region:'ארה"ב',
-    home:'Boston Celtics', away:'Miami Heat',
-    homeLogo:'', awayLogo:'',
-    status:'live', minute:null, quarter:3, quarterTime:'4:22', score:{home:78,away:72},
-    odds:{home:1.40, draw:null, away:2.80},
-    stats:{possession:[52,48], fgPct:[48,43], threePct:[38,33], ftPct:[82,77]},
-    timeline:[
-      {min:'Q1', type:'score', team:'home', player:'Tatum 12pts'},
-      {min:'Q2', type:'score', team:'away', player:'Butler 8pts'},
-    ],
-    h2h:{ homeWins:12, draws:0, awayWins:8,
-      recent:[{home:'Celtics', away:'Heat', score:'108-97', date:'Apr 24'},
-              {home:'Heat', away:'Celtics', score:'102-98', date:'Jan 24'}] }
-  },
-  {
-    id:4, sport:'football', league:'לה ליגה', leagueIcon:'⚽', region:'ספרד',
-    home:'ברצלונה', away:'אתלטיקו מדריד',
-    homeLogo:'', awayLogo:'',
-    status:'live', minute:82, score:{home:2,away:2},
-    odds:{home:2.10, draw:3.10, away:3.40},
-    stats:{possession:[55,45], shots:[14,9], shotsOnTarget:[7,4], corners:[8,4], yellowCards:[3,1], redCards:[0,1]},
-    timeline:[
-      {min:12, type:'goal', team:'home', player:'לבנדובסקי'},
-      {min:35, type:'goal', team:'away', player:'גריזמן'},
-      {min:58, type:'red', team:'away', player:'סאבק'},
-      {min:61, type:'goal', team:'home', player:'פדרי'},
-      {min:74, type:'goal', team:'away', player:'מורטה'},
-    ],
-    h2h:{ homeWins:10, draws:5, awayWins:7,
-      recent:[{home:'ברצלונה', away:'אתלטיקו מדריד', score:'1-0', date:'פבר 24'},
-              {home:'אתלטיקו', away:'ברצלונה', score:'3-2', date:'ספט 23'}] }
-  },
-  // UPCOMING
-  {
-    id:5, sport:'football', league:'ליגת העל', leagueIcon:'⚽', region:'ישראל',
-    home:'מכבי חיפה', away:'בית"ר ירושלים',
-    homeLogo:'', awayLogo:'',
-    status:'upcoming', kickoff: addMin(NOW, 45), score:null,
-    odds:{home:2.20, draw:3.10, away:2.90},
-    stats:null, timeline:[], h2h:{ homeWins:6, draws:7, awayWins:6,
-      recent:[{home:'מכבי חיפה', away:'בית"ר ירושלים', score:'1-1', date:'ינו 24'}] }
-  },
-  {
-    id:6, sport:'football', league:'בונדסליגה', leagueIcon:'⚽', region:'גרמניה',
-    home:'בורוסיה דורטמונד', away:'באיירן מינכן',
-    homeLogo:'', awayLogo:'',
-    status:'upcoming', kickoff: addMin(NOW, 90), score:null,
-    odds:{home:3.40, draw:3.20, away:1.90},
-    stats:null, timeline:[], h2h:{ homeWins:4, draws:5, awayWins:11,
-      recent:[{home:'בורוסיה', away:'באיירן', score:'0-1', date:'פבר 24'}] }
-  },
-  {
-    id:7, sport:'basketball', league:'ליגת Winner בסקטבול', leagueIcon:'🏀', region:'ישראל',
-    home:'מכבי ת"א', away:'הפועל ירושלים',
-    homeLogo:'', awayLogo:'',
-    status:'upcoming', kickoff: addMin(NOW, 120), score:null,
-    odds:{home:1.65, draw:null, away:2.20},
-    stats:null, timeline:[], h2h:{ homeWins:9, draws:0, awayWins:5,
-      recent:[{home:'מכבי ת"א', away:'הפועל ירושלים', score:'95-88', date:'מרץ 24'}] }
-  },
-  {
-    id:8, sport:'football', league:'סרייה א', leagueIcon:'⚽', region:'איטליה',
-    home:'יובנטוס', away:'אינטר מילאן',
-    homeLogo:'', awayLogo:'',
-    status:'upcoming', kickoff: addMin(NOW, 180), score:null,
-    odds:{home:2.80, draw:3.10, away:2.40},
-    stats:null, timeline:[], h2h:{ homeWins:7, draws:8, awayWins:7,
-      recent:[{home:'אינטר', away:'יובנטוס', score:'1-1', date:'פבר 24'}] }
-  },
-  {
-    id:9, sport:'tennis', league:'ATP Masters', leagueIcon:'🎾', region:'בינלאומי',
-    home:'יאנניק סינר', away:'נובאק ג׳וקוביץ׳',
-    homeLogo:'', awayLogo:'',
-    status:'upcoming', kickoff: addMin(NOW, 60), score:null,
-    odds:{home:1.85, draw:null, away:1.90},
-    stats:null, timeline:[], h2h:{ homeWins:3, draws:0, awayWins:5,
-      recent:[{home:'סינר', away:'ג׳וקוביץ׳', score:'2-1 סטים', date:'ינו 24'}] }
-  },
-  // FINISHED
-  {
-    id:10, sport:'football', league:'ליגת העל', leagueIcon:'⚽', region:'ישראל',
-    home:'הפועל ת"א', away:'אשדוד',
-    homeLogo:'', awayLogo:'',
-    status:'finished', score:{home:3,away:1},
-    odds:{home:1.70, draw:3.50, away:4.10},
-    stats:{possession:[54,46], shots:[16,8], shotsOnTarget:[7,3], corners:[8,4], yellowCards:[1,3], redCards:[0,0]},
-    timeline:[
-      {min:8, type:'goal', team:'home', player:'כהן'},
-      {min:42, type:'goal', team:'home', player:'אוזיאל'},
-      {min:55, type:'goal', team:'away', player:'מרטינז'},
-      {min:78, type:'goal', team:'home', player:'כהן'},
-    ],
-    h2h:{ homeWins:7, draws:5, awayWins:4, recent:[] }
-  },
-  {
-    id:11, sport:'football', league:'פרמייר ליג', leagueIcon:'⚽', region:'אנגליה',
-    home:'ליברפול', away:'צ׳לסי',
-    homeLogo:'', awayLogo:'',
-    status:'finished', score:{home:2,away:0},
-    odds:{home:1.90, draw:3.40, away:3.80},
-    stats:{possession:[62,38], shots:[18,6], shotsOnTarget:[8,2], corners:[9,3], yellowCards:[1,2], redCards:[0,0]},
-    timeline:[
-      {min:29, type:'goal', team:'home', player:'סאלח'},
-      {min:67, type:'goal', team:'home', player:'נונז'},
-    ],
-    h2h:{ homeWins:9, draws:6, awayWins:5, recent:[] }
-  },
-  {
-    id:12, sport:'basketball', league:'NBA', leagueIcon:'🏀', region:'ארה"ב',
-    home:'Golden State Warriors', away:'LA Lakers',
-    homeLogo:'', awayLogo:'',
-    status:'finished', score:{home:114,away:108},
-    odds:{home:1.75, draw:null, away:2.05},
-    stats:{possession:[50,50], fgPct:[47,44], threePct:[40,35], ftPct:[85,80]},
-    timeline:[], h2h:{ homeWins:8, draws:0, awayWins:7, recent:[] }
-  },
-];
-
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════
    STATE
-══════════════════════════════════════════ */
+══════════════════════════════════════ */
+let ALL_DATA = null;       // tabs object from API
+let activeDay   = 'today';
 let activeSport = 'all';
-let activeStatus = 'all';
-let favorites = JSON.parse(localStorage.getItem('hpg_favs') || '[]');
-let oddsDir = {}; // track odds movement
+let activeDTab  = null;   // currently open drawer row
+let favs = JSON.parse(localStorage.getItem('hpg_match_favs') || '[]');
 
-/* ═══════════════════════════════════════════
+const sportMap = { 'כדורגל':'football', 'כדורסל':'basketball' };
+const sportLabel = { football:'כדורגל', basketball:'כדורסל' };
+const sportIcon  = { football:'⚽', basketball:'🏀' };
+
+/* ═══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+function pickResult(row) {
+  // Returns 'hit' | 'miss' | 'pending'
+  if (row.bettingStatus !== 'closed' && row.matchPhase !== 'final') return 'pending';
+  if (!row.actualWinner) return 'pending';
+  const pickBase = (row.winnerPick || row.pick || '').replace(/\s*\(.*\)$/, '').trim();
+  const actual   = (row.actualWinner || '').trim();
+  if (!pickBase || !actual) return 'pending';
+  return pickBase === actual ? 'hit' : 'miss';
+}
+
+function matchStatus(row) {
+  if (row.matchPhase === 'in_progress' || (row.liveScore && row.liveScore !== '' && row.bettingStatus === 'available')) return 'live';
+  if (row.bettingStatus === 'closed' || row.matchPhase === 'final') return 'closed';
+  return 'upcoming';
+}
+
+function fmtOdds(o) { return o != null ? (+o).toFixed(2) : null; }
+
+function teamInitials(name) {
+  return name ? name.trim().substring(0,2).toUpperCase() : '?';
+}
+
+function marketShort(market) {
+  if (!market) return '';
+  if (market.includes('1X2') || market.includes('תוצאת סיום')) return '1X2';
+  if (market.includes('הימור יתרון') || market.includes('הנדיקאפ')) return 'HDP';
+  if (market.includes('מנצח') || market.includes('המנצח')) return 'ML';
+  if (market.includes('מעל') || market.includes('מתחת')) return 'O/U';
+  return market.substring(0,12);
+}
+
+/* ═══════════════════════════════════════
+   DATA LOAD
+══════════════════════════════════════ */
+async function loadData() {
+  showSkeleton();
+  try {
+    const rf = document.getElementById('rfbar');
+    rf.classList.add('on');
+    const res = await fetch('/api/winner-feed');
+    const json = await res.json();
+    ALL_DATA = json.tabs || null;
+    rf.classList.remove('on');
+  } catch(e) {
+    document.getElementById('rfbar').classList.remove('on');
+  }
+  if (!ALL_DATA) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty"><div class="ei">⚠️</div><p>לא ניתן לטעון נתונים כרגע. נסה שוב.</p></div>`;
+    return;
+  }
+  render();
+}
+
+function showSkeleton() {
+  document.getElementById('content').innerHTML =
+    Array(6).fill(`<div class="skeleton skel-row"></div>`).join('');
+}
+
+/* ═══════════════════════════════════════
    FILTERS
-══════════════════════════════════════════ */
-function setSport(el, sport) {
-  activeSport = sport;
-  document.querySelectorAll('.sport-pill').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderAll();
+══════════════════════════════════════ */
+function setDay(el, day) {
+  activeDay = day;
+  document.querySelectorAll('.day-tab').forEach(b => b.classList.toggle('on', b.dataset.day === day));
+  render();
+}
+function setSport(el, sp) {
+  activeSport = sp;
+  document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('on', b.dataset.sp === sp));
+  render();
 }
 
-function setStatus(el, status) {
-  activeStatus = status;
-  document.querySelectorAll('.status-pill').forEach(b => {
-    b.classList.remove('active-all','active-live','active-upcoming','active-finished');
-  });
-  const map = {all:'active-all', live:'active-live', upcoming:'active-upcoming', finished:'active-finished', fav:'active-all'};
-  el.classList.add(map[status] || 'active-all');
-  renderAll();
-}
+function getRows() {
+  const tab = ALL_DATA?.[activeDay];
+  if (!tab) return [];
+  const sports = activeSport === 'all'
+    ? [...(tab.sports?.football || []), ...(tab.sports?.basketball || [])]
+    : (tab.sports?.[activeSport] || []);
 
-function getFiltered() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const sort = document.getElementById('sortSelect').value;
-  let list = MATCHES.filter(m => {
-    if (activeSport !== 'all' && m.sport !== activeSport) return false;
-    if (activeStatus === 'fav' && !favorites.includes(m.id)) return false;
-    if (activeStatus !== 'all' && activeStatus !== 'fav' && m.status !== activeStatus) return false;
-    if (q) {
-      const text = `${m.home} ${m.away} ${m.league} ${m.region}`.toLowerCase();
-      if (!text.includes(q)) return false;
-    }
-    return true;
+  let rows = sports.filter(r => {
+    if (!q) return true;
+    return `${r.home} ${r.away} ${r.league}`.toLowerCase().includes(q);
   });
-  if (sort === 'live') list.sort((a,b) => (b.status==='live'?1:0)-(a.status==='live'?1:0));
-  else if (sort === 'league') list.sort((a,b) => a.league.localeCompare(b.league));
-  else list.sort((a,b) => {
-    const order = {live:0, upcoming:1, finished:2};
-    if (order[a.status] !== order[b.status]) return order[a.status]-order[b.status];
-    if (a.kickoff && b.kickoff) return a.kickoff-b.kickoff;
-    return 0;
-  });
-  return list;
+
+  const sort = document.getElementById('sortSel').value;
+  if (sort === 'league') rows.sort((a,b) => (a.league||'').localeCompare(b.league||''));
+  else if (sort === 'score') rows.sort((a,b) => (b.score||0) - (a.score||0));
+  else rows.sort((a,b) => (a.time||'').localeCompare(b.time||''));
+
+  return rows;
 }
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════
    RENDER
-══════════════════════════════════════════ */
-function renderAll() {
-  const all = getFiltered();
-  const live = all.filter(m => m.status==='live');
-  const upcoming = all.filter(m => m.status==='upcoming');
-  const finished = all.filter(m => m.status==='finished');
+══════════════════════════════════════ */
+function render() {
+  const rows = getRows();
 
-  // Live count badge
-  const liveCountEl = document.getElementById('liveCount');
-  const liveSectionCountEl = document.getElementById('liveSectionCount');
-  liveCountEl.textContent = MATCHES.filter(m=>m.status==='live').length;
-  liveSectionCountEl.textContent = live.length;
+  // Summary
+  const closed  = rows.filter(r => matchStatus(r) === 'closed');
+  const hits    = closed.filter(r => pickResult(r) === 'hit');
+  const misses  = closed.filter(r => pickResult(r) === 'miss');
+  const pending = rows.filter(r => matchStatus(r) === 'upcoming');
+  const live    = rows.filter(r => matchStatus(r) === 'live');
+  const pct = closed.length ? Math.round(hits.length / closed.length * 100) : null;
 
-  const isFiltered = activeSport !== 'all' || activeStatus !== 'all' || document.getElementById('searchInput').value.trim();
+  document.getElementById('summaryRow').innerHTML = `
+    ${rows.length ? `<span class="summary-stat"><span class="dot dot-soft"></span><b>${rows.length}</b> משחקים</span>` : ''}
+    ${live.length ? `<span class="summary-stat"><span class="dot dot-red"></span><b>${live.length}</b> חי</span>` : ''}
+    ${pending.length ? `<span class="summary-stat"><span class="dot dot-gold"></span><b>${pending.length}</b> ממתינים</span>` : ''}
+    ${hits.length ? `<span class="summary-stat"><span class="dot dot-green"></span><b>${hits.length}</b> נתפסו</span>` : ''}
+    ${misses.length ? `<span class="summary-stat"><span class="dot dot-red" style="background:var(--red)"></span><b>${misses.length}</b> לא נתפסו</span>` : ''}
+    ${pct !== null ? `<span class="summary-stat spacer"><b>${pct}%</b> דיוק</span>` : ''}
+  `;
 
-  if (isFiltered && activeStatus !== 'all') {
-    // Show filtered view
-    document.getElementById('liveSection').style.display = 'none';
-    document.getElementById('upcomingSection').style.display = 'none';
-    document.getElementById('finishedSection').style.display = 'none';
-    document.getElementById('filteredSection').style.display = 'block';
-
-    const titleMap = {live:'משחקים חיים', upcoming:'משחקים קרובים', finished:'תוצאות', fav:'מועדפים'};
-    document.getElementById('filteredTitle').textContent = titleMap[activeStatus] || 'משחקים';
-    document.getElementById('filteredCount').textContent = all.length;
-    document.getElementById('filteredGrid').innerHTML = all.map(cardHTML).join('') ||
-      `<div class="empty-state"><div class="empty-icon">🔍</div><p>לא נמצאו משחקים</p></div>`;
-  } else {
-    document.getElementById('liveSection').style.display = live.length ? 'block' : 'none';
-    document.getElementById('upcomingSection').style.display = 'block';
-    document.getElementById('finishedSection').style.display = 'block';
-    document.getElementById('filteredSection').style.display = 'none';
-
-    // Live strip
-    document.getElementById('liveStrip').innerHTML = live.map(liveCardHTML).join('');
-    // Upcoming
-    document.getElementById('upcomingCount').textContent = upcoming.length;
-    document.getElementById('upcomingGrid').innerHTML = upcoming.map(cardHTML).join('') ||
-      `<div class="empty-state"><div class="empty-icon">🕐</div><p>אין משחקים קרובים</p></div>`;
-    // Finished
-    document.getElementById('finishedCount').textContent = finished.length;
-    document.getElementById('finishedGrid').innerHTML = finished.map(cardHTML).join('') ||
-      `<div class="empty-state"><div class="empty-icon">✓</div><p>אין תוצאות</p></div>`;
-  }
-  attachCardHandlers();
-}
-
-function liveCardHTML(m) {
-  return `<div class="mcard live-card" data-id="${m.id}" style="animation-delay:${(m.id%5)*0.05}s">
-    ${cardTopHTML(m)}
-    ${cardBodyHTML(m)}
-    ${cardFooterHTML(m)}
-  </div>`;
-}
-
-function cardHTML(m) {
-  return `<div class="mcard${m.status==='live'?' live-card':''}${favorites.includes(m.id)?' fav-card':''}" data-id="${m.id}" style="animation-delay:${(m.id%8)*0.04}s">
-    ${cardTopHTML(m)}
-    ${cardBodyHTML(m)}
-    ${cardFooterHTML(m)}
-  </div>`;
-}
-
-function cardTopHTML(m) {
-  const statusBadge = {
-    live: `<span class="match-status-badge live-st"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f04f50;margin-left:3px;animation:pulse-red 1.4s infinite"></span>${m.quarter ? `רבע ${m.quarter}` : `${m.minute}′`}</span>`,
-    upcoming: `<span class="match-status-badge upcoming-st">${m.kickoff ? fmtTime(m.kickoff) : 'בקרוב'}</span>`,
-    finished: `<span class="match-status-badge finished-st">סיום</span>`,
-  }[m.status];
-
-  const favStar = `<button class="fav-btn${favorites.includes(m.id)?' active':''}" data-fav="${m.id}" title="מועדפים">
-    ${favorites.includes(m.id) ? '⭐' : '☆'}
-  </button>`;
-
-  return `<div class="mcard-top">
-    <div class="league-info">
-      <span class="league-icon">${m.leagueIcon}</span>
-      <span class="league-name">${m.league}</span>
-    </div>
-    <div class="card-right">
-      ${statusBadge}
-      ${favStar}
-    </div>
-  </div>`;
-}
-
-function cardBodyHTML(m) {
-  const hasScore = m.score !== null;
-  const homeWinner = hasScore && m.status==='finished' && m.score.home > m.score.away;
-  const awayWinner = hasScore && m.status==='finished' && m.score.home < m.score.away;
-
-  let centerContent;
-  if (hasScore) {
-    const scoreClass = m.status==='live' ? ' live-score' : '';
-    centerContent = `<span class="score-display${scoreClass}">${m.score.home} – ${m.score.away}</span>
-      ${m.status==='live' ? `<span class="score-time">${m.quarter ? `רבע ${m.quarter} · ${m.quarterTime}` : `${m.minute}′`}</span>` : ''}`;
-  } else {
-    centerContent = `<span class="vs-label">נגד</span>`;
+  if (!rows.length) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty"><div class="ei">📭</div><p>אין משחקים להצגה</p></div>`;
+    return;
   }
 
-  const drawOdd = m.odds.draw
-    ? `<div class="odd-btn" data-mid="${m.id}" data-type="draw"><span class="odd-label">תיקו</span><span class="odd-val">${m.odds.draw.toFixed(2)}</span></div>`
-    : `<div class="odd-btn" style="opacity:.3;pointer-events:none"><span class="odd-label">–</span><span class="odd-val">–</span></div>`;
+  // Group by league
+  const groups = {};
+  rows.forEach(r => {
+    const key = `${sportMap[r.sport] || 'football'}::${r.league || 'לא ידוע'}`;
+    if (!groups[key]) groups[key] = { league:r.league, sport:sportMap[r.sport]||'football', rows:[] };
+    groups[key].rows.push(r);
+  });
 
-  return `<div class="mcard-body">
-    <div class="teams-row">
-      <div class="team-col${homeWinner?' winner-side':''}">
-        <div class="team-logo">${m.homeLogo ? `<img src="${m.homeLogo}" alt="${m.home}" onerror="this.style.display='none';this.parentNode.textContent='${m.home.substring(0,2)}'">` : m.home.substring(0,2)}</div>
-        <span class="team-name-card">${m.home}</span>
+  const html = Object.values(groups).map((g, gi) => {
+    const rowsHtml = g.rows.map(r => rowHTML(r)).join('');
+    return `
+      <div class="league-group">
+        <div class="league-head" data-gi="${gi}" onclick="toggleGroup(this)">
+          <span class="league-flag">${sportIcon[g.sport]||'🏅'}</span>
+          <span class="league-title">${g.league}</span>
+          <span class="league-sport-badge">${sportLabel[g.sport]||g.sport}</span>
+          <span class="league-count">${g.rows.length}</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="league-rows">
+          ${rowsHtml}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = html;
+  attachHandlers();
+}
+
+function rowHTML(r) {
+  const st   = matchStatus(r);
+  const res  = pickResult(r);
+  const odds = fmtOdds(r.odds);
+  const pick = r.winnerPick || r.pick || '';
+  const score = (st === 'live' || st === 'closed') ? (r.liveScore || r.result || '') : '';
+  const scoreClass = st === 'live' ? ' live' : res === 'hit' ? ' hit' : '';
+
+  // Status badge
+  let sbClass = 'sb-wait', sbLabel = 'ממתין';
+  if (st === 'live')          { sbClass = 'sb-live';   sbLabel = `<span class="t-live-dot"></span> חי`; }
+  else if (st === 'closed') {
+    if (res === 'hit')        { sbClass = 'sb-hit';    sbLabel = 'נתפס ✓'; }
+    else if (res === 'miss')  { sbClass = 'sb-miss';   sbLabel = 'לא נתפס'; }
+    else                      { sbClass = 'sb-closed'; sbLabel = 'נסגר'; }
+  }
+
+  // Pick badge class
+  const pbClass = res === 'hit' ? ' hit' : res === 'miss' ? ' miss' : '';
+
+  // Time display
+  const timeStr = (r.time||'').substring(0,5);
+
+  // Row class
+  const rowCls = st === 'live' ? ' live-row' : st === 'closed' && res === 'hit' ? ' hit' : st === 'closed' && res === 'miss' ? ' miss' : st === 'closed' ? ' closed' : '';
+
+  const favIcon = favs.includes(r.id) ? '⭐' : '☆';
+  const favCls  = favs.includes(r.id) ? ' on' : '';
+
+  // Logo
+  const hLogo = r.homeAsset
+    ? `<div class="team-logo-sm"><img src="${r.homeAsset}" alt="${r.home}" onerror="this.style.display='none'"></div>`
+    : `<div class="team-logo-sm">${teamInitials(r.home)}</div>`;
+  const aLogo = r.awayAsset
+    ? `<div class="team-logo-sm"><img src="${r.awayAsset}" alt="${r.away}" onerror="this.style.display='none'"></div>`
+    : `<div class="team-logo-sm">${teamInitials(r.away)}</div>`;
+
+  return `<div class="mrow${rowCls}" data-id="${r.id}" onclick="openDrawer('${r.id}')">
+    <div class="mrow-time">
+      <div class="t-hour">${timeStr}</div>
+      ${st === 'live' ? `<div class="t-live"><span class="t-live-dot"></span> חי</div>` : ''}
+      ${st === 'closed' ? `<div class="t-done">נסגר</div>` : ''}
+    </div>
+    <div class="mrow-main">
+      <div class="mrow-teams">
+        ${hLogo}<span class="team-name">${r.home}</span>
+        <span class="vs-sep">–</span>
+        ${aLogo}<span class="team-name">${r.away}</span>
+        ${score ? `<span class="score-inline${scoreClass}">${score}</span>` : ''}
       </div>
-      <div class="score-center">${centerContent}</div>
-      <div class="team-col${awayWinner?' winner-side':''}">
-        <div class="team-logo">${m.awayLogo ? `<img src="${m.awayLogo}" alt="${m.away}" onerror="this.style.display='none';this.parentNode.textContent='${m.away.substring(0,2)}'">` : m.away.substring(0,2)}</div>
-        <span class="team-name-card">${m.away}</span>
+      <div class="pick-row">
+        <span class="pick-label">הימרנו:</span>
+        <span class="pick-badge${pbClass}">${pick}</span>
+        ${odds ? `<span class="pick-odds">@${odds}</span>` : ''}
+        <span class="market-tag">${marketShort(r.market)}</span>
       </div>
     </div>
-    <div class="odds-row">
-      <div class="odd-btn" data-mid="${m.id}" data-type="home"><span class="odd-label">1 ${m.home.substring(0,8)}</span><span class="odd-val">${m.odds.home.toFixed(2)}</span></div>
-      ${drawOdd}
-      <div class="odd-btn" data-mid="${m.id}" data-type="away"><span class="odd-label">2 ${m.away.substring(0,8)}</span><span class="odd-val">${m.odds.away.toFixed(2)}</span></div>
+    <div class="mrow-status">
+      <span class="status-badge ${sbClass}">${sbLabel}</span>
+      <button class="fav-btn${favCls}" data-fid="${r.id}" onclick="toggleFav(event,'${r.id}')">${favIcon}</button>
     </div>
   </div>`;
 }
 
-function cardFooterHTML(m) {
-  const miniStats = m.stats
-    ? `<span class="stat-mini"><span class="stat-mini-icon">⚽</span>${m.stats.shots ? m.stats.shots[0]+'-'+m.stats.shots[1] : ''} כדורים</span>
-       <span class="stat-mini"><span class="stat-mini-icon">📐</span>${m.stats.corners ? m.stats.corners[0]+'-'+m.stats.corners[1] : ''} קרנות</span>`
-    : `<span class="stat-mini" style="color:var(--soft)">אין סטטיסטיקות</span>`;
-
-  return `<div class="mcard-footer">
-    ${miniStats}
-    <button class="open-detail-btn" data-open="${m.id}">פרטים ›</button>
-  </div>`;
+function toggleGroup(head) {
+  head.classList.toggle('collapsed');
+  head.nextElementSibling.classList.toggle('collapsed');
 }
 
-/* ═══════════════════════════════════════════
-   CARD HANDLERS
-══════════════════════════════════════════ */
-function attachCardHandlers() {
-  // Fav buttons
-  document.querySelectorAll('[data-fav]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      const id = parseInt(btn.dataset.fav);
-      if (favorites.includes(id)) favorites = favorites.filter(x=>x!==id);
-      else favorites.push(id);
-      localStorage.setItem('hpg_favs', JSON.stringify(favorites));
-      renderAll();
-    };
-  });
-
-  // Odds buttons
-  document.querySelectorAll('.odd-btn[data-mid]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      const mid = btn.dataset.mid;
-      document.querySelectorAll(`.odd-btn[data-mid="${mid}"]`).forEach(b => b.classList.remove('selected'));
-      btn.classList.toggle('selected');
-    };
-  });
-
-  // Open detail
-  document.querySelectorAll('[data-open]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      openDrawer(parseInt(btn.dataset.open));
-    };
-  });
-
-  // Card click
-  document.querySelectorAll('.mcard').forEach(card => {
-    card.onclick = () => openDrawer(parseInt(card.dataset.id));
+function attachHandlers() {
+  document.querySelectorAll('.fav-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); toggleFav(e, btn.dataset.fid); });
   });
 }
 
-/* ═══════════════════════════════════════════
+function toggleFav(e, id) {
+  e.stopPropagation();
+  if (favs.includes(id)) favs = favs.filter(x => x !== id);
+  else favs.push(id);
+  localStorage.setItem('hpg_match_favs', JSON.stringify(favs));
+  render();
+}
+
+/* ═══════════════════════════════════════
    DRAWER
-══════════════════════════════════════════ */
-let activeDrawerTab = 'overview';
+══════════════════════════════════════ */
+let drawerTab = 'overview';
+
+function findRow(id) {
+  if (!ALL_DATA) return null;
+  for (const tab of Object.values(ALL_DATA)) {
+    for (const rows of Object.values(tab.sports || {})) {
+      const r = rows.find(x => x.id === id);
+      if (r) return r;
+    }
+  }
+  return null;
+}
 
 function openDrawer(id) {
-  const m = MATCHES.find(x => x.id===id);
-  if (!m) return;
+  const r = findRow(id);
+  if (!r) return;
+  activeDTab = id;
   document.body.classList.add('no-scroll');
-  document.getElementById('drawerOverlay').classList.add('open');
-  document.getElementById('matchDrawer').classList.add('open');
-  renderDrawer(m);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  buildDrawer(r, drawerTab);
 }
 
 function closeDrawer() {
   document.body.classList.remove('no-scroll');
-  document.getElementById('drawerOverlay').classList.remove('open');
-  document.getElementById('matchDrawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  activeDTab = null;
 }
 
-function renderDrawer(m) {
-  const hasScore = m.score !== null;
-  const isLive = m.status === 'live';
-  const statusLabel = {live:'חי', upcoming:'קרוב', finished:'נגמר'}[m.status];
+function buildDrawer(r, tab) {
+  const st  = matchStatus(r);
+  const res = pickResult(r);
+  const score = (r.liveScore && r.liveScore !== '') ? r.liveScore : (r.result || '');
+  const pick  = r.winnerPick || r.pick || '';
+  const odds  = fmtOdds(r.odds);
 
-  const scoreHTML = hasScore
-    ? `<span class="drawer-score${isLive?' live':''}">${m.score.home} – ${m.score.away}</span>`
-    : `<span class="drawer-score" style="font-size:24px;color:var(--soft)">נגד</span>`;
+  let scoreHTML, scoreSub = '';
+  if (score) {
+    scoreHTML = `<span class="dscore${st==='live'?' live':''}">${score}</span>`;
+    if (st === 'live' && r.matchPhase) scoreSub = r.matchPhase;
+  } else {
+    scoreHTML = `<span class="dscore pending">נגד</span>`;
+    scoreSub  = r.time ? r.time.substring(0,5) : '';
+  }
 
-  const centerBottom = isLive
-    ? `<div class="drawer-live-badge"><span class="live-dot"></span> ${m.quarter ? `רבע ${m.quarter} · ${m.quarterTime}` : `${m.minute}′`}</div>`
-    : `<span class="drawer-score-sub">${statusLabel}${m.kickoff ? ' · ' + fmtTime(m.kickoff) : ''}</span>`;
+  const hLogoD = r.homeAsset
+    ? `<div class="dlogo"><img src="${r.homeAsset}" alt="${r.home}" onerror="this.style.display='none'"></div>`
+    : `<div class="dlogo">${teamInitials(r.home)}</div>`;
+  const aLogoD = r.awayAsset
+    ? `<div class="dlogo"><img src="${r.awayAsset}" alt="${r.away}" onerror="this.style.display='none'"></div>`
+    : `<div class="dlogo">${teamInitials(r.away)}</div>`;
 
-  const drawer = document.getElementById('matchDrawer');
+  // Pick box class
+  const dpCls = res === 'hit' ? ' hit' : res === 'miss' ? ' miss' : '';
+  const resultBadge = res === 'hit'
+    ? `<span class="dp-result-badge hit">נתפס ✓</span>`
+    : res === 'miss'
+    ? `<span class="dp-result-badge miss">לא נתפס</span>` : '';
+
+  const drawer = document.getElementById('drawer');
   drawer.innerHTML = `
-    <div class="drawer-head">
-      <div class="drawer-head-row">
-        <div class="drawer-league">
-          <span class="drawer-league-icon">${m.leagueIcon}</span>
-          <span class="drawer-league-name">${m.league} · ${m.region}</span>
+    <div class="dhead">
+      <div class="dhead-top">
+        <div class="dleague">
+          <span>${sportIcon[sportMap[r.sport]||'football']||'🏅'}</span>
+          <span>${r.league}${r.country ? ' · '+r.country : ''}</span>
         </div>
-        <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        <button class="dclose" onclick="closeDrawer()">✕</button>
       </div>
-
-      <div class="drawer-match">
-        <div class="drawer-team">
-          <div class="drawer-logo">${m.homeLogo ? `<img src="${m.homeLogo}" alt="${m.home}" onerror="this.style.display='none'">` : m.home.substring(0,2)}</div>
-          <span class="drawer-team-name">${m.home}</span>
+      <div class="dmatch">
+        <div class="dteam">
+          ${hLogoD}
+          <span class="dteam-name">${r.home}</span>
         </div>
-        <div class="drawer-center">
+        <div class="dcenter">
           ${scoreHTML}
-          ${centerBottom}
+          ${scoreSub ? `<span class="dscore-sub">${scoreSub}</span>` : ''}
+          ${st === 'live' ? `<div class="dlive-badge"><span class="t-live-dot"></span> חי</div>` : ''}
         </div>
-        <div class="drawer-team">
-          <div class="drawer-logo">${m.awayLogo ? `<img src="${m.awayLogo}" alt="${m.away}" onerror="this.style.display='none'">` : m.away.substring(0,2)}</div>
-          <span class="drawer-team-name">${m.away}</span>
+        <div class="dteam">
+          ${aLogoD}
+          <span class="dteam-name">${r.away}</span>
         </div>
       </div>
-
-      <div class="drawer-tabs">
-        <button class="drawer-tab${activeDrawerTab==='overview'?' active':''}" onclick="switchDrawerTab(this,'overview','${m.id}')">סקירה</button>
-        <button class="drawer-tab${activeDrawerTab==='stats'?' active':''}" onclick="switchDrawerTab(this,'stats','${m.id}')">סטטיסטיקות</button>
-        <button class="drawer-tab${activeDrawerTab==='odds'?' active':''}" onclick="switchDrawerTab(this,'odds','${m.id}')">יחסים</button>
-        <button class="drawer-tab${activeDrawerTab==='h2h'?' active':''}" onclick="switchDrawerTab(this,'h2h','${m.id}')">היסטוריה</button>
+      <div class="dpick-box${dpCls}">
+        <span class="dp-label">הימרנו</span>
+        <span class="dp-pick">${pick}</span>
+        ${odds ? `<span class="dp-odds">@${odds}</span>` : ''}
+        ${resultBadge}
+      </div>
+      <div class="dtabs">
+        <button class="dtab${tab==='overview'?' on':''}" onclick="switchDTab(this,'overview','${r.id}')">סקירה</button>
+        <button class="dtab${tab==='markets'?' on':''}" onclick="switchDTab(this,'markets','${r.id}')">שוקים</button>
+        <button class="dtab${tab==='signals'?' on':''}" onclick="switchDTab(this,'signals','${r.id}')">סיגנלים</button>
       </div>
     </div>
-
-    <div class="drawer-body" id="drawerBody">
-      ${renderDrawerTab(m, activeDrawerTab)}
-    </div>
+    <div class="dbody" id="dbody">${buildDTab(r, tab)}</div>
   `;
 }
 
-function switchDrawerTab(el, tab, mid) {
-  activeDrawerTab = tab;
-  document.querySelectorAll('.drawer-tab').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  const m = MATCHES.find(x => x.id===parseInt(mid));
-  document.getElementById('drawerBody').innerHTML = renderDrawerTab(m, tab);
-  // Animate stat bars
-  if (tab === 'stats') setTimeout(animateStatBars, 50);
+function switchDTab(el, tab, id) {
+  drawerTab = tab;
+  document.querySelectorAll('.dtab').forEach(b => b.classList.toggle('on', b === el));
+  const r = findRow(id);
+  if (r) document.getElementById('dbody').innerHTML = buildDTab(r, tab);
+  if (tab === 'overview') setTimeout(animateBars, 50);
 }
 
-function renderDrawerTab(m, tab) {
-  if (tab === 'overview') return renderOverviewTab(m);
-  if (tab === 'stats') return renderStatsTab(m);
-  if (tab === 'odds') return renderOddsTab(m);
-  if (tab === 'h2h') return renderH2HTab(m);
+function buildDTab(r, tab) {
+  if (tab === 'overview')  return buildOverview(r);
+  if (tab === 'markets')   return buildMarkets(r);
+  if (tab === 'signals')   return buildSignals(r);
   return '';
 }
 
-function renderOverviewTab(m) {
-  const hasTimeline = m.timeline && m.timeline.length > 0;
+function buildOverview(r) {
+  const allM = r.allMarkets || [];
+  // Possession: try to find from signals or fake symmetric
+  const hasPoss = false; // no possession in snapshot
 
-  const timelineHTML = hasTimeline
-    ? m.timeline.map(e => {
-        const icons = {goal:'⚽', yellow:'🟨', red:'🟥', score:'🏀', sub:'🔄'};
-        const teamLabel = e.team==='home' ? m.home.substring(0,10) : m.away.substring(0,10);
-        return `<div class="timeline-item">
-          <div class="timeline-min">${e.min}′</div>
-          <div class="timeline-content">
-            <span class="timeline-icon">${icons[e.type]||'•'}</span>
-            <div>
-              <div class="timeline-text">${e.player}</div>
-              <div class="timeline-sub">${teamLabel}</div>
-            </div>
+  // Match context
+  const ex = r.explanation || r.recommendationReason || '';
+  const exHTML = ex ? `<div class="dsec"><h4>הסבר</h4><div style="font-size:12px;color:var(--muted);line-height:1.5;border:1px solid var(--line);border-radius:7px;padding:10px;background:rgba(255,255,255,.02)">${ex}</div></div>` : '';
+
+  // Signals
+  const sigs = r.signals || [];
+  const sigHTML = sigs.length
+    ? `<div class="dsec"><h4>סיגנלים</h4><div style="display:flex;gap:6px;flex-wrap:wrap">${sigs.slice(0,8).map(s=>`<span style="border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:10px;color:var(--muted);font-weight:800">${s}</span>`).join('')}</div></div>`
+    : '';
+
+  // Score breakdown
+  const sc = r.scoreBreakdown || {};
+  const scEntries = Object.entries(sc).filter(([,v]) => v !== null && v !== undefined);
+  const scHTML = scEntries.length
+    ? `<div class="dsec"><h4>ציונים</h4>${scEntries.map(([k,v]) => `
+        <div class="stat-row">
+          <div class="stat-row-top"><span class="sv">${typeof v==='number'?v.toFixed(1):v}</span><span class="sl">${k}</span><span class="sv"></span></div>
+          <div class="bar-pair">
+            <div class="bar-track"><div class="bar-fill bf-home" data-w="${Math.min(100,Math.max(0,(v/100)*100))}" style="width:0%"></div></div>
+            <div class="bar-track"></div>
           </div>
-        </div>`;
-      }).join('')
-    : '<div style="color:var(--soft);font-size:13px;padding:8px 0">אין אירועים עדיין</div>';
-
-  const nextMatchInfo = m.status==='upcoming' && m.kickoff
-    ? `<div style="border:1px solid var(--line);border-radius:8px;padding:12px;background:rgba(56,130,245,.06);border-color:rgba(56,130,245,.2);margin-bottom:12px">
-        <div style="font-size:11px;color:#80b4ff;font-weight:900;margin-bottom:6px">⏰ השעה להתחלה</div>
-        <div style="font:900 28px/1 Heebo,sans-serif;color:var(--text)">${fmtTime(m.kickoff)}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">${formatCountdown(m.kickoff)}</div>
+        </div>`).join('')}
       </div>`
     : '';
 
-  return `<div class="drawer-section">
-    <h4>אירועי משחק</h4>
-    ${nextMatchInfo}
-    <div class="timeline-list">${timelineHTML}</div>
-  </div>`;
+  return [exHTML, sigHTML, scHTML].filter(Boolean).join('') ||
+    `<div style="color:var(--soft);font-size:13px;text-align:center;padding:24px 0">אין נתונים נוספים</div>`;
 }
 
-function renderStatsTab(m) {
-  if (!m.stats) return '<div style="color:var(--soft);font-size:13px;padding:8px 0;text-align:center">סטטיסטיקות לא זמינות</div>';
+function buildMarkets(r) {
+  const allM = r.allMarkets || [];
+  if (!allM.length) {
+    return `<div style="color:var(--soft);font-size:13px;text-align:center;padding:24px 0">אין שוקי הימורים זמינים</div>`;
+  }
 
-  const isBball = m.sport === 'basketball';
+  // Group markets
+  const groups = {};
+  allM.forEach(m => {
+    const g = m.marketName || m.market || 'כללי';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(m);
+  });
 
-  let rows = [];
-  if (m.stats.possession) rows.push({label:'החזקה',home:m.stats.possession[0],away:m.stats.possession[1],unit:'%',maxVal:100});
-  if (m.stats.shots) rows.push({label:'בעיטות',home:m.stats.shots[0],away:m.stats.shots[1],unit:'',maxVal:Math.max(m.stats.shots[0],m.stats.shots[1],1)*1.2});
-  if (m.stats.shotsOnTarget) rows.push({label:'מסגרת',home:m.stats.shotsOnTarget[0],away:m.stats.shotsOnTarget[1],unit:'',maxVal:Math.max(m.stats.shotsOnTarget[0],m.stats.shotsOnTarget[1],1)*1.2});
-  if (m.stats.corners) rows.push({label:'קרנות',home:m.stats.corners[0],away:m.stats.corners[1],unit:'',maxVal:Math.max(m.stats.corners[0],m.stats.corners[1],1)*1.2});
-  if (m.stats.yellowCards) rows.push({label:'צהוב',home:m.stats.yellowCards[0],away:m.stats.yellowCards[1],unit:'',maxVal:Math.max(m.stats.yellowCards[0],m.stats.yellowCards[1],1)*1.2});
-  if (m.stats.fgPct) rows.push({label:'FG%',home:m.stats.fgPct[0],away:m.stats.fgPct[1],unit:'%',maxVal:100});
-  if (m.stats.threePct) rows.push({label:'3PT%',home:m.stats.threePct[0],away:m.stats.threePct[1],unit:'%',maxVal:100});
-
-  const barsHTML = rows.map(r => {
-    const homeW = Math.min(100, (r.home/r.maxVal)*100);
-    const awayW = Math.min(100, (r.away/r.maxVal)*100);
-    return `<div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-        <span style="font:900 12px/1 Heebo,sans-serif;color:var(--text)">${r.home}${r.unit}</span>
-        <span style="font-size:10px;color:var(--soft);font-weight:900">${r.label}</span>
-        <span style="font:900 12px/1 Heebo,sans-serif;color:var(--text)">${r.away}${r.unit}</span>
+  return Object.entries(groups).map(([gName, outcomes]) => `
+    <div class="mkt-group">
+      <div class="mkt-title">${gName}</div>
+      <div class="mkt-grid">${outcomes.slice(0,6).map(o => `
+        <div class="mkt-btn${(r.pick||'').includes(o.name||o.outcomeName||'') ? ' sel' : ''}">
+          <span class="mkt-lbl">${o.name || o.outcomeName || ''}</span>
+          <span class="mkt-val">${o.odds ? (+o.odds).toFixed(2) : '–'}</span>
+        </div>`).join('')}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px">
-        <div class="stat-bar-wrap"><div class="stat-bar-fill home-fill" data-w="${homeW}" style="width:0%"></div></div>
-        <div class="stat-bar-wrap"><div class="stat-bar-fill away-fill" data-w="${awayW}" style="width:0%"></div></div>
+    </div>`).join('');
+}
+
+function buildSignals(r) {
+  const sigs = r.signals || [];
+  const prob = r.probability || r.normalizedProbability;
+  const ri   = r.riskLevel || '';
+  const rec  = r.recommendationReason || r.explanation || '';
+  const score = r.recommendationScore || r.score || 0;
+
+  const metaHTML = `
+    <div class="dsec"><h4>מטא נתונים</h4>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+        ${score ? `<div style="border:1px solid var(--line);border-radius:7px;padding:8px;background:rgba(255,255,255,.02);text-align:center"><b style="font:900 20px/1 Heebo,sans-serif;color:var(--gold)">${typeof score==='number'?score.toFixed(0):score}</b><div style="font-size:10px;color:var(--soft);margin-top:3px;font-weight:800">ציון מודל</div></div>` : ''}
+        ${prob ? `<div style="border:1px solid var(--line);border-radius:7px;padding:8px;background:rgba(255,255,255,.02);text-align:center"><b style="font:900 20px/1 Heebo,sans-serif;color:var(--cyan)">${(+prob*100).toFixed(0)}%</b><div style="font-size:10px;color:var(--soft);margin-top:3px;font-weight:800">הסתברות</div></div>` : ''}
+        ${ri ? `<div style="border:1px solid var(--line);border-radius:7px;padding:8px;background:rgba(255,255,255,.02);text-align:center"><b style="font:900 14px/1 Heebo,sans-serif;color:var(--muted)">${ri}</b><div style="font-size:10px;color:var(--soft);margin-top:3px;font-weight:800">רמת סיכון</div></div>` : ''}
+        ${r.odds ? `<div style="border:1px solid var(--line);border-radius:7px;padding:8px;background:rgba(255,255,255,.02);text-align:center"><b style="font:900 20px/1 Heebo,sans-serif;color:var(--gold)">${(+r.odds).toFixed(2)}</b><div style="font-size:10px;color:var(--soft);margin-top:3px;font-weight:800">יחס Winner</div></div>` : ''}
       </div>
     </div>`;
-  }).join('');
 
-  const possHTML = m.stats.possession ? `
-    <div class="possession-wrap">
-      <div class="poss-ring">
-        <svg width="60" height="60" viewBox="0 0 60 60">
-          <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
-          <circle cx="30" cy="30" r="24" fill="none" stroke="url(#posGrad)" stroke-width="6"
-            stroke-dasharray="${(m.stats.possession[0]/100)*150.8} 150.8" stroke-linecap="round"/>
-          <defs>
-            <linearGradient id="posGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#38d9f5"/>
-              <stop offset="100%" stop-color="#8b5cf6"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <div class="poss-ring-text">${m.stats.possession[0]}%</div>
-      </div>
-      <div class="poss-details">
-        <div class="poss-row"><span class="poss-label">${m.home.substring(0,12)}</span><span class="poss-val poss-home">${m.stats.possession[0]}%</span></div>
-        <div class="poss-row"><span class="poss-label">${m.away.substring(0,12)}</span><span class="poss-val poss-away">${m.stats.possession[1]}%</span></div>
-        <div style="margin-top:4px;font-size:10px;color:var(--soft);font-weight:800">החזקת כדור</div>
-      </div>
-    </div>` : '';
+  const sigsHTML = sigs.length
+    ? `<div class="dsec"><h4>סיגנלים</h4>
+        <div style="display:grid;gap:5px">
+          ${sigs.map(s => `<div style="border:1px solid var(--line);border-radius:6px;padding:7px 10px;background:rgba(255,255,255,.02);font-size:12px;color:var(--muted);font-weight:700">📊 ${s}</div>`).join('')}
+        </div>
+       </div>`
+    : '';
 
-  return `<div class="drawer-section">
-    <h4>סטטיסטיקות משחק</h4>
-    ${possHTML}
-    ${barsHTML}
-  </div>`;
+  const recHTML = rec
+    ? `<div class="dsec"><h4>המלצה</h4><div style="font-size:12px;color:var(--muted);line-height:1.5;border:1px solid var(--line);border-radius:7px;padding:10px;background:rgba(255,255,255,.02)">${rec}</div></div>`
+    : '';
+
+  return [metaHTML, sigsHTML, recHTML].filter(Boolean).join('') ||
+    `<div style="color:var(--soft);font-size:13px;text-align:center;padding:24px 0">אין נתונים</div>`;
 }
 
-function renderOddsTab(m) {
-  const mainHTML = `<div class="market-group">
-    <div class="market-group-title">תוצאת משחק (1X2)</div>
-    <div class="market-outcomes">
-      <div class="market-outcome">
-        <span class="mo-label">${m.home.substring(0,12)} (1)</span>
-        <span class="mo-val">${m.odds.home.toFixed(2)}</span>
-      </div>
-      ${m.odds.draw ? `<div class="market-outcome">
-        <span class="mo-label">תיקו (X)</span>
-        <span class="mo-val">${m.odds.draw.toFixed(2)}</span>
-      </div>` : ''}
-      <div class="market-outcome">
-        <span class="mo-label">${m.away.substring(0,12)} (2)</span>
-        <span class="mo-val">${m.odds.away.toFixed(2)}</span>
-      </div>
-    </div>
-  </div>`;
-
-  const moreMarkets = m.sport === 'football' ? `
-    <div class="market-group">
-      <div class="market-group-title">שערים (Over/Under)</div>
-      <div class="market-outcomes">
-        <div class="market-outcome"><span class="mo-label">Over 2.5</span><span class="mo-val">1.82</span></div>
-        <div class="market-outcome"><span class="mo-label">Under 2.5</span><span class="mo-val">1.95</span></div>
-        <div class="market-outcome"><span class="mo-label">Over 1.5</span><span class="mo-val">1.38</span></div>
-        <div class="market-outcome"><span class="mo-label">Under 1.5</span><span class="mo-val">2.90</span></div>
-      </div>
-    </div>
-    <div class="market-group">
-      <div class="market-group-title">שתי הקבוצות מסמנות (BTTS)</div>
-      <div class="market-outcomes">
-        <div class="market-outcome"><span class="mo-label">כן</span><span class="mo-val">1.72</span></div>
-        <div class="market-outcome"><span class="mo-label">לא</span><span class="mo-val">2.05</span></div>
-      </div>
-    </div>
-    <div class="market-group">
-      <div class="market-group-title">הנדיקאפ אסיאתי</div>
-      <div class="market-outcomes">
-        <div class="market-outcome"><span class="mo-label">${m.home.substring(0,10)} -0.5</span><span class="mo-val">2.15</span></div>
-        <div class="market-outcome"><span class="mo-label">${m.away.substring(0,10)} +0.5</span><span class="mo-val">1.72</span></div>
-        <div class="market-outcome"><span class="mo-label">${m.home.substring(0,10)} -1</span><span class="mo-val">3.40</span></div>
-        <div class="market-outcome"><span class="mo-label">${m.away.substring(0,10)} +1</span><span class="mo-val">1.35</span></div>
-      </div>
-    </div>
-  ` : `
-    <div class="market-group">
-      <div class="market-group-title">הנדיקאפ נקודות</div>
-      <div class="market-outcomes">
-        <div class="market-outcome"><span class="mo-label">${m.home.substring(0,10)} -4.5</span><span class="mo-val">1.90</span></div>
-        <div class="market-outcome"><span class="mo-label">${m.away.substring(0,10)} +4.5</span><span class="mo-val">1.90</span></div>
-      </div>
-    </div>
-    <div class="market-group">
-      <div class="market-group-title">סה"כ נקודות (O/U)</div>
-      <div class="market-outcomes">
-        <div class="market-outcome"><span class="mo-label">Over 215.5</span><span class="mo-val">1.90</span></div>
-        <div class="market-outcome"><span class="mo-label">Under 215.5</span><span class="mo-val">1.90</span></div>
-      </div>
-    </div>
-  `;
-
-  return `<div class="drawer-section">
-    <h4>שוקי הימורים</h4>
-    ${mainHTML}${moreMarkets}
-  </div>`;
-}
-
-function renderH2HTab(m) {
-  const h = m.h2h;
-  const recentHTML = h.recent.length
-    ? h.recent.map(r => `
-        <div class="h2h-match">
-          <span class="teams">${r.home} נגד ${r.away}</span>
-          <span class="score-badge">${r.score}</span>
-          <span class="date">${r.date}</span>
-        </div>`).join('')
-    : '<div style="color:var(--soft);font-size:12px;padding:8px 0">אין משחקים אחרונים</div>';
-
-  return `<div class="drawer-section">
-    <h4>היסטוריה ישירה</h4>
-    <div class="h2h-record">
-      <div class="h2h-box wins"><b>${h.homeWins}</b><span>ניצחון ${m.home.substring(0,8)}</span></div>
-      <div class="h2h-box draws"><b>${h.draws}</b><span>תיקו</span></div>
-      <div class="h2h-box losses"><b>${h.awayWins}</b><span>ניצחון ${m.away.substring(0,8)}</span></div>
-    </div>
-    <div style="font-size:11px;color:var(--soft);font-weight:900;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">משחקים אחרונים</div>
-    ${recentHTML}
-  </div>`;
-}
-
-function animateStatBars() {
-  document.querySelectorAll('.stat-bar-fill[data-w]').forEach(el => {
+function animateBars() {
+  document.querySelectorAll('.bar-fill[data-w]').forEach(el => {
     el.style.width = el.dataset.w + '%';
   });
 }
 
-/* ═══════════════════════════════════════════
-   HELPERS
-══════════════════════════════════════════ */
-function formatCountdown(date) {
-  const diff = date - NOW;
-  if (diff <= 0) return 'עכשיו';
-  const mins = Math.floor(diff/60000);
-  if (mins < 60) return `בעוד ${mins} דק׳`;
-  const hrs = Math.floor(mins/60);
-  return `בעוד ${hrs} שעות`;
-}
-
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════
    SEARCH
-══════════════════════════════════════════ */
-document.getElementById('searchInput').addEventListener('input', () => {
-  const q = document.getElementById('searchInput').value.trim();
-  if (q) {
-    activeStatus = 'search';
-    document.getElementById('filteredSection').style.display = 'block';
-    document.getElementById('liveSection').style.display = 'none';
-    document.getElementById('upcomingSection').style.display = 'none';
-    document.getElementById('finishedSection').style.display = 'none';
-    document.getElementById('filteredTitle').textContent = `תוצאות לחיפוש "${q}"`;
-    const results = MATCHES.filter(m => {
-      const text = `${m.home} ${m.away} ${m.league} ${m.region}`.toLowerCase();
-      return text.includes(q.toLowerCase());
-    });
-    document.getElementById('filteredCount').textContent = results.length;
-    document.getElementById('filteredGrid').innerHTML = results.map(cardHTML).join('') ||
-      `<div class="empty-state"><div class="empty-icon">🔍</div><p>לא נמצאו תוצאות עבור "${q}"</p></div>`;
-    attachCardHandlers();
-  } else {
-    activeStatus = 'all';
-    document.querySelectorAll('.status-pill').forEach(b => b.classList.remove('active-all','active-live','active-upcoming','active-finished'));
-    document.querySelector('[data-status=all]').classList.add('active-all');
-    renderAll();
-  }
-});
+══════════════════════════════════════ */
+document.getElementById('searchInput').addEventListener('input', render);
 
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════
    KEYBOARD
-══════════════════════════════════════════ */
+══════════════════════════════════════ */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeDrawer();
   if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
@@ -1828,40 +1018,25 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ═══════════════════════════════════════════
-   SIMULATE LIVE UPDATES
-══════════════════════════════════════════ */
-function simulateLiveUpdates() {
-  const liveMatches = MATCHES.filter(m => m.status === 'live');
-  liveMatches.forEach(m => {
-    if (m.minute !== null && m.minute < 90) {
-      m.minute += 1;
-    }
-    // Random small odds fluctuation
-    const fluctuate = v => Math.max(1.01, +(v + (Math.random()-.5)*0.04).toFixed(2));
-    const prev = {...m.odds};
-    m.odds.home = fluctuate(m.odds.home);
-    if (m.odds.draw) m.odds.draw = fluctuate(m.odds.draw);
-    m.odds.away = fluctuate(m.odds.away);
-    oddsDir[m.id] = {
-      home: m.odds.home > prev.home ? 'up' : m.odds.home < prev.home ? 'down' : '',
-      draw: m.odds.draw && m.odds.draw > prev.draw ? 'up' : 'down',
-      away: m.odds.away > prev.away ? 'up' : m.odds.away < prev.away ? 'down' : '',
-    };
-  });
-  // Show refresh bar briefly
-  const bar = document.getElementById('refreshBar');
-  bar.classList.add('active');
-  setTimeout(() => bar.classList.remove('active'), 800);
+/* ═══════════════════════════════════════
+   AUTO REFRESH every 2 min
+══════════════════════════════════════ */
+setInterval(async () => {
+  if (!ALL_DATA) return;
+  const rf = document.getElementById('rfbar');
+  rf.classList.add('on');
+  try {
+    const res = await fetch('/api/winner-feed');
+    const json = await res.json();
+    if (json.tabs) { ALL_DATA = json.tabs; render(); }
+  } catch(_) {}
+  rf.classList.remove('on');
+}, 120_000);
 
-  renderAll();
-}
-
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════
    INIT
-══════════════════════════════════════════ */
-renderAll();
-setInterval(simulateLiveUpdates, 15000); // Update every 15s
+══════════════════════════════════════ */
+loadData();
 </script>
 </body>
 </html>
