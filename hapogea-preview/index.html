@@ -1744,18 +1744,15 @@
       <button class="btn" id="refresh">רענון נתוני Winner</button>
     </section>
 
-    <section class="content">
+    <section class="content" id="cardsSection" style="display:none">
       <section>
         <div class="section-title">
           <div>
-            <h3 id="listTitle">ניתוחים מחושבים</h3>
-            <p id="resultMeta">טוען נתונים מווינר</p>
+            <h3 id="listTitle">הפוגע AI</h3>
+            <p id="resultMeta"></p>
           </div>
-          <span class="pill">מקור: Winner</span>
         </div>
-        <div class="cards" id="cards">
-          <div class="empty" style="visibility:hidden">טוען...</div>
-        </div>
+        <div class="cards" id="cards"></div>
       </section>
     </section>
 
@@ -3099,79 +3096,17 @@
     function renderCards() {
       const cards = document.getElementById("cards");
       const title = document.getElementById("listTitle");
-      const meta = document.getElementById("resultMeta");
-      if (state.sportTab === "reuben") {
-        title.textContent = "הפוגע AI · ניתוח משחק לפי נתונים";
-        meta.textContent = "סוכן ניתוח לכדורגל וכדורסל";
-        cards.innerHTML = renderReubenAI();
+      const meta  = document.getElementById("resultMeta");
+      const sec   = document.getElementById("cardsSection");
+      if (state.sportTab !== "reuben") {
+        if (sec) sec.style.display = "none";
         return;
       }
-      const tab = state.feed?.tabs?.[state.day];
-      title.textContent = `${tab?.label || ""} · ${tab?.date || ""}`;
-      if (state.error) {
-        cards.innerHTML = `<div class="error">${state.error}</div>`;
-        meta.textContent = "טעינת הנתונים נכשלה";
-        return;
-      }
-      const rows = currentRows();
-      const isRefreshing = state.loading && state.feed;
-      const sourceMode = state.fromLocalCache
-        ? "מתעדכן..."
-        : (state.feed?.fallback || state.feed?.stale) ? "snapshot מאומת" : "נתונים חיים";
-      const totalRows = daySportRows(state.day, state.sportTab).length;
-      const withPick = rows.filter(row => row.recommended && !row.outsideRange).length;
-      const withoutPick = Math.max(0, rows.length - withPick);
-      const withoutPickText = `${withoutPick} ללא יתרון סטטיסטי`;
-      meta.textContent = isOpenDay()
-        ? `${rows.length}/20 משחקי Winner עם הציון הסטטיסטי הגבוה ביותר · ${withPick} עם יתרון סטטיסטי${withoutPick ? ` · ${withoutPickText}` : ""}. ${sourceMode}${isRefreshing ? " · מתעדכן..." : ""}`
-        : `${rows.length} \u05ea\u05d5\u05e6\u05d0\u05d5\u05ea \u05e8\u05e9\u05de\u05d9\u05d5\u05ea \u05de\u05ea\u05d5\u05da ${totalRows}. \u05d4\u05de\u05e1\u05da \u05d4\u05d6\u05d4 \u05e1\u05d5\u05d2\u05e8 \u05ea\u05d7\u05d6\u05d9\u05d5\u05ea \u05e9\u05e0\u05e9\u05de\u05e8\u05d5 \u05e7\u05d5\u05d3\u05dd. ${sourceMode}${isRefreshing ? " \u00b7 \u05de\u05ea\u05e2\u05d3\u05db\u05df..." : ""}`;
-      const banners = [
-        (state.feed?.fallback || state.feed?.stale) ? `<div class="fallback-banner">\u05de\u05d5\u05e6\u05d2\u05d9\u05dd \u05e0\u05ea\u05d5\u05e0\u05d9 \u05d2\u05d9\u05d1\u05d5\u05d9 \u05de\u05d0\u05d5\u05de\u05ea\u05d9\u05dd. Winner Live \u05dc\u05d0 \u05d6\u05de\u05d9\u05df \u05db\u05e8\u05d2\u05e2 \u05d1\u05e9\u05e8\u05ea; \u05d4\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd \u05e2\u05d5\u05d3\u05db\u05e0\u05d5 ${formatShortTime(state.feed.generatedAt || state.localCachedAt)}.</div>` : "",
-        state.loadError ? `<div class="stale-banner">\u05d4\u05e8\u05e2\u05e0\u05d5\u05df \u05d4\u05d0\u05d7\u05e8\u05d5\u05df \u05e0\u05db\u05e9\u05dc: ${escapeHtml(state.loadError)}. \u05de\u05d5\u05e6\u05d2\u05d9\u05dd \u05d4\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd \u05d4\u05d0\u05d7\u05e8\u05d5\u05e0\u05d9\u05dd \u05e9\u05e0\u05e9\u05de\u05e8\u05d5.</div>` : ""
-      ].join("");
-      if (state.sportTab === "all") {
-        const bySport = currentRowsBySport();
-        const sections = [
-          ["football", "כדורגל", bySport.football],
-          ["basketball", "כדורסל", bySport.basketball],
-        ].filter(([, , sportRows]) => sportRows.length);
-        cards.innerHTML = banners + (sections.length
-          ? sections.map(([, label, sportRows]) => `
-              <section class="sport-section">
-                <div class="sport-section-title"><div class="sport-heading"><span class="sport-icon">${label === "כדורסל" ? "🏀" : "⚽"}</span>${label}</div><span>${sportRows.length} משחקים</span></div>
-                <div class="sport-section-grid">${sportRows.map(rowCard).join("")}</div>
-              </section>
-            `).join("")
-          : `<div class="empty">${isOpenDay() ? "No valid games today that match the criteria." : "No finished games loaded for this date."}</div>`);
-        return;
-      }
-      cards.innerHTML = banners + (rows.length
-        ? rows.map(rowCard).join("")
-        : `<div class="empty">${isOpenDay() ? "No valid games today that match the criteria." : "No finished games loaded for this date."}</div>`);
-
-      // Premium lock: blur/overlay all cards beyond the first for free users
-      if (!state.isPremium) {
-        const allCards = cards.querySelectorAll('article.card');
-        allCards.forEach((card, i) => {
-          if (i === 0) return; // first card is free
-          card.style.position = 'relative';
-          card.style.overflow = 'hidden';
-          if (!card.querySelector('.premium-lock-overlay')) {
-            const overlay = document.createElement('div');
-            overlay.className = 'premium-lock-overlay';
-            overlay.innerHTML = '<span class="lock-icon">🔒</span><span class="lock-label">זמין למנויי פרימיום</span><button class="lock-btn" onclick="openPremiumModal()">קנה פרימיום</button>';
-            card.appendChild(overlay);
-          }
-        });
-        if (allCards.length > 1) {
-          const banner = document.createElement('div');
-          banner.style.cssText = 'text-align:center;padding:20px;color:rgba(255,255,255,.5);font-size:13px;font-weight:800';
-          banner.innerHTML = `🔒 ${allCards.length - 1} ניתוחים נוספים זמינים בפרימיום — <button onclick="openPremiumModal()" style="background:none;border:none;color:#55d6ff;cursor:pointer;font:800 13px Heebo,sans-serif;text-decoration:underline">פתח גישה</button>`;
-          cards.appendChild(banner);
-        }
-      }
+      if (sec) sec.style.display = "";
+      if (title) title.textContent = "הפוגע AI · ניתוח משחק לפי נתונים";
+      if (meta)  meta.textContent  = "סוכן ניתוח לכדורגל וכדורסל";
+      if (cards) cards.innerHTML   = renderReubenAI();
     }
-
     function debugRows() {
       const audit = state.sportTab === "all"
         ? [
@@ -3658,7 +3593,6 @@
       renderCards();
       renderDebug();
       renderMatchCards();
-      applyLogosToCards();
       const premBtn = document.getElementById('premiumHeaderBtn');
       if (premBtn) premBtn.textContent = state.isPremium ? '✓ פרימיום' : '🔒 פרימיום';
       const mcBadge = document.getElementById('mcPremBadge');
