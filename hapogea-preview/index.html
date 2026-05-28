@@ -3199,7 +3199,11 @@
           };
         }
         if (result.matchPhase !== "final" || !result.actualWinner) return item;
-        const hit = samePick(item.pickTeam || item.pick, result.actualWinner);
+        // Prefer server-computed status for spread picks (spread logic runs on server via spreadStatus)
+        const serverSt = String(result.status || "").toLowerCase();
+        const hit = (serverSt === "hit") ? true
+          : (serverSt === "miss") ? false
+          : samePick(item.pickTeam || item.pick, result.actualWinner);
         return {
           ...item,
           status: hit ? "hit" : "miss",
