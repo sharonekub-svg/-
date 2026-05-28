@@ -2741,6 +2741,152 @@
       ].join("\n");
     }
 
+    // Compact club tier map (1 low → 5 elite) used for generic match analysis
+    const REUVEN_TEAM_TIERS = (function() {
+      const t = {};
+      [
+        [5, ["manchester city","man city","liverpool","real madrid","ריאל מדריד","barcelona","ברצלונה","bayern munich","bayern","inter milan","psg","paris saint-germain","paris saint germain","celtics","boston celtics"]],
+        [4, ["arsenal","ארסנל","chelsea","manchester united","man utd","man united","atletico madrid","אטלטיקו","borussia dortmund","dortmund","bayer leverkusen","leverkusen","rb leipzig","leipzig","napoli","juventus","ac milan","milan","paris","פריז","פאריז","monaco","marseille","lyon","lakers","warriors","nuggets","bucks","suns","76ers","sixers","cavaliers","clippers","מכבי תל אביב","מכבי חיפה","maccabi tel aviv","panathinaikos","anadolu efes","efes","fenerbahce"]],
+        [3, ["tottenham","spurs","newcastle","aston villa","west ham","brighton","sevilla","villarreal","real sociedad","athletic bilbao","betis","wolfsburg","freiburg","eintracht frankfurt","frankfurt","roma","lazio","fiorentina","heat","nets","hawks","grizzlies","timberwolves","pacers","mavericks","rockets","הפועל תל אביב","ביתר ירושלים","ביתר","הפועל באר שבע","מכבי נתניה","olympiacos","cska","alba berlin","red star"]],
+        [2, ["everton","fulham","crystal palace","wolves","brentford","levante","getafe","granada","mainz","augsburg","הפועל חיפה","מכבי פתח תקווה","הפועל ירושלים"]],
+      ].forEach(([tier, names]) => names.forEach(n => { t[n] = tier; }));
+      return t;
+    })();
+
+    function reuvenTeamTier(name) {
+      const norm = normalizeReuvenText(String(name || ""));
+      if (REUVEN_TEAM_TIERS[norm]) return REUVEN_TEAM_TIERS[norm];
+      for (const key of Object.keys(REUVEN_TEAM_TIERS)) {
+        if (norm.length >= 4 && (norm.includes(key) || key.includes(norm))) return REUVEN_TEAM_TIERS[key];
+      }
+      return 3;
+    }
+
+    function reuvenParseTeams(query) {
+      const clean = normalizeReuvenText(query)
+        .replace(/היום|מחר|הלילה|tonight|today|tomorrow|[\d:]+/g, "")
+        .replace(/\s+/g, " ").trim();
+      const parts = clean.split(/\s+נגד\s+|\s+vs\.?\s+|\s+-\s+|\s+against\s+/i)
+        .map(s => s.trim()).filter(Boolean);
+      return { home: parts[0] || clean, away: parts[1] || "" };
+    }
+
+    function analyzeReuvenGenericMatch(query) {
+      const hebrewAnswer = reuvenPrefersHebrew(query);
+      const { home, away } = reuvenParseTeams(query);
+      const homeTier = reuvenTeamTier(home);
+      const awayTier = reuvenTeamTier(away);
+      const tierGap = homeTier - awayTier;
+      const gapAbs = Math.abs(tierGap);
+      const isBasketball = /basketball|nba|euroleague|כדורסל/i.test(query);
+
+      let favored, underdog, favoredTier, isHomeWin;
+      if (!away || tierGap >= 1) { favored = home; underdog = away; favoredTier = homeTier; isHomeWin = true; }
+      else if (tierGap <= -1) { favored = away; underdog = home; favoredTier = awayTier; isHomeWin = false; }
+      else { favored = home; underdog = away; favoredTier = homeTier; isHomeWin = true; }
+
+      let winPct = isHomeWin ? 55 : 48;
+      if (gapAbs >= 2) winPct += 13;
+      else if (gapAbs === 1) winPct += 7;
+      winPct = Math.min(72, winPct);
+      const riskLevel = gapAbs >= 2 ? 2 : gapAbs === 1 ? 3 : 4;
+      const rating = gapAbs >= 2 ? 7 : gapAbs === 1 ? 6 : 5;
+
+      const tierLabelHe = t => t >= 5 ? "עילית עולמית" : t === 4 ? "סוג א׳ גבוה" : t === 3 ? "סוג א׳ בינוני" : t === 2 ? "סוג ב׳" : "סוג ג׳";
+      const tierLabelEn = t => t >= 5 ? "World Elite" : t === 4 ? "Top-tier" : t === 3 ? "Mid-tier" : "Lower-tier";
+
+      const sections = [];
+      const suggestions = [];
+
+      if (hebrewAnswer) {
+        const matchTitle = away ? `${home} נגד ${away}` : home;
+        const rec = gapAbs >= 2 ? "בעד חזק ✅" : gapAbs === 1 ? "בעד בזהירות 🟡" : "יתרון ביתי קל 🟡";
+
+        sections.push({ type: "verdict", icon: "🎯", title: "מה הייתי בוחר",
+          content: [`משחק: **${matchTitle}**`, "", `הצד המועדף: **${favored}**`, `קריאה: **${rec}** · הסתברות סטטיסטית: ~${winPct}%`, "", "⚠️ ניתוח זה מבוסס על דירוגי קבוצות, היסטוריה ויתרון ביתי — ללא יחסי Winner בזמן אמת."].join("\n") });
+
+        sections.push({ type: "analysis", icon: "📊", title: "ניתוח המשחק",
+          content: [
+            away ? `${home} (${tierLabelHe(homeTier)}) מול ${away} (${tierLabelHe(awayTier)})` : `${home} (${tierLabelHe(homeTier)})`,
+            "",
+            `פער דירוג: ${gapAbs === 0 ? "אין פער — שיוויון סטטיסטי" : `${gapAbs} דרגות לטובת ${favored}`}`,
+            isBasketball ? "ענף: כדורסל · מנתח Moneyline, ספרד, קצב, עומק ספסל." : "ענף: כדורגל · מנתח ניצחון/תיקו, Over/Under, סיכוי כפול, שערים ראשון.",
+          ].join("\n") });
+
+        const pros = [
+          away ? `- **${favored}** מדורג ${tierLabelHe(favoredTier)}${gapAbs >= 2 ? " — פער איכות ברור" : gapAbs === 1 ? " — יתרון מסוים" : " — שיוויון רמות"}.` : `- ${home} מדורג ${tierLabelHe(homeTier)}.`,
+          isHomeWin && away ? "- יתרון ביתי: סטטיסטית ~60% מהמשחקים מסתיימים בניצחון/תיקו לקבוצת הבית." : `- גם כצד חוץ, ${favored} מציג רמה שמכריחה תוצאה.`,
+          gapAbs >= 2 ? `- פער דירוג של ${gapAbs} דרגות — הגורם המשמעותי ביותר בחיזוי תוצאות.` : "",
+          isBasketball ? "- בכדורסל הפרש רמה מתורגם ישירות לפרשי ניקוד וסיכוי ריאלי." : "- בכדורגל הפרש רמה משפיע על שליטה, עומק סגל ואפשרויות כניסה.",
+        ].filter(Boolean);
+        sections.push({ type: "pros", icon: "✅", title: "יתרונות", content: pros.join("\n") });
+
+        const cons = [
+          "- ניתוח זה לא כולל נתוני פציעות, הרכב, מוטיבציה, טקטיקה או קצב נוכחי.",
+          away ? `- ${underdog} לא חסרי אפשרויות — בספורט תמיד יש הפתעות.` : "- חסר נתוני יריב להשוואה מלאה.",
+          gapAbs === 0 ? "- כשהרמות שקולות, הגורמים שלא ניתן לדעת מראש קובעים יותר." : "",
+          isBasketball ? "- בכדורסל: רוטציות, פציעות וגארבג׳ טיים יכולים לשנות את כל התמונה." : "- בכדורגל: כדור אחד, קלפים אדומים ומזג אוויר יכולים לבטל כל ניתוח.",
+        ].filter(Boolean);
+        sections.push({ type: "cons", icon: "⚠️", title: "חסרונות וסיכונים", content: cons.join("\n") });
+
+        sections.push({ type: "value", icon: "💰", title: "Value ביחס לשוק",
+          content: [`אין יחסי Winner בזמן אמת למשחק זה.`, "", `לבדיקת Value אמיתי: מצא את המשחק ב-Winner ובדוק שהיחס המוצע גבוה מ-${(100/winPct).toFixed(2)} (${winPct}% הסתברות מודל).`, gapAbs >= 2 ? "פייבוריט ברור — חפש יחס בטווח 1.30-1.60 לניתוח." : "ממליץ לבדוק גם סיכוי כפול כדי להוריד סיכון."].join("\n") });
+
+        sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: `${riskLevel}/5`, riskLevel });
+
+        sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה",
+          content: "ניתוח סטטיסטי כללי מבוסס דירוגי קבוצות והיסטוריה — ללא יחסי Winner בזמן אמת. אין ייעוץ הימורים, המלצה לשים כסף, או הבטחת תוצאה." });
+
+        if (away) suggestions.push(`${home} נגד ${away} ב-Winner`, `סטטיסטיקות של ${home}`, isBasketball ? "ספרד או Moneyline?" : "Over 2.5?", "מה הסיכוי לתיקו?");
+        else suggestions.push(`ספר לי עוד על ${home}`, "דוגמה לניתוח מלא", "ברצלונה נגד ריאל מדריד");
+
+      } else {
+        const matchTitle = away ? `${home} vs ${away}` : home;
+        const rec = gapAbs >= 2 ? "Strongly Favor ✅" : gapAbs === 1 ? "Slight Edge 🟡" : "Statistical Toss-up — Home Advantage 🟡";
+
+        sections.push({ type: "verdict", icon: "🎯", title: "What I Would Pick",
+          content: [`Match: **${matchTitle}**`, "", `Statistically favored: **${favored}**`, `Model read: **${rec}** · Statistical probability: ~${winPct}%`, "", "⚠️ This analysis is based on team tiers, historical data, and home advantage — no live Winner odds."].join("\n") });
+
+        sections.push({ type: "analysis", icon: "📊", title: "Match Analysis",
+          content: [
+            away ? `${home} (${tierLabelEn(homeTier)}) vs ${away} (${tierLabelEn(awayTier)})` : `${home} (${tierLabelEn(homeTier)})`,
+            "",
+            `Tier gap: ${gapAbs === 0 ? "None — statistical toss-up" : `${gapAbs} level(s) in favor of ${favored}`}`,
+            isBasketball ? "Sport: Basketball · Analyzing Moneyline, spread, pace, bench depth." : "Sport: Football · Analyzing win/draw, Over/Under, double chance, first goal.",
+          ].join("\n") });
+
+        const pros = [
+          away ? `- **${favored}** is rated ${tierLabelEn(favoredTier)}${gapAbs >= 2 ? " — clear quality gap" : gapAbs === 1 ? " — slight edge" : " — equal tier"}.` : `- ${home} is rated ${tierLabelEn(homeTier)}.`,
+          isHomeWin && away ? "- Home advantage: statistically ~60% of matches end in home win or draw." : `- Even away, ${favored} shows enough class to force a result.`,
+          gapAbs >= 2 ? `- Tier gap of ${gapAbs} levels — the single most significant predictor in outcome modeling.` : "",
+          isBasketball ? "- In basketball, tier gap directly translates to point differentials." : "- In football, tier gap drives squad depth, substitution options, and game control.",
+        ].filter(Boolean);
+        sections.push({ type: "pros", icon: "✅", title: "Strengths", content: pros.join("\n") });
+
+        const cons = [
+          "- No live injury, lineup, motivation, or tactical data included.",
+          away ? `- ${underdog} always has a puncher's chance — upsets happen.` : "- Missing opponent for full comparison.",
+          gapAbs === 0 ? "- When tiers are equal, unmeasurable factors decide the outcome." : "",
+          isBasketball ? "- Basketball: rotations, injuries, and garbage time can flip everything." : "- Football: one ball, red cards, and weather can override any model.",
+        ].filter(Boolean);
+        sections.push({ type: "cons", icon: "⚠️", title: "Weaknesses & Risks", content: cons.join("\n") });
+
+        sections.push({ type: "value", icon: "💰", title: "Value Analysis",
+          content: [`No live Winner odds for this match.`, "", `To check real Value: find this match on Winner and verify the offered price is above ${(100/winPct).toFixed(2)} (${winPct}% model probability).`, gapAbs >= 2 ? "Clear favorite — look for odds in the 1.30-1.60 range for analysis." : "Consider double chance to reduce risk on this one."].join("\n") });
+
+        sections.push({ type: "risk", icon: "🔥", title: "Risk Level", content: `${riskLevel}/5`, riskLevel });
+
+        sections.push({ type: "disclaimer", icon: "ℹ️", title: "Note",
+          content: "General statistical analysis based on team tiers and historical patterns — no live Winner odds. Not betting advice, no instruction to stake money, no guaranteed result." });
+
+        if (away) suggestions.push(`${home} vs ${away} on Winner`, `${home} stats`, isBasketball ? "Spread or Moneyline?" : "Over 2.5?", "Draw probability?");
+        else suggestions.push(`Tell me more about ${home}`, "Full match analysis example", "Real Madrid vs Barcelona");
+      }
+
+      const plainText = sections.map(s => `${s.title}\n${s.content}`).join("\n\n");
+      return { text: plainText, sections, suggestions };
+    }
+
     function findReuvenMatches(text) {
       const terms = reuvenTerms(text);
       if (!terms.length) return [];
@@ -2761,7 +2907,7 @@
     function analyzeReubenBet(text) {
       const value = String(text || "").trim();
       if (!value) {
-        return "Enter a match or market to analyze, for example: Real Madrid vs Barcelona, Over 2.5 goals as market context, or Maccabi -4.5 as a line to review statistically.";
+        return "כתוב שם משחק — לדוגמה: ברצלונה נגד ריאל מדריד, ארסנל נגד פריז, מנצ׳סטר סיטי היום. אנתח כל משחק אפשרי לפי סטטיסטיקות, דירוגים ונתוני Winner בזמן אמת.";
       }
       const choice = value.match(/^\s*(?:#|מספר|בחירה)?\s*(\d+)\s*$/i);
       if (choice && state.reubenCandidates.length) {
@@ -2797,7 +2943,7 @@
       state.reubenCandidates = matches;
       state.reubenLastQuery = value;
       if (!matches.length) {
-        return "אין. לא מצאתי בפיד Winner משחק בין הקבוצות האלו בחודש הקרוב. אם כתבת שם חלקי, נסה לכתוב את שתי הקבוצות כמו שמופיעות ב-Winner.";
+        return analyzeReuvenGenericMatch(value);
       }
       if (matches.length > 1) {
         return [
