@@ -1259,67 +1259,202 @@
     }
     .reuben-panel {
       grid-column: 1 / -1;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.025);
-      padding: 16px;
-      display: grid;
+      background: #0a1a24;
+      border: 1px solid rgba(85,214,255,.18);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .reuben-header {
+      display: flex;
+      align-items: center;
       gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      background: rgba(85,214,255,.04);
     }
-    .reuben-panel textarea {
-      min-height: 120px;
-      resize: vertical;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(0,0,0,.22);
+    .reuben-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,#55d6ff,#2ee99d);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex: 0 0 auto;
+    }
+    .reuben-header-info { flex: 1; }
+    .reuben-header-name {
+      font-weight: 900;
+      font-size: 15px;
       color: var(--text);
-      padding: 12px;
-      font: 700 14px/1.55 Heebo,Assistant,sans-serif;
+      line-height: 1.2;
     }
-    .reuben-output {
-      border: 1px solid rgba(85,214,255,.22);
-      border-radius: 8px;
-      padding: 12px;
-      background: rgba(85,214,255,.055);
-      color: var(--muted);
-      white-space: pre-wrap;
-      line-height: 1.65;
-      font-size: 13px;
+    .reuben-header-status {
+      font-size: 11px;
+      color: #2ee99d;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 2px;
+    }
+    .reuben-online-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #2ee99d;
+      flex: 0 0 auto;
+      animation: pulse-ring 2s ease-out infinite;
     }
     .chat-log {
-      display: grid;
-      gap: 10px;
-      max-height: 420px;
-      overflow: auto;
-      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-height: 580px;
+      overflow-y: auto;
+      padding: 20px 16px;
+      scroll-behavior: smooth;
     }
-    .chat-message {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 12px;
-      white-space: pre-wrap;
-      line-height: 1.65;
-      font-size: 13px;
+    .chat-msg {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 14px;
     }
-    .chat-message.user {
-      justify-self: end;
-      max-width: min(680px, 92%);
-      background: rgba(255,200,87,.08);
+    .chat-msg.user { align-items: flex-end; }
+    .chat-msg.ai { align-items: flex-start; width: 100%; }
+    .chat-bubble-user {
+      background: rgba(255,200,87,.13);
+      border: 1px solid rgba(255,200,87,.25);
+      border-radius: 18px 18px 4px 18px;
+      padding: 10px 16px;
+      max-width: min(520px, 88%);
       color: var(--text);
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
-    .chat-message.ai {
-      justify-self: start;
-      max-width: min(760px, 96%);
-      background: rgba(85,214,255,.055);
+    .chat-bubble-ai { width: 100%; }
+    .ai-sections { display: grid; gap: 10px; }
+    .ai-section {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,.03);
+      opacity: 0;
+      transform: translateY(8px);
+      animation: section-reveal .4s ease forwards;
+    }
+    .ai-section:nth-child(1) { animation-delay: 0s; }
+    .ai-section:nth-child(2) { animation-delay: .09s; }
+    .ai-section:nth-child(3) { animation-delay: .18s; }
+    .ai-section:nth-child(4) { animation-delay: .27s; }
+    .ai-section:nth-child(5) { animation-delay: .36s; }
+    .ai-section:nth-child(6) { animation-delay: .45s; }
+    .ai-section:nth-child(7) { animation-delay: .54s; }
+    .ai-section.verdict { border-color: rgba(85,214,255,.35); background: rgba(85,214,255,.06); }
+    .ai-section.value { border-color: rgba(255,200,87,.3); background: rgba(255,200,87,.04); }
+    .ai-section.risk { border-color: rgba(255,107,107,.25); background: rgba(255,107,107,.04); }
+    .ai-section.disclaimer { border-color: rgba(255,255,255,.05); background: transparent; }
+    .ai-section-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
       color: var(--muted);
     }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
-    .typing-dot { animation: blink 1.2s step-end infinite; }
-    .ai-thinking {
+    .ai-section.verdict .ai-section-head { color: var(--cyan); }
+    .ai-section.value .ai-section-head { color: #ffc857; }
+    .ai-section.risk .ai-section-head { color: #ff7777; }
+    .ai-section-body {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+    .ai-section.disclaimer .ai-section-body { font-size: 12px; color: var(--soft); }
+    .risk-meter { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .risk-dots { display: flex; gap: 4px; }
+    .risk-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.12);
+    }
+    .risk-dot.active { background: #ff7777; }
+    .risk-dot.active.low { background: #2ee99d; }
+    .risk-dot.active.medium { background: #ffc857; }
+    .risk-label { font-size: 12px; color: var(--muted); }
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .suggestion-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(85,214,255,.3);
+      background: rgba(85,214,255,.06);
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .suggestion-chip:hover { background: rgba(85,214,255,.14); border-color: rgba(85,214,255,.6); }
+    @keyframes section-reveal { to { opacity: 1; transform: translateY(0); } }
+    .reuben-input-area {
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding: 14px 16px;
       display: grid;
       gap: 10px;
-      min-width: min(420px, 100%);
     }
+    .reuben-input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+    .reuben-input-row textarea {
+      min-height: 48px;
+      max-height: 120px;
+      resize: none;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 10px 14px;
+      font: 700 14px/1.5 Heebo,Assistant,sans-serif;
+      transition: border-color .15s;
+    }
+    .reuben-input-row textarea:focus { border-color: rgba(85,214,255,.45); outline: none; }
+    .reuben-send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg,#55d6ff,#2ee99d);
+      color: #06131a;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      transition: opacity .15s;
+    }
+    .reuben-send-btn:disabled { opacity: .4; cursor: default; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .typing-dot { animation: blink 1.2s step-end infinite; }
+    .ai-thinking { display: grid; gap: 10px; width: 100%; }
     .thinking-head {
       display: flex;
       align-items: center;
@@ -1337,13 +1472,7 @@
       animation: pulse-ring 1.35s ease-out infinite;
       flex: 0 0 auto;
     }
-    .thinking-steps {
-      display: grid;
-      gap: 7px;
-      color: var(--soft);
-      font-size: 12px;
-      font-weight: 800;
-    }
+    .thinking-steps { display: grid; gap: 7px; color: var(--soft); font-size: 12px; font-weight: 800; }
     .thinking-step {
       display: flex;
       align-items: center;
@@ -1359,11 +1488,7 @@
       pointer-events: auto;
       animation: thinking-step 2.8s ease-in-out infinite;
     }
-    .thinking-step.step-done {
-      opacity: .55;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
+    .thinking-step.step-done { opacity: .55; transform: translateY(0); pointer-events: auto; }
     .thinking-line {
       height: 4px;
       width: 42px;
@@ -2779,7 +2904,6 @@
       const value = String(originalText || "").trim();
       state.reubenCandidates = [matchedRow];
       const hebrewAnswer = reuvenPrefersHebrew(value);
-
       const oddsMatch = value.match(/(?:odds|@)?\s*(\d+(?:[.,]\d+)?)/i);
       const selectedOutcome = selectReuvenOutcome(matchedRow, value);
       const odds = oddsMatch ? Number(oddsMatch[1].replace(",", ".")) : (selectedOutcome?.odds || null);
@@ -2792,12 +2916,10 @@
       const isBtts = /btts|both teams/i.test(lower);
       const isShortOddsRange = odds && odds >= 1.4 && odds <= 1.9;
       const marketName = isSpread ? "spread / handicap" : isOver ? "over" : isUnder ? "under" : isBtts ? "BTTS" : "win / moneyline";
-      const sportName = isBasketball ? "basketball" : "football";
       const winnerContext = [
         `${matchedRow.day} ${matchedRow.time || ""} | ${matchedRow.sport} | ${matchedRow.league} | ${matchedRow.match}`,
         reuvenMarketSummary(matchedRow),
       ].join("\n");
-      const dataAccess = reuvenDataAccessSummary(matchedRow, selectedOutcome);
       const whySide = reuvenWhySide(matchedRow, selectedOutcome, hebrewAnswer);
 
       let estimated = odds ? Math.round(Math.max(38, Math.min(78, implied + 2))) : 55;
@@ -2823,90 +2945,127 @@
       if (isSpread) rating -= 1;
       rating = Math.max(1, Math.min(10, rating));
 
-      const oddsLine = odds
-        ? "Winner odds: " + formatOdds(odds) + " | Market: " + (selectedOutcome?.marketTitle || marketName) + " | Tested side: " + (selectedOutcome?.label || "user side") + " | Implied probability: " + implied.toFixed(1) + "% | הפוגע AI estimate: " + estimated + "%"
-        : "מצאתי את המשחק, אבל אין כרגע שוק Winner פעיל עם יחס תקין לניתוח.";
-      const valueLine = ev === null
-        ? "Expected value cannot be estimated until there is an active Winner price."
-        : ev > 0
-          ? "Model edge is positive versus implied probability: +" + (ev * 100).toFixed(1) + "% before lineup/injury confirmation."
-          : "Model edge is not attractive versus implied probability: " + (ev * 100).toFixed(1) + "%.";
-      const caution = isShortOddsRange
-        ? "Special 1.40-1.90 rule: this is a short-price zone, so the statistical edge must be very clear. Treat the price as market context, not an instruction."
-        : "Outside the 1.40-1.90 zone: volatility/value must be checked even more carefully.";
+      const riskLevel = Math.max(1, Math.min(5, Math.round(6 - rating / 2)));
       const assessment = reuvenStatisticalAssessment(recommendation, rating, selectedOutcome);
-      const exactSide = assessment.odds
-        ? `${assessment.market} | ${assessment.side} @ ${formatOdds(assessment.odds)}`
-        : assessment.side;
+      const sections = [];
+      const suggestions = [];
 
       if (hebrewAnswer) {
-        const hebrewRecommendation = recommendation === "Strongly Favor" ? "בעד חזק"
-          : recommendation === "Slightly Favor" ? "בעד בזהירות"
-            : recommendation === "Slightly Against" ? "נגד בזהירות"
-              : recommendation === "Strongly Against" ? "נגד חזק"
-                : "ניטרלי";
-        const hebrewValueLine = ev === null
-          ? "אי אפשר לאמוד יתרון מול השוק עד שיש יחס Winner פעיל."
+        const hebrewRec = recommendation === "Strongly Favor" ? "בעד חזק ✅"
+          : recommendation === "Slightly Favor" ? "בעד בזהירות 🟡"
+          : recommendation === "Slightly Against" ? "נגד בזהירות 🟠"
+          : recommendation === "Strongly Against" ? "נגד חזק ❌"
+          : "ניטרלי ⚪";
+        const hebrewEV = ev === null
+          ? "אי אפשר לאמוד יתרון עד שיש יחס Winner פעיל."
           : ev > 0
-            ? "יתרון המודל מול ההסתברות הגלומה חיובי: +" + (ev * 100).toFixed(1) + "% לפני אימות הרכבים/פציעות."
-            : "יתרון המודל מול ההסתברות הגלומה לא מספיק חזק: " + (ev * 100).toFixed(1) + "%.";
-        const hebrewCaution = isShortOddsRange
-          ? "כלל 1.40-1.90: זה טווח יחסים קצר, אז צריך יתרון סטטיסטי ממש ברור. היחס הוא נתון שוק בלבד, לא הוראת פעולה."
-          : "מחוץ לטווח 1.40-1.90: חייבים לבדוק תנודתיות וערך בזהירות גבוהה יותר.";
-        const hebrewOddsLine = odds
-          ? "יחס Winner: " + formatOdds(odds) + " | שוק: " + (selectedOutcome?.marketTitle || marketName) + " | צד שנבדק: " + (selectedOutcome?.label || "הצד שהזכרת") + " | הסתברות גלומה: " + implied.toFixed(1) + "% | הערכת הפוגע AI: " + estimated + "%"
-          : "מצאתי את המשחק, אבל אין כרגע שוק Winner פעיל עם יחס תקין לניתוח.";
-        const guardrail = asksForBettingInstruction(value)
-          ? "אני לא נותן המלצות הימורים או הוראות לשים כסף. לפי הנתונים הספורטיביים, אפשר לדבר רק על יתרון סטטיסטי, סיכונים ומגמות."
-          : "הפוגע AI מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.";
-        const bottomLine = assessment.hasEdge
-          ? `שורה תחתונה: קיים יתרון סטטיסטי מסוים בצד שנבדק (${exactSide}). דירוג יתרון סטטיסטי: ${rating}/10. זה אינו ייעוץ הימורים או הוראה לשים כסף.`
-          : `שורה תחתונה: היתרון הסטטיסטי לא מספיק חד כרגע. דירוג יתרון סטטיסטי: ${rating}/10. זה אינו ייעוץ הימורים או הוראה לשים כסף.`;
-        return [
-          guardrail,
-          "סיכום ניתוח\n" + value + "\nמשחק Winner שנמצא: " + matchedRow.match + "\nענף: " + (isBasketball ? "כדורסל" : "כדורגל") + " | שוק: " + marketName,
-          "נתוני Winner\n" + winnerContext,
-          "גישה לנתונים\n" + dataAccess,
-          "למה דווקא הצד הזה\n" + whySide,
-          "חוזקות\n- המשחק מספיק ברור כדי להשוות מחיר שוק מול הסתברות מודל.\n- השוק נבדק מול היחסים הפעילים של Winner כנתון קונטקסט.\n- אם היחס עדיין חי, אפשר לחשב הסתברות גלומה מול הערכת מודל.",
-          "חולשות וסיכונים\n- Winner נותן יחסים ושווקים, לא מאגר מלא של פציעות/הרכבים. מידע חסר נספר כאי-ודאות ולא כהמצאה.\n- יחס קצר יכול להיות רע אם השוק כבר תימחר את הפייבוריט.\n- " + (isBasketball ? "בכדורסל ליינים רגישים לקצב, רוטציות וגארבג' טיים." : "בכדורגל ניצחון/שערים רגישים לטקטיקה, אדומים, מזג אוויר ורוטציה."),
-          "יחסים והסתברות\n" + hebrewOddsLine,
-          "בדיקת יתרון סטטיסטי\n" + hebrewValueLine + "\n" + hebrewCaution,
-          "קריאה סטטיסטית\n" + hebrewRecommendation + "\nפירוש: " + (assessment.hasEdge ? "יש סימני יתרון, אבל מידע חסר כמו הרכבים/פציעות נשאר אי-ודאות." : "אין יתרון מספיק ברור בנתונים הזמינים."),
-          "דירוג יתרון סטטיסטי מ-1 עד 10\n" + rating + "/10",
-          "זוויות נוספות לבדיקה\n- אם ניצחון ישיר או Over קצר מדי, אפשר להשוות גם מגמות שערים, סיכוי כפול, BTTS או בכדורסל Moneyline/ליין רלוונטי כנתוני שוק.\n- אם אין יתרון ברור, המסקנה האנליטית היא שהנתונים לא מספיק חד-משמעיים.",
-          bottomLine,
-          "אני עונה לפי השפה שלך: אם תכתוב בעברית אענה בעברית; אם תכתוב באנגלית אענה באנגלית.\nלמטרות מידע ולמידה בלבד. אין כאן ייעוץ הימורים, המלצה לשים כסף או הבטחת תוצאה."
-        ].join("\n\n");
+            ? `יתרון מודל חיובי: +${(ev * 100).toFixed(1)}% מול ההסתברות הגלומה.`
+            : `יתרון מודל לא מספיק: ${(ev * 100).toFixed(1)}% מול ההסתברות הגלומה.`;
+        const oddsText = odds
+          ? `יחס Winner: ${formatOdds(odds)} | הסתברות גלומה: ${implied.toFixed(1)}% | הערכת מודל: ${estimated}%`
+          : "אין יחס Winner פעיל כרגע לצד הזה.";
+        const side = selectedOutcome?.label || explicitPickText(matchedRow);
+        sections.push({ type: "verdict", icon: "🎯", title: "מה הייתי בוחר",
+          content: `הצד שנבדק: **${side}**\n\nקריאת מודל: **${hebrewRec}** · דירוג: ${rating}/10\n\n${oddsText}` });
+        sections.push({ type: "analysis", icon: "📊", title: "ניתוח המשחק",
+          content: `${matchedRow.match}\n${matchedRow.day} ${matchedRow.time || ""} | ${matchedRow.league}\n\n${winnerContext}` });
+        sections.push({ type: "pros", icon: "✅", title: "יתרונות",
+          content: whySide });
+        sections.push({ type: "cons", icon: "⚠️", title: "חסרונות וסיכונים",
+          content: [
+            "- Winner מספק יחסים ושווקים בלבד — אין בסיס נתונים לפציעות/הרכבים בזמן אמת.",
+            isShortOddsRange ? "- יחס קצר (1.40-1.90): צריך יתרון ממש ברור כדי שהמחיר יהיה אטרקטיבי." : "- מחוץ לטווח הקצר: לבדוק תנודתיות בזהירות.",
+            isBasketball ? "- בכדורסל: ליינים רגישים לקצב, רוטציות וגארבג׳ טיים." : "- בכדורגל: ניצחון/שערים רגישים לטקטיקה, אדומים, מזג אוויר ורוטציה.",
+            "- מידע חסר (הרכב, מוטיבציה) = אי-ודאות, לא ניחוש."
+          ].join("\n") });
+        sections.push({ type: "value", icon: "💰", title: "Value ביחס לשוק",
+          content: `${hebrewEV}\n\n${isShortOddsRange ? "כלל 1.40-1.90: טווח קצר — צריך יתרון סטטיסטי ממש ברור." : "מחוץ לטווח הקצר — לבדוק תנודתיות וערך בזהירות גבוהה."}` });
+        sections.push({ type: "risk", icon: "🔥", title: "רמת סיכון", content: `${riskLevel}/5`, riskLevel });
+        sections.push({ type: "disclaimer", icon: "ℹ️", title: "הערה",
+          content: asksForBettingInstruction(value)
+            ? "אני לא נותן הוראות הימורים. ניתוח ספורטיבי וסטטיסטי בלבד — אין כאן המלצה לשים כסף."
+            : "ניתוח ספורטיבי וסטטיסטי בלבד. אין ייעוץ הימורים, המלצה לשים כסף, או הבטחת תוצאה." });
+        suggestions.push(
+          `נתח לעומק את ${matchedRow.home || "קבוצת הבית"}`,
+          "השווה שווקים למשחק",
+          isBasketball ? "מה הליין המומלץ?" : "BTTS או Over 2.5?",
+          "מה הסיכוי לתיקו?"
+        );
+      } else {
+        const engRec = recommendation === "Strongly Favor" ? "Strongly Favor ✅"
+          : recommendation === "Slightly Favor" ? "Slight Edge 🟡"
+          : recommendation === "Slightly Against" ? "Slight Fade 🟠"
+          : recommendation === "Strongly Against" ? "Strongly Against ❌"
+          : "Neutral ⚪";
+        const engEV = ev === null
+          ? "Cannot estimate edge without an active Winner price."
+          : ev > 0
+            ? `Model edge is positive: +${(ev * 100).toFixed(1)}% vs implied.`
+            : `Model edge is negative: ${(ev * 100).toFixed(1)}% vs implied.`;
+        const oddsText = odds
+          ? `Odds: ${formatOdds(odds)} | Implied: ${implied.toFixed(1)}% | Model estimate: ${estimated}%`
+          : "No active Winner price for this side right now.";
+        const side = selectedOutcome?.label || explicitPickText(matchedRow);
+        sections.push({ type: "verdict", icon: "🎯", title: "What I Would Pick",
+          content: `Tested side: **${side}**\n\nModel read: **${engRec}** · Rating: ${rating}/10\n\n${oddsText}` });
+        sections.push({ type: "analysis", icon: "📊", title: "Match Analysis",
+          content: `${matchedRow.match}\n${matchedRow.day} ${matchedRow.time || ""} | ${matchedRow.league}\n\n${winnerContext}` });
+        sections.push({ type: "pros", icon: "✅", title: "Strengths",
+          content: whySide });
+        sections.push({ type: "cons", icon: "⚠️", title: "Weaknesses & Risks",
+          content: [
+            "- Winner provides odds and markets only — no real-time injury/lineup database.",
+            isShortOddsRange ? "- Short odds (1.40-1.90): needs a very clear edge for the price to be attractive." : "- Outside short-odds range: volatility must be checked carefully.",
+            isBasketball ? "- Basketball: lines are sensitive to pace, rotation, and garbage time." : "- Football: win/totals sensitive to tactics, red cards, weather, rotation.",
+            "- Missing data (lineup, motivation) = uncertainty, not a guess."
+          ].join("\n") });
+        sections.push({ type: "value", icon: "💰", title: "Value Analysis",
+          content: `${engEV}\n\n${isShortOddsRange ? "1.40-1.90 rule: short price — needs a statistically very clear edge." : "Outside the short range — check volatility and value more carefully."}` });
+        sections.push({ type: "risk", icon: "🔥", title: "Risk Level", content: `${riskLevel}/5`, riskLevel });
+        sections.push({ type: "disclaimer", icon: "ℹ️", title: "Note",
+          content: asksForBettingInstruction(value)
+            ? "I don't give betting instructions — sports and statistical analysis only. No instruction to stake money."
+            : "Sports and statistical analysis only. No betting advice, no instruction to stake money, no guaranteed result." });
+        suggestions.push(
+          `Deep dive: ${matchedRow.home || "home team"}`,
+          "Compare markets",
+          isBasketball ? "Best basketball line?" : "BTTS or Over 2.5?",
+          "Draw probability?"
+        );
       }
 
-      return [
-        (asksForBettingInstruction(value)
-          ? "I do not provide betting instructions or tell users where to put money. From a sports/statistical angle, I can discuss edges, risks, and matchup data."
-          : "הפוגע AI provides sports and statistical analysis only. This is not betting advice, not an instruction to stake money, and not a guarantee of results or profit."),
-        "Analysis Summary\n" + value + "\nMatched Winner game: " + matchedRow.match + "\nSport: " + sportName + " | Market: " + marketName,
-        "Winner Feed Context\n" + winnerContext,
-        "Data Access\n" + dataAccess,
-        "Why this side\n" + whySide,
-        "Strengths\n- The match is framed clearly enough to compare market price against model probability.\n- For " + sportName + ", the key checks are form, matchup style, home/away, fatigue/rest, and current market movement.\n- If the quoted price is from Winner, it can be compared directly against implied probability as market context.",
-        "Weaknesses\n- Winner gives the market and odds, not a complete injury/lineup database. Missing external data is treated as uncertainty, not invented confidence.\n- Short odds can still be weak if the market has already priced the obvious favorite.\n- " + (isBasketball ? "Basketball spreads are sensitive to garbage time, rotation changes, and pace." : "Football totals/win probabilities are sensitive to tactics, red cards, weather, and lineup rotation."),
-        "Odds and Probability\n" + oddsLine,
-        "Statistical Edge Assessment\n" + valueLine + "\n" + caution,
-        "Statistical Read\n" + recommendation + "\nMeaning: " + (assessment.hasEdge ? "there are edge signals, but missing lineup/injury data remains uncertainty." : "the available data does not show a clear enough edge."),
-        "Statistical Edge Rating out of 10\n" + rating + "/10",
-        "Alternative Angles\n- If straight win or Over is too short, compare BTTS, Over 1.5, double chance, or basketball ML/spread as market context.\n- If the edge is unclear, the analytical conclusion is that the data is not decisive.",
-        (assessment.hasEdge
-          ? `Bottom line: there is some statistical edge on the tested side (${exactSide}). Statistical edge rating: ${rating}/10. This is not betting advice or an instruction to stake money.`
-          : `Bottom line: the statistical edge is not sharp enough right now. Statistical edge rating: ${rating}/10. This is not betting advice or an instruction to stake money.`),
-        "I answer in your language: if you write in English, I answer in English; if you write in Hebrew, I answer in Hebrew.\nFor information and education only. No betting advice, no instruction to stake money, and no guaranteed result."
-      ].join("\n\n");
+      const plainText = sections.map(s => `${s.title}\n${s.content}`).join("\n\n");
+      return { text: plainText, sections, suggestions };
     }
 
     function renderChatMessage(message) {
-      const image = message.image
-        ? `<img src="${escapeHtml(message.image)}" alt="תמונה שהועלתה לניתוח נתונים" style="max-width:220px;width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.12);margin-bottom:8px;display:block">`
-        : "";
-      return `<div class="chat-message ${message.role === "user" ? "user" : "ai"}" style="white-space:pre-wrap">${image}${escapeHtml(message.text)}</div>`;
+      if (message.role === "user") {
+        const image = message.image
+          ? `<img src="${escapeHtml(message.image)}" alt="תמונה שהועלתה" style="max-width:200px;width:100%;border-radius:8px;margin-bottom:6px;display:block">`
+          : "";
+        return `<div class="chat-msg user"><div class="chat-bubble-user">${image}${escapeHtml(message.text || "")}</div></div>`;
+      }
+      if (message.sections && message.sections.length) {
+        const sectionsHtml = message.sections.map(section => {
+          const riskMeter = section.riskLevel != null ? (() => {
+            const lvl = section.riskLevel;
+            const lbl = lvl <= 1 ? "נמוך" : lvl <= 2 ? "נמוך-בינוני" : lvl === 3 ? "בינוני" : lvl === 4 ? "גבוה" : "גבוה מאוד";
+            const dc = lvl <= 2 ? " low" : lvl === 3 ? " medium" : "";
+            const dots = Array.from({length:5}, (_,i) => `<span class="risk-dot${i < lvl ? " active"+dc : ""}"></span>`).join("");
+            return `<div class="risk-meter"><div class="risk-dots">${dots}</div><span class="risk-label">${lbl}</span></div>`;
+          })() : "";
+          const formatted = escapeHtml(section.content || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+          return `<div class="ai-section ${section.type || ""}">
+            <div class="ai-section-head"><span>${section.icon || ""}</span>${escapeHtml(section.title || "")}</div>
+            <div class="ai-section-body">${formatted}${riskMeter}</div>
+          </div>`;
+        }).join("");
+        const chipsHtml = (message.suggestions || []).length
+          ? `<div class="suggestion-chips">${(message.suggestions || []).map(s => `<button class="suggestion-chip" data-chip="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join("")}</div>`
+          : "";
+        return `<div class="chat-msg ai"><div class="chat-bubble-ai"><div class="ai-sections">${sectionsHtml}</div>${chipsHtml}</div></div>`;
+      }
+      return `<div class="chat-msg ai"><div class="chat-bubble-user" style="background:rgba(85,214,255,.06);border-color:rgba(85,214,255,.18);border-radius:18px 18px 18px 4px;max-width:100%;color:var(--muted)">${escapeHtml(message.text || "")}</div></div>`;
     }
 
     function renderAiThinking() {
@@ -2918,7 +3077,7 @@
         "בונה הסבר ברור למה הצד הזה מקבל יתרון",
       ];
       return `
-        <div class="chat-message ai">
+        <div class="chat-msg ai">
           <div class="ai-thinking" aria-live="polite" aria-label="הפוגע AI חושב">
             <div class="thinking-head">
               <span>הפוגע AI מחפש ומנתח</span>
@@ -2938,39 +3097,41 @@
     function renderReubenAI() {
       const messages = state.reubenMessages.length
         ? state.reubenMessages
-        : [{ role: "ai", text: "שלום! אני הפוגע AI.\n\nהפוגע AI מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.\n\nשאל אותי על משחקים, קבוצות, חוזקות, חולשות ונתונים סטטיסטיים. אעזור לך להבין את המשחק טוב יותר לפי נתונים, בלי לתת הוראות או המלצות להימור.\n\nדוגמה בטקסט: \"ברצלונה נגד ריאל מדריד, היום\"" }];
+        : [{ role: "ai", text: "שלום! אני הפוגע AI — מנתח משחקים מקצועי.\n\nאני עובד עם נתוני Winner בזמן אמת: יחסים, שווקים, הסתברויות.\n\nשאל אותי על כל משחק — ואני אנתח יתרונות, חסרונות, Value ואיפה הייתי הולך.\n\nדוגמה: \"ארסנל נגד פריז\" או \"ברצלונה היום\"" }];
       const loading = state.reubenLoading;
       const isLocked = !state.isPremium && (state.reubenFreeUsed || 0) >= 1;
       return `
         <section class="reuben-panel">
-          <div class="section-title" style="margin:0">
-            <div>
-              <h3 style="display:flex;align-items:center;gap:8px">הפוגע AI <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:rgba(85,214,255,.15);color:var(--cyan)">BETA</span></h3>
-              <p><b>הפוגע AI מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.</b></p>
-              <p>שאל את הפוגע AI על משחקים, קבוצות, חוזקות, חולשות ונתונים סטטיסטיים. הוא יעזור לך להבין את המשחק טוב יותר לפי נתונים, בלי לתת הוראות או המלצות להימור.</p>
+          <div class="reuben-header">
+            <div class="reuben-avatar">⚽</div>
+            <div class="reuben-header-info">
+              <div class="reuben-header-name">הפוגע AI</div>
+              <div class="reuben-header-status"><span class="reuben-online-dot"></span>מנתח משחקים · נתוני Winner בזמן אמת</div>
             </div>
-            <span class="pill">Winner · AI</span>
+            <span class="pill">BETA</span>
           </div>
           <div class="chat-log" id="reubenOutput">
             ${messages.map(renderChatMessage).join("")}
             ${loading ? renderAiThinking() : ""}
           </div>
           ${isLocked ? `
-          <div style="text-align:center;padding:20px;background:rgba(85,214,255,.06);border:1px solid rgba(85,214,255,.2);border-radius:12px;margin-top:8px">
-            <div style="font-size:24px;margin-bottom:8px">🔒</div>
-            <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:rgba(255,255,255,.8)">השתמשת בטיפ החינמי שלך</p>
-            <p style="margin:0 0 16px;font-size:12px;color:rgba(255,255,255,.5)">פרימיום נותן גישה בלתי מוגבלת להפוגע AI</p>
+          <div style="text-align:center;padding:24px 16px;border-top:1px solid rgba(255,255,255,.07)">
+            <div style="font-size:28px;margin-bottom:8px">🔒</div>
+            <p style="margin:0 0 8px;font-size:14px;font-weight:800;color:rgba(255,255,255,.8)">השתמשת בניתוח החינמי שלך</p>
+            <p style="margin:0 0 16px;font-size:12px;color:rgba(255,255,255,.45)">פרימיום נותן גישה בלתי מוגבלת להפוגע AI</p>
             <button onclick="openPremiumModal()" style="padding:12px 28px;border-radius:20px;border:none;background:linear-gradient(135deg,#55d6ff,#2196f3);color:#06131a;font:800 14px Heebo,sans-serif;cursor:pointer">פתח פרימיום 🔓</button>
           </div>
           ` : `
-          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:4px">
-            <textarea id="reubenInput" placeholder="כתוב משחק: קבוצה א' נגד קבוצה ב', היום / מחר" style="min-height:72px;resize:vertical" autocomplete="off" spellcheck="false" ${loading ? "disabled" : ""}></textarea>
-            <button class="open-game" type="button" id="reubenAnalyze" style="align-self:end;min-width:80px" ${loading ? "disabled style='opacity:.5'" : ""}>${loading ? "⏳" : "שלח ←"}</button>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
-            <input id="reubenSlipFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" ${loading ? "disabled" : ""}>
-            <label for="reubenSlipFile" class="open-game" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;opacity:${loading ? ".5" : "1"}">העלה תמונה לניתוח נתונים</label>
-            <span class="micro">ה-Agent יקרא רק נתונים גלויים בתמונה. בלי חיבור ניתוח תמונה בשרת הוא לא ינחש.</span>
+          <div class="reuben-input-area">
+            <div class="reuben-input-row">
+              <textarea id="reubenInput" placeholder="כתוב משחק: ארסנל נגד פריז, ברצלונה היום..." autocomplete="off" spellcheck="false" rows="2" ${loading ? "disabled" : ""}></textarea>
+              <button class="reuben-send-btn" type="button" id="reubenAnalyze" ${loading ? "disabled" : ""}>➤</button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input id="reubenSlipFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" ${loading ? "disabled" : ""}>
+              <label for="reubenSlipFile" class="open-game" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:32px;font-size:12px;opacity:${loading ? ".5" : "1"}">📷 תמונה לניתוח</label>
+              <span class="micro">ניתוח ספורטיבי וסטטיסטי בלבד · אין ייעוץ הימורים</span>
+            </div>
           </div>
           `}
         </section>
@@ -3851,6 +4012,12 @@
         else navigator.clipboard?.writeText(text);
         return;
       }
+      const chip = event.target.closest(".suggestion-chip");
+      if (chip && chip.dataset.chip) {
+        const input = document.getElementById("reubenInput");
+        if (input) { input.value = chip.dataset.chip; input.focus(); }
+        return;
+      }
       if (event.target.closest("#reubenAnalyze")) {
         const input = document.getElementById("reubenInput");
         const question = (input?.value || "").trim();
@@ -3911,7 +4078,8 @@
 
           clearInterval(stepTimer);
           state.reubenThinkingStep = 0;
-          state.reubenMessages.push({ role: "ai", text: analyzeReubenBet(question) });
+          const result = analyzeReubenBet(question);
+          state.reubenMessages.push({ role: "ai", ...(typeof result === "string" ? { text: result } : result) });
           state.reubenLoading = false;
           if (!state.isPremium) {
             state.reubenFreeUsed = (state.reubenFreeUsed || 0) + 1;
