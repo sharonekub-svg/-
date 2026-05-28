@@ -2527,9 +2527,12 @@
     }
 
     function reuvenTerms(value) {
+      const STOP = new Set(["winner", "odds", "over", "under", "bet", "win", "vs",
+        "נגד", "של", "עם", "בין", "היום", "מחר", "אתה", "אומר", "אומרת", "על", "מה", "זה", "הזה",
+        "לי", "גם", "כן", "לא", "את", "אני", "הוא", "היא", "הם", "מי", "איך", "למה"]);
       return normalizeReuvenText(value)
         .split(" ")
-        .filter(term => term.length >= 3 && !["winner", "odds", "over", "under", "bet", "win", "vs"].includes(term));
+        .filter(term => term.length >= 3 && !STOP.has(term));
     }
 
     function reuvenMarketSummary(row) {
@@ -2643,6 +2646,29 @@
       }
 
       const matches = findReuvenMatches(value);
+
+      // Follow-up: if no new game found but we have a single stored candidate, treat as a follow-up question on that game
+      if (!matches.length && state.reubenCandidates.length === 1) {
+        return analyzeReuvenResolvedMatch(value, state.reubenCandidates[0]);
+      }
+
+      // Follow-up: if multiple candidates stored, try to narrow down by the new text
+      if (!matches.length && state.reubenCandidates.length > 1) {
+        const terms = reuvenTerms(value);
+        if (terms.length) {
+          const narrowed = state.reubenCandidates.filter(row => {
+            const haystack = normalizeReuvenText(`${row.match || ""} ${row.home || ""} ${row.away || ""}`);
+            return terms.some(term => haystack.includes(term));
+          });
+          if (narrowed.length === 1) return analyzeReuvenResolvedMatch(value, narrowed[0]);
+        }
+        return [
+          `יש לי ${state.reubenCandidates.length} אפשרויות עדיין. לאיזה משחק אתה מתכוון?`,
+          state.reubenCandidates.map((row, i) => `${i + 1}. ${row.day} ${row.time || ""} | ${row.league} | ${row.match}`).join("\n"),
+          "תכתוב מספר, למשל 1."
+        ].join("\n\n");
+      }
+
       state.reubenCandidates = matches;
       state.reubenLastQuery = value;
       if (!matches.length) {
