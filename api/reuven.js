@@ -106,6 +106,51 @@ function findMatchInMarkets(markets, homeQuery, awayQuery, dateKey) {
   return [...seen.values()].sort((a, b) => b.total - a.total)[0] || null;
 }
 
+// Broader search: by competition keyword and/or date when no team names given
+function findMatchesByContext(markets, { competition, dateKey, isFinal }) {
+  const seen = new Map();
+  const compNorm = competition ? normalizeTeamName(competition) : null;
+
+  for (const m of markets) {
+    const date = winnerDateToIso(m.e_date);
+    const matchesDate = !dateKey || date === dateKey;
+    const leagueNorm = normalizeTeamName(cleanText(m.league || ""));
+    const descNorm = normalizeTeamName(cleanText(m.desc || ""));
+
+    const matchesComp = !compNorm || compNorm.split(" ").some(w => w.length >= 3 && leagueNorm.includes(w));
+    const matchesFinal = !isFinal || leagueNorm.includes("final") || descNorm.includes("final") ||
+                         leagueNorm.includes("גמר") || descNorm.includes("גמר");
+
+    if (matchesDate && matchesComp && (!isFinal || matchesFinal) && !seen.has(String(m.eId))) {
+      const desc = cleanText(m.desc);
+      const parts = desc.split(" - ");
+      seen.set(String(m.eId), {
+        eId: String(m.eId), date, desc,
+        home: parts[0] || "", away: parts[1] || "",
+        league: cleanText(m.league), time: m.m_hour || "",
+        sportId: m.sId,
+      });
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+}
+
+// Brief summary of all matches for a date (schedule view)
+function formatScheduleSummary(markets, dateKey) {
+  const seen = new Map();
+  for (const m of markets) {
+    if (winnerDateToIso(m.e_date) !== dateKey) continue;
+    const eId = String(m.eId);
+    if (!seen.has(eId)) {
+      const desc = cleanText(m.desc);
+      const league = cleanText(m.league);
+      const time = m.m_hour || "";
+      seen.set(eId, `${time} | ${league} | ${desc}`);
+    }
+  }
+  return [...seen.values()].slice(0, 20);
+}
+
 function formatMarketsForPrompt(markets, eId) {
   const eventMarkets = markets.filter(m => String(m.eId) === String(eId));
   return eventMarkets.map(m => {
@@ -119,6 +164,24 @@ function formatMarketsForPrompt(markets, eId) {
   }).slice(0, 12).join("\n\n");
 }
 
+// ── Competition keyword map ───────────────────────────────────────────────────
+
+const COMPETITION_MAP = [
+  { key: "ליגת האלופות", terms: ["ליגת האלופות", "champions league", "ucl", "champion"] },
+  { key: "ליגה אירופית",  terms: ["ליגה אירופית", "europa league", "uel"] },
+  { key: "קונפרנס",       terms: ["קונפרנס", "conference league", "uecl"] },
+  { key: "פרמייר ליג",    terms: ["פרמייר ליג", "premier league", "epl"] },
+  { key: "לה ליגה",       terms: ["לה ליגה", "la liga", "laliga"] },
+  { key: "בונדסליגה",     terms: ["בונדסליגה", "bundesliga"] },
+  { key: "סריה א",        terms: ["סריה א", "serie a", "serie-a"] },
+  { key: "ליג 1",         terms: ["ליג 1", "ligue 1", "ligue-1"] },
+  { key: "ליגת העל",      terms: ["ליגת העל", "israeli premier", "israel league"] },
+  { key: "NBA",           terms: ["nba"] },
+  { key: "יורוליג",       terms: ["יורוליג", "euroleague"] },
+  { key: "קופה",          terms: ["קופה", "copa libertadores", "copa sudamericana"] },
+  { key: "MLS",           terms: ["mls"] },
+];
+
 // ── Query parser ─────────────────────────────────────────────────────────────
 
 function parseQuery(text) {
@@ -130,15 +193,15 @@ function parseQuery(text) {
   for (const pattern of vsPatterns) {
     const m = text.match(pattern);
     if (m) {
-      // Strip date words from team names
       home = m[1].replace(/\b(היום|מחר|אתמול|today|tomorrow|yesterday)\b/gi, "").trim();
       away = m[2].replace(/\b(היום|מחר|אתמול|today|tomorrow|yesterday)\b/gi, "").trim();
       if (home && away) break;
     }
   }
 
-  // Date offset
   const lc = text.toLowerCase();
+
+  // Date offset
   let offset = 0;
   if (/מחר|tomorrow/.test(lc)) offset = 1;
   else if (/אתמול|yesterday/.test(lc)) offset = -1;
@@ -146,7 +209,16 @@ function parseQuery(text) {
   const d = new Date();
   d.setDate(d.getDate() + offset);
   const dateKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Jerusalem" }).format(d);
-  return { home, away, dateKey, offset };
+
+  // Competition detection
+  let competition = null;
+  for (const { key, terms } of COMPETITION_MAP) {
+    if (terms.some(t => lc.includes(t))) { competition = key; break; }
+  }
+  // "גמר" alone without competition = finals in general
+  const isFinal = /גמר|final/.test(lc);
+
+  return { home, away, dateKey, offset, competition, isFinal };
 }
 
 // ── Claude API call ───────────────────────────────────────────────────────────
@@ -297,49 +369,69 @@ module.exports = async (req, res) => {
   }));
 
   try {
-    const { home, away, dateKey, offset } = parseQuery(query);
+    const { home, away, dateKey, offset, competition, isFinal } = parseQuery(query);
 
-    // ── 1. Fetch Winner markets ──────────────────────────────────────────────
+    // ── 1. Fetch Winner markets and build rich context ───────────────────────
     let winnerSection = "";
     let matchInfo = null;
 
     try {
       const markets = await getWinnerLine();
-      let found = (home || away) ? findMatchInMarkets(markets, home, away, dateKey) : null;
+      const dateLabel = offset === 0 ? "היום" : offset === 1 ? "מחר" : "אתמול";
 
-      // Retry without date constraint if not found
-      if (!found && (home || away)) {
-        found = findMatchInMarkets(markets, home, away, null);
-      }
+      // STEP A: exact team-name match
+      let found = (home || away) ? findMatchInMarkets(markets, home, away, dateKey) : null;
+      if (!found && (home || away)) found = findMatchInMarkets(markets, home, away, null);
 
       if (found) {
         matchInfo = { desc: found.desc, league: found.league, date: found.date };
         const formatted = formatMarketsForPrompt(markets, found.eId);
-        const dateLabel = found.date === dateKey ? (offset === 0 ? "היום" : offset === 1 ? "מחר" : "אתמול") : found.date;
-        winnerSection = `✅ נמצא ב-Winner: ${found.desc}
-ליגה: ${found.league}
-תאריך: ${dateLabel} (${found.date})
+        const dl = found.date === dateKey ? dateLabel : found.date;
+        winnerSection = `✅ נמצא ב-Winner: ${found.desc}\nליגה: ${found.league}\nתאריך: ${dl} (${found.date})\n\nשווקים ויחסים:\n${formatted}`;
 
-שווקים ויחסים עכשיו:
-${formatted}`;
-      } else if (home || away) {
-        winnerSection = `⚠️ לא מצאתי את המשחק "${[home, away].filter(Boolean).join(" נגד ")}" ב-Winner כרגע. ייתכן שהמשחק לא מופיע כרגע בשווקי Winner, שם הקבוצה שונה, או שהמשחק עבר.`;
       } else {
-        winnerSection = "לא צוינו שמות קבוצות — לא חיפשתי ב-Winner.";
+        // STEP B: competition + date search (handles "גמר ליגת האלופות מחר" etc.)
+        const contextMatches = findMatchesByContext(markets, { competition, dateKey, isFinal });
+
+        if (contextMatches.length === 1) {
+          // Exactly one match found — treat as specific
+          const m = contextMatches[0];
+          matchInfo = { desc: m.desc, league: m.league, date: m.date };
+          const formatted = formatMarketsForPrompt(markets, m.eId);
+          winnerSection = `✅ נמצא ב-Winner: ${m.desc}\nליגה: ${m.league}\nתאריך: ${m.date} ${m.time}\n\nשווקים ויחסים:\n${formatted}`;
+
+        } else if (contextMatches.length > 1) {
+          // Multiple matches — show all with odds summary
+          const lines = contextMatches.slice(0, 8).map(m => {
+            const odds = formatMarketsForPrompt(markets, m.eId);
+            return `📅 ${m.date} ${m.time} | ${m.league}\n⚽ ${m.desc}\n${odds}`;
+          }).join("\n\n---\n\n");
+          winnerSection = `נמצאו ${contextMatches.length} משחקים רלוונטיים ב-Winner:\n\n${lines}`;
+
+        } else if (home || away) {
+          winnerSection = `⚠️ לא מצאתי "${[home, away].filter(Boolean).join(" נגד ")}" ב-Winner. ייתכן שהמשחק עבר, נדחה, או שם הקבוצה שונה.`;
+
+        } else {
+          // STEP C: general date query — show full schedule for that day
+          const schedule = formatScheduleSummary(markets, dateKey);
+          winnerSection = schedule.length > 0
+            ? `לוח משחקים ${dateLabel} (${dateKey}) ב-Winner:\n${schedule.join("\n")}`
+            : `לא מצאתי משחקים ב-Winner ל-${dateLabel} (${dateKey}).`;
+        }
       }
     } catch (winnerErr) {
       winnerSection = `⚠️ לא הצלחתי להתחבר ל-Winner (${winnerErr.message}). אענה לפי ידע כללי.`;
     }
 
-    // ── 2. Build user message for Claude ────────────────────────────────────
+    // ── 2. Build prompt ──────────────────────────────────────────────────────
     const safeQuery = query.replace(/`/g, "'").replace(/\$\{/g, "\\${");
     const userMessage = `שאלת המשתמש: ${safeQuery}
 
---- נתוני Winner ---
+--- נתוני Winner בזמן אמת ---
 ${winnerSection}
---------------------
+-----------------------------
 
-נתח את הבקשה וענה בעברית כ-AI Sports Analyst. אם יש אודס מ-Winner — השתמש בו לחישוב הסתברות גלומה ויתרון סטטיסטי אפשרי. אל תיתן הוראות או המלצות לשים כסף. אם אין נתונים — ציין זאת בבירור.`;
+ענה בעברית. אם יש אודס — חשב הסתברות גלומה (1/אודס). אל תיתן הוראות הימור. אם אין נתונים מספיקים — ציין זאת בבירור.`;
 
     // ── 3. Call Claude ───────────────────────────────────────────────────────
     const answer = await callGemini(userMessage, history);
