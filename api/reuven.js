@@ -487,15 +487,13 @@ module.exports = async (req, res) => {
     res.status(200).json({ ok: true, answer, matchInfo });
   } catch (err) {
     console.error("Reuven API error:", err);
-    // When AI quota is exceeded but we have Winner data, return that directly
     const isQuota = /429|quota|rate.?limit/i.test(err.message);
-    const hasWinnerData = winnerSection && !winnerSection.startsWith("⚠️") && winnerSection.length > 20;
-    if (isQuota && hasWinnerData) {
-      res.status(200).json({
-        ok: false,
-        answer: `ה-AI לא זמין כרגע (מכסה יומית מוצתה). הנה נתוני Winner ישירות:\n\n${winnerSection}`,
-        matchInfo,
-      });
+    if (isQuota) {
+      const hasWinnerData = winnerSection && !winnerSection.startsWith("⚠️") && winnerSection.length > 20;
+      const answer = hasWinnerData
+        ? `ה-AI לא זמין כרגע (מכסה יומית מוצתה). הנה נתוני Winner ישירות:\n\n${winnerSection}`
+        : `ה-AI לא זמין כרגע (מכסה יומית מוצתה). ${winnerSection || "נסה שוב מאוחר יותר."}`;
+      res.status(200).json({ ok: false, answer, matchInfo });
       return;
     }
     res.status(200).json({
