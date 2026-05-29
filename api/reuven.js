@@ -1,7 +1,8 @@
 const crypto = require("crypto");
 const { rateLimit, sanitizeInput } = require("./_rate-limit");
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = "gemini-2.0-flash";
 
 // ── Winner API helpers ────────────────────────────────────────────────────────
 
@@ -234,45 +235,42 @@ Use the real odds as statistical context — calculate implied probability (1/od
 If the user asks "מה לשים", "על מה להמר" or similar — respond: "אני לא נותן הוראות להמר. לפי הנתונים הספורטיביים..." and then give your analysis.`;
 
 
-async function callClaude(userMessage, conversationHistory) {
-  if (!ANTHROPIC_API_KEY) {
-    return "AI Sports Analyst לא מופעל — מפתח ANTHROPIC_API_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
+async function callGemini(userMessage, conversationHistory) {
+  if (!GEMINI_API_KEY) {
+    return "הפוגע AI לא מופעל — מפתח GEMINI_API_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
   }
 
-  const messages = [
-    ...conversationHistory.slice(-6).map(h => ({
-      role: h.role === "user" ? "user" : "assistant",
-      content: h.text,
-    })),
-    { role: "user", content: userMessage },
-  ];
+  // Build conversation history in Gemini format (user/model alternation)
+  const contents = [];
+  for (const h of conversationHistory.slice(-6)) {
+    contents.push({
+      role: h.role === "user" ? "user" : "model",
+      parts: [{ text: h.text || "" }],
+    });
+  }
+  contents.push({ role: "user", parts: [{ text: userMessage }] });
 
   const body = {
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 1200,
-    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-    messages,
+    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents,
+    generationConfig: { maxOutputTokens: 1500, temperature: 0.7 },
   };
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-beta": "prompt-caching-2024-07-31",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(30000),
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(`Claude API ${res.status}: ${errText.slice(0, 200)}`);
+    throw new Error(`Gemini API ${res.status}: ${errText.slice(0, 200)}`);
   }
 
   const data = await res.json();
-  return data.content?.[0]?.text || "לא קיבלתי תגובה.";
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "לא קיבלתי תגובה.";
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
@@ -283,7 +281,7 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") { res.status(200).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
 
-  // 10 requests per IP per minute — protects Claude API spend
+  // 10 requests per IP per minute — protects Gemini API quota
   if (rateLimit(req, res, { max: 10, windowMs: 60_000 })) return;
 
   const rawQuery = (req.body || {}).query;
@@ -344,7 +342,7 @@ ${winnerSection}
 נתח את הבקשה וענה בעברית כ-AI Sports Analyst. אם יש אודס מ-Winner — השתמש בו לחישוב הסתברות גלומה ויתרון סטטיסטי אפשרי. אל תיתן הוראות או המלצות לשים כסף. אם אין נתונים — ציין זאת בבירור.`;
 
     // ── 3. Call Claude ───────────────────────────────────────────────────────
-    const answer = await callClaude(userMessage, history);
+    const answer = await callGemini(userMessage, history);
 
     res.status(200).json({ ok: true, answer, matchInfo });
   } catch (err) {
