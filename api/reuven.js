@@ -1,8 +1,8 @@
 const crypto = require("crypto");
 const { rateLimit, sanitizeInput } = require("./_rate-limit");
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 // ── Winner API helpers ────────────────────────────────────────────────────────
 
@@ -278,7 +278,7 @@ function parseQuery(text) {
   return { home, away, dateKey, offset, competition, rawCompetitionFallback, isFinal, hasDateWord };
 }
 
-// ── Gemini API call ───────────────────────────────────────────────────────────
+// ── Groq API call ────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `You are not a basic betting bot.
 You are an elite sports intelligence agent.
@@ -364,42 +364,44 @@ Use the real odds as statistical context — calculate implied probability (1/od
 If the user asks "מה לשים", "על מה להמר" or similar — respond: "אני לא נותן הוראות להמר. לפי הנתונים הספורטיביים..." and then give your analysis.`;
 
 
-async function callGemini(userMessage, conversationHistory) {
-  if (!GEMINI_API_KEY) {
-    return "הפוגע AI לא מופעל — מפתח GEMINI_API_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
+async function callGroq(userMessage, conversationHistory) {
+  if (!GROQ_API_KEY) {
+    return "הפוגע AI לא מופעל — מפתח GROQ_API_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
   }
 
-  const contents = [];
-  for (const h of conversationHistory.slice(-6)) {
-    contents.push({
-      role: h.role === "user" ? "user" : "model",
-      parts: [{ text: h.text || "" }],
-    });
-  }
-  contents.push({ role: "user", parts: [{ text: userMessage }] });
+  const messages = [
+    { role: "system", content: SYSTEM_PROMPT },
+    ...conversationHistory.slice(-6).map(h => ({
+      role: h.role === "user" ? "user" : "assistant",
+      content: h.text || "",
+    })),
+    { role: "user", content: userMessage },
+  ];
 
   const body = {
-    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-    contents,
-    generationConfig: { maxOutputTokens: 1500, temperature: 0.7 },
+    model: GROQ_MODEL,
+    messages,
+    max_tokens: 1500,
+    temperature: 0.7,
   };
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
   const MAX_RETRIES = 3;
-  const RETRY_DELAYS = [3000, 6000, 12000]; // 3s, 6s, 12s
+  const RETRY_DELAYS = [3000, 6000, 12000];
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const res = await fetch(url, {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(30000),
     });
 
     if (res.ok) {
       const data = await res.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "לא קיבלתי תגובה.";
+      return data.choices?.[0]?.message?.content || "לא קיבלתי תגובה.";
     }
 
     if (res.status === 429 && attempt < MAX_RETRIES - 1) {
@@ -408,7 +410,7 @@ async function callGemini(userMessage, conversationHistory) {
     }
 
     const errText = await res.text().catch(() => "");
-    throw new Error(`Gemini API ${res.status}: ${errText.slice(0, 200)}`);
+    throw new Error(`Groq API ${res.status}: ${errText.slice(0, 200)}`);
   }
 }
 
@@ -493,7 +495,7 @@ module.exports = async (req, res) => {
     const safeQuery = query.replace(/`/g, "'").replace(/\$\{/g, "\\${" );
     const userMessage = `שאלת המשתמש: ${safeQuery}\n\n--- נתוני Winner בזמן אמת ---\n${winnerSection}\n-----------------------------\n\nענה בעברית. אם יש אודס — חשב הסתברות גלומה (1/אודס). אל תיתן הוראות הימור. אם אין נתונים מספיקים — ציין זאת בבירור.`;
 
-    const answer = await callGemini(userMessage, history);
+    const answer = await callGroq(userMessage, history);
 
     res.status(200).json({ ok: true, answer, matchInfo });
   } catch (err) {
