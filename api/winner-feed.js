@@ -2,6 +2,8 @@ const crypto = require("crypto");
 const SNAPSHOT = require("./winner-snapshot.json");
 const { rateLimit } = require("./_rate-limit");
 
+// ── API-Sports (football + basketball scores — bypasses Hebrew/English name mismatch) ──
+const FOOTBALL_API_KEY = process.env.FOOTBALL_KEY || "";
 // ── The Odds API (fallback when Winner is blocked) ───────────────────────────
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
@@ -202,6 +204,104 @@ async function kvSet(key, value, ttlSeconds = 3600) {
       retryAttempts: 1,
     }).catch(() => null);
   }
+}
+
+async function getApiSportsScores(dateKey, sportId) {
+  if (!FOOTBALL_API_KEY) return [];
+  const cacheKey = `apisports-scores:${dateKey}:${sportId}`;
+  const cached = await kvGet(cacheKey);
+  if (cached) return cached;
+
+  let url;
+  if (sportId === WINNER_FOOTBALL_ID) {
+    url = `https://v3.football.api-sports.io/fixtures?date=${dateKey}`;
+  } else if (sportId === WINNER_BASKETBALL_ID) {
+    url = `https://v1.basketball.api-sports.io/games?date=${dateKey}`;
+  } else {
+    return [];
+  }
+
+  const data = await fetchJson(url, {
+    headers: { "x-apisports-key": FOOTBALL_API_KEY },
+    retryAttempts: 1,
+  }).catch((err) => {
+    console.warn(`[api-sports] fetch failed ${url}:`, err.message);
+    return null;
+  });
+
+  const rows = [];
+  for (const item of data?.response || []) {
+    let home, away, homeScore, awayScore, kickoffUtcMs, isFinal, statusText;
+    if (sportId === WINNER_FOOTBALL_ID) {
+      home = item.teams?.home?.name;
+      away = item.teams?.away?.name;
+      homeScore = item.goals?.home;
+      awayScore = item.goals?.away;
+      kickoffUtcMs = item.fixture?.timestamp ? item.fixture.timestamp * 1000 : null;
+      const s = item.fixture?.status?.short || "";
+      isFinal = s === "FT" || s === "AET" || s === "PEN";
+      statusText = item.fixture?.status?.long || "";
+    } else {
+      home = item.teams?.home?.name;
+      away = item.teams?.away?.name;
+      homeScore = item.scores?.home?.total;
+      awayScore = item.scores?.away?.total;
+      kickoffUtcMs = item.date ? new Date(item.date).getTime() : null;
+      const s = item.status?.short || "";
+      isFinal = s === "FT" || s === "AOT" || item.status?.long === "Finished";
+      statusText = item.status?.long || "";
+    }
+    if (!home || !away) continue;
+    const hasScore = Number.isFinite(homeScore) && Number.isFinite(awayScore) && homeScore >= 0 && awayScore >= 0;
+    if (!hasScore || !isFinal) continue;
+    const actualWinner = homeScore === awayScore ? "תיקו" : homeScore > awayScore ? home : away;
+    rows.push({
+      eventid: `apisports-${sportId}-${item.fixture?.id || item.id}`,
+      date: dateKey,
+      sportid: sportId,
+      teamA: home,
+      teamB: away,
+      scoreA: String(homeScore),
+      scoreB: String(awayScore),
+      statusGroup: 4,
+      isFinal: true,
+      statusText,
+      markets: [{ title: "המנצח", marketResults: [actualWinner] }],
+      source: "ApiSports",
+      kickoffUtcMs,
+    });
+  }
+  await kvSet(cacheKey, rows, 15 * 60);
+  return rows;
+}
+
+function findResultByTime(row, timedEvents) {
+  if (!timedEvents || !timedEvents.length || !row) return null;
+  const rowKickMs = kickoffMs(row.day || row.date, row.time);
+  if (!Number.isFinite(rowKickMs)) return null;
+  const TOLERANCE_MS = 25 * 60 * 1000;
+  let best = null;
+  let bestDiff = Infinity;
+  for (const event of timedEvents) {
+    if (Number(event.sportid) !== Number(row.sportId || row.sportid)) continue;
+    if (!Number.isFinite(event.kickoffUtcMs)) continue;
+    const diff = Math.abs(event.kickoffUtcMs - rowKickMs);
+    if (diff < TOLERANCE_MS && diff < bestDiff) {
+      best = event;
+      bestDiff = diff;
+    }
+  }
+  return best;
+}
+
+function applyApiSportsResults(rows, timedEvents) {
+  if (!timedEvents || !timedEvents.length) return rows;
+  return rows.map((row) => {
+    if (row.matchPhase === "final" || row.matchPhase === "cancelled" || row.matchPhase === "postponed") return row;
+    const event = findResultByTime(row, timedEvents);
+    if (!event) return row;
+    return applyResult(row, event);
+  });
 }
 
 function winnerDateToIso(value) {
@@ -733,7 +833,7 @@ function resultMatchScore(row, event) {
   return Math.max(direct, swapped);
 }
 
-function findResultEvent(resultsByEvent, row) {
+function findResultEvent(resultsByEvent, row, timedEvents = []) {
   if (!resultsByEvent || !row) return null;
   const direct = resultsByEvent.get(String(row.eventId)) || resultsByEvent.get(String(row.resultKey || ""));
   if (direct) return direct;
@@ -751,7 +851,8 @@ function findResultEvent(resultsByEvent, row) {
       bestScore = score;
     }
   }
-  return bestScore >= 0.55 ? best : null;
+  if (bestScore >= 0.55) return best;
+  return findResultByTime(row, timedEvents) || null;
 }
 
 function resultWinner(event) {
@@ -1312,7 +1413,7 @@ function rejectionReasons(row) {
   return reasons;
 }
 
-function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, resultsByEvent = new Map(), sportIdFilter = null, standingsMap365 = new Map()) {
+function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, resultsByEvent = new Map(), sportIdFilter = null, standingsMap365 = new Map(), timedEvents = []) {
   const events = new Map();
 
   // First pass: collect all events that have an allowed market on this date
@@ -1450,7 +1551,7 @@ function buildCurrentPicks(markets, dateKey, limit = TARGET_PICKS_PER_SPORT, res
           ],
     };
 
-    const matchedResult = findResultEvent(resultsByEvent, row);
+    const matchedResult = findResultEvent(resultsByEvent, row, timedEvents);
     const enrichedRow = applyResult(row, matchedResult);
 
     // ── Motivation check via 365scores standings ──
@@ -2068,7 +2169,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   const yesterday = israelDate(-1);
   const today = israelDate(0);
   const tomorrow = israelDate(1);
-  const [{ hashes, markets }, winnerResultEvents, scores365Events] = await Promise.all([
+  const [{ hashes, markets }, winnerResultEvents, scores365Events, apiSportsEvents] = await Promise.all([
     getWinnerLine(),
     getResults(yesterday, tomorrow).catch((error) => {
       console.warn("Winner results unavailable; continuing with live line only:", error.message);
@@ -2082,6 +2183,16 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       get365BasketballResults(today, today),
       get365BasketballResults(tomorrow, tomorrow),
     ]).then((items) => items.flat()),
+    // API-Sports scores for yesterday+today — time-based fallback when name matching fails
+    Promise.all([
+      getApiSportsScores(yesterday, WINNER_FOOTBALL_ID),
+      getApiSportsScores(yesterday, WINNER_BASKETBALL_ID),
+      getApiSportsScores(today, WINNER_FOOTBALL_ID),
+      getApiSportsScores(today, WINNER_BASKETBALL_ID),
+    ]).then((items) => items.flat()).catch((err) => {
+      console.warn("[api-sports] failed to fetch scores:", err.message);
+      return [];
+    }),
   ]);
   const resultEvents = [...winnerResultEvents, ...scores365Events];
   const resultsByEvent = resultIndex(resultEvents);
@@ -2124,18 +2235,21 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   // Primary: snapshot picks for yesterday (knows what was recommended + picked team)
   // Secondary: live result rows (have actualWinner + matchPhase:final)
   const snapshotYesterdayPicks = snapshotPicksForDay(yesterday);
-  const yesterdayMerged = mergeRows(
+  const yesterdayMergedBase = mergeRows(
     snapshotYesterdayPicks.length > 0 ? snapshotYesterdayPicks : buildResultRows(winnerResultEvents, yesterday),
     yesterdayResultRows
   );
+  // Apply API-Sports scores as fallback for yesterday picks still stuck on "ממתין"
+  const yesterdayMerged = applyApiSportsResults(yesterdayMergedBase, apiSportsEvents.filter((e) => e.date === yesterday));
 
+  const apiSportsToday = apiSportsEvents.filter((e) => e.date === today);
   const liveTodayPicks = [
-    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
-    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
+    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365, apiSportsToday),
+    ...buildCurrentPicks(markets, today, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365, apiSportsToday),
   ];
   // Supplement live picks with snapshot picks for games that fell off the live line (already started)
   const snapshotTodayPicks = snapshotPicksForDay(today);
-  const todayCurrentRows = mergeRows(
+  const todayCurrentRowsBase = mergeRows(
     [...liveTodayPicks, ...snapshotTodayPicks],
     [
       ...buildResultRows(winnerResultEvents, today),
@@ -2143,6 +2257,9 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       ...build365BasketballRows(scores365Events, today),
     ]
   );
+  // Apply API-Sports scores as fallback for today picks still stuck on "ממתין"
+  const todayCurrentRows = applyApiSportsResults(todayCurrentRowsBase, apiSportsToday);
+
   const tomorrowCurrentRows = [
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_FOOTBALL_ID, standingsMap365),
     ...buildCurrentPicks(markets, tomorrow, BOARD_PICK_LIMIT, resultsByEvent, WINNER_BASKETBALL_ID, standingsMap365),
