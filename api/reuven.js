@@ -408,6 +408,20 @@ module.exports = async (req, res) => {
           }).join("\n\n---\n\n");
           winnerSection = `נמצאו ${contextMatches.length} משחקים רלוונטיים ב-Winner:\n\n${lines}`;
 
+        } else if (competition) {
+          // STEP B2: competition found but no matches on that specific date —
+          // retry across ALL available dates (e.g. "מי יקח את ליגת האלופות?" with no date)
+          const anyDateMatches = findMatchesByContext(markets, { competition, dateKey: null, isFinal });
+          if (anyDateMatches.length > 0) {
+            const lines = anyDateMatches.slice(0, 8).map(m => {
+              const odds = formatMarketsForPrompt(markets, m.eId);
+              return `📅 ${m.date} ${m.time} | ${m.league}\n⚽ ${m.desc}\n${odds}`;
+            }).join("\n\n---\n\n");
+            winnerSection = `לא נמצא משחק ספציפי ${dateLabel}, אבל אלה כל משחקי ${competition} הקרובים ב-Winner:\n\n${lines}`;
+          } else {
+            winnerSection = `לא מצאתי משחקי ${competition} ב-Winner כרגע. ייתכן שאין יחסים פתוחים עדיין.`;
+          }
+
         } else if (home || away) {
           winnerSection = `⚠️ לא מצאתי "${[home, away].filter(Boolean).join(" נגד ")}" ב-Winner. ייתכן שהמשחק עבר, נדחה, או שם הקבוצה שונה.`;
 
