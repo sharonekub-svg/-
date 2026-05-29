@@ -385,20 +385,31 @@ async function callGemini(userMessage, conversationHistory) {
   };
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(30000),
-  });
 
-  if (!res.ok) {
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS = [3000, 6000, 12000]; // 3s, 6s, 12s
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "לא קיבלתי תגובה.";
+    }
+
+    if (res.status === 429 && attempt < MAX_RETRIES - 1) {
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[attempt]));
+      continue;
+    }
+
     const errText = await res.text().catch(() => "");
     throw new Error(`Gemini API ${res.status}: ${errText.slice(0, 200)}`);
   }
-
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "לא קיבלתי תגובה.";
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
