@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const { rateLimit, sanitizeInput } = require("./_rate-limit");
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_API_KEY = process.env.AI_KEY;
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 // ── Winner API helpers ────────────────────────────────────────────────────────
@@ -366,7 +366,7 @@ If the user asks "מה לשים", "על מה להמר" or similar — respond: "
 
 async function callGroq(userMessage, conversationHistory) {
   if (!GROQ_API_KEY) {
-    return "הפוגע AI לא מופעל — מפתח GROQ_API_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
+    return "הפוגע AI לא מופעל — מפתח AI_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
   }
 
   const messages = [
