@@ -5292,6 +5292,8 @@
         const input = document.getElementById("reubenInput");
         const question = (input?.value || "").trim();
         if (!question) return;
+        // Capture history BEFORE pushing current message (so it doesn't appear twice in the AI context)
+        const historySnapshot = state.reubenMessages.slice(-6).map(m => ({ role: m.role, text: m.text || "" }));
         state.reubenMessages.push({ role: "user", text: question });
         state.reubenLoading = true;
         if (input) input.value = "";
@@ -5349,8 +5351,8 @@
           clearInterval(stepTimer);
           state.reubenThinkingStep = 0;
 
-          // Build conversation history for context (last 6 messages)
-          const history = state.reubenMessages.slice(-6).map(m => ({ role: m.role, text: m.text || "" }));
+          // Use history snapshot captured before current message was pushed
+          const history = historySnapshot;
 
           let aiText = "";
           try {

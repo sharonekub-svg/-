@@ -619,12 +619,24 @@ async function callGroq(userMessage, conversationHistory) {
     return "הפוגע AI לא מופעל — מפתח AI_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
   }
 
+  // Build history, skipping empty messages and collapsing consecutive same-role messages
+  const historyMsgs = conversationHistory.slice(-6)
+    .map(h => ({ role: h.role === "user" ? "user" : "assistant", content: h.text || "" }))
+    .filter(h => h.content.trim().length > 0);
+
+  // Deduplicate consecutive same-role entries (keep last)
+  const dedupedHistory = historyMsgs.reduce((acc, msg) => {
+    if (acc.length > 0 && acc[acc.length - 1].role === msg.role) {
+      acc[acc.length - 1] = msg; // replace with later one
+    } else {
+      acc.push(msg);
+    }
+    return acc;
+  }, []);
+
   const messages = [
     { role: "system", content: SYSTEM_PROMPT },
-    ...conversationHistory.slice(-6).map(h => ({
-      role: h.role === "user" ? "user" : "assistant",
-      content: h.text || "",
-    })),
+    ...dedupedHistory,
     { role: "user", content: userMessage },
   ];
 
