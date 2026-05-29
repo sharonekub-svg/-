@@ -2313,6 +2313,16 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       tomorrow: tomorrowFinalRows.length,
     },
   };
+  const debugApiSports = {
+    keyPresent: !!FOOTBALL_API_KEY,
+    eventsTotal: apiSportsEvents.length,
+    eventsToday: apiSportsToday.length,
+    settledRows: apiSportsSettledRows.length,
+    todayHitMiss: todayCurrentRows.filter((r) => r.status === "hit" || r.status === "miss").length,
+    yesterdayHitMiss: yesterdayMerged.filter((r) => r.status === "hit" || r.status === "miss").length,
+  };
+  console.log("[api-sports debug]", JSON.stringify(debugApiSports));
+
   return {
     ok: true,
     generatedAt: new Date().toISOString(),
@@ -2321,6 +2331,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     targetPicksPerSport: TARGET_PICKS_PER_SPORT,
     lineStats,
     trackingResults,
+    debugApiSports,
     reuvenSchedule: buildReuvenSchedule(markets, today, 31),
     debugAudit: {
       today: splitBySport(auditOpenRows(todayEnrichedRows, todayFinalRows)),
