@@ -107,9 +107,13 @@ function findMatchInMarkets(markets, homeQuery, awayQuery, dateKey) {
 }
 
 // Broader search: by competition keyword and/or date when no team names given
-function findMatchesByContext(markets, { competition, dateKey, isFinal }) {
+function findMatchesByContext(markets, { competition, rawCompetitionFallback, dateKey, isFinal }) {
   const seen = new Map();
-  const compNorm = competition ? normalizeTeamName(competition) : null;
+  const compNorm = competition
+    ? normalizeTeamName(competition)
+    : rawCompetitionFallback
+      ? normalizeTeamName(rawCompetitionFallback)
+      : null;
 
   for (const m of markets) {
     const date = winnerDateToIso(m.e_date);
@@ -168,19 +172,128 @@ function formatMarketsForPrompt(markets, eId) {
 // ── Competition keyword map ───────────────────────────────────────────────────
 
 const COMPETITION_MAP = [
-  { key: "ליגת האלופות", terms: ["ליגת האלופות", "champions league", "ucl", "champion"] },
-  { key: "ליגה אירופית",  terms: ["ליגה אירופית", "europa league", "uel"] },
-  { key: "קונפרנס",       terms: ["קונפרנס", "conference league", "uecl"] },
-  { key: "פרמייר ליג",    terms: ["פרמייר ליג", "premier league", "epl"] },
-  { key: "לה ליגה",       terms: ["לה ליגה", "la liga", "laliga"] },
-  { key: "בונדסליגה",     terms: ["בונדסליגה", "bundesliga"] },
-  { key: "סריה א",        terms: ["סריה א", "serie a", "serie-a"] },
-  { key: "ליג 1",         terms: ["ליג 1", "ligue 1", "ligue-1"] },
-  { key: "ליגת העל",      terms: ["ליגת העל", "israeli premier", "israel league"] },
-  { key: "NBA",           terms: ["nba"] },
-  { key: "יורוליג",       terms: ["יורוליג", "euroleague"] },
-  { key: "קופה",          terms: ["קופה", "copa libertadores", "copa sudamericana"] },
-  { key: "MLS",           terms: ["mls"] },
+  // UEFA club
+  { key: "ליגת האלופות",      terms: ["ליגת האלופות", "champions league", "ucl", "champion league"] },
+  { key: "ליגה אירופית",      terms: ["ליגה אירופית", "europa league", "uel"] },
+  { key: "קונפרנס",           terms: ["קונפרנס", "conference league", "uecl"] },
+  { key: "סופר קאפ",          terms: ["סופר קאפ", "super cup", "supercup", "uefa super"] },
+
+  // International / national teams
+  { key: "ליגת האומות",       terms: ["ליגת האומות", "ליגה לאומית", "nations league", "uefa nations", "nations"] },
+  { key: "יורו",              terms: ["יורו", "euro 20", "european championship", "uefa euro", "אליפות אירופה"] },
+  { key: "מונדיאל",           terms: ["מונדיאל", "world cup", "fifa world", "גביע העולם", "wc 20"] },
+  { key: "קופה אמריקה",       terms: ["קופה אמריקה", "copa america", "copa améri"] },
+  { key: "גביע אפריקה",       terms: ["גביע אפריקה", "africa cup", "afcon", "can 20", "cup of nations"] },
+  { key: "אסיאן קאפ",         terms: ["אסיאן קאפ", "asian cup", "afc asian cup"] },
+  { key: "גולד קאפ",          terms: ["גולד קאפ", "gold cup", "concacaf gold"] },
+  { key: "קופה קונפדרציות",   terms: ["קופה קונפדרציות", "confederations cup"] },
+
+  // England
+  { key: "פרמייר ליג",        terms: ["פרמייר ליג", "premier league", "epl", "אנגלית ראשונה", "english premier"] },
+  { key: "צ'מפיונשיפ",        terms: ["צ'מפיונשיפ", "championship", "efl championship", "אנגלית שנייה"] },
+  { key: "ליג 1 אנגליה",      terms: ["league one", "ליג וואן אנגליה"] },
+  { key: "גביע FA",           terms: ["גביע fa", "fa cup", "גביע אנגליה"] },
+  { key: "ליג קאפ",           terms: ["ליג קאפ", "league cup", "carabao cup", "efl cup"] },
+
+  // Spain
+  { key: "לה ליגה",           terms: ["לה ליגה", "la liga", "laliga", "ספרדית ראשונה"] },
+  { key: "סגונדה",            terms: ["סגונדה", "segunda", "ספרדית שנייה"] },
+  { key: "קופה דל ריי",       terms: ["קופה דל ריי", "copa del rey", "גביע ספרד"] },
+
+  // Germany
+  { key: "בונדסליגה",         terms: ["בונדסליגה", "bundesliga", "גרמנית ראשונה"] },
+  { key: "בונדסליגה 2",       terms: ["בונדסליגה 2", "2. bundesliga", "גרמנית שנייה"] },
+  { key: "DFB פוקאל",         terms: ["dfb pokal", "dfb-pokal", "גביע גרמניה"] },
+
+  // Italy
+  { key: "סריה א",            terms: ["סריה א", "serie a", "serie-a", "איטלקית ראשונה"] },
+  { key: "סריה ב",            terms: ["סריה ב", "serie b", "איטלקית שנייה"] },
+  { key: "קופה איטליה",       terms: ["קופה איטליה", "coppa italia", "גביע איטליה"] },
+
+  // France
+  { key: "ליג 1",             terms: ["ליג 1", "ligue 1", "ligue-1", "צרפתית ראשונה"] },
+  { key: "ליג 2",             terms: ["ליג 2", "ligue 2", "צרפתית שנייה"] },
+  { key: "קופה דה פראנס",     terms: ["קופה דה פראנס", "coupe de france", "גביע צרפת"] },
+
+  // Portugal
+  { key: "פורטוגלית",         terms: ["פורטוגלית", "primeira liga", "liga portugal", "פורטוגל"] },
+  { key: "קופה פורטוגל",      terms: ["קופה פורטוגל", "taca de portugal"] },
+
+  // Netherlands
+  { key: "ארדיביזי",          terms: ["ארדיביזי", "eredivisie", "הולנדית", "dutch eredivisie"] },
+  { key: "KNVB קאפ",          terms: ["knvb", "הולנדית גביע"] },
+
+  // Belgium
+  { key: "בלגית",             terms: ["בלגית", "jupiler pro", "belgian first", "בלגיה"] },
+
+  // Turkey
+  { key: "סופר ליג טורקיה",   terms: ["טורקית", "super lig", "süper lig", "turkish süper", "טורקיה"] },
+
+  // Scotland
+  { key: "פרמייר ליג סקוטלנד", terms: ["סקוטית", "scottish premiership", "spfl", "סקוטלנד"] },
+
+  // Greece
+  { key: "סופר ליג יוון",     terms: ["יוונית", "super league greece", "greek super", "יוון"] },
+
+  // Switzerland / Austria
+  { key: "שווייצרית",         terms: ["שווייצרית", "swiss super league", "שווייץ"] },
+  { key: "אוסטרית",           terms: ["אוסטרית", "austrian bundesliga", "admiral bundesliga", "אוסטריה"] },
+
+  // Nordic
+  { key: "שבדית",             terms: ["שבדית", "allsvenskan", "שבדיה"] },
+  { key: "נורבגית",           terms: ["נורבגית", "eliteserien", "נורבגיה"] },
+  { key: "דנית",              terms: ["דנית", "danish superliga", "דנמרק"] },
+  { key: "פינית",             terms: ["פינית", "veikkausliiga", "פינלנד"] },
+
+  // Eastern Europe
+  { key: "רוסית",             terms: ["רוסית", "russian premier", "רפל", "רוסיה"] },
+  { key: "אוקראינית",         terms: ["אוקראינית", "ukrainian premier", "ukraine"] },
+  { key: "פולנית",            terms: ["פולנית", "ekstraklasa", "פולין"] },
+  { key: "צ'כית",             terms: ["צ'כית", "czech liga", "fortuna liga"] },
+  { key: "רומנית",            terms: ["רומנית", "liga 1 romania", "רומניה"] },
+  { key: "הונגרית",           terms: ["הונגרית", "nb i", "hungarian"] },
+  { key: "סרבית",             terms: ["סרבית", "superliga srbije", "serbia"] },
+  { key: "קרואטית",           terms: ["קרואטית", "hnl", "croatia"] },
+  { key: "סלובקית",           terms: ["סלובקית", "slovak"] },
+  { key: "בולגרית",           terms: ["בולגרית", "parva liga", "bulgaria"] },
+
+  // Israel
+  { key: "ליגת העל",          terms: ["ליגת העל", "israeli premier", "ישראלית ראשונה", "ליגה ראשונה ישראל"] },
+  { key: "ליגה לאומית ישראל", terms: ["ליגה לאומית", "leumit", "ישראלית שנייה", "ליגה לאומית ישראל"] },
+  { key: "ליגה א ישראל",      terms: ["ליגה א ישראל", "liga alef"] },
+  { key: "גביע המדינה",       terms: ["גביע המדינה", "state cup", "גביע ישראל", "גביע הטוטו"] },
+
+  // Americas
+  { key: "MLS",               terms: ["mls", "major league soccer"] },
+  { key: "ליגה MX",           terms: ["ליגה mx", "liga mx", "מקסיקנית", "מקסיקו"] },
+  { key: "ברזילאית",          terms: ["ברזילאית", "brasileirao", "campeonato brasileiro", "ברזיל"] },
+  { key: "ארגנטינאית",        terms: ["ארגנטינאית", "liga profesional", "primera division argentina", "ארגנטינה"] },
+  { key: "קופה ליברטדורס",    terms: ["ליברטדורס", "copa libertadores", "libertadores"] },
+  { key: "קופה סודאמריקאנה",  terms: ["סודאמריקאנה", "copa sudamericana", "sudamericana"] },
+  { key: "קולומביאנית",       terms: ["קולומביאנית", "liga betplay", "קולומביה"] },
+  { key: "צ'יליאנית",         terms: ["צ'יליאנית", "primera division chile", "צ'ילה"] },
+  { key: "פרואנית",           terms: ["פרואנית", "liga 1 peru", "פרו"] },
+  { key: "אקוודורית",         terms: ["אקוודורית", "liga pro ecuador"] },
+
+  // Asia / Middle East
+  { key: "AFC ליגת האלופות",  terms: ["afc champions", "ליגת האלופות afc", "asian champions"] },
+  { key: "J-League",          terms: ["j-league", "j league", "jleague", "יפנית"] },
+  { key: "K-League",          terms: ["k-league", "k league", "kleague", "קוריאנית"] },
+  { key: "סינית",             terms: ["סינית", "chinese super league", "csl", "סין"] },
+  { key: "A-League",          terms: ["a-league", "a league", "אוסטרלית"] },
+  { key: "סאודית",            terms: ["סאודית", "saudi pro league", "roshn", "ערב הסעודית"] },
+  { key: "אמירויות",          terms: ["אמירויות", "uae pro league", "emirates"] },
+  { key: "קטרית",             terms: ["קטרית", "qatar stars league", "קטר"] },
+  { key: "הודית",             terms: ["הודית", "isl", "indian super league"] },
+
+  // Basketball
+  { key: "NBA",               terms: ["nba"] },
+  { key: "יורוליג",           terms: ["יורוליג", "euroleague", "euro league"] },
+  { key: "יורוקאפ",          terms: ["יורוקאפ", "eurocup"] },
+  { key: "NCAA",              terms: ["ncaa", "college basketball", "march madness"] },
+  { key: "NBL",               terms: ["nbl", "australian basketball"] },
+  { key: "כדורסל ישראל",      terms: ["כדורסל ישראל", "ליגת winner כדורסל", "winner league basketball"] },
+  { key: "FIBA",              terms: ["fiba", "אליפות עולם כדורסל", "basketball world cup"] },
 ];
 
 // ── Query parser ─────────────────────────────────────────────────────────────
@@ -214,14 +327,17 @@ function parseQuery(text) {
     dateKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Jerusalem" }).format(d);
   }
 
-  // Competition detection
+  // Competition detection — map first, then raw query fallback
   let competition = null;
   for (const { key, terms } of COMPETITION_MAP) {
     if (terms.some(t => lc.includes(t))) { competition = key; break; }
   }
+  // Fallback: if nothing matched the map, pass the raw query so findMatchesByContext
+  // can fuzzy-match it directly against Winner's league names
+  const rawCompetitionFallback = !competition && !home && !away ? text : null;
   const isFinal = /גמר|final/.test(lc);
 
-  return { home, away, dateKey, offset, competition, isFinal, hasDateWord };
+  return { home, away, dateKey, offset, competition, rawCompetitionFallback, isFinal, hasDateWord };
 }
 
 // ── Claude API call ───────────────────────────────────────────────────────────
@@ -372,7 +488,7 @@ module.exports = async (req, res) => {
   }));
 
   try {
-    const { home, away, dateKey, offset, competition, isFinal } = parseQuery(query);
+    const { home, away, dateKey, offset, competition, rawCompetitionFallback, isFinal } = parseQuery(query);
 
     // ── 1. Fetch Winner markets and build rich context ───────────────────────
     let winnerSection = "";
@@ -394,7 +510,7 @@ module.exports = async (req, res) => {
 
       } else {
         // STEP B: competition + date search (handles "גמר ליגת האלופות מחר" etc.)
-        const contextMatches = findMatchesByContext(markets, { competition, dateKey, isFinal });
+        const contextMatches = findMatchesByContext(markets, { competition, rawCompetitionFallback, dateKey, isFinal });
 
         if (contextMatches.length === 1) {
           // Exactly one match found — treat as specific
