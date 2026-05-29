@@ -5728,30 +5728,43 @@ function AiApp() {
     if(busy)return;
     const run=++runRef.current;
     setBusy(true);atBottom.current=true;
+    const historySnap=messages.slice(-6).map(m=>({role:m.role,text:m.role==="user"?m.text:(m.intro||"")}));
     setMessages(m=>[...m,
       {role:"user",text},
-      {role:"ai",phase:"thinking",thinkStep:0,streamLen:0,intro:AI_INTRO_TEXT,analysis:AI_ANALYSIS,revealed:0,open:{},showFinal:false},
+      {role:"ai",phase:"thinking",thinkStep:0,streamLen:0,intro:"",analysis:[],revealed:0,open:{},showFinal:false},
     ]);
     for(let i=0;i<AI_THINKING_STEPS.length;i++){
       await aiSleep(560);if(run!==runRef.current)return;
       patchAi({thinkStep:i});
     }
     await aiSleep(420);if(run!==runRef.current)return;
-    patchAi({phase:"streaming",streamLen:0});
-    for(let n=0;n<=AI_INTRO_TEXT.length;n+=3){
-      await aiSleep(20);if(run!==runRef.current)return;
+
+    // Call real API
+    let introText="";
+    try{
+      const ac=new AbortController();
+      const tid=setTimeout(()=>ac.abort(),35000);
+      const resp=await fetch("/api/reuven",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({query:text,history:historySnap}),
+        signal:ac.signal,
+      });
+      clearTimeout(tid);
+      const data=await resp.json().catch(()=>({}));
+      introText=data.answer||"לא הצלחתי לקבל ניתוח. תנסה שוב.";
+    }catch(err){
+      introText="שגיאה טכנית — ה-API לא זמין כרגע. תנסה שוב.";
+    }
+
+    if(run!==runRef.current)return;
+    patchAi({phase:"streaming",intro:introText,streamLen:0,analysis:[]});
+    for(let n=0;n<=introText.length;n+=4){
+      await aiSleep(16);if(run!==runRef.current)return;
       patchAi({streamLen:n});
     }
-    patchAi({streamLen:AI_INTRO_TEXT.length});
-    await aiSleep(280);if(run!==runRef.current)return;
-    patchAi({phase:"analysis",revealed:0,open:Object.fromEntries(AI_ANALYSIS.map(a=>[a.id,a.open]))});
-    for(let i=0;i<AI_ANALYSIS.length;i++){
-      await aiSleep(220);if(run!==runRef.current)return;
-      patchAi(prev=>({revealed:prev.revealed+1}));
-    }
-    await aiSleep(260);if(run!==runRef.current)return;
-    patchAi({showFinal:true});
-    await aiSleep(200);
+    patchAi({streamLen:introText.length});
+    await aiSleep(200);if(run!==runRef.current)return;
     patchAi({phase:"done"});
     setBusy(false);
   };
@@ -5765,7 +5778,7 @@ function AiApp() {
           <button className="ai-icon-btn" onClick={()=>setCollapsed(c=>!c)} aria-label="תפריט">
             <AiIcon name="sidebar" size={19}/>
           </button>
-          <div className="ai-topbar-title">ארסנל נגד מנצ'סטר סיטי</div>
+          <div className="ai-topbar-title">הפוגע AI</div>
           <div style={{flex:1}}/>
           <div className="ai-model-pill"><span className="ai-pulse-dot"/>הפוגע · 2.5 Pro</div>
         </div>
