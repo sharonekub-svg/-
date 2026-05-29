@@ -275,34 +275,80 @@ async function getApiSportsScores(dateKey, sportId) {
   return rows;
 }
 
+// Map Hebrew characters to approximate Latin consonants for phonetic matching
+const HEBREW_CONSONANTS = {
+  'א': '', 'ב': 'b', 'ג': 'g', 'ד': 'd', 'ה': 'h',
+  'ו': 'v', 'ז': 'z', 'ח': 'h', 'ט': 't', 'י': '',
+  'כ': 'k', 'ך': 'k', 'ל': 'l', 'מ': 'm', 'ם': 'm',
+  'נ': 'n', 'ן': 'n', 'ס': 's', 'ע': '', 'פ': 'f',
+  'ף': 'f', 'צ': 'ts', 'ץ': 'ts', 'ק': 'k', 'ר': 'r',
+  'ש': 'sh', 'ת': 't',
+};
+
+function consonantKey(str) {
+  let out = "";
+  for (const ch of String(str || "").toLowerCase()) {
+    if (HEBREW_CONSONANTS[ch] !== undefined) {
+      out += HEBREW_CONSONANTS[ch];
+    } else if (/[a-z]/.test(ch) && !"aeiou".includes(ch)) {
+      out += ch;
+    }
+  }
+  // Collapse repeated consonants (brann→brn, glimt→glmt)
+  return out.replace(/(.)\1+/g, "$1");
+}
+
+function phoneticNameScore(rowHome, rowAway, evHome, evAway) {
+  // Returns the length of the best consonant overlap found between any row/event team pair.
+  // A score ≥ 3 is a strong phonetic match; 0 = no match detected.
+  const rowKeys  = [rowHome, rowAway].map(consonantKey).filter(k => k.length >= 2);
+  const evTokens = [evHome, evAway].flatMap(n =>
+    n.split(/[\s\-\/]+/).map(consonantKey).filter(k => k.length >= 2)
+  );
+  let best = 0;
+  for (const rk of rowKeys) {
+    for (const ek of evTokens) {
+      const shorter = rk.length <= ek.length ? rk : ek;
+      const longer  = rk.length >  ek.length ? rk : ek;
+      if (shorter.length >= 3 && longer.includes(shorter)) best = Math.max(best, shorter.length);
+      else if (shorter.length >= 2 && (longer.startsWith(shorter) || shorter.startsWith(longer))) best = Math.max(best, shorter.length);
+    }
+  }
+  return best;
+}
+
 function applyApiSportsResults(rows, timedEvents) {
   if (!timedEvents || !timedEvents.length) return rows;
 
   const TOLERANCE_MS = 25 * 60 * 1000;
 
-  // Build all candidate (rowIdx, event, diff) pairs for unsettled rows
+  // Build all candidate (rowIdx, event, diff, nameScore) pairs for unsettled rows
   const candidates = [];
   rows.forEach((row, rowIdx) => {
     const s = String(row.status || "");
     if (s === "hit" || s === "miss" || s === "בוטל" || s === "לא אומת") return;
     const rowKickMs = kickoffMs(row.day || row.date, row.time);
     if (!Number.isFinite(rowKickMs)) return;
+    const rowHome = cleanText(row.home || row.teamA || "");
+    const rowAway = cleanText(row.away || row.teamB || "");
     for (const event of timedEvents) {
       if (Number(event.sportid) !== Number(row.sportId || row.sportid)) continue;
       if (!Number.isFinite(event.kickoffUtcMs)) continue;
       const diff = Math.abs(event.kickoffUtcMs - rowKickMs);
-      if (diff < TOLERANCE_MS) candidates.push({ rowIdx, event, diff });
+      if (diff >= TOLERANCE_MS) continue;
+      const nameScore = phoneticNameScore(rowHome, rowAway, cleanText(event.teamA || ""), cleanText(event.teamB || ""));
+      candidates.push({ rowIdx, event, diff, nameScore });
     }
   });
 
-  // Sort ascending by diff so the closest match is assigned first
-  candidates.sort((a, b) => a.diff - b.diff);
+  // Sort: highest nameScore first (confirmed match), then smallest diff (closest time)
+  candidates.sort((a, b) => b.nameScore - a.nameScore || a.diff - b.diff);
 
   // Greedy 1-to-1 assignment: each Winner row and each API-Sports event can match at most once
   const usedRows = new Set();
   const usedEvents = new Set();
   const rowToEvent = new Map();
-  for (const { rowIdx, event, diff } of candidates) {
+  for (const { rowIdx, event } of candidates) {
     const eid = event.eventid;
     if (usedRows.has(rowIdx) || usedEvents.has(eid)) continue;
     usedRows.add(rowIdx);
