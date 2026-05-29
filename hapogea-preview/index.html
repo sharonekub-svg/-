@@ -9,29 +9,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&family=Heebo:wght@500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #07090b;
-      --panel: #10151a;
-      --panel-soft: #151b20;
-      --line: rgba(255,255,255,.09);
-      --line-strong: rgba(255,255,255,.16);
-      --text: #f7f3ea;
-      --muted: #aeb8bd;
-      --soft: #78848a;
-      --green: #31d187;
-      --red: #ef5350;
-      --gold: #ffc857;
-      --cyan: #55d6ff;
-      --orange: #ff7a45;
-      --shadow: 0 24px 80px rgba(0,0,0,.36);
+      --bg: #FAF8F4;
+      --panel: #FFFFFF;
+      --panel-soft: #F9F6F1;
+      --line: rgba(33,31,27,.09);
+      --line-strong: rgba(33,31,27,.16);
+      --text: #211F1B;
+      --muted: #6E675C;
+      --soft: #A39B8C;
+      --green: #15803D;
+      --red: #DC2626;
+      --gold: #92600A;
+      --cyan: #2563EB;
+      --orange: #D05C1A;
+      --shadow: 0 4px 20px rgba(40,33,22,.08),0 1px 3px rgba(40,33,22,.04);
+      --accent: #2563EB;
+      --accent-soft: rgba(37,99,235,.10);
+      --accent-line: rgba(37,99,235,.22);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at 10% 0%, rgba(85,214,255,.10), transparent 28rem),
-        radial-gradient(circle at 90% 12%, rgba(255,122,69,.10), transparent 25rem),
-        linear-gradient(180deg, #07090b 0%, #0d1216 48%, #07090b 100%);
+        radial-gradient(circle at 10% 0%, rgba(37,99,235,.05), transparent 28rem),
+        radial-gradient(circle at 90% 12%, rgba(208,92,26,.05), transparent 25rem),
+        #FAF8F4;
       color: var(--text);
       font-family: Assistant, Heebo, Arial, sans-serif;
       letter-spacing: 0;
@@ -2088,6 +2091,268 @@
       #ai-root .ai-sidebar { position: absolute; z-index: 30; height: 100%; box-shadow: var(--shadow-lg); }
       #ai-section { top: 60px; }
     }
+
+    /* ═══════════════════════════════════════════════════════════
+       UNIFIED LIGHT THEME — full-site match to הפוגע AI palette
+       All sports UI adopts the warm, premium AI design system
+       ═══════════════════════════════════════════════════════════ */
+
+    /* Topbar */
+    .topbar { background: rgba(250,248,244,.92); border-bottom-color: rgba(33,31,27,.09); }
+    .brand h1 { color: #211F1B; }
+    .brand p   { color: #6E675C; }
+
+    /* Tabs */
+    .tab { color: #6E675C; background: transparent; border-color: transparent; }
+    .tab.active { color: #2563EB; background: rgba(37,99,235,.08); border-color: rgba(37,99,235,.22); }
+    .tab:hover:not(.active) { color: #211F1B; background: rgba(33,31,27,.05); }
+    #premiumHeaderBtn { background: linear-gradient(135deg,#2563EB,#4F46E5) !important; color:#fff !important; }
+
+    /* Hero */
+    .hero-main { background: #FFFFFF; border-color: rgba(33,31,27,.09); box-shadow: 0 4px 20px rgba(40,33,22,.07); }
+    .hero-main::before {
+      background:
+        linear-gradient(135deg,rgba(37,99,235,.07),transparent 48%),
+        linear-gradient(225deg,rgba(208,92,26,.06),transparent 44%);
+    }
+    .eyebrow { background: rgba(37,99,235,.07); border-color: rgba(37,99,235,.22); color: #2563EB; }
+    .hero h2 { color: #211F1B; }
+    .hero-copy { color: #6E675C; }
+    .stat { background: #F9F6F1; border-color: rgba(33,31,27,.09); }
+    .stat b { color: #211F1B; } .stat span { color: #6E675C; }
+    .hero-side { background: #FFFFFF; border-color: rgba(33,31,27,.09); }
+    .daily-head h3 { color: #211F1B; }
+    .pill { background: rgba(146,96,10,.07); border-color: rgba(146,96,10,.20); color: #92600A; }
+    .pickbox { background: rgba(21,128,61,.06); border-color: rgba(21,128,61,.22); }
+    .odds { color: #15803D; }
+    .metric { background: #F9F6F1; border-color: rgba(33,31,27,.09); }
+    .metric b { color: #211F1B; } .metric span { color: #6E675C; }
+    .feature-chip { background: #F3EFE8; border-color: rgba(33,31,27,.12); color: #6E675C; }
+
+    /* World Cup strip */
+    .wc-strip { background: #FFFFFF; border-color: rgba(33,31,27,.09); }
+    .wc-banner {
+      background:
+        radial-gradient(circle at 83% 24%,rgba(146,96,10,.10),transparent 118px),
+        radial-gradient(circle at 96% 76%,rgba(37,99,235,.07),transparent 120px),
+        linear-gradient(135deg,#F9F6F1 0%,#FAF8F4 58%,#FBF4E8 100%);
+    }
+    .wc-banner::before { border-color: rgba(33,31,27,.08); }
+    .wc-banner-copy h3 { color: #211F1B; }
+    .wc-banner-copy p { color: #6E675C; }
+    .wc-kicker { background: rgba(146,96,10,.07); border-color: rgba(146,96,10,.20); color: #92600A; }
+    .wc-enter { background: rgba(37,99,235,.07); border-color: rgba(37,99,235,.22); color: #2563EB; }
+    .wc-mark { background: rgba(33,31,27,.04); border-color: rgba(33,31,27,.12); color: #211F1B; }
+    .wc-mark span { color: #92600A; }
+    .wc-head h3 { color: #211F1B; } .wc-head p { color: #6E675C; }
+    .wc-card { background: #F9F6F1; border-color: rgba(33,31,27,.09); }
+    .wc-card.compact:hover { background: #F3EFE8; border-color: rgba(33,31,27,.16); transform: translateY(-1px); }
+    .wc-card strong { color: #211F1B; }
+    .wc-score { color: #6E675C; } .wc-score b { color: #92600A; }
+    .wc-meta { color: #A39B8C; }
+    .wc-toolbar { background: #F9F6F1; border-color: rgba(33,31,27,.09); }
+    .wc-day-pill { background: #F3EFE8; border-color: rgba(33,31,27,.09); color: #6E675C; }
+    .wc-day-pill.active { background: rgba(146,96,10,.10); border-color: rgba(146,96,10,.28); color: #92600A; }
+    .wc-match { background: #FFFFFF; border-color: rgba(33,31,27,.09); }
+    .wc-match:hover { border-color: rgba(37,99,235,.22); background: #FDFCFB; }
+    .wc-team { background: #F9F6F1; border-color: rgba(33,31,27,.07); }
+    .wc-team b { color: #211F1B; }
+    .wc-flag { background: #F3EFE8; border-color: rgba(33,31,27,.12); }
+    .wc-stage { color: #92600A; }
+    .wc-status { background: rgba(37,99,235,.07); border-color: rgba(37,99,235,.18); color: #2563EB; }
+    .wc-status.finished { background: rgba(33,31,27,.05); border-color: rgba(33,31,27,.12); color: #6E675C; }
+    .wc-datebox { background: rgba(146,96,10,.07); border-color: rgba(146,96,10,.18); color: #92600A; }
+    .wc-datebox small { color: #A39B8C; }
+    .wc-date-details { color: #6E675C; }
+    .wc-odd { background: #F9F6F1; border-color: rgba(33,31,27,.09); color: #6E675C; }
+    .wc-odd b { color: #211F1B; }
+    .wc-odd.selected { background: rgba(21,128,61,.07); border-color: rgba(21,128,61,.22); color: #15803D; }
+    .wc-why { background: rgba(146,96,10,.05); border-color: rgba(146,96,10,.14); color: #6E675C; }
+    .wc-why.neutral { background: rgba(37,99,235,.04); border-color: rgba(37,99,235,.12); }
+
+    /* Toolbar */
+    .toolbar { background: #FFFFFF; border-color: rgba(33,31,27,.09); }
+    .field label { color: #6E675C; }
+    .field input, .field select { background: #F9F6F1; border-color: rgba(33,31,27,.14); color: #211F1B; }
+    .field input:focus, .field select:focus { border-color: rgba(37,99,235,.45); box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+    .btn { background: #2563EB; border-color: #2563EB; color: #fff; }
+    .btn:hover { background: #1D4ED8; border-color: #1D4ED8; }
+
+    /* Section headers */
+    .section-title h3 { color: #211F1B; }
+    .section-title p  { color: #6E675C; }
+
+    /* Panels & cards */
+    .panel { background: #FFFFFF; border-color: rgba(33,31,27,.09); box-shadow: 0 4px 16px rgba(40,33,22,.05); }
+    .card {
+      background: linear-gradient(180deg,#FFFFFF,#FDFCFB);
+      border-color: rgba(33,31,27,.09);
+      box-shadow: 0 2px 10px rgba(40,33,22,.05);
+    }
+    .card:hover { border-color: rgba(37,99,235,.22); box-shadow: 0 8px 28px rgba(40,33,22,.09); transform: translateY(-1px); }
+    .card-head { background: #F9F6F1; border-bottom-color: rgba(33,31,27,.07); }
+    .league { color: #211F1B; }
+    .time   { color: #6E675C; }
+
+    /* Logo wraps */
+    .logo-wrap { background: #F3EFE8; border-color: rgba(33,31,27,.12); }
+
+    /* Teams */
+    .team-name { color: #6E675C; }
+    .team-odd { background: rgba(146,96,10,.07); border-color: rgba(33,31,27,.09); color: #92600A; }
+    .team-odd small { color: #A39B8C; }
+    .versus { color: #A39B8C; }
+    .versus-main { background: #F3EFE8; border-color: rgba(33,31,27,.12); color: #6E675C; }
+
+    /* Selected state */
+    .team-side.selected .logo-wrap, .versus.selected {
+      border-color: rgba(21,128,61,.80);
+      box-shadow: 0 0 0 3px rgba(21,128,61,.11), 0 0 18px rgba(21,128,61,.12);
+      background: rgba(21,128,61,.07);
+    }
+    .team-side.selected .team-name, .versus.selected { color: #15803D; }
+    .team-side.selected .team-odd, .versus.selected .team-odd { color: #fff; background: #15803D; border-color: rgba(21,128,61,.60); }
+    .team-side.selected .team-odd small, .versus.selected .team-odd small { color: rgba(255,255,255,.70); }
+    .versus.selected .versus-main { border-color: rgba(21,128,61,.80); background: rgba(21,128,61,.10); color: #15803D; }
+    .team-side.selected:after, .versus.selected:after { background: #15803D; border-color: rgba(21,128,61,.85); color: #fff; box-shadow: 0 6px 18px rgba(21,128,61,.20); }
+
+    /* Pick box */
+    .picked-bet { background: rgba(21,128,61,.05); border-color: rgba(21,128,61,.22); box-shadow: 0 2px 10px rgba(21,128,61,.08); }
+    .picked-bet .label { color: #15803D; }
+    .picked-bet strong { color: #211F1B; }
+    .pick-action { color: #15803D; border-top-color: rgba(21,128,61,.14); }
+    .pick-help { color: #6E675C; }
+    .picked-bet .picked-odds { background: #15803D; color: #fff; }
+    .market-row { background: rgba(21,128,61,.05); border-color: rgba(21,128,61,.16); }
+    .market-row .name { color: #211F1B; }
+    .market-row .price { color: #92600A; }
+
+    /* Result line */
+    .result-line { background: #F9F6F1; border-color: rgba(33,31,27,.09); color: #6E675C; }
+    .result-line b { color: #211F1B; }
+    .result-score { color: #92600A; }
+    .result-detail b { color: #211F1B; }
+    .result-detail span { color: #A39B8C; }
+
+    /* Odds box */
+    .odds-box { background: rgba(21,128,61,.07); border-color: rgba(21,128,61,.22); color: #15803D; }
+    .odds-box small { color: #A39B8C; }
+    .why-line { color: #6E675C; }
+
+    /* Card internals */
+    .card-section { background: #F9F6F1; border-color: rgba(33,31,27,.08); }
+    .teams-line { background: transparent; border: none; }
+    .pick-summary-main span { color: #A39B8C; }
+    .pick-summary-main strong { color: #211F1B; }
+    .card-time-box { color: #6E675C; }
+    .card-time-box b { color: #211F1B; }
+    .signal { background: #F3EFE8; border-color: rgba(33,31,27,.09); color: #6E675C; }
+    .details { color: #6E675C; border-top-color: rgba(33,31,27,.08); }
+    .score-row { color: #6E675C; }
+    .meter { background: rgba(33,31,27,.08); }
+    .meter span { background: linear-gradient(90deg,#15803D,#2563EB); }
+    .open-game { background: #F3EFE8; border-color: rgba(33,31,27,.14); color: #211F1B; }
+
+    /* Status & verdict badges */
+    .status { background: #F3EFE8; border-color: rgba(33,31,27,.14); color: #6E675C; box-shadow: none; }
+    .status.hit  { color:#fff; background:#15803D; border-color:rgba(21,128,61,.85);  box-shadow:0 0 0 3px rgba(21,128,61,.11),0 6px 18px rgba(21,128,61,.16); }
+    .status.miss { color:#fff; background:#DC2626; border-color:rgba(220,38,38,.85); box-shadow:0 0 0 3px rgba(220,38,38,.11),0 6px 18px rgba(220,38,38,.16); }
+    .status.wait { color:#fff; background:#2563EB; border-color:rgba(37,99,235,.85);  box-shadow:0 0 0 3px rgba(37,99,235,.11),0 6px 18px rgba(37,99,235,.16); }
+    .status.closed { color:#fff; background:#92600A; border-color:rgba(146,96,10,.85); box-shadow:0 0 0 3px rgba(146,96,10,.11),0 6px 18px rgba(146,96,10,.16); }
+
+    .verdict { background: #F3EFE8; border-color: rgba(33,31,27,.14); color: #6E675C; box-shadow: none !important; }
+    .verdict.hit  { color:#fff; background:#15803D; border-color:rgba(21,128,61,.85); }
+    .verdict.miss { color:#fff; background:#DC2626; border-color:rgba(220,38,38,.85); }
+    .verdict.wait { color:#fff; background:#2563EB; border-color:rgba(37,99,235,.85); }
+    .verdict.closed { color:#6E675C; background:rgba(33,31,27,.06); border-color:rgba(33,31,27,.12); }
+    .verdict.unverified { color:#fff; background:#92600A; border-color:rgba(146,96,10,.85); }
+
+    /* Badge adjustments */
+    .badge-won     { color:#fff; background:#15803D; }
+    .badge-pending { color:#fff; background:#2563EB; }
+    .badge-void, .badge-suspended { color:#fff; background:#92600A; }
+    .badge-closed  { color:#6E675C; background:rgba(33,31,27,.07); border:1px solid rgba(33,31,27,.12); }
+
+    /* Live card */
+    .card-live-area { background: rgba(220,38,38,.06); border-color: rgba(220,38,38,.18); }
+    .card-live-area.phase-final { background:#F9F6F1; border-color:rgba(33,31,27,.09); }
+    .card-live-area.phase-scheduled { background:#F9F6F1; border-color:rgba(33,31,27,.09); color:#6E675C; }
+    .card-live-area.phase-ht { background:rgba(208,92,26,.06); border-color:rgba(208,92,26,.20); }
+    .card-live-area.phase-unavailable { background:#F9F6F1; border-color:rgba(33,31,27,.09); }
+    .card-live-area .live-label { color:#6E675C; }
+    .live-score-main { color:#211F1B; }
+    .live-label { color:#6E675C; }
+
+    /* Verified */
+    .card-verified { color:#A39B8C; border-top-color:rgba(33,31,27,.06); }
+    .vdot { background:#15803D; }
+    .verified-badge { background:rgba(21,128,61,.07); border-color:rgba(21,128,61,.22); color:#15803D; }
+
+    /* Odds movement */
+    .odds-movement { color:#A39B8C; }
+    .odds-down { color:#DC2626; }
+    .odds-up   { color:#15803D; }
+
+    /* Sport section headers */
+    .sport-section-title { color:#211F1B; }
+    .sport-section-title span { color:#6E675C; }
+    .sport-icon { background:#F3EFE8; border-color:rgba(33,31,27,.12); }
+
+    /* Banners */
+    .fallback-banner, .stale-banner { background:rgba(146,96,10,.06); border-color:rgba(146,96,10,.20); color:#92600A; }
+    .empty { background:#F9F6F1; border-color:rgba(33,31,27,.12); color:#6E675C; }
+    .error { color:#DC2626; border-color:rgba(220,38,38,.22); background:rgba(220,38,38,.04); }
+
+    /* Share button */
+    .btn-share-link { background:#F3EFE8; border-color:rgba(33,31,27,.12); color:#211F1B; }
+    .btn-share-link:hover { background:#ECE7DD; border-color:rgba(33,31,27,.18); }
+
+    /* Modal */
+    .modal { background: rgba(33,31,27,.68); }
+    .modal-card { background:#FFFFFF; border-color:rgba(33,31,27,.09); }
+    .modal-head { background:#F9F6F1; border-bottom-color:rgba(33,31,27,.07); }
+    .modal-close { background:#F3EFE8; border-color:rgba(33,31,27,.12); color:#211F1B; }
+    .modal-close:hover { background:#ECE7DD; }
+    .explain-box, .market-box { background:#F9F6F1; border-color:rgba(33,31,27,.09); }
+    .explain-box p { color:#6E675C; }
+    .outcome-row { border-top-color:rgba(33,31,27,.08); color:#6E675C; }
+    .outcome-row strong { color:#92600A; }
+
+    /* Loading overlay */
+    #loadingOverlay {
+      background:
+        radial-gradient(circle at 20% 10%,rgba(37,99,235,.07),transparent 30rem),
+        radial-gradient(circle at 80% 5%,rgba(208,92,26,.07),transparent 22rem),
+        #FAF8F4;
+    }
+    .loading-logo { background: linear-gradient(135deg,#2563EB,#4F46E5); }
+    .loading-title { color:#211F1B; }
+    .loading-sub   { color:#6E675C; }
+    .loading-step  { color:#A39B8C; }
+    .progress-track { background:rgba(33,31,27,.12); }
+    .progress-fill  { background:linear-gradient(90deg,#2563EB,#D05C1A); }
+
+    /* Refresh bar */
+    #refreshBar::after { background: linear-gradient(90deg,#2563EB,#D05C1A,#2563EB); }
+
+    /* Skeletons */
+    .skeleton-card { background:#FFFFFF; border-color:rgba(33,31,27,.09); }
+    .skeleton-line  { background:rgba(33,31,27,.07); }
+    .skeleton-block { background:rgba(33,31,27,.05); }
+
+    /* Debug */
+    .debug-row { background:#F9F6F1; border-color:rgba(33,31,27,.09); }
+    .debug-row.accepted { border-color:rgba(21,128,61,.28); }
+    .debug-row.rejected { border-color:rgba(220,38,38,.22); }
+    .debug-reasons { color:#6E675C; }
+
+    /* Premium lock overlay */
+    .premium-lock-overlay { background:rgba(250,248,244,.90); backdrop-filter:blur(8px); }
+    .premium-lock-overlay .lock-label { color:#211F1B; }
+    .premium-lock-overlay .lock-btn { background:linear-gradient(135deg,#2563EB,#4F46E5); color:#fff; }
+
+    /* Footer */
+    .footer { color:#A39B8C; }
 
   </style>
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
