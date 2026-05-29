@@ -4477,7 +4477,7 @@
             <div class="reuben-input-area">
               <div class="reuben-input-frame">
                 <div class="reuben-input-row">
-                  <textarea id="reubenInput" placeholder="כתוב משחק: ארסנל נגד פריז, לייקרס נגד סלטיקס..." autocomplete="off" spellcheck="false" rows="2" ${loading ? "disabled" : ""}></textarea>
+                  <textarea id="reubenInput" placeholder="כתוב משחק או הדבק תמונת טופס (Ctrl+V)..." autocomplete="off" spellcheck="false" rows="2" ${loading ? "disabled" : ""}></textarea>
                   <button class="reuben-send-btn" type="button" id="reubenAnalyze" ${loading ? "disabled" : ""}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8H2M8.5 2.5L14 8l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
@@ -5556,6 +5556,26 @@
           e.preventDefault();
         }
       }
+    });
+
+    // Paste image directly into the chat input (Ctrl+V / Cmd+V)
+    document.addEventListener("paste", (e) => {
+      if (state.sportTab !== "ai" || state.reubenLoading) return;
+      const items = Array.from(e.clipboardData?.items || []);
+      const imageItem = items.find(item => item.type.startsWith("image/"));
+      if (!imageItem) return;
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (!file) return;
+      // Show a small "תמונה הודבקה" preview indicator in the input
+      const input = document.getElementById("reubenInput");
+      if (input && !input.value.trim()) input.placeholder = "⏳ מנתח תמונה שהודבקה...";
+      analyzeReuvenSlipFile(file).catch(error => {
+        state.reubenMessages.push({ role: "ai", text: `לא הצלחתי לקרוא את התמונה: ${error.message}` });
+        state.reubenLoading = false;
+        renderCards();
+        scrollReuvenOutput();
+      });
     });
 
     loadFeed();
