@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const { rateLimit, sanitizeInput } = require("./_rate-limit");
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
@@ -282,11 +283,20 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") { res.status(200).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
 
-  const { query, history = [] } = req.body || {};
-  if (!String(query || "").trim()) {
+  // 10 requests per IP per minute — protects Claude API spend
+  if (rateLimit(req, res, { max: 10, windowMs: 60_000 })) return;
+
+  const rawQuery = (req.body || {}).query;
+  const rawHistory = Array.isArray((req.body || {}).history) ? (req.body || {}).history : [];
+  const query = sanitizeInput(rawQuery, 1000);
+  if (!query) {
     res.status(400).json({ error: "Missing query" });
     return;
   }
+  const history = rawHistory.slice(-6).map((m) => ({
+    role: m.role === "user" ? "user" : "assistant",
+    text: sanitizeInput(m.text, 500),
+  }));
 
   try {
     const { home, away, dateKey, offset } = parseQuery(query);
@@ -324,7 +334,8 @@ ${formatted}`;
     }
 
     // ── 2. Build user message for Claude ────────────────────────────────────
-    const userMessage = `שאלת המשתמש: ${query}
+    const safeQuery = query.replace(/`/g, "'").replace(/\$\{/g, "\\${");
+    const userMessage = `שאלת המשתמש: ${safeQuery}
 
 --- נתוני Winner ---
 ${winnerSection}

@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const SNAPSHOT = require("./winner-snapshot.json");
+const { rateLimit } = require("./_rate-limit");
 
 // ── The Odds API (fallback when Winner is blocked) ───────────────────────────
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
@@ -2751,6 +2752,8 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=86400");
+  // 30 requests per IP per minute — feed is heavily cached so this is generous
+  if (rateLimit(req, res, { max: 30, windowMs: 60_000 })) return;
   try {
     const force = String(req?.query?.force || "").toLowerCase() === "1";
     const payload = await buildCachedWinnerFeedPayload({ force });
