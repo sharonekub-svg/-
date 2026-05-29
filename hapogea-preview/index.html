@@ -4809,7 +4809,18 @@
         ? (tracked?.pickTeam || tracked?.pick || row.pickTeam || row.winnerPick || row.pick || "לא נשמר")
         : "לא נשמר";
       const result = row.liveScore || row.result || tracked?.result || "";
-      const actual = row.actualWinner || tracked?.actualWinner || "";
+      let actual = row.actualWinner || tracked?.actualWinner || "";
+      // If actualWinner is missing but game ended, derive winner from score using Winner's own team names
+      if (!actual && row.matchPhase === "final" && result) {
+        const m = String(result).match(/^(\d+)[:\-](\d+)$/);
+        if (m) {
+          const h = parseInt(m[1], 10);
+          const a = parseInt(m[2], 10);
+          if (h > a) actual = row.home || "";
+          else if (a > h) actual = row.away || "";
+          else actual = "תיקו";
+        }
+      }
       let status = tracked?.status || "";
       if (!status || status === "pending") {
         // Also accept direct status from the server row (hit/miss/נתפס/נפל)

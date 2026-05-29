@@ -821,24 +821,63 @@ function resultPhase(event) {
   return "scheduled";
 }
 
+// Returns the winning team mapped to the Winner row's own team names (avoids language mismatch).
+// Falls back to the raw event winner string when score data is unavailable.
+function winnerTeamFromScores(event, row) {
+  const homeScore = scoreNumber(event.scoreA);
+  const awayScore = scoreNumber(event.scoreB);
+  if (homeScore === null || awayScore === null) return null;
+  if (homeScore === awayScore) return "תיקו";
+  // Detect which 365Scores team (teamA/teamB) corresponds to Winner's home/away.
+  const directScore  = teamNameScore(row.home, event.teamA) + teamNameScore(row.away, event.teamB);
+  const swappedScore = teamNameScore(row.home, event.teamB) + teamNameScore(row.away, event.teamA);
+  const homeIsTeamA  = directScore >= swappedScore;
+  const teamAWon     = homeScore > awayScore;
+  const homeWon      = homeIsTeamA ? teamAWon : !teamAWon;
+  return homeWon ? cleanText(row.home) : cleanText(row.away);
+}
+
 function applyResult(row, event) {
   if (!event) return row;
-  const actualWinner = resultWinner(event);
   const result = scoreText(event.scoreA, event.scoreB, event.noScoreLabel);
-  const phase = resultPhase(event);
+  const phase  = resultPhase(event);
+
+  // Prefer score-derived winner mapped to Winner team names — avoids Hebrew/English mismatch
+  const scoredWinner = phase === "final" ? winnerTeamFromScores(event, row) : null;
+  const actualWinner = scoredWinner || resultWinner(event) || row.actualWinner || "";
+
   const calculatedSpreadStatus = phase === "final" ? spreadStatus(event, row) : "";
-  const finalStatus = phase === "cancelled"
-    ? "בוטל"
-    : phase === "postponed"
-      ? "לא אומת"
-      : phase === "final"
-        ? calculatedSpreadStatus || resultStatus({ markets: event.markets || [] }, row.winnerPick || row.pick)
-        : "ממתין";
+
+  let finalStatus;
+  if (phase === "cancelled") {
+    finalStatus = "בוטל";
+  } else if (phase === "postponed") {
+    finalStatus = "לא אומת";
+  } else if (phase === "final") {
+    if (calculatedSpreadStatus) {
+      finalStatus = calculatedSpreadStatus;
+    } else if (scoredWinner) {
+      // Compare directly using Winner team names
+      const pick = cleanText(row.winnerPick || row.pick || "");
+      const isDrawPick = pick.toLowerCase() === "x" || pick === "תיקו";
+      if (scoredWinner === "תיקו") {
+        finalStatus = isDrawPick ? "hit" : "miss";
+      } else {
+        const w = cleanText(scoredWinner);
+        finalStatus = (w === pick || w.includes(pick) || pick.includes(w)) ? "hit" : "miss";
+      }
+    } else {
+      finalStatus = resultStatus({ markets: event.markets || [] }, row.winnerPick || row.pick);
+    }
+  } else {
+    finalStatus = "ממתין";
+  }
+
   return {
     ...row,
     liveScore: result || row.liveScore || "",
     result: result || row.result || "",
-    actualWinner: actualWinner || row.actualWinner || "",
+    actualWinner,
     matchPhase: phase,
     bettingStatus: phase === "cancelled" ? "cancelled" : phase === "postponed" ? "postponed" : row.bettingStatus,
     resultVerifiedAt: phase === "final" || phase === "cancelled" || phase === "postponed" ? new Date().toISOString() : row.resultVerifiedAt,
