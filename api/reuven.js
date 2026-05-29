@@ -4,6 +4,10 @@ const { rateLimit, sanitizeInput } = require("./_rate-limit");
 const GROQ_API_KEY = process.env.AI_KEY;
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
+const FOOTBALL_API_KEY = process.env.FOOTBALL_KEY;
+const ODDS_API_KEY_EXT = process.env.ODDS_API_KEY;
+const ODDS_API_EXT = "https://api.the-odds-api.com/v4";
+
 // ── Winner API helpers ────────────────────────────────────────────────────────
 
 function winnerHeaders(extra = {}) {
@@ -167,6 +171,125 @@ function formatMarketsForPrompt(markets, eId) {
     }).join("\n");
     return `【${title}】\n${outcomes}`;
   }).slice(0, 12).join("\n\n");
+}
+
+// ── API-Football (api-sports.io) ──────────────────────────────────────────────
+
+async function fetchApiFootballData(home, away) {
+  if (!FOOTBALL_API_KEY) return null;
+  try {
+    const teamRes = await fetch(
+      `https://v3.football.api-sports.io/teams?search=${encodeURIComponent(home.slice(0, 25))}`,
+      { headers: { "x-apisports-key": FOOTBALL_API_KEY }, signal: AbortSignal.timeout(9000) }
+    );
+    if (!teamRes.ok) return null;
+    const teamData = await teamRes.json();
+    const teamId = teamData.response?.[0]?.team?.id;
+    if (!teamId) return null;
+
+    const fixRes = await fetch(
+      `https://v3.football.api-sports.io/fixtures?team=${teamId}&next=10`,
+      { headers: { "x-apisports-key": FOOTBALL_API_KEY }, signal: AbortSignal.timeout(9000) }
+    );
+    if (!fixRes.ok) return null;
+    const fixData = await fixRes.json();
+
+    for (const f of (fixData.response || [])) {
+      const fHome = f.teams?.home?.name || "";
+      const fAway = f.teams?.away?.name || "";
+      const score = teamMatchScore(home, fHome) + teamMatchScore(away, fAway);
+      const revScore = teamMatchScore(home, fAway) + teamMatchScore(away, fHome);
+      if (Math.max(score, revScore) < 0.8) continue;
+
+      const league = f.league?.name || "";
+      const country = f.league?.country || "";
+      const date = (f.fixture?.date || "").slice(0, 10);
+      const time = (f.fixture?.date || "").slice(11, 16);
+      const venue = f.fixture?.venue?.name || "";
+      const round = f.league?.round || "";
+      const parts = [
+        `📊 API-Football: ${fHome} vs ${fAway}`,
+        `ליגה: ${league}${country ? ` (${country})` : ""}${round ? ` — ${round}` : ""}`,
+        `תאריך: ${date}${time ? ` ${time} UTC` : ""}${venue ? ` | ${venue}` : ""}`,
+      ];
+      return parts.join("\n");
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ── The Odds API (external odds when Winner is blocked) ───────────────────────
+
+const ODDS_SPORT_MAP = {
+  "ליגת האלופות": "soccer_uefa_champs_league",
+  "ליגה אירופאית": "soccer_uefa_europa_league",
+  "קונפרנס": "soccer_uefa_europa_conference_league",
+  "פרמייר ליג": "soccer_epl",
+  "בונדסליגה": "soccer_germany_bundesliga",
+  "סריה א": "soccer_italy_serie_a",
+  "ליג 1": "soccer_france_ligue_one",
+  "לה ליגה": "soccer_spain_la_liga",
+  "ארדיביזי": "soccer_netherlands_eredivisie",
+  "סופר ליג טורקיה": "soccer_turkey_super_league",
+  "פרמייר ליג סקוטלנד": "soccer_scotland_premier_league",
+  "פורטוגלית": "soccer_portugal_primeira_liga",
+  "בלגית": "soccer_belgium_first_div",
+  "שבדית": "soccer_sweden_allsvenskan",
+  "נורבגית": "soccer_norway_eliteserien",
+  "דנית": "soccer_denmark_superliga",
+  "ליגת העל": "soccer_israel_premier_league",
+  "MLS": "soccer_usa_mls",
+  "ליגה MX": "soccer_mexico_ligamx",
+  "ברזילאית": "soccer_brazil_campeonato",
+  "ארגנטינאית": "soccer_argentina_primera_division",
+  "קופה ליברטדורס": "soccer_conmebol_copa_libertadores",
+  "NBA": "basketball_nba",
+  "יורוליג": "basketball_euroleague",
+  "NCAA": "basketball_ncaab",
+};
+
+const ODDS_FALLBACK_KEYS = [
+  "soccer_epl",
+  "soccer_uefa_champs_league",
+  "soccer_spain_la_liga",
+  "soccer_germany_bundesliga",
+];
+
+async function fetchOddsApiData(home, away, competition) {
+  if (!ODDS_API_KEY_EXT) return null;
+  const mappedKey = competition ? ODDS_SPORT_MAP[competition] : null;
+  const keysToTry = mappedKey ? [mappedKey] : ODDS_FALLBACK_KEYS.slice(0, 2);
+
+  for (const sportKey of keysToTry) {
+    try {
+      const url = `${ODDS_API_EXT}/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY_EXT}&regions=eu&markets=h2h&oddsFormat=decimal`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(9000) });
+      if (!res.ok) continue;
+      const events = await res.json();
+
+      for (const ev of (Array.isArray(events) ? events : [])) {
+        const s1 = teamMatchScore(home, ev.home_team) + teamMatchScore(away, ev.away_team);
+        const s2 = teamMatchScore(home, ev.away_team) + teamMatchScore(away, ev.home_team);
+        if (Math.max(s1, s2) < 0.9) continue;
+
+        const bookmaker = ev.bookmakers?.[0];
+        if (!bookmaker) continue;
+        const h2h = bookmaker.markets?.find(m => m.key === "h2h");
+        if (!h2h?.outcomes?.length) continue;
+
+        const outcomeLines = h2h.outcomes
+          .map(o => `  ${o.name}: ${Number(o.price).toFixed(2)} (${(100 / o.price).toFixed(1)}%)`)
+          .join("\n");
+        const date = new Date(ev.commence_time).toLocaleDateString("he-IL");
+        return `💰 The Odds API (${bookmaker.title}): ${ev.home_team} vs ${ev.away_team}\nתאריך: ${date}\nיחסים:\n${outcomeLines}`;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }
 
 // ── Competition keyword map ───────────────────────────────────────────────────
@@ -489,7 +612,25 @@ module.exports = async (req, res) => {
         }
       }
     } catch (winnerErr) {
-      winnerSection = `⚠️ לא הצלחתי להתחבר ל-Winner (${winnerErr.message}). אענה לפי ידע כללי.`;
+      winnerSection = `⚠️ לא הצלחתי להתחבר ל-Winner (${winnerErr.message}).`;
+    }
+
+    // If Winner returned no useful data, fetch from external APIs in parallel
+    const winnerLackingData = !winnerSection ||
+      winnerSection.startsWith("⚠️") ||
+      winnerSection.startsWith("לא מצאתי");
+
+    if (winnerLackingData && (home || away)) {
+      const [apifResult, oddsResult] = await Promise.allSettled([
+        (home && away) ? fetchApiFootballData(home, away) : Promise.resolve(null),
+        (home || away) ? fetchOddsApiData(home || "", away || "", competition) : Promise.resolve(null),
+      ]);
+      const extras = [];
+      if (apifResult.status === "fulfilled" && apifResult.value) extras.push(apifResult.value);
+      if (oddsResult.status === "fulfilled" && oddsResult.value) extras.push(oddsResult.value);
+      if (extras.length > 0) {
+        winnerSection = (winnerLackingData && winnerSection ? winnerSection + "\n\n" : "") + extras.join("\n\n");
+      }
     }
 
     const safeQuery = query.replace(/`/g, "'").replace(/\$\{/g, "\\${" );
