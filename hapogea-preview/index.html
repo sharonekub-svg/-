@@ -5085,6 +5085,13 @@
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    function attachTextareaPasteListener() {
+      const ta = document.getElementById("reubenInput");
+      if (!ta || ta._pasteAttached) return;
+      ta._pasteAttached = true;
+      ta.addEventListener("paste", handleReuvenPaste);
+    }
+
     function render() {
       renderTabs();
       renderStats();
@@ -5093,6 +5100,7 @@
       renderCards();
       renderDebug();
       applyLogosToCards();
+      attachTextareaPasteListener();
       const premBtn = document.getElementById('premiumHeaderBtn');
       if (premBtn) premBtn.textContent = state.isPremium ? '✓ פרימיום' : '🔒 פרימיום';
     }
@@ -5559,7 +5567,9 @@
     });
 
     // Paste image directly into the chat input (Ctrl+V / Cmd+V)
-    document.addEventListener("paste", (e) => {
+    // Listen on #cards (persists across renders) so we catch paste events
+    // that bubble up from the textarea inside it.
+    function handleReuvenPaste(e) {
       if (state.sportTab !== "ai" || state.reubenLoading) return;
       const items = Array.from(e.clipboardData?.items || []);
       const imageItem = items.find(item => item.type.startsWith("image/"));
@@ -5567,15 +5577,23 @@
       e.preventDefault();
       const file = imageItem.getAsFile();
       if (!file) return;
-      // Show a small "תמונה הודבקה" preview indicator in the input
       const input = document.getElementById("reubenInput");
-      if (input && !input.value.trim()) input.placeholder = "⏳ מנתח תמונה שהודבקה...";
+      if (input) { input.value = ""; input.placeholder = "⏳ מנתח תמונה שהודבקה..."; }
       analyzeReuvenSlipFile(file).catch(error => {
         state.reubenMessages.push({ role: "ai", text: `לא הצלחתי לקרוא את התמונה: ${error.message}` });
         state.reubenLoading = false;
         renderCards();
         scrollReuvenOutput();
       });
+    }
+    // Attach to both the cards container (catches bubbled events from textarea)
+    // and to document as a fallback when nothing is focused.
+    document.getElementById("cards").addEventListener("paste", handleReuvenPaste);
+    document.addEventListener("paste", (e) => {
+      // Only fire from document if the active element is NOT inside #cards
+      // (prevents double-firing)
+      if (document.getElementById("cards")?.contains(document.activeElement)) return;
+      handleReuvenPaste(e);
     });
 
     loadFeed();
