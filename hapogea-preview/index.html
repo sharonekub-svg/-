@@ -5339,8 +5339,27 @@
 
           clearInterval(stepTimer);
           state.reubenThinkingStep = 0;
-          const result = analyzeReubenBet(question);
-          state.reubenMessages.push({ role: "ai", ...(typeof result === "string" ? { text: result } : result) });
+
+          // Build conversation history for context (last 6 messages)
+          const history = state.reubenMessages.slice(-6).map(m => ({ role: m.role, text: m.text || "" }));
+
+          let aiText = "";
+          try {
+            const response = await fetch("/api/reuven", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query: question, history }),
+              signal: AbortSignal.timeout(35000),
+            });
+            const data = await response.json().catch(() => ({}));
+            aiText = data.answer || "לא הצלחתי לקבל ניתוח. תנסה שוב.";
+          } catch (err) {
+            // Fallback to local analysis if API unavailable
+            const fallback = analyzeReubenBet(question);
+            aiText = typeof fallback === "string" ? fallback : (fallback.text || "שגיאה טכנית. תנסה שוב.");
+          }
+
+          state.reubenMessages.push({ role: "ai", text: aiText });
           state.reubenLoading = false;
           if (!state.isPremium) {
             state.reubenFreeUsed = (state.reubenFreeUsed || 0) + 1;
