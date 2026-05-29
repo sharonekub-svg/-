@@ -297,7 +297,9 @@ function findResultByTime(row, timedEvents) {
 function applyApiSportsResults(rows, timedEvents) {
   if (!timedEvents || !timedEvents.length) return rows;
   return rows.map((row) => {
-    if (row.matchPhase === "final" || row.matchPhase === "cancelled" || row.matchPhase === "postponed") return row;
+    const s = String(row.status || "");
+    // Only skip rows already definitively settled — a "final" phase without a hit/miss verdict still needs resolving
+    if (s === "hit" || s === "miss" || s === "בוטל" || s === "לא אומת") return row;
     const event = findResultByTime(row, timedEvents);
     if (!event) return row;
     return applyResult(row, event);
@@ -2278,6 +2280,12 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
   const todayRows = splitBySport(todayFinalRows);
   const tomorrowFinalRows = withLogos ? finalOpenRowsByDay(tomorrowEnrichedRows) : tomorrowEnrichedRows.slice(0, TARGET_PICKS_PER_SPORT);
   const tomorrowRows = splitBySport(tomorrowFinalRows);
+  // API-Sports-settled rows carry Winner eventId + Hebrew names + server-computed status.
+  // Including them in trackingResults lets the browser settle picks by eventId directly.
+  const apiSportsSettledRows = [
+    ...todayCurrentRows.filter((r) => r.status === "hit" || r.status === "miss"),
+    ...yesterdayMerged.filter((r) => r.status === "hit" || r.status === "miss"),
+  ];
   const trackingResults = [
     ...buildResultRows(winnerResultEvents, yesterday),
     ...buildResultRows(winnerResultEvents, today),
@@ -2288,6 +2296,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     ...build365BasketballRows(scores365Events, yesterday),
     ...build365BasketballRows(scores365Events, today),
     ...build365BasketballRows(scores365Events, tomorrow),
+    ...apiSportsSettledRows,
   ].map(compactTrackingRow);
   const lineStats = {
     football: {
