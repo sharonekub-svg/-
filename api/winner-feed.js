@@ -275,32 +275,45 @@ async function getApiSportsScores(dateKey, sportId) {
   return rows;
 }
 
-function findResultByTime(row, timedEvents) {
-  if (!timedEvents || !timedEvents.length || !row) return null;
-  const rowKickMs = kickoffMs(row.day || row.date, row.time);
-  if (!Number.isFinite(rowKickMs)) return null;
-  const TOLERANCE_MS = 25 * 60 * 1000;
-  let best = null;
-  let bestDiff = Infinity;
-  for (const event of timedEvents) {
-    if (Number(event.sportid) !== Number(row.sportId || row.sportid)) continue;
-    if (!Number.isFinite(event.kickoffUtcMs)) continue;
-    const diff = Math.abs(event.kickoffUtcMs - rowKickMs);
-    if (diff < TOLERANCE_MS && diff < bestDiff) {
-      best = event;
-      bestDiff = diff;
-    }
-  }
-  return best;
-}
-
 function applyApiSportsResults(rows, timedEvents) {
   if (!timedEvents || !timedEvents.length) return rows;
-  return rows.map((row) => {
+
+  const TOLERANCE_MS = 25 * 60 * 1000;
+
+  // Build all candidate (rowIdx, event, diff) pairs for unsettled rows
+  const candidates = [];
+  rows.forEach((row, rowIdx) => {
     const s = String(row.status || "");
-    // Only skip rows already definitively settled — a "final" phase without a hit/miss verdict still needs resolving
+    if (s === "hit" || s === "miss" || s === "בוטל" || s === "לא אומת") return;
+    const rowKickMs = kickoffMs(row.day || row.date, row.time);
+    if (!Number.isFinite(rowKickMs)) return;
+    for (const event of timedEvents) {
+      if (Number(event.sportid) !== Number(row.sportId || row.sportid)) continue;
+      if (!Number.isFinite(event.kickoffUtcMs)) continue;
+      const diff = Math.abs(event.kickoffUtcMs - rowKickMs);
+      if (diff < TOLERANCE_MS) candidates.push({ rowIdx, event, diff });
+    }
+  });
+
+  // Sort ascending by diff so the closest match is assigned first
+  candidates.sort((a, b) => a.diff - b.diff);
+
+  // Greedy 1-to-1 assignment: each Winner row and each API-Sports event can match at most once
+  const usedRows = new Set();
+  const usedEvents = new Set();
+  const rowToEvent = new Map();
+  for (const { rowIdx, event, diff } of candidates) {
+    const eid = event.eventid;
+    if (usedRows.has(rowIdx) || usedEvents.has(eid)) continue;
+    usedRows.add(rowIdx);
+    usedEvents.add(eid);
+    rowToEvent.set(rowIdx, event);
+  }
+
+  return rows.map((row, i) => {
+    const s = String(row.status || "");
     if (s === "hit" || s === "miss" || s === "בוטל" || s === "לא אומת") return row;
-    const event = findResultByTime(row, timedEvents);
+    const event = rowToEvent.get(i);
     if (!event) return row;
     return applyResult(row, event);
   });
