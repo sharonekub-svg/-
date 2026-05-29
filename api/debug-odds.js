@@ -1,5 +1,15 @@
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
+const { rateLimit } = require("./_rate-limit");
+
+function isAuthorized(req) {
+  if (req.headers["x-vercel-cron"]) return true;
+  const expected = process.env.CRON_SECRET;
+  if (!expected) return false; // require secret to always be set for this endpoint
+  const bearer = (req.headers["authorization"] || "").replace(/^Bearer\s+/i, "");
+  const custom = req.headers["x-cron-secret"] || req.query?.secret || "";
+  return bearer === expected || custom === expected;
+}
 // Same 10 core leagues as winner-feed.js to avoid draining quota during debugging
 const ODDS_API_SPORTS = [
   "soccer_conmebol_copa_libertadores",
@@ -16,6 +26,8 @@ const ODDS_API_SPORTS = [
 
 module.exports = async function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
+  if (!isAuthorized(req)) return res.status(401).json({ error: "unauthorized" });
+  if (rateLimit(req, res, { max: 3, windowMs: 60_000 })) return;
   if (!ODDS_API_KEY) return res.status(400).json({ error: "no key" });
 
   function israelDate(offset = 0) {

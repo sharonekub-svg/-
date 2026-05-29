@@ -6,6 +6,7 @@
 // 4. Wikipedia/TheSportsDB via English label
 // 5. Dynamic SVG badge fallback
 
+const { rateLimit } = require("./_rate-limit");
 const logoCache = globalThis.__HAPOGEA_LOGO_API_CACHE__ || (globalThis.__HAPOGEA_LOGO_API_CACHE__ = new Map());
 
 function cleanText(value) {
@@ -187,7 +188,9 @@ async function resolveLogo(name, type) {
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  const q = cleanText(req.query?.q || "");
+  // 60 requests per IP per minute — each request fans out to external APIs
+  if (rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
+  const q = cleanText(req.query?.q || "").slice(0, 200);
   const type = req.query?.type === "league" ? "league" : "team";
   if (!q) {
     res.status(400).send("Missing q");

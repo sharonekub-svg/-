@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const SNAPSHOT = require("./winner-snapshot.json");
+const { rateLimit } = require("./_rate-limit");
 
 // ── The Odds API (fallback when Winner is blocked) ───────────────────────────
 const ODDS_API_KEY  = process.env.ODDS_API_KEY || "";
@@ -2070,7 +2071,7 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
         return [
           ...(tab.sports?.football || []),
           ...(tab.sports?.basketball || []),
-        ];
+        ].filter((r) => !r.day || r.day === dateKey);
       }
     }
     return [];
@@ -2588,6 +2589,14 @@ function normalizeFallbackRows(payload) {
     // Overwriting caused stale games to masquerade as today's games.
   }
 
+  // Enforce row.day matches tab.date — removes rows that slipped into the wrong tab
+  for (const tab of Object.values(copy.tabs || {})) {
+    if (!tab.date) continue;
+    for (const sport of Object.keys(tab.sports || {})) {
+      tab.sports[sport] = (tab.sports[sport] || []).filter((r) => !r.day || r.day === tab.date);
+    }
+  }
+
   // Normalize row fields
   for (const tab of Object.values(copy.tabs || {})) {
     for (const rows of Object.values(tab.sports || {})) {
@@ -2743,6 +2752,8 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=86400");
+  // 30 requests per IP per minute — feed is heavily cached so this is generous
+  if (rateLimit(req, res, { max: 30, windowMs: 60_000 })) return;
   try {
     const force = String(req?.query?.force || "").toLowerCase() === "1";
     const payload = await buildCachedWinnerFeedPayload({ force });

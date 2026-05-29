@@ -1,6 +1,12 @@
 const crypto = require("crypto");
+const { rateLimit, sanitizeInput } = require("./_rate-limit");
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GROQ_API_KEY = process.env.AI_KEY;
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+const FOOTBALL_API_KEY = process.env.FOOTBALL_KEY;
+const ODDS_API_KEY_EXT = process.env.ODDS_API_KEY;
+const ODDS_API_EXT = "https://api.the-odds-api.com/v4";
 
 // ── Winner API helpers ────────────────────────────────────────────────────────
 
@@ -24,7 +30,7 @@ function winnerHeaders(extra = {}) {
 }
 
 function cleanText(value) {
-  return String(value || "").replace(/[‪-‮‬‎‏]/g, "").replace(/\s+/g, " ").trim();
+  return String(value || "").replace(/[‪-‮‌‎‏]/g, "").replace(/\s+/g, " ").trim();
 }
 
 function decimal(value) {
@@ -104,6 +110,56 @@ function findMatchInMarkets(markets, homeQuery, awayQuery, dateKey) {
   return [...seen.values()].sort((a, b) => b.total - a.total)[0] || null;
 }
 
+// Broader search: by competition keyword and/or date when no team names given
+function findMatchesByContext(markets, { competition, rawCompetitionFallback, dateKey, isFinal }) {
+  const seen = new Map();
+  const compNorm = competition
+    ? normalizeTeamName(competition)
+    : rawCompetitionFallback
+      ? normalizeTeamName(rawCompetitionFallback)
+      : null;
+
+  for (const m of markets) {
+    const date = winnerDateToIso(m.e_date);
+    const matchesDate = !dateKey || date === dateKey;
+    const leagueNorm = normalizeTeamName(cleanText(m.league || ""));
+    const descNorm = normalizeTeamName(cleanText(m.desc || ""));
+
+    const matchesComp = !compNorm || compNorm.split(" ").some(w => w.length >= 3 && leagueNorm.includes(w));
+    const matchesFinal = !isFinal || leagueNorm.includes("final") || descNorm.includes("final") ||
+                         leagueNorm.includes("גמר") || descNorm.includes("גמר");
+
+    if (matchesDate && matchesComp && (!isFinal || matchesFinal) && !seen.has(String(m.eId))) {
+      const desc = cleanText(m.desc);
+      const parts = desc.split(" - ");
+      seen.set(String(m.eId), {
+        eId: String(m.eId), date, desc,
+        home: parts[0] || "", away: parts[1] || "",
+        league: cleanText(m.league), time: m.m_hour || "",
+        sportId: m.sId,
+      });
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+}
+
+// Brief summary of all matches for a date (schedule view)
+function formatScheduleSummary(markets, dateKey) {
+  const seen = new Map();
+  for (const m of markets) {
+    const date = winnerDateToIso(m.e_date);
+    if (dateKey && date !== dateKey) continue;
+    const eId = String(m.eId);
+    if (!seen.has(eId)) {
+      const desc = cleanText(m.desc);
+      const league = cleanText(m.league);
+      const time = m.m_hour || "";
+      seen.set(eId, `${time} | ${league} | ${desc}`);
+    }
+  }
+  return [...seen.values()].slice(0, 20);
+}
+
 function formatMarketsForPrompt(markets, eId) {
   const eventMarkets = markets.filter(m => String(m.eId) === String(eId));
   return eventMarkets.map(m => {
@@ -117,6 +173,288 @@ function formatMarketsForPrompt(markets, eId) {
   }).slice(0, 12).join("\n\n");
 }
 
+// ── Hebrew → English team name translations ───────────────────────────────────
+
+const HE_TO_EN = {
+  "ריאל מדריד": "Real Madrid", "ברצלונה": "Barcelona", "אטלטיקו מדריד": "Atletico Madrid",
+  "מנצ'סטר סיטי": "Manchester City", "מנצ'סטר יונייטד": "Manchester United",
+  "ארסנל": "Arsenal", "צ'לסי": "Chelsea", "ליברפול": "Liverpool",
+  "טוטנהאם": "Tottenham", "ניוקאסל": "Newcastle", "אסטון וילה": "Aston Villa",
+  "פריז סן ז'רמן": "Paris Saint-Germain", "מארסיי": "Marseille", "ליון": "Lyon",
+  "בייר לברקוזן": "Bayer Leverkusen", "בוורוסיה דורטמונד": "Borussia Dortmund",
+  "בוורוסיה מ'גלדבך": "Borussia Mönchengladbach",
+  "באיירן מינכן": "Bayern Munich", "ליפציג": "RB Leipzig", "פרנקפורט": "Eintracht Frankfurt",
+  "אינטר מילאן": "Inter Milan", "מילאן": "AC Milan", "יובנטוס": "Juventus",
+  "נאפולי": "Napoli", "רומא": "AS Roma", "פיורנטינה": "Fiorentina", "לאציו": "Lazio",
+  "איי אקס": "Ajax", "פנרבחה": "Fenerbahce", "גלטסראי": "Galatasaray",
+  "בנפיקה": "Benfica", "פורטו": "Porto", "ספורטינג": "Sporting CP",
+  "סלטיק": "Celtic", "ריינג'רס": "Rangers",
+  "מכבי תל אביב": "Maccabi Tel Aviv", "הפועל תל אביב": "Hapoel Tel Aviv",
+  "מכבי חיפה": "Maccabi Haifa", "הפועל באר שבע": "Hapoel Beer Sheva",
+  "בני יהודה": "Bnei Yehuda", "מכבי פתח תקווה": "Maccabi Petah Tikva",
+  "לוס אנג'לס": "LA Galaxy", "אינטר מיאמי": "Inter Miami",
+  "בוקה ג'וניורס": "Boca Juniors", "ריבר פלייט": "River Plate",
+  "פלמנגו": "Flamengo", "פלמינסה": "Palmeiras",
+  "ליון בסקטבול": "LDLC ASVEL", "מכבי תל אביב בסקטבול": "Maccabi Tel Aviv Basketball",
+  "ריאל מדריד בסקטבול": "Real Madrid Basketball",
+  "CSKA מוסקבה": "CSKA Moscow", "אלבה ברלין": "ALBA Berlin",
+};
+
+function translateTeamName(name) {
+  if (!name) return name;
+  const direct = HE_TO_EN[name.trim()];
+  if (direct) return direct;
+  // Partial match: if any key is contained in the name, use its translation
+  for (const [he, en] of Object.entries(HE_TO_EN)) {
+    if (name.includes(he)) return en;
+  }
+  return name;
+}
+
+// ── API-Football (api-sports.io) ──────────────────────────────────────────────
+
+async function fetchApiFootballData(home, away) {
+  if (!FOOTBALL_API_KEY) return null;
+  try {
+    // Translate Hebrew team names to English for API search
+    const homeEn = translateTeamName(home);
+    const awayEn = translateTeamName(away);
+
+    const teamRes = await fetch(
+      `https://v3.football.api-sports.io/teams?search=${encodeURIComponent(homeEn.slice(0, 30))}`,
+      { headers: { "x-apisports-key": FOOTBALL_API_KEY }, signal: AbortSignal.timeout(9000) }
+    );
+    if (!teamRes.ok) return null;
+    const teamData = await teamRes.json();
+    const teamId = teamData.response?.[0]?.team?.id;
+    if (!teamId) return null;
+
+    // Fetch next 20 fixtures for more coverage
+    const fixRes = await fetch(
+      `https://v3.football.api-sports.io/fixtures?team=${teamId}&next=20`,
+      { headers: { "x-apisports-key": FOOTBALL_API_KEY }, signal: AbortSignal.timeout(9000) }
+    );
+    if (!fixRes.ok) return null;
+    const fixData = await fixRes.json();
+
+    // Also fetch last 5 fixtures for recent form
+    const lastRes = await fetch(
+      `https://v3.football.api-sports.io/fixtures?team=${teamId}&last=5`,
+      { headers: { "x-apisports-key": FOOTBALL_API_KEY }, signal: AbortSignal.timeout(9000) }
+    );
+    const lastData = lastRes.ok ? await lastRes.json() : { response: [] };
+
+    let matchLine = null;
+    for (const f of (fixData.response || [])) {
+      const fHome = f.teams?.home?.name || "";
+      const fAway = f.teams?.away?.name || "";
+      // Match against both original and translated names
+      const score = Math.max(
+        teamMatchScore(homeEn, fHome) + teamMatchScore(awayEn, fAway),
+        teamMatchScore(home, fHome) + teamMatchScore(away, fAway),
+      );
+      const revScore = Math.max(
+        teamMatchScore(homeEn, fAway) + teamMatchScore(awayEn, fHome),
+        teamMatchScore(home, fAway) + teamMatchScore(away, fHome),
+      );
+      if (Math.max(score, revScore) < 0.7) continue;
+
+      const league = f.league?.name || "";
+      const country = f.league?.country || "";
+      const date = (f.fixture?.date || "").slice(0, 10);
+      const time = (f.fixture?.date || "").slice(11, 16);
+      const venue = f.fixture?.venue?.name || "";
+      const round = f.league?.round || "";
+      matchLine = [
+        `📊 API-Football: ${fHome} vs ${fAway}`,
+        `ליגה: ${league}${country ? ` (${country})` : ""}${round ? ` — ${round}` : ""}`,
+        `תאריך: ${date}${time ? ` ${time} UTC` : ""}${venue ? ` | ${venue}` : ""}`,
+      ].join("\n");
+      break;
+    }
+
+    // Append recent form
+    const recentGames = (lastData.response || []).slice(0, 5).map(f => {
+      const gh = f.goals?.home ?? "?";
+      const ga = f.goals?.away ?? "?";
+      const fh = f.teams?.home?.name || "";
+      const fa = f.teams?.away?.name || "";
+      const d = (f.fixture?.date || "").slice(0, 10);
+      return `  ${d}: ${fh} ${gh}-${ga} ${fa}`;
+    });
+    const formSection = recentGames.length > 0
+      ? `\nתוצאות אחרונות (${homeEn}):\n${recentGames.join("\n")}`
+      : "";
+
+    if (matchLine) return matchLine + formSection;
+    if (formSection) return `📊 API-Football — ${homeEn} (לא נמצא משחק קרוב)${formSection}`;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ── The Odds API (external odds when Winner is blocked) ───────────────────────
+
+const ODDS_SPORT_MAP = {
+  "ליגת האלופות": "soccer_uefa_champs_league",
+  "ליגה אירופאית": "soccer_uefa_europa_league",
+  "קונפרנס": "soccer_uefa_europa_conference_league",
+  "פרמייר ליג": "soccer_epl",
+  "בונדסליגה": "soccer_germany_bundesliga",
+  "סריה א": "soccer_italy_serie_a",
+  "ליג 1": "soccer_france_ligue_one",
+  "לה ליגה": "soccer_spain_la_liga",
+  "ארדיביזי": "soccer_netherlands_eredivisie",
+  "סופר ליג טורקיה": "soccer_turkey_super_league",
+  "פרמייר ליג סקוטלנד": "soccer_scotland_premier_league",
+  "פורטוגלית": "soccer_portugal_primeira_liga",
+  "בלגית": "soccer_belgium_first_div",
+  "שבדית": "soccer_sweden_allsvenskan",
+  "נורבגית": "soccer_norway_eliteserien",
+  "דנית": "soccer_denmark_superliga",
+  "ליגת העל": "soccer_israel_premier_league",
+  "MLS": "soccer_usa_mls",
+  "ליגה MX": "soccer_mexico_ligamx",
+  "ברזילאית": "soccer_brazil_campeonato",
+  "ארגנטינאית": "soccer_argentina_primera_division",
+  "קופה ליברטדורס": "soccer_conmebol_copa_libertadores",
+  "NBA": "basketball_nba",
+  "יורוליג": "basketball_euroleague",
+  "NCAA": "basketball_ncaab",
+};
+
+const ODDS_FALLBACK_KEYS = [
+  "soccer_uefa_champs_league",
+  "soccer_epl",
+  "soccer_spain_la_liga",
+  "soccer_germany_bundesliga",
+  "soccer_italy_serie_a",
+  "soccer_france_ligue_one",
+  "soccer_netherlands_eredivisie",
+  "soccer_portugal_primeira_liga",
+  "soccer_turkey_super_league",
+  "soccer_israel_premier_league",
+  "soccer_usa_mls",
+  "soccer_brazil_campeonato",
+  "soccer_conmebol_copa_libertadores",
+  "basketball_nba",
+  "basketball_euroleague",
+];
+
+async function fetchOddsApiData(home, away, competition) {
+  if (!ODDS_API_KEY_EXT) return null;
+  const homeEn = translateTeamName(home);
+  const awayEn = translateTeamName(away);
+  const mappedKey = competition ? ODDS_SPORT_MAP[competition] : null;
+  // When no competition known, try all fallback keys (saves quota by stopping early)
+  const keysToTry = mappedKey ? [mappedKey] : ODDS_FALLBACK_KEYS;
+
+  for (const sportKey of keysToTry) {
+    try {
+      const url = `${ODDS_API_EXT}/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY_EXT}&regions=eu&markets=h2h&oddsFormat=decimal`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(9000) });
+      if (!res.ok) continue;
+      const events = await res.json();
+
+      for (const ev of (Array.isArray(events) ? events : [])) {
+        const s1 = Math.max(
+          teamMatchScore(homeEn, ev.home_team) + teamMatchScore(awayEn, ev.away_team),
+          teamMatchScore(home, ev.home_team) + teamMatchScore(away, ev.away_team),
+        );
+        const s2 = Math.max(
+          teamMatchScore(homeEn, ev.away_team) + teamMatchScore(awayEn, ev.home_team),
+          teamMatchScore(home, ev.away_team) + teamMatchScore(away, ev.home_team),
+        );
+        if (Math.max(s1, s2) < 0.75) continue;
+
+        const bookmaker = ev.bookmakers?.[0];
+        if (!bookmaker) continue;
+        const h2h = bookmaker.markets?.find(m => m.key === "h2h");
+        if (!h2h?.outcomes?.length) continue;
+
+        const outcomeLines = h2h.outcomes
+          .map(o => `  ${o.name}: ${Number(o.price).toFixed(2)} (${(100 / o.price).toFixed(1)}%)`)
+          .join("\n");
+        const date = new Date(ev.commence_time).toLocaleDateString("he-IL");
+        return `💰 The Odds API (${bookmaker.title}): ${ev.home_team} vs ${ev.away_team}\nתאריך: ${date}\nיחסים:\n${outcomeLines}`;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+// ── Competition keyword map ───────────────────────────────────────────────────
+
+const COMPETITION_MAP = [
+  { key: "ליגת האלופות", terms: ["ליגת האלופות", "champions league", "ucl", "champion league"] },
+  { key: "ליגה אירופאית", terms: ["ליגה אירופאית", "europa league", "uel"] },
+  { key: "קונפרנס", terms: ["קונפרנס", "conference league", "uecl"] },
+  { key: "סופר קאפ", terms: ["סופר קאפ", "super cup", "supercup", "uefa super"] },
+  { key: "ליגת האומות", terms: ["ליגת האומות", "ליגה לאומית", "nations league", "uefa nations", "nations"] },
+  { key: "יורו", terms: ["יורו", "euro 20", "european championship", "uefa euro", "אליפות אירופה"] },
+  { key: "מונדיאל", terms: ["מונדיאל", "world cup", "fifa world", "גביע העולם", "wc 20"] },
+  { key: "קופה אמריקה", terms: ["קופה אמריקה", "copa america", "copa améri"] },
+  { key: "גביע אפריקה", terms: ["גביע אפריקה", "africa cup", "afcon", "can 20", "cup of nations"] },
+  { key: "אסיאן קאפ", terms: ["אסיאן קאפ", "asian cup", "afc asian cup"] },
+  { key: "גולד קאפ", terms: ["גולד קאפ", "gold cup", "concacaf gold"] },
+  { key: "פרמייר ליג", terms: ["פרמייר ליג", "premier league", "epl", "אנגלית ראשונה", "english premier"] },
+  { key: "צ'מפיונשיפ", terms: ["צ'מפיונשיפ", "championship", "efl championship", "אנגלית שנייה"] },
+  { key: "גביע FA", terms: ["גביע fa", "fa cup", "גביע אנגליה"] },
+  { key: "ליג קאפ", terms: ["ליג קאפ", "league cup", "carabao cup", "efl cup"] },
+  { key: "לה ליגה", terms: ["לה ליגה", "la liga", "laliga", "ספרדית ראשונה"] },
+  { key: "סגונדה", terms: ["סגונדה", "segunda", "ספרדית שנייה"] },
+  { key: "קופה דל ריי", terms: ["קופה דל ריי", "copa del rey", "גביע ספרד"] },
+  { key: "בונדסליגה", terms: ["בונדסליגה", "bundesliga", "גרמנית ראשונה"] },
+  { key: "בונדסליגה 2", terms: ["בונדסליגה 2", "2. bundesliga", "גרמנית שנייה"] },
+  { key: "DFB פוקאל", terms: ["dfb pokal", "dfb-pokal", "גביע גרמניה"] },
+  { key: "סריה א", terms: ["סריה א", "serie a", "serie-a", "איטלקית ראשונה"] },
+  { key: "סריה ב", terms: ["סריה ב", "serie b", "איטלקית שנייה"] },
+  { key: "קופה איטליה", terms: ["קופה איטליה", "coppa italia", "גביע איטליה"] },
+  { key: "ליג 1", terms: ["ליג 1", "ligue 1", "ligue-1", "צרפתית ראשונה"] },
+  { key: "ליג 2", terms: ["ליג 2", "ligue 2", "צרפתית שנייה"] },
+  { key: "קופה דה פראנס", terms: ["קופה דה פראנס", "coupe de france", "גביע צרפת"] },
+  { key: "פורטוגלית", terms: ["פורטוגלית", "primeira liga", "liga portugal", "פורטוגל"] },
+  { key: "ארדיביזי", terms: ["ארדיביזי", "eredivisie", "הולנדית", "dutch eredivisie"] },
+  { key: "בלגית", terms: ["בלגית", "jupiler pro", "belgian first", "בלגיה"] },
+  { key: "סופר ליג טורקיה", terms: ["טורקית", "super lig", "süper lig", "turkish süper", "טורקיה"] },
+  { key: "פרמייר ליג סקוטלנד", terms: ["סקוטית", "scottish premiership", "spfl", "סקוטלנד"] },
+  { key: "סופר ליג יוון", terms: ["יוונית", "super league greece", "greek super", "יוון"] },
+  { key: "שווייצרית", terms: ["שווייצרית", "swiss super league", "שווייץ"] },
+  { key: "אוסטרית", terms: ["אוסטרית", "austrian bundesliga", "admiral bundesliga", "אוסטריה"] },
+  { key: "שבדית", terms: ["שבדית", "allsvenskan", "שבדיה"] },
+  { key: "נורבגית", terms: ["נורבגית", "eliteserien", "נורבגיה"] },
+  { key: "דנית", terms: ["דנית", "danish superliga", "דנמרק"] },
+  { key: "פינית", terms: ["פינית", "veikkausliiga", "פינלנד"] },
+  { key: "רוסית", terms: ["רוסית", "russian premier", "רפל", "רוסיה"] },
+  { key: "אוקראינית", terms: ["אוקראינית", "ukrainian premier", "ukraine"] },
+  { key: "פולנית", terms: ["פולנית", "ekstraklasa", "פולין"] },
+  { key: "ליגת העל", terms: ["ליגת העל", "israeli premier", "ישראלית ראשונה", "ליגה ראשונה ישראל"] },
+  { key: "ליגה לאומית ישראל", terms: ["ליגה לאומית", "leumit", "ישראלית שנייה", "ליגה לאומית ישראל"] },
+  { key: "גביע המדינה", terms: ["גביע המדינה", "state cup", "גביע ישראל", "גביע הטוטו"] },
+  { key: "MLS", terms: ["mls", "major league soccer"] },
+  { key: "ליגה MX", terms: ["ליגה mx", "liga mx", "מקסיקנית", "מקסיקו"] },
+  { key: "ברזילאית", terms: ["ברזילאית", "brasileirao", "campeonato brasileiro", "ברזיל"] },
+  { key: "ארגנטינאית", terms: ["ארגנטינאית", "liga profesional", "primera division argentina", "ארגנטינה"] },
+  { key: "קופה ליברטדורס", terms: ["ליברטדורס", "copa libertadores", "libertadores"] },
+  { key: "קופה סודאמריקאנה", terms: ["סודאמריקאנה", "copa sudamericana", "sudamericana"] },
+  { key: "AFC ליגת האלופות", terms: ["afc champions", "ליגת האלופות afc", "asian champions"] },
+  { key: "J-League", terms: ["j-league", "j league", "jleague", "יפנית"] },
+  { key: "K-League", terms: ["k-league", "k league", "kleague", "קוריאנית"] },
+  { key: "סינית", terms: ["סינית", "chinese super league", "csl", "סין"] },
+  { key: "סאודית", terms: ["סאודית", "saudi pro league", "roshn", "ערב הסעודית"] },
+  { key: "אמירויות", terms: ["אמירויות", "uae pro league", "emirates"] },
+  { key: "קטרית", terms: ["קטרית", "qatar stars league", "קטר"] },
+  { key: "NBA", terms: ["nba"] },
+  { key: "יורוליג", terms: ["יורוליג", "euroleague", "euro league"] },
+  { key: "יורוקאפ", terms: ["יורוקאפ", "eurocup"] },
+  { key: "NCAA", terms: ["ncaa", "college basketball", "march madness"] },
+  { key: "כדורסל ישראל", terms: ["כדורסל ישראל", "ליגת winner כדורסל", "winner league basketball"] },
+  { key: "FIBA", terms: ["fiba", "אליפות עולם כדורסל", "basketball world cup"] },
+];
+
 // ── Query parser ─────────────────────────────────────────────────────────────
 
 function parseQuery(text) {
@@ -128,87 +466,214 @@ function parseQuery(text) {
   for (const pattern of vsPatterns) {
     const m = text.match(pattern);
     if (m) {
-      // Strip date words from team names
       home = m[1].replace(/\b(היום|מחר|אתמול|today|tomorrow|yesterday)\b/gi, "").trim();
       away = m[2].replace(/\b(היום|מחר|אתמול|today|tomorrow|yesterday)\b/gi, "").trim();
       if (home && away) break;
     }
   }
 
-  // Date offset
   const lc = text.toLowerCase();
+
+  const hasDateWord = /היום|מחר|אתמול|today|tomorrow|yesterday/.test(lc);
   let offset = 0;
-  if (/מחר|tomorrow/.test(lc)) offset = 1;
-  else if (/אתמול|yesterday/.test(lc)) offset = -1;
-
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  const dateKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Jerusalem" }).format(d);
-  return { home, away, dateKey, offset };
-}
-
-// ── Claude API call ───────────────────────────────────────────────────────────
-
-const SYSTEM_PROMPT = `אתה AI Sports Analyst — מנתח ספורטיבי וסטטיסטי חכם, ישיר ואמין. אתה מדבר עברית שוטפת וקצרה, ומסביר נתוני משחקים בפשטות ללא ז'רגון.
-
-משפט חובה בתחילת תשובה רלוונטית:
-AI Sports Analyst מספק ניתוחים ספורטיביים וסטטיסטיים בלבד. השירות אינו מהווה ייעוץ הימורים, אינו המלצה לשים כסף, ואינו מבטיח תוצאה או רווח.
-
-## כיצד אתה פועל
-1. אתה מקבל נתוני שווקים אמיתיים מ-Winner — אודס, שווקים והסתברויות גלומות — כקונטקסט סטטיסטי בלבד
-2. אתה מנתח חוזקות, חולשות, כושר, בית/חוץ, מאזן ראש בראש, מגמות התקפה/הגנה ואי-ודאות
-3. אתה מסביר אם קיים יתרון סטטיסטי אפשרי, בלי לתת הוראה או המלצה לשים כסף
-
-## כללים
-- ענה תמיד בעברית בלבד
-- אם המשתמש שואל "על מה להמר", "מה לשים", "מי הבחירה שלך" או ניסוח דומה, ענה: "אני לא נותן המלצות הימורים או הוראות לשים כסף. לפי הנתונים הספורטיביים..." ואז נתח יתרונות וסיכונים
-- אסור להשתמש במשפטים כמו "שים על", "הייתי מהמר על", "הבחירה המומלצת היא", "טיפ להיום", "הימור בטוח" או "המשחק הכי טוב לשים עליו"
-- אל תמציא נתוני פציעות, הרכבים או סטטיסטיקות — ציין בפירוש אם אין לך נתון
-- הצג הסתברות שוקית (1/אודס) לכל אודס שאתה מציג
-- אם האודס קצר מ-1.40 — אמור בפירוש שהשוק מתמחר הסתברות גבוהה ולכן מרווח הטעות קטן
-- אם אין מספיק נתונים — אמור זאת ואל תנחש
-- קומפקטי: 3–5 פסקאות, ישיר לעניין
-- בסוף: "שורה תחתונה" עם דירוג יתרון סטטיסטי מ-1 עד 10, ולא המלצת פעולה`;
-
-async function callClaude(userMessage, conversationHistory) {
-  if (!ANTHROPIC_API_KEY) {
-    return "AI Sports Analyst לא מופעל — מפתח ANTHROPIC_API_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
+  let dateKey = null;
+  if (hasDateWord) {
+    if (/מחר|tomorrow/.test(lc)) offset = 1;
+    else if (/אתמול|yesterday/.test(lc)) offset = -1;
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    dateKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Jerusalem" }).format(d);
   }
 
+  let competition = null;
+  for (const { key, terms } of COMPETITION_MAP) {
+    if (terms.some(t => lc.includes(t))) { competition = key; break; }
+  }
+  const rawCompetitionFallback = !competition && !home && !away ? text : null;
+  const isFinal = /גמר|final/.test(lc);
+
+  return { home, away, dateKey, offset, competition, rawCompetitionFallback, isFinal, hasDateWord };
+}
+
+// ── Groq API call ────────────────────────────────────────────────────────────
+
+const SYSTEM_PROMPT = `You are not a basic betting bot.
+You are an elite sports intelligence agent.
+You think, reason, and communicate like ChatGPT — but your entire world is sports, odds, statistics, fixtures, and predictions.
+
+You never repeat the same answer mindlessly.
+You understand context, ambiguity, and human intent.
+
+When a user asks:
+"Arsenal vs City, who wins?"
+you do NOT panic if the match is unclear or missing.
+
+You first think:
+
+* Is there an upcoming match between these teams?
+* Could the user mean a specific competition?
+* Could they mean Premier League, Champions League, FA Cup, or a friendly?
+* Is the fixture missing from the calendar?
+
+If the match is unclear, you calmly ask:
+"Which competition or date are you referring to?"
+
+You NEVER invent fake games.
+You NEVER hallucinate fixtures.
+You NEVER repeat the same sentence over and over.
+
+You behave like a real football analyst sitting in a studio with access to logic, memory, and context.
+
+When the user clarifies:
+"Champions League semifinal"
+or
+"The game in August"
+
+you instantly continue naturally, understanding the conversation history like ChatGPT.
+
+You analyze:
+
+* Team form
+* Injuries
+* Motivation
+* League standings
+* Head-to-head history
+* Tactical matchups
+* Home vs away performance
+* Betting market value
+* Probability and risk
+
+You explain predictions clearly and intelligently.
+
+Bad AI behavior:
+"I cannot find the game."
+"The game does not exist."
+Repeating the same line again and again.
+
+Good AI behavior:
+"I couldn't find an upcoming Arsenal vs City match right now. Are you talking about a specific competition or date?"
+
+You are conversational, smart, adaptive, and human-like.
+
+If the user says:
+"Who wins Arsenal vs PSG?"
+you understand they mean:
+Arsenal F.C. vs Paris Saint-Germain F.C.
+
+If multiple matches are possible, ask for clarification naturally.
+
+You are an AI sports strategist, not a robotic database.
+
+Your goal is to make the user feel like they are talking to a world-class sports analyst powered by GPT-level reasoning.
+
+You do not guarantee wins.
+You provide intelligent analysis, probabilities, value opportunities, and risk-aware predictions.
+
+You answer with confidence, clarity, and context awareness at all times.
+
+## Language
+Always respond in Hebrew (עברית). The user interface is in Hebrew. Write naturally and fluently in Hebrew, like a professional sports analyst speaking to an Israeli audience.
+
+## When live odds data is provided
+Use the real odds as statistical context — calculate implied probability (1/odds), note market edges, and use them to support your analysis. Never invent odds.
+
+## When NO live data is available — CRITICAL RULES (read every word)
+
+You ALWAYS have enough knowledge to analyze any top club or national team. No excuses.
+
+STRUCTURE your response in exactly this format:
+**1. זהות קבוצתית וסגנון משחק** — describe each team's philosophy, pressing style, defensive shape, attacking patterns, and what makes them dangerous.
+**2. ביצועים אחרונים ומומנטום** — discuss their recent form, European/league performance, consistency, and home/away record.
+**3. מפגשים היסטוריים (H2H)** — name the historical rivalry pattern, who tends to dominate, famous encounters, and what the head-to-head record tells us.
+**4. ניתוח טקטי** — the tactical battle: how do their systems clash? Who has the midfield advantage? Pressing vs possession? Set pieces? Who controls tempo?
+**5. תחזית מנומקת** — pick a CLEAR winner. State your prediction directly: "הניצחון הסביר הוא לX". Include a suggested score (e.g. 2-1). Explain WHY with confidence.
+
+BANNED behaviors (instant fail):
+- "קשה לתת תחזית" — NEVER say this
+- "אם היינו צריכים לבחור" — NEVER say this
+- "לא מספיק נתונים" — NEVER say this
+- Naming individual players (e.g. מבאפה, מסי, סאקה, המרטיק, קאמה) — NEVER. Rosters change. Name the CLUB, not individuals.
+- Vague conclusions without a winner — NEVER
+
+You are an ELITE analyst. You commit to a prediction. You explain your reasoning with depth and confidence.
+If no live odds: note briefly "⚠️ ניתוח מבוסס ידע כללי — אין נתוני אודס בזמן אמת."
+
+## Bottom line — MANDATORY LAST LINE
+Every response that involves a match prediction MUST end with exactly this format as the very last line:
+**🏆 אני חושב ש-[שם הקבוצה] ינצחו.**
+No exceptions. This is the final line, after everything else. Make it bold.
+
+## Short follow-up messages — CRITICAL RULE
+If the user sends a very short or vague message like "מחר", "ומה עם הגמר?", "ואם?", "כן", "מה הסיכויים?" —
+ALWAYS treat it as a follow-up to the previous message in the conversation history.
+Look at the conversation history to understand the context (which match, which teams, which competition).
+Do NOT ask "מי הקבוצות?" if the previous messages already established the context.
+Continue the conversation naturally, like ChatGPT would.
+
+## Betting instruction rule
+If the user asks "מה לשים", "על מה להמר" or similar — respond: "אני לא נותן הוראות להמר. לפי הנתונים הספורטיביים..." and then give your analysis.`;
+
+
+async function callGroq(userMessage, conversationHistory) {
+  if (!GROQ_API_KEY) {
+    return "הפוגע AI לא מופעל — מפתח AI_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
+  }
+
+  // Build history, skipping empty messages and collapsing consecutive same-role messages
+  const historyMsgs = conversationHistory.slice(-6)
+    .map(h => ({ role: h.role === "user" ? "user" : "assistant", content: h.text || "" }))
+    .filter(h => h.content.trim().length > 0);
+
+  // Deduplicate consecutive same-role entries (keep last)
+  const dedupedHistory = historyMsgs.reduce((acc, msg) => {
+    if (acc.length > 0 && acc[acc.length - 1].role === msg.role) {
+      acc[acc.length - 1] = msg; // replace with later one
+    } else {
+      acc.push(msg);
+    }
+    return acc;
+  }, []);
+
   const messages = [
-    ...conversationHistory.slice(-6).map(h => ({
-      role: h.role === "user" ? "user" : "assistant",
-      content: h.text,
-    })),
+    { role: "system", content: SYSTEM_PROMPT },
+    ...dedupedHistory,
     { role: "user", content: userMessage },
   ];
 
   const body = {
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 1200,
-    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+    model: GROQ_MODEL,
     messages,
+    max_tokens: 2500,
+    temperature: 0.65,
   };
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-beta": "prompt-caching-2024-07-31",
-    },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(30000),
-  });
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS = [3000, 6000, 12000];
 
-  if (!res.ok) {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || "לא קיבלתי תגובה.";
+    }
+
+    if (res.status === 429 && attempt < MAX_RETRIES - 1) {
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[attempt]));
+      continue;
+    }
+
     const errText = await res.text().catch(() => "");
-    throw new Error(`Claude API ${res.status}: ${errText.slice(0, 200)}`);
+    throw new Error(`Groq API ${res.status}: ${errText.slice(0, 200)}`);
   }
-
-  const data = await res.json();
-  return data.content?.[0]?.text || "לא קיבלתי תגובה.";
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
@@ -219,62 +684,115 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") { res.status(200).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
 
-  const { query, history = [] } = req.body || {};
-  if (!String(query || "").trim()) {
+  if (rateLimit(req, res, { max: 10, windowMs: 60_000 })) return;
+
+  const rawQuery = (req.body || {}).query;
+  const rawHistory = Array.isArray((req.body || {}).history) ? (req.body || {}).history : [];
+  const query = sanitizeInput(rawQuery, 1000);
+  if (!query) {
     res.status(400).json({ error: "Missing query" });
     return;
   }
+  const history = rawHistory.slice(-6).map((m) => ({
+    role: m.role === "user" ? "user" : "assistant",
+    text: sanitizeInput(m.text, 500),
+  }));
+
+  let winnerSection = "";
+  let matchInfo = null;
 
   try {
-    const { home, away, dateKey, offset } = parseQuery(query);
-
-    // ── 1. Fetch Winner markets ──────────────────────────────────────────────
-    let winnerSection = "";
-    let matchInfo = null;
+    const { home, away, dateKey, offset, competition, rawCompetitionFallback, isFinal } = parseQuery(query);
 
     try {
       const markets = await getWinnerLine();
-      let found = (home || away) ? findMatchInMarkets(markets, home, away, dateKey) : null;
+      const dateLabel = offset === 0 ? "היום" : offset === 1 ? "מחר" : "אתמול";
 
-      // Retry without date constraint if not found
-      if (!found && (home || away)) {
-        found = findMatchInMarkets(markets, home, away, null);
-      }
+      let found = (home || away) ? findMatchInMarkets(markets, home, away, dateKey) : null;
+      if (!found && (home || away)) found = findMatchInMarkets(markets, home, away, null);
 
       if (found) {
         matchInfo = { desc: found.desc, league: found.league, date: found.date };
         const formatted = formatMarketsForPrompt(markets, found.eId);
-        const dateLabel = found.date === dateKey ? (offset === 0 ? "היום" : offset === 1 ? "מחר" : "אתמול") : found.date;
-        winnerSection = `✅ נמצא ב-Winner: ${found.desc}
-ליגה: ${found.league}
-תאריך: ${dateLabel} (${found.date})
+        const dl = found.date === dateKey ? dateLabel : found.date;
+        winnerSection = `✅ נמצא ב-Winner: ${found.desc}\nליגה: ${found.league}\nתאריך: ${dl} (${found.date})\n\nשווקים ויחסים:\n${formatted}`;
 
-שווקים ויחסים עכשיו:
-${formatted}`;
-      } else if (home || away) {
-        winnerSection = `⚠️ לא מצאתי את המשחק "${[home, away].filter(Boolean).join(" נגד ")}" ב-Winner כרגע. ייתכן שהמשחק לא מופיע כרגע בשווקי Winner, שם הקבוצה שונה, או שהמשחק עבר.`;
       } else {
-        winnerSection = "לא צוינו שמות קבוצות — לא חיפשתי ב-Winner.";
+        const contextMatches = findMatchesByContext(markets, { competition, rawCompetitionFallback, dateKey, isFinal });
+
+        if (contextMatches.length === 1) {
+          const m = contextMatches[0];
+          matchInfo = { desc: m.desc, league: m.league, date: m.date };
+          const formatted = formatMarketsForPrompt(markets, m.eId);
+          winnerSection = `✅ נמצא ב-Winner: ${m.desc}\nליגה: ${m.league}\nתאריך: ${m.date} ${m.time}\n\nשווקים ויחסים:\n${formatted}`;
+
+        } else if (contextMatches.length > 1) {
+          const lines = contextMatches.slice(0, 8).map(m => {
+            const odds = formatMarketsForPrompt(markets, m.eId);
+            return `📅 ${m.date} ${m.time} | ${m.league}\n⚽ ${m.desc}\n${odds}`;
+          }).join("\n\n---\n\n");
+          winnerSection = `נמצאו ${contextMatches.length} משחקים רלוונטיים ב-Winner:\n\n${lines}`;
+
+        } else if (home || away) {
+          winnerSection = `⚠️ לא מצאתי "${[home, away].filter(Boolean).join(" נגד ")}" ב-Winner. ייתכן שהמשחק עבר, נדחה, או שם הקבוצה שונה.`;
+
+        } else {
+          if (dateKey) {
+            const schedule = formatScheduleSummary(markets, dateKey);
+            winnerSection = schedule.length > 0
+              ? `לוח משחקים ${dateLabel} (${dateKey}) ב-Winner:\n${schedule.join("\n")}`
+              : `לא מצאתי משחקים ב-Winner ל-${dateLabel} (${dateKey}).`;
+          } else {
+            const allUpcoming = formatScheduleSummary(markets, null);
+            winnerSection = allUpcoming.length > 0
+              ? `משחקים קרובים ב-Winner:\n${allUpcoming.join("\n")}`
+              : "לא מצאתי משחקים קרובים ב-Winner כרגע.";
+          }
+        }
       }
     } catch (winnerErr) {
-      winnerSection = `⚠️ לא הצלחתי להתחבר ל-Winner (${winnerErr.message}). אענה לפי ידע כללי.`;
+      winnerSection = `⚠️ לא הצלחתי להתחבר ל-Winner (${winnerErr.message}).`;
     }
 
-    // ── 2. Build user message for Claude ────────────────────────────────────
-    const userMessage = `שאלת המשתמש: ${query}
+    // If Winner returned no useful data, fetch from external APIs in parallel
+    const winnerLackingData = !winnerSection ||
+      winnerSection.startsWith("⚠️") ||
+      winnerSection.startsWith("לא מצאתי");
 
---- נתוני Winner ---
-${winnerSection}
---------------------
+    if (winnerLackingData && (home || away)) {
+      const [apifResult, oddsResult] = await Promise.allSettled([
+        (home && away) ? fetchApiFootballData(home, away) : Promise.resolve(null),
+        (home || away) ? fetchOddsApiData(home || "", away || "", competition) : Promise.resolve(null),
+      ]);
+      const extras = [];
+      if (apifResult.status === "fulfilled" && apifResult.value) extras.push(apifResult.value);
+      if (oddsResult.status === "fulfilled" && oddsResult.value) extras.push(oddsResult.value);
+      if (extras.length > 0) {
+        winnerSection = (winnerLackingData && winnerSection ? winnerSection + "\n\n" : "") + extras.join("\n\n");
+      }
+    }
 
-נתח את הבקשה וענה בעברית כ-AI Sports Analyst. אם יש אודס מ-Winner — השתמש בו לחישוב הסתברות גלומה ויתרון סטטיסטי אפשרי. אל תיתן הוראות או המלצות לשים כסף. אם אין נתונים — ציין זאת בבירור.`;
+    const hasLiveData = winnerSection && !winnerSection.startsWith("⚠️") && winnerSection.length > 30;
+    const safeQuery = query.replace(/`/g, "'").replace(/\$\{/g, "\\${" );
+    const dataInstruction = hasLiveData
+      ? "יש אודס בזמן אמת — חשב הסתברות גלומה (1/אודס) ונתח לפי הנתונים."
+      : "אין נתוני אודס בזמן אמת — בצע ניתוח מעמיק לפי ידע כללי. חמישה סעיפים, תחזית ברורה עם מנצח ותוצאה מוצעת.";
+    const userMessage = `שאלת המשתמש: ${safeQuery}\n\n--- נתוני Winner / APIs בזמן אמת ---\n${winnerSection || "(לא נמצאו נתוני אודס בזמן אמת)"}\n-----------------------------\n\nענה בעברית. ${dataInstruction} אל תיתן הוראות הימור.`;
 
-    // ── 3. Call Claude ───────────────────────────────────────────────────────
-    const answer = await callClaude(userMessage, history);
+    const answer = await callGroq(userMessage, history);
 
     res.status(200).json({ ok: true, answer, matchInfo });
   } catch (err) {
     console.error("Reuven API error:", err);
+    const isQuota = /429|quota|rate.?limit/i.test(err.message);
+    if (isQuota) {
+      const hasWinnerData = winnerSection && !winnerSection.startsWith("⚠️") && winnerSection.length > 20;
+      const answer = hasWinnerData
+        ? `ה-AI לא זמין כרגע (מכסה יומית מוצתה). הנה נתוני Winner ישירות:\n\n${winnerSection}`
+        : `ה-AI לא זמין כרגע (מכסה יומית מוצתה). ${winnerSection || "נסה שוב מאוחר יותר."}`;
+      res.status(200).json({ ok: false, answer, matchInfo });
+      return;
+    }
     res.status(200).json({
       ok: false,
       answer: `שגיאה טכנית: ${err.message}. אנא נסה שוב.`,

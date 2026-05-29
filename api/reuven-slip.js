@@ -1,6 +1,7 @@
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
 const { buildWinnerFeedPayload } = require("./winner-feed.js");
+const { rateLimit, sanitizeInput } = require("./_rate-limit");
 
 function cleanText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
@@ -89,8 +90,11 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") { res.status(200).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
 
+  // 5 requests per IP per minute — vision API is the most expensive call
+  if (rateLimit(req, res, { max: 5, windowMs: 60_000 })) return;
+
   const image = parseDataUrl(req.body?.image);
-  const note = cleanText(req.body?.note || "");
+  const note = sanitizeInput(req.body?.note, 500);
   if (!image) {
     res.status(400).json({ ok: false, answer: "לא הצלחתי לקרוא את קובץ התמונה. תעלה PNG/JPG/WebP ברור של הטופס." });
     return;
