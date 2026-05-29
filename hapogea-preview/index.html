@@ -5752,7 +5752,8 @@ function AiApp() {
       });
       clearTimeout(tid);
       const data=await resp.json().catch(()=>({}));
-      introText=data.answer||"לא הצלחתי לקבל ניתוח. תנסה שוב.";
+      if(data.answer)introText=data.answer;
+      else introText="לא הצלחתי לקבל ניתוח. תנסה שוב.";
     }catch(err){
       introText="שגיאה טכנית — ה-API לא זמין כרגע. תנסה שוב.";
     }
