@@ -423,11 +423,11 @@ module.exports = async (req, res) => {
     text: sanitizeInput(m.text, 500),
   }));
 
+  let winnerSection = "";
+  let matchInfo = null;
+
   try {
     const { home, away, dateKey, offset, competition, rawCompetitionFallback, isFinal } = parseQuery(query);
-
-    let winnerSection = "";
-    let matchInfo = null;
 
     try {
       const markets = await getWinnerLine();
