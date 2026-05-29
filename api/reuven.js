@@ -139,7 +139,8 @@ function findMatchesByContext(markets, { competition, dateKey, isFinal }) {
 function formatScheduleSummary(markets, dateKey) {
   const seen = new Map();
   for (const m of markets) {
-    if (winnerDateToIso(m.e_date) !== dateKey) continue;
+    const date = winnerDateToIso(m.e_date);
+    if (dateKey && date !== dateKey) continue;
     const eId = String(m.eId);
     if (!seen.has(eId)) {
       const desc = cleanText(m.desc);
@@ -201,24 +202,26 @@ function parseQuery(text) {
 
   const lc = text.toLowerCase();
 
-  // Date offset
+  // Date — only set if user explicitly mentioned one
+  const hasDateWord = /היום|מחר|אתמול|today|tomorrow|yesterday/.test(lc);
   let offset = 0;
-  if (/מחר|tomorrow/.test(lc)) offset = 1;
-  else if (/אתמול|yesterday/.test(lc)) offset = -1;
-
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  const dateKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Jerusalem" }).format(d);
+  let dateKey = null;
+  if (hasDateWord) {
+    if (/מחר|tomorrow/.test(lc)) offset = 1;
+    else if (/אתמול|yesterday/.test(lc)) offset = -1;
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    dateKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Jerusalem" }).format(d);
+  }
 
   // Competition detection
   let competition = null;
   for (const { key, terms } of COMPETITION_MAP) {
     if (terms.some(t => lc.includes(t))) { competition = key; break; }
   }
-  // "גמר" alone without competition = finals in general
   const isFinal = /גמר|final/.test(lc);
 
-  return { home, away, dateKey, offset, competition, isFinal };
+  return { home, away, dateKey, offset, competition, isFinal, hasDateWord };
 }
 
 // ── Claude API call ───────────────────────────────────────────────────────────
@@ -408,29 +411,24 @@ module.exports = async (req, res) => {
           }).join("\n\n---\n\n");
           winnerSection = `נמצאו ${contextMatches.length} משחקים רלוונטיים ב-Winner:\n\n${lines}`;
 
-        } else if (competition) {
-          // STEP B2: competition found but no matches on that specific date —
-          // retry across ALL available dates (e.g. "מי יקח את ליגת האלופות?" with no date)
-          const anyDateMatches = findMatchesByContext(markets, { competition, dateKey: null, isFinal });
-          if (anyDateMatches.length > 0) {
-            const lines = anyDateMatches.slice(0, 8).map(m => {
-              const odds = formatMarketsForPrompt(markets, m.eId);
-              return `📅 ${m.date} ${m.time} | ${m.league}\n⚽ ${m.desc}\n${odds}`;
-            }).join("\n\n---\n\n");
-            winnerSection = `לא נמצא משחק ספציפי ${dateLabel}, אבל אלה כל משחקי ${competition} הקרובים ב-Winner:\n\n${lines}`;
-          } else {
-            winnerSection = `לא מצאתי משחקי ${competition} ב-Winner כרגע. ייתכן שאין יחסים פתוחים עדיין.`;
-          }
-
         } else if (home || away) {
           winnerSection = `⚠️ לא מצאתי "${[home, away].filter(Boolean).join(" נגד ")}" ב-Winner. ייתכן שהמשחק עבר, נדחה, או שם הקבוצה שונה.`;
 
         } else {
-          // STEP C: general date query — show full schedule for that day
-          const schedule = formatScheduleSummary(markets, dateKey);
-          winnerSection = schedule.length > 0
-            ? `לוח משחקים ${dateLabel} (${dateKey}) ב-Winner:\n${schedule.join("\n")}`
-            : `לא מצאתי משחקים ב-Winner ל-${dateLabel} (${dateKey}).`;
+          // STEP C: no teams, no competition, no date → show upcoming schedule
+          if (dateKey) {
+            const schedule = formatScheduleSummary(markets, dateKey);
+            winnerSection = schedule.length > 0
+              ? `לוח משחקים ${dateLabel} (${dateKey}) ב-Winner:\n${schedule.join("\n")}`
+              : `לא מצאתי משחקים ב-Winner ל-${dateLabel} (${dateKey}).`;
+          } else {
+            // Show next ~2 days worth of matches
+            const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Jerusalem" }).format(new Date());
+            const allUpcoming = formatScheduleSummary(markets, null);
+            winnerSection = allUpcoming.length > 0
+              ? `משחקים קרובים ב-Winner:\n${allUpcoming.join("\n")}`
+              : "לא מצאתי משחקים קרובים ב-Winner כרגע.";
+          }
         }
       }
     } catch (winnerErr) {
