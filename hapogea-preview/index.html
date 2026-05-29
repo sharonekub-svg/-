@@ -1260,6 +1260,104 @@
       max-width: min(150px, 38vw);
       font-size: 12px;
     }
+
+    /* ── Card state accent borders ── */
+    .card.state-pick {
+      border-inline-start: 3px solid rgba(49,209,135,.65);
+    }
+    .card.state-hit {
+      border-inline-start: 3px solid #31d187;
+      background: linear-gradient(180deg, rgba(49,209,135,.06) 0%, rgba(255,255,255,.018) 100%) !important;
+    }
+    .card.state-miss {
+      border-inline-start: 3px solid #ef5350;
+    }
+    .card.state-wait {
+      border-inline-start: 3px solid rgba(85,214,255,.6);
+    }
+
+    /* ── Winner indicator pill inside teams ── */
+    .team-pick-label {
+      font-size: 9.5px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: rgba(49,209,135,.92);
+      text-align: center;
+      line-height: 1;
+      min-height: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+    .team-pick-label-spacer { min-height: 12px; }
+
+    /* ── Enhanced selected team styling ── */
+    .team-side { padding: 6px 5px; border-radius: 10px; }
+    .team-side.selected {
+      background: rgba(49,209,135,.075);
+      border-radius: 10px;
+      padding: 6px 5px;
+    }
+    .team-side.selected .logo-wrap {
+      width: 60px;
+      height: 60px;
+      border-color: rgba(49,209,135,.88);
+      box-shadow: 0 0 0 3px rgba(49,209,135,.18), 0 6px 20px rgba(49,209,135,.22);
+    }
+    .team-side.selected .team-name {
+      font-size: 12.5px;
+      font-weight: 900;
+      color: #bff8dc;
+      max-width: 140px;
+    }
+    .versus.selected .versus-main {
+      border-color: rgba(49,209,135,.92);
+      background: rgba(49,209,135,.14);
+      color: #bff8dc;
+      box-shadow: 0 0 0 3px rgba(49,209,135,.16);
+    }
+    /* suppress old pseudo-element badge — replaced by explicit label */
+    .team-side.selected:after,
+    .versus.selected:after { display: none !important; }
+
+    /* ── Bigger, more prominent odds box ── */
+    .odds-box {
+      min-width: 68px;
+      font-size: 21px;
+      font-weight: 900;
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+
+    /* ── Pick section with recommendation ── */
+    .pick-section-rec {
+      display: grid;
+      gap: 8px;
+      background: rgba(49,209,135,.06);
+      border: 1px solid rgba(49,209,135,.22);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .pick-section-norec {
+      opacity: .72;
+    }
+
+    /* ── Result line outcome tinting ── */
+    .result-line.outcome-hit {
+      background: rgba(49,209,135,.07) !important;
+      border-color: rgba(49,209,135,.32) !important;
+    }
+    .result-line.outcome-miss {
+      background: rgba(239,83,80,.06) !important;
+      border-color: rgba(239,83,80,.28) !important;
+    }
+    .result-line .verdict {
+      font-size: 15px;
+      min-width: 80px;
+    }
+
     /* ─── REUBEN AI — SIDEBAR + CHAT LAYOUT ─── */
     .reuben-panel {
       grid-column: 1 / -1;
@@ -2303,6 +2401,24 @@
     .empty { background:#F9F6F1; border-color:rgba(33,31,27,.12); color:#6E675C; }
     .error { color:#DC2626; border-color:rgba(220,38,38,.22); background:rgba(220,38,38,.04); }
 
+    /* Card state accents — light mode */
+    .card.state-pick { border-inline-start-color: rgba(21,128,61,.55); }
+    .card.state-hit  { border-inline-start-color: #15803D; background: linear-gradient(180deg, rgba(21,128,61,.05) 0%, #FDFCFB 100%) !important; }
+    .card.state-miss { border-inline-start-color: #DC2626; }
+    .card.state-wait { border-inline-start-color: #2563EB; }
+    /* Winner label */
+    .team-pick-label { color: #15803D; }
+    .team-side.selected { background: rgba(21,128,61,.06); }
+    .team-side.selected .logo-wrap { border-color: rgba(21,128,61,.80); box-shadow: 0 0 0 3px rgba(21,128,61,.12), 0 4px 14px rgba(21,128,61,.14); }
+    .team-side.selected .team-name { color: #15803D; }
+    .versus.selected .versus-main { border-color: rgba(21,128,61,.78); background: rgba(21,128,61,.10); color: #15803D; box-shadow: 0 0 0 3px rgba(21,128,61,.10); }
+    /* Pick section */
+    .pick-section-rec { background: rgba(21,128,61,.05); border-color: rgba(21,128,61,.20); }
+    .odds-box { background: rgba(21,128,61,.08); border-color: rgba(21,128,61,.24); color: #15803D; }
+    /* Result tinting */
+    .result-line.outcome-hit  { background: rgba(21,128,61,.05) !important; border-color: rgba(21,128,61,.26) !important; }
+    .result-line.outcome-miss { background: rgba(220,38,38,.04) !important; border-color: rgba(220,38,38,.22) !important; }
+
     /* Share button */
     .btn-share-link { background:#F3EFE8; border-color:rgba(33,31,27,.12); color:#211F1B; }
     .btn-share-link:hover { background:#ECE7DD; border-color:rgba(33,31,27,.18); }
@@ -2776,10 +2892,26 @@
 
     function teamsMarkup(row) {
       const side = pickSide(row);
+      const winLabel = `<div class="team-pick-label">▲&nbsp;נבחר</div>`;
+      const spacer   = `<div class="team-pick-label-spacer"></div>`;
       return `
-        <div class="team-side ${side === "home" ? "selected" : ""}">${logoMarkup(row.homeAsset)}<div class="team-name">${row.home || ""}</div>${teamOddMarkup(row, "home", "1")}</div>
-        <div class="versus ${side === "draw" ? "selected" : ""}"><span class="versus-main">${side === "draw" ? "תיקו" : "VS"}</span>${teamOddMarkup(row, "draw", "X")}</div>
-        <div class="team-side ${side === "away" ? "selected" : ""}">${logoMarkup(row.awayAsset)}<div class="team-name">${row.away || ""}</div>${teamOddMarkup(row, "away", "2")}</div>
+        <div class="team-side ${side === "home" ? "selected" : ""}">
+          ${side === "home" ? winLabel : spacer}
+          ${logoMarkup(row.homeAsset)}
+          <div class="team-name">${row.home || ""}</div>
+          ${teamOddMarkup(row, "home", "1")}
+        </div>
+        <div class="versus ${side === "draw" ? "selected" : ""}">
+          ${side === "draw" ? winLabel : ""}
+          <span class="versus-main">${side === "draw" ? "תיקו" : "VS"}</span>
+          ${teamOddMarkup(row, "draw", "X")}
+        </div>
+        <div class="team-side ${side === "away" ? "selected" : ""}">
+          ${side === "away" ? winLabel : spacer}
+          ${logoMarkup(row.awayAsset)}
+          <div class="team-name">${row.away || ""}</div>
+          ${teamOddMarkup(row, "away", "2")}
+        </div>
       `;
     }
 
@@ -4747,7 +4879,7 @@
         verifyLabel = "\u05de\u05de\u05ea\u05d9\u05df \u05dc\u05d0\u05d9\u05de\u05d5\u05ea \u05de-Winner";
       }
       return `
-        <div class="result-line">
+        <div class="result-line outcome-${outcome.key}">
           <div class="result-detail">
             <span>בדיקת תחזית סטטיסטית</span>
             <b>${outcome.label}${outcome.actual ? ` · בפועל: ${outcome.actual}` : ""}</b>
@@ -4803,14 +4935,22 @@
 
     function rowCard(row) {
       const hasRecommendation = row.recommended || (!!row.odds && !row.outsideRange);
+      const outcome = rowOutcome(row);
       const noPickLabel = row.recommendationReason === "rank"
         ? "לא בטופ 20"
         : row.recommendationReason === "odds-range"
           ? "מחוץ לטווח 1.40-1.90"
           : "ללא יתרון סטטיסטי";
       const why = (row.explanation || [])[1] || (row.signals || []).slice(0, 2).join(" · ");
+
+      let stateClass = "";
+      if (outcome.key === "hit") stateClass = "state-hit";
+      else if (outcome.key === "miss") stateClass = "state-miss";
+      else if (outcome.key === "pending" && hasRecommendation) stateClass = "state-wait";
+      else if (hasRecommendation) stateClass = "state-pick";
+
       return `
-        <article class="card" data-id="${row.id}">
+        <article class="card ${stateClass}" data-id="${row.id}">
           <div class="card-head">
             <div class="card-topline" style="width:100%">
               <div class="card-meta-stack">
@@ -4834,21 +4974,25 @@
             </div>
             <div class="card-section">
               ${hasRecommendation
-                ? `<div class="pick-summary">
-                     <div class="pick-summary-main">
-                       <span>הצד שנבחר</span>
-                       <strong>${explicitPickText(row)}</strong>
-                       <span>${marketLabelText(row)} · ${pickActionText(row)}</span>
+                ? `<div class="pick-section-rec">
+                     <div class="pick-summary">
+                       <div class="pick-summary-main">
+                         <span>הצד שנבחר</span>
+                         <strong>${explicitPickText(row)}</strong>
+                         <span>${marketLabelText(row)} · ${pickActionText(row)}</span>
+                       </div>
+                       <div class="odds-box"><small>יחס</small>${row.odds ? formatOdds(row.odds) : "תוצאה"}</div>
                      </div>
-                     <div class="odds-box"><small>יחס</small>${row.odds ? formatOdds(row.odds) : "תוצאה"}</div>
-                   </div>
-                   ${why ? `<div class="why-line">${why}</div>` : ""}
-                   ${oddsMovementMarkup(row)}`
-                : `<div class="pick-summary" style="opacity:.72">
-                     <div class="pick-summary-main">
-                       <span>ללא יתרון סטטיסטי</span>
-                       <strong>${explicitPickText(row)}${row.oddsRaw ? ` · ${formatOdds(row.oddsRaw)}` : ""}</strong>
-                       <span>${noPickLabel}</span>
+                     ${why ? `<div class="why-line">${why}</div>` : ""}
+                     ${oddsMovementMarkup(row)}
+                   </div>`
+                : `<div class="pick-section-norec">
+                     <div class="pick-summary">
+                       <div class="pick-summary-main">
+                         <span>ללא יתרון סטטיסטי</span>
+                         <strong>${explicitPickText(row)}${row.oddsRaw ? ` · ${formatOdds(row.oddsRaw)}` : ""}</strong>
+                         <span>${noPickLabel}</span>
+                       </div>
                      </div>
                    </div>`}
             </div>
