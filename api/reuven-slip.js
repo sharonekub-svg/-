@@ -1,5 +1,5 @@
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GROQ_API_KEY = process.env.AI_KEY;
+const GROQ_VISION_MODEL = "llama-3.2-11b-vision-preview";
 const { buildWinnerFeedPayload } = require("./winner-feed.js");
 const { rateLimit, sanitizeInput } = require("./_rate-limit");
 
@@ -14,39 +14,39 @@ function parseDataUrl(value) {
 }
 
 function compactWinnerContext(feed) {
-  const rows = (feed?.reuvenSchedule || []).slice(0, 90);
+  const rows = (feed?.reuvenSchedule || []).slice(0, 60);
   return rows.map((row) => {
-    const markets = (row.markets || []).slice(0, 4).map((market) => {
+    const markets = (row.markets || []).slice(0, 3).map((market) => {
       const outcomes = (market.outcomes || [])
-        .filter((outcome) => outcome.odds)
-        .slice(0, 5)
-        .map((outcome) => `${outcome.label || outcome.desc}: ${Number(outcome.odds).toFixed(2)}`)
+        .filter((o) => o.odds)
+        .slice(0, 4)
+        .map((o) => `${o.label || o.desc}: ${Number(o.odds).toFixed(2)}`)
         .join(", ");
       return `${market.title}: ${outcomes}`;
     }).join(" | ");
-    return `${row.day} ${row.time || ""} | ${row.sport} | ${row.league} | ${row.match} | ${markets}`;
+    return `${row.day} ${row.time || ""} | ${row.league} | ${row.match} | ${markets}`;
   }).join("\n");
 }
 
-async function callGeminiVision({ image, note, winnerContext }) {
-  if (!GEMINI_API_KEY) {
-    return "ניתוח תמונה לא מופעל — מפתח GEMINI_API_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
+async function callGroqVision({ image, note, winnerContext }) {
+  if (!GROQ_API_KEY) {
+    return "ניתוח תמונה לא מופעל — מפתח AI_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
   }
 
   const prompt = `אתה אנליסט ספורט וסטטיסטיקה.
 
 משימה:
-1. קרא את התמונה שהועלתה. חלץ את כל המשחקים, שווקים, יחסים, והמרה כוללת אם גלויים.
+1. קרא את התמונה. חלץ את כל המשחקים, שווקים, יחסים, והמרה כוללת אם גלויים.
 2. השווה כל משחק מזוהה מול נתוני Winner המצורפים אם אפשר.
-3. נתח את החוזקות, החולשות, אי-הוודאות והקשר השוק. אם טקסט לא קריא — אמור זאת בדיוק.
+3. נתח חוזקות, חולשות, ואי-וודאות. אם טקסט לא קריא — ציין זאת בדיוק.
 4. דרג את יתרון הסטטיסטי/פרופיל הסיכון מ-1 עד 10.
-5. תן שורה תחתונה ברורה על איכות סטטיסטית בלבד.
+5. תן שורה תחתונה על איכות סטטיסטית בלבד.
 
 חוקים:
-- אל תמציא קבוצות, יחסים, נגרים, או שווקים שאינם גלויים בתמונה.
-- אל תתן הנחיות להמר — אל תשתמש בביטויים "שים על", "הייתי מהמר", "כדאי להמר".
-- אם ליגה/רגל אחת חלשה סטטיסטית — ציין אותה.
-- זהו ניתוח ספורטיבי בלבד, לא ייעוץ הימורים.
+- אל תמציא קבוצות, יחסים, או שווקים שאינם גלויים.
+- אל תתן הנחיות הימור — ללא "שים על", "הייתי מהמר", "כדאי להמר".
+- אם רגל אחת חלשה — ציין אותה.
+- ניתוח ספורטיבי בלבד, לא ייעוץ הימורים.
 
 הערת המשתמש: ${cleanText(note) || "אין הערה."}
 
@@ -54,29 +54,34 @@ async function callGeminiVision({ image, note, winnerContext }) {
 ${winnerContext || "לא זמין."}`;
 
   const body = {
-    contents: [{
-      parts: [
-        { inline_data: { mime_type: image.mimeType, data: image.data } },
-        { text: prompt },
+    model: GROQ_VISION_MODEL,
+    max_tokens: 1400,
+    temperature: 0.55,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${image.mimeType};base64,${image.data}` } },
+        { type: "text", text: prompt },
       ],
     }],
-    generationConfig: { maxOutputTokens: 1400, temperature: 0.55 },
   };
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-  const res = await fetch(url, {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${GROQ_API_KEY}`,
+    },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(45000),
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Gemini Vision ${res.status}: ${text.slice(0, 220)}`);
+    throw new Error(`Groq Vision ${res.status}: ${text.slice(0, 220)}`);
   }
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "לא התקבלה תשובה מהניתוח.";
+  return data.choices?.[0]?.message?.content || "לא התקבלה תשובה מהניתוח.";
 }
 
 module.exports = async (req, res) => {
@@ -85,7 +90,6 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") { res.status(200).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
 
-  // 5 requests per IP per minute — vision call is heavier
   if (rateLimit(req, res, { max: 5, windowMs: 60_000 })) return;
 
   const image = parseDataUrl(req.body?.image);
@@ -103,7 +107,7 @@ module.exports = async (req, res) => {
     } catch (error) {
       winnerContext = `Winner context failed: ${error.message}`;
     }
-    const answer = await callGeminiVision({ image, note, winnerContext });
+    const answer = await callGroqVision({ image, note, winnerContext });
     res.status(200).json({ ok: true, answer });
   } catch (error) {
     console.error("Reuven slip error:", error);
