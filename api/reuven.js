@@ -173,13 +173,55 @@ function formatMarketsForPrompt(markets, eId) {
   }).slice(0, 12).join("\n\n");
 }
 
+// ── Hebrew → English team name translations ───────────────────────────────────
+
+const HE_TO_EN = {
+  "ריאל מדריד": "Real Madrid", "ברצלונה": "Barcelona", "אטלטיקו מדריד": "Atletico Madrid",
+  "מנצ'סטר סיטי": "Manchester City", "מנצ'סטר יונייטד": "Manchester United",
+  "ארסנל": "Arsenal", "צ'לסי": "Chelsea", "ליברפול": "Liverpool",
+  "טוטנהאם": "Tottenham", "ניוקאסל": "Newcastle", "אסטון וילה": "Aston Villa",
+  "פריז סן ז'רמן": "Paris Saint-Germain", "מארסיי": "Marseille", "ליון": "Lyon",
+  "בייר לברקוזן": "Bayer Leverkusen", "בוורוסיה דורטמונד": "Borussia Dortmund",
+  "בוורוסיה מ'גלדבך": "Borussia Mönchengladbach",
+  "באיירן מינכן": "Bayern Munich", "ליפציג": "RB Leipzig", "פרנקפורט": "Eintracht Frankfurt",
+  "אינטר מילאן": "Inter Milan", "מילאן": "AC Milan", "יובנטוס": "Juventus",
+  "נאפולי": "Napoli", "רומא": "AS Roma", "פיורנטינה": "Fiorentina", "לאציו": "Lazio",
+  "איי אקס": "Ajax", "פנרבחה": "Fenerbahce", "גלטסראי": "Galatasaray",
+  "בנפיקה": "Benfica", "פורטו": "Porto", "ספורטינג": "Sporting CP",
+  "סלטיק": "Celtic", "ריינג'רס": "Rangers",
+  "מכבי תל אביב": "Maccabi Tel Aviv", "הפועל תל אביב": "Hapoel Tel Aviv",
+  "מכבי חיפה": "Maccabi Haifa", "הפועל באר שבע": "Hapoel Beer Sheva",
+  "בני יהודה": "Bnei Yehuda", "מכבי פתח תקווה": "Maccabi Petah Tikva",
+  "לוס אנג'לס": "LA Galaxy", "אינטר מיאמי": "Inter Miami",
+  "בוקה ג'וניורס": "Boca Juniors", "ריבר פלייט": "River Plate",
+  "פלמנגו": "Flamengo", "פלמינסה": "Palmeiras",
+  "ליון בסקטבול": "LDLC ASVEL", "מכבי תל אביב בסקטבול": "Maccabi Tel Aviv Basketball",
+  "ריאל מדריד בסקטבול": "Real Madrid Basketball",
+  "CSKA מוסקבה": "CSKA Moscow", "אלבה ברלין": "ALBA Berlin",
+};
+
+function translateTeamName(name) {
+  if (!name) return name;
+  const direct = HE_TO_EN[name.trim()];
+  if (direct) return direct;
+  // Partial match: if any key is contained in the name, use its translation
+  for (const [he, en] of Object.entries(HE_TO_EN)) {
+    if (name.includes(he)) return en;
+  }
+  return name;
+}
+
 // ── API-Football (api-sports.io) ──────────────────────────────────────────────
 
 async function fetchApiFootballData(home, away) {
   if (!FOOTBALL_API_KEY) return null;
   try {
+    // Translate Hebrew team names to English for API search
+    const homeEn = translateTeamName(home);
+    const awayEn = translateTeamName(away);
+
     const teamRes = await fetch(
-      `https://v3.football.api-sports.io/teams?search=${encodeURIComponent(home.slice(0, 25))}`,
+      `https://v3.football.api-sports.io/teams?search=${encodeURIComponent(homeEn.slice(0, 30))}`,
       { headers: { "x-apisports-key": FOOTBALL_API_KEY }, signal: AbortSignal.timeout(9000) }
     );
     if (!teamRes.ok) return null;
@@ -187,19 +229,35 @@ async function fetchApiFootballData(home, away) {
     const teamId = teamData.response?.[0]?.team?.id;
     if (!teamId) return null;
 
+    // Fetch next 20 fixtures for more coverage
     const fixRes = await fetch(
-      `https://v3.football.api-sports.io/fixtures?team=${teamId}&next=10`,
+      `https://v3.football.api-sports.io/fixtures?team=${teamId}&next=20`,
       { headers: { "x-apisports-key": FOOTBALL_API_KEY }, signal: AbortSignal.timeout(9000) }
     );
     if (!fixRes.ok) return null;
     const fixData = await fixRes.json();
 
+    // Also fetch last 5 fixtures for recent form
+    const lastRes = await fetch(
+      `https://v3.football.api-sports.io/fixtures?team=${teamId}&last=5`,
+      { headers: { "x-apisports-key": FOOTBALL_API_KEY }, signal: AbortSignal.timeout(9000) }
+    );
+    const lastData = lastRes.ok ? await lastRes.json() : { response: [] };
+
+    let matchLine = null;
     for (const f of (fixData.response || [])) {
       const fHome = f.teams?.home?.name || "";
       const fAway = f.teams?.away?.name || "";
-      const score = teamMatchScore(home, fHome) + teamMatchScore(away, fAway);
-      const revScore = teamMatchScore(home, fAway) + teamMatchScore(away, fHome);
-      if (Math.max(score, revScore) < 0.8) continue;
+      // Match against both original and translated names
+      const score = Math.max(
+        teamMatchScore(homeEn, fHome) + teamMatchScore(awayEn, fAway),
+        teamMatchScore(home, fHome) + teamMatchScore(away, fAway),
+      );
+      const revScore = Math.max(
+        teamMatchScore(homeEn, fAway) + teamMatchScore(awayEn, fHome),
+        teamMatchScore(home, fAway) + teamMatchScore(away, fHome),
+      );
+      if (Math.max(score, revScore) < 0.7) continue;
 
       const league = f.league?.name || "";
       const country = f.league?.country || "";
@@ -207,13 +265,29 @@ async function fetchApiFootballData(home, away) {
       const time = (f.fixture?.date || "").slice(11, 16);
       const venue = f.fixture?.venue?.name || "";
       const round = f.league?.round || "";
-      const parts = [
+      matchLine = [
         `📊 API-Football: ${fHome} vs ${fAway}`,
         `ליגה: ${league}${country ? ` (${country})` : ""}${round ? ` — ${round}` : ""}`,
         `תאריך: ${date}${time ? ` ${time} UTC` : ""}${venue ? ` | ${venue}` : ""}`,
-      ];
-      return parts.join("\n");
+      ].join("\n");
+      break;
     }
+
+    // Append recent form
+    const recentGames = (lastData.response || []).slice(0, 5).map(f => {
+      const gh = f.goals?.home ?? "?";
+      const ga = f.goals?.away ?? "?";
+      const fh = f.teams?.home?.name || "";
+      const fa = f.teams?.away?.name || "";
+      const d = (f.fixture?.date || "").slice(0, 10);
+      return `  ${d}: ${fh} ${gh}-${ga} ${fa}`;
+    });
+    const formSection = recentGames.length > 0
+      ? `\nתוצאות אחרונות (${homeEn}):\n${recentGames.join("\n")}`
+      : "";
+
+    if (matchLine) return matchLine + formSection;
+    if (formSection) return `📊 API-Football — ${homeEn} (לא נמצא משחק קרוב)${formSection}`;
     return null;
   } catch {
     return null;
@@ -251,16 +325,30 @@ const ODDS_SPORT_MAP = {
 };
 
 const ODDS_FALLBACK_KEYS = [
-  "soccer_epl",
   "soccer_uefa_champs_league",
+  "soccer_epl",
   "soccer_spain_la_liga",
   "soccer_germany_bundesliga",
+  "soccer_italy_serie_a",
+  "soccer_france_ligue_one",
+  "soccer_netherlands_eredivisie",
+  "soccer_portugal_primeira_liga",
+  "soccer_turkey_super_league",
+  "soccer_israel_premier_league",
+  "soccer_usa_mls",
+  "soccer_brazil_campeonato",
+  "soccer_conmebol_copa_libertadores",
+  "basketball_nba",
+  "basketball_euroleague",
 ];
 
 async function fetchOddsApiData(home, away, competition) {
   if (!ODDS_API_KEY_EXT) return null;
+  const homeEn = translateTeamName(home);
+  const awayEn = translateTeamName(away);
   const mappedKey = competition ? ODDS_SPORT_MAP[competition] : null;
-  const keysToTry = mappedKey ? [mappedKey] : ODDS_FALLBACK_KEYS.slice(0, 2);
+  // When no competition known, try all fallback keys (saves quota by stopping early)
+  const keysToTry = mappedKey ? [mappedKey] : ODDS_FALLBACK_KEYS;
 
   for (const sportKey of keysToTry) {
     try {
@@ -270,9 +358,15 @@ async function fetchOddsApiData(home, away, competition) {
       const events = await res.json();
 
       for (const ev of (Array.isArray(events) ? events : [])) {
-        const s1 = teamMatchScore(home, ev.home_team) + teamMatchScore(away, ev.away_team);
-        const s2 = teamMatchScore(home, ev.away_team) + teamMatchScore(away, ev.home_team);
-        if (Math.max(s1, s2) < 0.9) continue;
+        const s1 = Math.max(
+          teamMatchScore(homeEn, ev.home_team) + teamMatchScore(awayEn, ev.away_team),
+          teamMatchScore(home, ev.home_team) + teamMatchScore(away, ev.away_team),
+        );
+        const s2 = Math.max(
+          teamMatchScore(homeEn, ev.away_team) + teamMatchScore(awayEn, ev.home_team),
+          teamMatchScore(home, ev.away_team) + teamMatchScore(away, ev.home_team),
+        );
+        if (Math.max(s1, s2) < 0.75) continue;
 
         const bookmaker = ev.bookmakers?.[0];
         if (!bookmaker) continue;
@@ -532,8 +626,8 @@ async function callGroq(userMessage, conversationHistory) {
   const body = {
     model: GROQ_MODEL,
     messages,
-    max_tokens: 1500,
-    temperature: 0.7,
+    max_tokens: 2500,
+    temperature: 0.65,
   };
 
   const MAX_RETRIES = 3;
@@ -661,8 +755,12 @@ module.exports = async (req, res) => {
       }
     }
 
+    const hasLiveData = winnerSection && !winnerSection.startsWith("⚠️") && winnerSection.length > 30;
     const safeQuery = query.replace(/`/g, "'").replace(/\$\{/g, "\\${" );
-    const userMessage = `שאלת המשתמש: ${safeQuery}\n\n--- נתוני Winner בזמן אמת ---\n${winnerSection}\n-----------------------------\n\nענה בעברית. אם יש אודס — חשב הסתברות גלומה (1/אודס). אל תיתן הוראות הימור. אם אין נתונים מספיקים — ציין זאת בבירור.`;
+    const dataInstruction = hasLiveData
+      ? "יש אודס בזמן אמת — חשב הסתברות גלומה (1/אודס) ונתח לפי הנתונים."
+      : "אין נתוני אודס בזמן אמת — בצע ניתוח מעמיק לפי ידע כללי. חמישה סעיפים, תחזית ברורה עם מנצח ותוצאה מוצעת.";
+    const userMessage = `שאלת המשתמש: ${safeQuery}\n\n--- נתוני Winner / APIs בזמן אמת ---\n${winnerSection || "(לא נמצאו נתוני אודס בזמן אמת)"}\n-----------------------------\n\nענה בעברית. ${dataInstruction} אל תיתן הוראות הימור.`;
 
     const answer = await callGroq(userMessage, history);
 
