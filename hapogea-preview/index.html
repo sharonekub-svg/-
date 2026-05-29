@@ -4887,12 +4887,21 @@
       } catch (_) {}
     }
 
+    function timeoutSignal(ms) {
+      if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
+        return AbortSignal.timeout(ms);
+      }
+      const ac = new AbortController();
+      setTimeout(() => ac.abort(), ms);
+      return ac.signal;
+    }
+
     async function _resolveLogo(name) {
       if (_logoMem.has(name)) {
         const v = _logoMem.get(name);
         return (v instanceof Promise) ? null : v;
       }
-      const p = fetch(`/api/logo?q=${encodeURIComponent(name)}&type=team`, { signal: AbortSignal.timeout(7000) })
+      const p = fetch(`/api/logo?q=${encodeURIComponent(name)}&type=team`, { signal: timeoutSignal(7000) })
         .then(response => response.ok ? response.url : null)
         .then(url => {
         if (url) _saveLogo(name, url);
@@ -5349,7 +5358,7 @@
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ query: question, history }),
-              signal: AbortSignal.timeout(35000),
+              signal: timeoutSignal(35000),
             });
             const data = await response.json().catch(() => ({}));
             aiText = data.answer || "לא הצלחתי לקבל ניתוח. תנסה שוב.";
