@@ -1718,13 +1718,16 @@
     .reuben-send-btn:disabled { opacity: .3; cursor: default; }
     .reuben-input-footer { display: flex; align-items: center; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
     .reuben-upload-label {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 5px 11px; border-radius: 7px;
-      border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.025);
-      color: rgba(255,255,255,.32); font: 500 11px Heebo, sans-serif;
-      cursor: pointer; transition: border-color .12s, color .12s;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px;
+      border: 1px solid rgba(85,214,255,.28);
+      background: rgba(85,214,255,.07);
+      color: rgba(85,214,255,.85); font: 700 12px Heebo, sans-serif;
+      cursor: pointer; transition: all .15s;
+      white-space: nowrap;
     }
-    .reuben-upload-label:hover { border-color: rgba(255,255,255,.13); color: rgba(255,255,255,.55); }
+    .reuben-upload-label:hover { border-color: rgba(85,214,255,.55); background: rgba(85,214,255,.13); color: #a8f0ff; }
+    .reuben-upload-label svg { flex-shrink: 0; }
     .reuben-disclaimer { font-size: 10px; color: rgba(255,255,255,.18); margin-inline-start: auto; }
     /* ── THINKING / LOADING ── */
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
@@ -4482,7 +4485,10 @@
               </div>
               <div class="reuben-input-footer">
                 <input id="reubenSlipFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" ${loading ? "disabled" : ""}>
-                <label for="reubenSlipFile" class="reuben-upload-label" style="opacity:${loading ? ".45" : "1"}">תמונה לניתוח</label>
+                <label for="reubenSlipFile" class="reuben-upload-label" style="opacity:${loading ? ".45" : "1"}">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 4l3-3 3 3M2 10.5V12a.5.5 0 00.5.5h9a.5.5 0 00.5-.5v-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  העלה טופס לניתוח
+                </label>
                 <span class="reuben-disclaimer">ניתוח ספורטיבי בלבד · אין ייעוץ הימורים</span>
               </div>
             </div>

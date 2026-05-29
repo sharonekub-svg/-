@@ -1,5 +1,5 @@
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = "gemini-2.0-flash";
 const { buildWinnerFeedPayload } = require("./winner-feed.js");
 const { rateLimit, sanitizeInput } = require("./_rate-limit");
 
@@ -10,7 +10,7 @@ function cleanText(value) {
 function parseDataUrl(value) {
   const match = String(value || "").match(/^data:(image\/(?:png|jpe?g|webp));base64,([a-z0-9+/=]+)$/i);
   if (!match) return null;
-  return { mediaType: match[1].toLowerCase(), data: match[2] };
+  return { mimeType: match[1].toLowerCase(), data: match[2] };
 }
 
 function compactWinnerContext(feed) {
@@ -28,60 +28,55 @@ function compactWinnerContext(feed) {
   }).join("\n");
 }
 
-async function callVision({ image, note, winnerContext }) {
-  const prompt = `You are AI Sports Analyst, a sharp sports and statistical analyst.
+async function callGeminiVision({ image, note, winnerContext }) {
+  if (!GEMINI_API_KEY) {
+    return "ניתוח תמונה לא מופעל — מפתח GEMINI_API_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
+  }
 
-Mandatory framing:
-AI Sports Analyst provides sports and statistical analysis only. This is not betting advice, not an instruction to stake money, and not a guarantee of results or profit.
+  const prompt = `אתה אנליסט ספורט וסטטיסטיקה.
 
-Task:
-1. Read the uploaded image. Extract all visible games, markets, odds, stake, and total odds if visible, only as market context.
-2. Compare any recognizable games/markets against the provided Winner context when possible.
-3. Analyze the sports/statistical strengths, weaknesses, uncertainty, and market context. Do not pretend certainty. If text is unreadable, say exactly what is unreadable.
-4. Rate the statistical edge/risk profile from 1 to 10.
-5. Give a clear bottom line about statistical quality only. Do not tell the user whether to place it, avoid it, stake money, or change it as a betting instruction.
-6. If the user wrote Hebrew, answer Hebrew. If English, answer English. Default Hebrew.
+משימה:
+1. קרא את התמונה שהועלתה. חלץ את כל המשחקים, שווקים, יחסים, והמרה כוללת אם גלויים.
+2. השווה כל משחק מזוהה מול נתוני Winner המצורפים אם אפשר.
+3. נתח את החוזקות, החולשות, אי-הוודאות והקשר השוק. אם טקסט לא קריא — אמור זאת בדיוק.
+4. דרג את יתרון הסטטיסטי/פרופיל הסיכון מ-1 עד 10.
+5. תן שורה תחתונה ברורה על איכות סטטיסטית בלבד.
 
-Important:
-- Do not invent teams, odds, injuries, or markets that are not visible.
-- Winner odds are the bookmaker source. If the image odds differ from current Winner context, mention it.
-- For multi-leg forms, be extra strict: one weak leg can damage the statistical profile.
-- Explain which leg has the weakest statistical support and why, without giving instructions to bet.
-- Never use phrases like "place it", "bet on", "my pick", "best bet", "tip", or Hebrew equivalents such as "שים על" / "הייתי מהמר".
+חוקים:
+- אל תמציא קבוצות, יחסים, נגרים, או שווקים שאינם גלויים בתמונה.
+- אל תתן הנחיות להמר — אל תשתמש בביטויים "שים על", "הייתי מהמר", "כדאי להמר".
+- אם ליגה/רגל אחת חלשה סטטיסטית — ציין אותה.
+- זהו ניתוח ספורטיבי בלבד, לא ייעוץ הימורים.
 
-User note:
-${cleanText(note) || "No extra note."}
+הערת המשתמש: ${cleanText(note) || "אין הערה."}
 
-Current Winner context:
-${winnerContext || "Winner context unavailable."}`;
+נתוני Winner נוכחיים:
+${winnerContext || "לא זמין."}`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const body = {
+    contents: [{
+      parts: [
+        { inline_data: { mime_type: image.mimeType, data: image.data } },
+        { text: prompt },
+      ],
+    }],
+    generationConfig: { maxOutputTokens: 1400, temperature: 0.55 },
+  };
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 1400,
-      messages: [{
-        role: "user",
-        content: [
-          { type: "image", source: { type: "base64", media_type: image.mediaType, data: image.data } },
-          { type: "text", text: prompt },
-        ],
-      }],
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(45000),
   });
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`Vision API ${response.status}: ${text.slice(0, 220)}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Gemini Vision ${res.status}: ${text.slice(0, 220)}`);
   }
-  const data = await response.json();
-  return data.content?.[0]?.text || "לא התקבלה תשובה מהניתוח.";
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "לא התקבלה תשובה מהניתוח.";
 }
 
 module.exports = async (req, res) => {
@@ -90,20 +85,13 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") { res.status(200).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
 
-  // 5 requests per IP per minute — vision API is the most expensive call
+  // 5 requests per IP per minute — vision call is heavier
   if (rateLimit(req, res, { max: 5, windowMs: 60_000 })) return;
 
   const image = parseDataUrl(req.body?.image);
   const note = sanitizeInput(req.body?.note, 500);
   if (!image) {
     res.status(400).json({ ok: false, answer: "לא הצלחתי לקרוא את קובץ התמונה. תעלה PNG/JPG/WebP ברור של הטופס." });
-    return;
-  }
-  if (!ANTHROPIC_API_KEY) {
-    res.status(200).json({
-      ok: false,
-      answer: "קיבלתי את התמונה, אבל ניתוח תמונה עדיין לא מופעל בשרת כי חסר ANTHROPIC_API_KEY. אני לא אנחש מה כתוב בתמונה. בינתיים תעתיק לי את המשחקים והיחסים, ואני אתן ניתוח ספורטיבי וסטטיסטי בלבד מול נתוני Winner.",
-    });
     return;
   }
 
@@ -115,13 +103,13 @@ module.exports = async (req, res) => {
     } catch (error) {
       winnerContext = `Winner context failed: ${error.message}`;
     }
-    const answer = await callVision({ image, note, winnerContext });
+    const answer = await callGeminiVision({ image, note, winnerContext });
     res.status(200).json({ ok: true, answer });
   } catch (error) {
     console.error("Reuven slip error:", error);
     res.status(200).json({
       ok: false,
-      answer: `לא הצלחתי לנתח את התמונה כרגע: ${error.message}. אם זה דחוף, תעתיק לי את המשחקים והנתונים בטקסט ואני אנתח אותם מבחינה ספורטיבית וסטטיסטית.`,
+      answer: `לא הצלחתי לנתח את התמונה כרגע: ${error.message}. תעתיק לי את המשחקים והנתונים בטקסט ואני אנתח אותם.`,
     });
   }
 };
