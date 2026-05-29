@@ -951,6 +951,11 @@ function applyResult(row, event) {
 
   const calculatedSpreadStatus = phase === "final" ? spreadStatus(event, row) : "";
 
+  const pick = cleanText(row.winnerPick || row.pick || "");
+
+  // Over/under pick detection: "מעל X" or "מתחת X" where X is a number
+  const overUnderMatch = pick.match(/^(מעל|מתחת)\s+([\d.]+)/);
+
   let finalStatus;
   if (phase === "cancelled") {
     finalStatus = "בוטל";
@@ -959,9 +964,20 @@ function applyResult(row, event) {
   } else if (phase === "final") {
     if (calculatedSpreadStatus) {
       finalStatus = calculatedSpreadStatus;
+    } else if (overUnderMatch) {
+      // Over/under: compare total goals/points against threshold using actual scores
+      const homeScore = scoreNumber(event.scoreA);
+      const awayScore = scoreNumber(event.scoreB);
+      if (homeScore !== null && awayScore !== null) {
+        const total = homeScore + awayScore;
+        const threshold = parseFloat(overUnderMatch[2]);
+        const isOver = overUnderMatch[1] === "מעל";
+        finalStatus = isOver ? (total > threshold ? "hit" : "miss") : (total < threshold ? "hit" : "miss");
+      } else {
+        finalStatus = resultStatus({ markets: event.markets || [] }, pick);
+      }
     } else if (scoredWinner) {
       // Compare directly using Winner team names
-      const pick = cleanText(row.winnerPick || row.pick || "");
       const isDrawPick = pick.toLowerCase() === "x" || pick === "תיקו";
       if (scoredWinner === "תיקו") {
         finalStatus = isDrawPick ? "hit" : "miss";
@@ -970,7 +986,7 @@ function applyResult(row, event) {
         finalStatus = (w === pick || w.includes(pick) || pick.includes(w)) ? "hit" : "miss";
       }
     } else {
-      finalStatus = resultStatus({ markets: event.markets || [] }, row.winnerPick || row.pick);
+      finalStatus = resultStatus({ markets: event.markets || [] }, pick);
     }
   } else {
     finalStatus = "ממתין";
