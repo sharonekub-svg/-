@@ -2313,16 +2313,6 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
       tomorrow: tomorrowFinalRows.length,
     },
   };
-  const debugApiSports = {
-    keyPresent: !!FOOTBALL_API_KEY,
-    eventsTotal: apiSportsEvents.length,
-    eventsToday: apiSportsToday.length,
-    settledRows: apiSportsSettledRows.length,
-    todayHitMiss: todayCurrentRows.filter((r) => r.status === "hit" || r.status === "miss").length,
-    yesterdayHitMiss: yesterdayMerged.filter((r) => r.status === "hit" || r.status === "miss").length,
-  };
-  console.log("[api-sports debug]", JSON.stringify(debugApiSports));
-
   return {
     ok: true,
     generatedAt: new Date().toISOString(),
@@ -2331,7 +2321,6 @@ async function buildWinnerFeedPayload({ withLogos = true } = {}) {
     targetPicksPerSport: TARGET_PICKS_PER_SPORT,
     lineStats,
     trackingResults,
-    debugApiSports,
     reuvenSchedule: buildReuvenSchedule(markets, today, 31),
     debugAudit: {
       today: splitBySport(auditOpenRows(todayEnrichedRows, todayFinalRows)),
@@ -2722,6 +2711,73 @@ async function buildOddsApiFeed() {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Applies API-Sports time-based result matching to ANY payload (Winner, OddsAPI, or snapshot).
+// This runs AFTER we decide which payload to use, so it works even when Winner is blocked.
+async function enrichPayloadWithApiSports(payload) {
+  if (!FOOTBALL_API_KEY) return payload;
+  const yesterday = payload.tabs?.yesterday?.date;
+  const today     = payload.tabs?.today?.date;
+  const datesToFetch = [...new Set([yesterday, today].filter(Boolean))];
+  if (!datesToFetch.length) return payload;
+
+  const fetchResults = await Promise.all(
+    datesToFetch.flatMap((dateKey) => [
+      getApiSportsScores(dateKey, WINNER_FOOTBALL_ID).catch(() => []),
+      getApiSportsScores(dateKey, WINNER_BASKETBALL_ID).catch(() => []),
+    ])
+  );
+  const allEvents = fetchResults.flat();
+
+  const debug = {
+    keyPresent: true,
+    eventsTotal: allEvents.length,
+    eventsYesterday: allEvents.filter((e) => e.date === yesterday).length,
+    eventsToday:     allEvents.filter((e) => e.date === today).length,
+    settledRows: 0,
+  };
+
+  if (!allEvents.length) {
+    console.log("[api-sports enrich] no events returned:", JSON.stringify(debug));
+    return { ...payload, debugApiSports: debug };
+  }
+
+  const newTabs = { ...payload.tabs };
+  const allSettledRows = [];
+
+  for (const [tabKey, tabDate] of [["yesterday", yesterday], ["today", today]]) {
+    if (!tabDate) continue;
+    const tab = newTabs[tabKey];
+    if (!tab) continue;
+    const tabEvents = allEvents.filter((e) => e.date === tabDate);
+    if (!tabEvents.length) continue;
+
+    const newSports = { ...tab.sports };
+    for (const sport of ["football", "basketball"]) {
+      if (newSports[sport]?.length) {
+        newSports[sport] = applyApiSportsResults(newSports[sport], tabEvents);
+        allSettledRows.push(...newSports[sport].filter((r) => r.status === "hit" || r.status === "miss"));
+      }
+    }
+    newTabs[tabKey] = { ...tab, sports: newSports };
+  }
+
+  debug.settledRows = allSettledRows.length;
+  console.log("[api-sports enrich]", JSON.stringify(debug));
+
+  // Merge settled rows into trackingResults so the browser can find them
+  const existing = (payload.trackingResults || []).filter(
+    (r) => !(r.source === "ApiSports" && (r.status === "hit" || r.status === "miss"))
+  );
+  const newTrackingResults = [...existing, ...allSettledRows.map(compactTrackingRow)];
+
+  return {
+    ...payload,
+    tabs: newTabs,
+    trackingResults: newTrackingResults,
+    debugApiSports: debug,
+  };
+}
+
 function normalizeFallbackRows(payload) {
   const verifiedAt = payload.generatedAt || new Date().toISOString();
   const copy = JSON.parse(JSON.stringify(payload));
@@ -2918,6 +2974,12 @@ async function buildCachedWinnerFeedPayload({ force = false } = {}) {
       fallbackReason: snapshot.fallbackReason || "payload date mismatch",
     };
   }
+  // Enrich with API-Sports time-based results regardless of payload source
+  payload = await enrichPayloadWithApiSports(payload).catch((err) => {
+    console.warn("[api-sports enrich] failed:", err.message);
+    return payload;
+  });
+
   const entry = { cachedAt: Date.now(), payload };
   await kvSet(key, entry, 24 * 60 * 60);
   return {
