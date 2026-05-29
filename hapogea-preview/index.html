@@ -2543,7 +2543,6 @@
       <nav class="nav" id="dayTabs">
         <button class="tab" data-day="yesterday">אתמול</button>
         <button class="tab active" data-day="today">היום</button>
-        <button class="tab" data-day="tomorrow">מחר</button>
       </nav>
       <nav class="nav" id="sportTabs">
         <button class="tab active" data-sport-tab="football">כדורגל</button>
@@ -2960,7 +2959,7 @@
     }
 
     function isOpenDay(day = state.day) {
-      return day === "today" || day === "tomorrow";
+      return day === "today";
     }
 
     function daySportRows(day, sportTab) {
@@ -5220,9 +5219,8 @@
         const currentIsraelDay = israelDayString();
         const feedDay = activeTodayDate();
         if (feedDay && currentIsraelDay !== feedDay) {
-          // Rotate day tab: tomorrow → today, today → yesterday
-          if (state.day === "tomorrow") state.day = "today";
-          else if (state.day === "today") state.day = "yesterday";
+          // Rotate day tab at midnight: today → yesterday
+          if (state.day === "today") state.day = "yesterday";
           localStorage.removeItem(FEED_LS_KEY);
           loadFeed().finally(scheduleMidnightShift);
         } else {
@@ -5338,10 +5336,6 @@
 
     document.querySelectorAll("#dayTabs .tab").forEach(button => {
       button.addEventListener("click", () => {
-        if (button.dataset.day === 'tomorrow' && !state.isPremium) {
-          openPremiumModal();
-          return;
-        }
         state.day = button.dataset.day;
         render();
       });
