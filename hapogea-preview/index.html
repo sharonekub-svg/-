@@ -2568,6 +2568,11 @@
         style="padding:6px 14px;border-radius:20px;border:none;background:linear-gradient(135deg,#55d6ff,#2196f3);color:#06131a;font:800 12px Heebo,sans-serif;cursor:pointer;white-space:nowrap">
         🔒 פרימיום
       </button>
+      <button id="authHeaderBtn" onclick="HapAuth.openOrMenu()"
+        style="padding:6px 14px;border-radius:20px;border:1px solid var(--line-strong);background:rgba(255,255,255,.05);color:var(--text);font:800 12px Heebo,sans-serif;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:7px">
+        <span id="authHeaderAvatar" style="display:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font:800 10px/1 Heebo,sans-serif;align-items:center;justify-content:center"></span>
+        <span id="authHeaderLabel">התחבר</span>
+      </button>
     </div>
   </header>
 
@@ -5463,6 +5468,157 @@
         ReactDOM.createRoot(document.getElementById('ai-root')).render(React.createElement(AiApp));
       }
     }
+    // ══════════════ Account / Authentication ══════════════
+    // Device-local accounts: real sign-up / sign-in / sign-out with a
+    // persistent session and SHA-256 (salted) password hashing. Personalises
+    // the AI and stores per-user chat history. No password is ever stored in
+    // plaintext and nothing leaves the browser.
+    const HapAuth = (() => {
+      const USERS_KEY = "hapogea_users_v1";
+      const SESSION_KEY = "hapogea_session_v1";
+      let authTab = "signin";
+
+      const readUsers = () => { try { return JSON.parse(localStorage.getItem(USERS_KEY) || "[]"); } catch { return []; } };
+      const writeUsers = (u) => localStorage.setItem(USERS_KEY, JSON.stringify(u));
+      const normEmail = (e) => String(e || "").trim().toLowerCase();
+
+      function randomSalt() {
+        if (window.crypto && crypto.getRandomValues) {
+          const a = new Uint8Array(16); crypto.getRandomValues(a);
+          return [...a].map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+        return String(Math.random()).slice(2) + Date.now().toString(16);
+      }
+      async function hashPw(password, salt) {
+        const data = new TextEncoder().encode(salt + "|" + password);
+        if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+          const buf = await crypto.subtle.digest("SHA-256", data);
+          return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+        let h = 0x811c9dc5; const s = salt + "|" + password;
+        for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 0x01000193) >>> 0; }
+        return "f" + h.toString(16);
+      }
+
+      function current() {
+        const id = localStorage.getItem(SESSION_KEY);
+        if (!id) return null;
+        const u = readUsers().find(x => x.id === id);
+        if (!u) return null;
+        return { id: u.id, name: u.name, email: u.email, plan: u.plan || "Free" };
+      }
+
+      function broadcast() {
+        const u = current();
+        window.HAP_USER = u;
+        syncHeader(u);
+        document.dispatchEvent(new CustomEvent("hap:userchange", { detail: u }));
+      }
+
+      function initials(name) {
+        const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return "👤";
+        return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+      }
+
+      function syncHeader(u) {
+        const label = document.getElementById("authHeaderLabel");
+        const av = document.getElementById("authHeaderAvatar");
+        if (!label || !av) return;
+        if (u) {
+          label.textContent = u.name.split(/\s+/)[0];
+          av.textContent = initials(u.name);
+          av.style.display = "flex";
+        } else {
+          label.textContent = "התחבר";
+          av.style.display = "none";
+        }
+      }
+
+      // ── Modal control ──
+      const modal = () => document.getElementById("authModal");
+      function setError(msg) { const e = document.getElementById("authError"); if (e) e.textContent = msg || ""; }
+      function switchTab(tab) {
+        authTab = tab;
+        const isUp = tab === "signup";
+        document.getElementById("authNameRow").style.display = isUp ? "block" : "none";
+        document.getElementById("authTabSignin").style.background = isUp ? "none" : "rgba(99,102,241,.9)";
+        document.getElementById("authTabSignin").style.color = isUp ? "rgba(255,255,255,.65)" : "#fff";
+        document.getElementById("authTabSignup").style.background = isUp ? "rgba(99,102,241,.9)" : "none";
+        document.getElementById("authTabSignup").style.color = isUp ? "#fff" : "rgba(255,255,255,.65)";
+        document.getElementById("authSubmit").textContent = isUp ? "צור חשבון" : "התחבר";
+        document.getElementById("authSubtitle").textContent = isUp
+          ? "פתח חשבון כדי לשמור שיחות ולקבל ניתוח מותאם"
+          : "התחבר כדי לשמור שיחות ולקבל ניתוח מותאם";
+        document.getElementById("authPassword").setAttribute("autocomplete", isUp ? "new-password" : "current-password");
+        setError("");
+      }
+      function showView(signedIn) {
+        document.getElementById("authFormView").style.display = signedIn ? "none" : "block";
+        document.getElementById("authAccountView").style.display = signedIn ? "block" : "none";
+        if (signedIn) {
+          const u = current();
+          document.getElementById("authBigAvatar").textContent = initials(u.name);
+          document.getElementById("authAccountName").textContent = u.name;
+          document.getElementById("authAccountEmail").textContent = u.email;
+          document.getElementById("authAccountPlan").textContent =
+            (isPremiumUser() ? "מנוי פרימיום ✦" : "תוכנית " + (u.plan || "Free"));
+        }
+      }
+      function openModal(tab) {
+        modal().classList.remove("hidden");
+        showView(false);
+        switchTab(tab || "signin");
+        setError("");
+        ["authName", "authEmail", "authPassword"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        setTimeout(() => { const f = document.getElementById(tab === "signup" ? "authName" : "authEmail"); if (f) f.focus(); }, 60);
+      }
+      function closeModal() { modal().classList.add("hidden"); }
+      function openOrMenu() {
+        if (current()) { modal().classList.remove("hidden"); showView(true); }
+        else openModal("signin");
+      }
+
+      async function submit() {
+        const email = normEmail(document.getElementById("authEmail").value);
+        const password = document.getElementById("authPassword").value;
+        const name = document.getElementById("authName").value.trim();
+        if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError("כתובת אימייל לא תקינה");
+        if (!password || password.length < 6) return setError("הסיסמה חייבת לפחות 6 תווים");
+        const users = readUsers();
+
+        if (authTab === "signup") {
+          if (!name) return setError("נא להזין שם מלא");
+          if (users.some(u => u.email === email)) return setError("כבר קיים חשבון עם האימייל הזה");
+          const salt = randomSalt();
+          const hash = await hashPw(password, salt);
+          const user = { id: "u_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+            name, email, salt, hash, plan: "Free", createdAt: new Date().toISOString() };
+          users.push(user); writeUsers(users);
+          localStorage.setItem(SESSION_KEY, user.id);
+        } else {
+          const user = users.find(u => u.email === email);
+          if (!user) return setError("לא נמצא חשבון עם האימייל הזה");
+          const hash = await hashPw(password, user.salt);
+          if (hash !== user.hash) return setError("סיסמה שגויה");
+          localStorage.setItem(SESSION_KEY, user.id);
+        }
+        broadcast();
+        closeModal();
+      }
+
+      function signOut() {
+        localStorage.removeItem(SESSION_KEY);
+        broadcast();
+        closeModal();
+      }
+
+      function init() { broadcast(); }
+
+      return { current, openModal, closeModal, openOrMenu, switchTab, submit, signOut, init };
+    })();
+    window.HapAuth = HapAuth;
+
     document.getElementById("search").addEventListener("input", event => {
       state.search = event.target.value;
       renderCards();
@@ -5653,6 +5809,7 @@
 
     loadFeed();
     scheduleMidnightShift();
+    HapAuth.init();
   </script>
 
   <!-- Premium Modal -->
@@ -5682,6 +5839,52 @@
         פתח פרימיום 🔓
       </button>
       <p style="text-align:center;margin:14px 0 0;font-size:12px;color:rgba(255,255,255,.35)">אין לך קוד עדיין? <a href="mailto:kubovskys@gmail.com" style="color:#55d6ff;text-decoration:none">צור קשר</a></p>
+    </div>
+  </div>
+
+  <!-- ════ Account / Auth modal ════ -->
+  <div id="authModal" class="hidden" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
+    <div style="background:linear-gradient(145deg,#0d1820,#15233a);border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:32px 28px;max-width:400px;width:90%;position:relative;box-shadow:0 0 60px rgba(99,102,241,.18)">
+      <button onclick="HapAuth.closeModal()" style="position:absolute;top:14px;left:14px;background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">×</button>
+
+      <!-- Auth (signed-out) view -->
+      <div id="authFormView">
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:34px;margin-bottom:6px">⚡</div>
+          <h2 style="margin:0;font:900 24px/1 Heebo,sans-serif;color:#fff">הפוגע <span style="background:linear-gradient(90deg,#8b5cf6,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent">AI</span></h2>
+          <p id="authSubtitle" style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,.6)">התחבר כדי לשמור שיחות ולקבל ניתוח מותאם</p>
+        </div>
+        <div style="display:flex;gap:6px;background:rgba(255,255,255,.05);border-radius:12px;padding:4px;margin-bottom:18px">
+          <button id="authTabSignin" onclick="HapAuth.switchTab('signin')" style="flex:1;padding:9px;border:none;border-radius:9px;background:rgba(99,102,241,.9);color:#fff;font:800 13px Heebo,sans-serif;cursor:pointer">התחברות</button>
+          <button id="authTabSignup" onclick="HapAuth.switchTab('signup')" style="flex:1;padding:9px;border:none;border-radius:9px;background:none;color:rgba(255,255,255,.65);font:800 13px Heebo,sans-serif;cursor:pointer">הרשמה</button>
+        </div>
+        <div id="authNameRow" style="margin-bottom:12px;display:none">
+          <input id="authName" type="text" placeholder="שם מלא" autocomplete="name"
+            style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid rgba(99,102,241,.3);background:rgba(255,255,255,.06);color:#fff;font:15px Heebo,sans-serif">
+        </div>
+        <div style="margin-bottom:12px">
+          <input id="authEmail" type="email" placeholder="אימייל" autocomplete="email"
+            style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid rgba(99,102,241,.3);background:rgba(255,255,255,.06);color:#fff;font:15px Heebo,sans-serif;direction:ltr;text-align:right">
+        </div>
+        <div style="margin-bottom:10px">
+          <input id="authPassword" type="password" placeholder="סיסמה" autocomplete="current-password"
+            style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid rgba(99,102,241,.3);background:rgba(255,255,255,.06);color:#fff;font:15px Heebo,sans-serif;direction:ltr;text-align:right">
+        </div>
+        <p id="authError" style="color:#f87171;font-size:12.5px;text-align:center;margin:0 0 12px;min-height:16px"></p>
+        <button id="authSubmit" onclick="HapAuth.submit()" style="width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font:900 15px Heebo,sans-serif;cursor:pointer">התחבר</button>
+        <p style="text-align:center;margin:14px 0 0;font-size:11px;color:rgba(255,255,255,.3)">החשבון נשמר במכשיר זה בלבד · הסיסמה נשמרת מוצפנת (SHA-256)</p>
+      </div>
+
+      <!-- Account (signed-in) view -->
+      <div id="authAccountView" style="display:none">
+        <div style="text-align:center;margin-bottom:18px">
+          <div id="authBigAvatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font:900 26px/1 Heebo,sans-serif;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"></div>
+          <h2 id="authAccountName" style="margin:0;font:900 22px/1.1 Heebo,sans-serif;color:#fff"></h2>
+          <p id="authAccountEmail" style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,.55);direction:ltr"></p>
+          <p id="authAccountPlan" style="margin:8px 0 0;font-size:12px;color:#a5b4fc;font-weight:800"></p>
+        </div>
+        <button onclick="HapAuth.signOut()" style="width:100%;padding:13px;border-radius:12px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#fca5a5;font:900 14px Heebo,sans-serif;cursor:pointer">התנתקות</button>
+      </div>
     </div>
   </div>
 
@@ -5753,6 +5956,24 @@ const AI_FINAL_LEAN = {
 
 const aiSleep = ms => new Promise(r => setTimeout(r, ms));
 
+// Live binding to the device-local account (window.HapAuth / hap:userchange).
+function useHapUser() {
+  const [user, setUser] = React.useState(() => (window.HapAuth ? window.HapAuth.current() : (window.HAP_USER || null)));
+  React.useEffect(() => {
+    const onChange = (e) => setUser(e.detail || (window.HapAuth ? window.HapAuth.current() : null));
+    document.addEventListener("hap:userchange", onChange);
+    if (window.HapAuth) setUser(window.HapAuth.current());
+    return () => document.removeEventListener("hap:userchange", onChange);
+  }, []);
+  return user;
+}
+
+function userInitials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "👤";
+  return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+}
+
 function AiIcon({ name, size=18, stroke=1.9 }) {
   const p = { width:size, height:size, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:stroke, strokeLinecap:"round", strokeLinejoin:"round" };
   const paths = {
@@ -5778,7 +5999,8 @@ function AiIcon({ name, size=18, stroke=1.9 }) {
   return <svg {...p} aria-hidden="true">{paths[name]||null}</svg>;
 }
 
-function AiSidebar({ collapsed, onNewChat }) {
+function AiSidebar({ collapsed, onNewChat, user }) {
+  const openAccount = () => { if (window.HapAuth) window.HapAuth.openOrMenu(); };
   return (
     <div className={"ai-sidebar"+(collapsed?" collapsed":"")}>
       <div className="ai-sb-inner">
@@ -5804,9 +6026,12 @@ function AiSidebar({ collapsed, onNewChat }) {
           ))}
         </div>
         <div className="ai-sb-foot">
-          <div className="ai-user-row">
-            <div className="ai-avatar">דכ</div>
-            <div className="ai-user-meta"><b>דניאל כהן</b><br/><span>תוכנית Pro</span></div>
+          <div className="ai-user-row" onClick={openAccount} title={user?"החשבון שלי":"התחבר / הרשמה"}>
+            <div className="ai-avatar">{user?userInitials(user.name):"➜"}</div>
+            <div className="ai-user-meta">
+              <b>{user?user.name:"התחבר לחשבון"}</b><br/>
+              <span>{user?("תוכנית "+(user.plan||"Free")):"שמירת שיחות וניתוח אישי"}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -5922,6 +6147,7 @@ function AiMessage({m,idx,onToggle}) {
 }
 
 function AiApp() {
+  const user = useHapUser();
   const [messages,setMessages] = React.useState([]);
   const [busy,setBusy] = React.useState(false);
   const [scrolled,setScrolled] = React.useState(false);
@@ -5930,6 +6156,22 @@ function AiApp() {
   const scrollRef = React.useRef(null);
   const atBottom = React.useRef(true);
   const runRef = React.useRef(0);
+
+  // Per-user chat history: load the saved thread when the account changes,
+  // and persist completed threads back to that user's slot.
+  const threadKey = user ? "hapogea_ai_thread_" + user.id : "hapogea_ai_thread_guest";
+  React.useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(threadKey) || "null");
+      setMessages(Array.isArray(saved) ? saved : []);
+    } catch { setMessages([]); }
+    atBottom.current = true;
+  }, [threadKey]);
+  React.useEffect(() => {
+    if (!busy) {
+      try { localStorage.setItem(threadKey, JSON.stringify(messages)); } catch {}
+    }
+  }, [messages, busy, threadKey]);
 
   const patchAi = React.useCallback(patch=>{
     setMessages(m=>{
@@ -5984,7 +6226,7 @@ function AiApp() {
       const resp=await fetch("/api/reuven",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({query:text,history:historySnap}),
+        body:JSON.stringify({query:text,history:historySnap,user:user?{name:user.name,plan:user.plan}:null}),
         signal:ac.signal,
       });
       clearTimeout(tid);
@@ -6010,7 +6252,7 @@ function AiApp() {
   const empty=messages.length===0;
   return (
     <div className="ai-app">
-      <AiSidebar collapsed={collapsed} onNewChat={newChat}/>
+      <AiSidebar collapsed={collapsed} onNewChat={newChat} user={user}/>
       <div className="ai-main">
         <div className={"ai-topbar"+(scrolled?" scrolled":"")}>
           <button className="ai-icon-btn" onClick={()=>setCollapsed(c=>!c)} aria-label="תפריט">
