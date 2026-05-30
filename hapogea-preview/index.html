@@ -2588,8 +2588,27 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+  <!-- ══════════ LOGIN GATE — must sign in with Google before entering ══════════ -->
+  <div id="loginGate" style="position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 90% 120% at 50% -10%,#15233a,transparent 60%),linear-gradient(160deg,#070d16 0%,#0b1422 55%,#0a1018 100%);backdrop-filter:blur(2px)">
+    <div style="text-align:center;max-width:380px;width:90%;padding:40px 30px;background:linear-gradient(145deg,rgba(13,24,32,.85),rgba(21,35,58,.85));border:1px solid rgba(99,102,241,.28);border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,.55),0 0 60px rgba(99,102,241,.12)">
+      <div style="font-size:46px;margin-bottom:10px">⚡</div>
+      <h1 style="margin:0;font:900 30px/1 Heebo,sans-serif;color:#fff">הפוגע <span style="background:linear-gradient(90deg,#8b5cf6,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent">AI</span></h1>
+      <p style="margin:10px 0 26px;font-size:14px;color:rgba(255,255,255,.6);line-height:1.5">כדי להיכנס לאתר יש להתחבר תחילה עם חשבון Google</p>
+      <button id="gateGoogleBtn" onclick="HapAuth.signInWithGoogle()"
+        style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 18px;border-radius:14px;border:none;background:#fff;color:#1f1f1f;font:800 15px Heebo,sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:transform .15s,box-shadow .15s"
+        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.32)'"
+        onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(0,0,0,.25)'">
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        התחבר עם Google
+      </button>
+      <p id="gateError" style="color:#f87171;font-size:12.5px;margin:14px 0 0;min-height:16px"></p>
+      <p style="margin:18px 0 0;font-size:11px;color:rgba(255,255,255,.32)">ההתחברות מאובטחת דרך Supabase · Winner odds</p>
+    </div>
+  </div>
 
   <!-- Slim refresh bar (background refresh indicator) -->
   <div id="refreshBar"></div>
@@ -5646,6 +5665,40 @@
       const SESSION_KEY = "hapogea_session_v1";
       let authTab = "signin";
 
+      // ── Supabase Google auth (gate before entering the site) ──
+      const SUPABASE_URL = "https://jgcmtrlviuivbtimtqjq.supabase.co";
+      // Public anon / publishable key — safe to embed in the browser.
+      const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+      let sb = null, sbUser = null;
+      try {
+        if (window.supabase && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith("PASTE_")) {
+          sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+      } catch (e) { sb = null; }
+
+      const gateEl = () => document.getElementById("loginGate");
+      function showGate(show) {
+        const g = gateEl();
+        if (g) g.style.display = show ? "flex" : "none";
+        document.body.style.overflow = show ? "hidden" : "";
+      }
+      function gateError(msg) { const e = document.getElementById("gateError"); if (e) e.textContent = msg || ""; }
+
+      async function signInWithGoogle() {
+        if (!sb) { gateError("Supabase לא מוגדר עדיין — יש להזין anon key"); return; }
+        gateError("");
+        const btn = document.getElementById("gateGoogleBtn");
+        if (btn) { btn.disabled = true; btn.style.opacity = ".6"; }
+        const { error } = await sb.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: window.location.origin },
+        });
+        if (error) {
+          gateError(error.message);
+          if (btn) { btn.disabled = false; btn.style.opacity = ""; }
+        }
+      }
+
       const readUsers = () => { try { return JSON.parse(localStorage.getItem(USERS_KEY) || "[]"); } catch { return []; } };
       const writeUsers = (u) => localStorage.setItem(USERS_KEY, JSON.stringify(u));
       const normEmail = (e) => String(e || "").trim().toLowerCase();
@@ -5669,6 +5722,15 @@
       }
 
       function current() {
+        if (sbUser) {
+          const meta = sbUser.user_metadata || {};
+          return {
+            id: sbUser.id,
+            name: meta.full_name || meta.name || (sbUser.email || "").split("@")[0],
+            email: sbUser.email || "",
+            plan: "Free",
+          };
+        }
         const id = localStorage.getItem(SESSION_KEY);
         if (!id) return null;
         const u = readUsers().find(x => x.id === id);
@@ -5775,15 +5837,34 @@
         closeModal();
       }
 
-      function signOut() {
+      async function signOut() {
+        if (sb && sbUser) { try { await sb.auth.signOut(); } catch (e) {} sbUser = null; }
         localStorage.removeItem(SESSION_KEY);
         broadcast();
         closeModal();
+        if (sb) showGate(true);
       }
 
-      function init() { broadcast(); }
+      async function init() {
+        if (sb) {
+          try {
+            const { data } = await sb.auth.getSession();
+            sbUser = data?.session?.user || null;
+          } catch (e) { sbUser = null; }
+          showGate(!sbUser);
+          sb.auth.onAuthStateChange((_event, session) => {
+            sbUser = session?.user || null;
+            showGate(!sbUser);
+            broadcast();
+          });
+        } else {
+          // No Supabase key configured yet — don't lock users out of the site.
+          showGate(false);
+        }
+        broadcast();
+      }
 
-      return { current, openModal, closeModal, openOrMenu, switchTab, submit, signOut, init };
+      return { current, openModal, closeModal, openOrMenu, switchTab, submit, signOut, init, signInWithGoogle };
     })();
     window.HapAuth = HapAuth;
 
