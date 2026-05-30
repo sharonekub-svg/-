@@ -701,32 +701,50 @@
       min-height: 196px;
       border: 0;
       background:
-        radial-gradient(circle at 83% 24%, rgba(255,200,87,.20), transparent 0 118px, transparent 119px),
-        radial-gradient(circle at 96% 76%, rgba(85,214,255,.16), transparent 0 120px, transparent 121px),
-        linear-gradient(135deg, rgba(14,24,23,.98) 0%, rgba(8,13,16,.98) 58%, rgba(31,24,9,.95) 100%);
+        radial-gradient(ellipse 80% 130% at 50% -15%, rgba(16,92,50,.92), transparent 60%),
+        radial-gradient(circle at 88% 28%, rgba(245,168,35,.24), transparent 40%),
+        radial-gradient(circle at 10% 78%, rgba(37,99,235,.14), transparent 40%),
+        linear-gradient(158deg, #071320 0%, #0c1f18 44%, #0a1628 100%);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 24px;
-      padding: 24px;
+      padding: 28px;
       cursor: pointer;
       position: relative;
       isolation: isolate;
+      overflow: hidden;
     }
-    .wc-banner:before {
+    /* grass-stripe texture */
+    .wc-banner::after {
       content: "";
       position: absolute;
-      inset: 12px;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 10px;
+      inset: 0;
+      background: repeating-linear-gradient(
+        165deg,
+        transparent, transparent 40px,
+        rgba(22,100,55,.065) 40px, rgba(22,100,55,.065) 80px
+      );
       pointer-events: none;
-      z-index: -1;
+      z-index: 0;
+    }
+    .wc-banner::before {
+      content: "";
+      position: absolute;
+      inset: 11px;
+      border: 1px solid rgba(245,168,35,.20);
+      border-radius: 12px;
+      pointer-events: none;
+      z-index: 1;
     }
     .wc-banner-copy {
       display: grid;
-      gap: 10px;
-      max-width: 660px;
+      gap: 8px;
+      max-width: 620px;
+      position: relative;
+      z-index: 2;
     }
+    .wc-tagline { margin: 0; font-size: 15px; font-weight: 700; color: rgba(245,235,200,.80); letter-spacing: .2px; }
     .wc-kicker {
       width: fit-content;
       border: 1px solid rgba(255,200,87,.26);
@@ -737,8 +755,8 @@
       font-size: 11px;
       font-weight: 900;
     }
-    .wc-banner-copy h3 { margin: 0; font-size: clamp(28px, 4vw, 48px); line-height: 1.02; text-wrap: balance; }
-    .wc-banner-copy p { margin: 0; color: rgba(247,243,234,.86); font-size: 14px; line-height: 1.55; max-width: 560px; }
+    .wc-banner-copy h3 { margin: 0; font-size: clamp(30px, 4.2vw, 52px); line-height: 1.0; text-wrap: balance; }
+    .wc-banner-copy p { margin: 0; color: rgba(247,243,234,.72); font-size: 13.5px; line-height: 1.55; max-width: 520px; }
     .wc-enter {
       width: fit-content;
       border: 1px solid rgba(255,255,255,.24);
@@ -760,20 +778,30 @@
       margin-top: 2px;
     }
     .wc-mark {
-      min-width: 172px;
-      min-height: 172px;
-      border-radius: 26px;
-      border: 1px solid rgba(255,200,87,.24);
-      background: rgba(255,255,255,.045);
-      display: grid;
-      place-items: center;
+      min-width: 164px;
+      min-height: 164px;
+      border-radius: 22px;
+      border: 1.5px solid rgba(245,168,35,.35);
+      background: linear-gradient(160deg, #fff9ee 0%, #fffdf7 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      color: white;
-      font: 900 78px/.8 Heebo, Assistant, sans-serif;
+      color: #211F1B;
       letter-spacing: 0;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 20px 50px rgba(0,0,0,.22);
+      padding: 16px 14px;
+      position: relative;
+      z-index: 2;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.9),
+        0 0 0 1px rgba(200,140,10,.12),
+        0 22px 54px rgba(20,12,0,.28),
+        0 0 44px rgba(245,168,35,.14);
     }
-    .wc-mark span { display: block; font-size: 17px; margin-top: 9px; letter-spacing: 2px; color: #ffe3a0; }
+    .wc-mark-stars { font-size: 11px; letter-spacing: 6px; color: #C8920A; margin-bottom: 4px; }
+    .wc-mark span { display: block; font-size: 12px; font-weight: 800; margin-top: 8px; letter-spacing: 1.2px; color: #92600A; text-transform: uppercase; }
+    .wc-mark small { display: block; font-size: 10.5px; font-weight: 700; color: rgba(110,103,92,.80); margin-top: 6px; }
     .wc-body {
       padding: 16px;
       display: grid;
@@ -1809,8 +1837,11 @@
       .cards { grid-template-columns: 1fr; }
       .explain-grid { grid-template-columns: 1fr; }
       .wc-grid { grid-template-columns: 1fr; }
-      .wc-banner { min-height: 180px; align-items: start; flex-direction: column; padding: 18px; }
-      .wc-mark { min-width: 100%; min-height: 84px; font-size: 48px; border-radius: 12px; }
+      .wc-banner { min-height: 180px; align-items: start; flex-direction: column; padding: 20px; }
+      .wc-mark { min-width: 100%; min-height: 88px; flex-direction: row; gap: 14px; border-radius: 14px; padding: 14px 18px; justify-content: flex-start; }
+      .wc-mark-stars { margin-bottom: 0; font-size: 13px; }
+      .wc-mark b { font-size: 52px; letter-spacing: -1px; }
+      .wc-ball-deco { display: none; }
       .wc-mark span { font-size: 14px; }
       .wc-match-grid { grid-template-columns: 1fr; }
       .teams-line { gap: 8px; }
@@ -2129,21 +2160,23 @@
     .metric b { color: #211F1B; } .metric span { color: #6E675C; }
     .feature-chip { background: #F3EFE8; border-color: rgba(33,31,27,.12); color: #6E675C; }
 
-    /* World Cup strip */
+    /* World Cup strip — light mode overrides */
     .wc-strip { background: #FFFFFF; border-color: rgba(33,31,27,.09); }
     .wc-banner {
       background:
-        radial-gradient(circle at 83% 24%,rgba(146,96,10,.10),transparent 118px),
-        radial-gradient(circle at 96% 76%,rgba(37,99,235,.07),transparent 120px),
-        linear-gradient(135deg,#F9F6F1 0%,#FAF8F4 58%,#FBF4E8 100%);
+        radial-gradient(ellipse 80% 130% at 50% -15%, rgba(16,92,50,.12), transparent 60%),
+        radial-gradient(circle at 88% 28%, rgba(245,168,35,.14), transparent 40%),
+        linear-gradient(158deg, #0c1f18 0%, #0a1628 100%);
     }
-    .wc-banner::before { border-color: rgba(33,31,27,.08); }
-    .wc-banner-copy h3 { color: #211F1B; }
-    .wc-banner-copy p { color: #6E675C; }
-    .wc-kicker { background: rgba(146,96,10,.07); border-color: rgba(146,96,10,.20); color: #92600A; }
-    .wc-enter { background: rgba(37,99,235,.07); border-color: rgba(37,99,235,.22); color: #2563EB; }
-    .wc-mark { background: rgba(33,31,27,.04); border-color: rgba(33,31,27,.12); color: #211F1B; }
+    .wc-banner::before { border-color: rgba(245,168,35,.22); }
+    .wc-banner-copy h3 { color: #fff; }
+    .wc-banner-copy p { color: rgba(247,243,234,.72); }
+    .wc-tagline { color: rgba(245,235,200,.80); }
+    .wc-kicker { background: rgba(245,168,35,.12); border-color: rgba(245,168,35,.28); color: #ffe3a0; }
+    .wc-host-label { color: rgba(245,235,200,.65); }
+    .wc-mark { background: linear-gradient(160deg, #fff9ee 0%, #fffdf7 100%); border-color: rgba(200,140,10,.35); color: #211F1B; }
     .wc-mark span { color: #92600A; }
+    .wc-mark-stars { color: #C8920A; }
     .wc-head h3 { color: #211F1B; } .wc-head p { color: #6E675C; }
     .wc-card { background: #F9F6F1; border-color: rgba(33,31,27,.09); }
     .wc-card.compact:hover { background: #F3EFE8; border-color: rgba(33,31,27,.16); transform: translateY(-1px); }
@@ -2484,61 +2517,71 @@
       .wc-count-sep { display: none; }
     }
 
-    /* ============ WORLD CUP BANNER — UX polish ============ */
-    .wc-banner { transition: transform .25s ease, box-shadow .25s ease; }
-    .wc-banner:hover { transform: translateY(-2px); }
-    .wc-banner:hover::before { border-color: rgba(146,96,10,.34); }
-    .wc-banner:focus-visible { outline: 2px solid var(--accent, #2563EB); outline-offset: 3px; }
-    /* animated dot in the kicker */
+    /* ============ WORLD CUP BANNER — design polish ============ */
+    .wc-banner { transition: transform .28s ease, box-shadow .28s ease; }
+    .wc-banner:hover { transform: translateY(-2px); box-shadow: 0 24px 60px rgba(0,0,0,.30); }
+    .wc-banner:hover::before { border-color: rgba(245,168,35,.38); }
+    .wc-banner:focus-visible { outline: 2px solid #F5A823; outline-offset: 3px; }
+    /* animated kicker dot */
     .wc-kicker { display: inline-flex; align-items: center; gap: 7px; }
     .wc-kicker-dot {
       width: 7px; height: 7px; border-radius: 50%;
       background: #f59e0b; box-shadow: 0 0 0 0 rgba(245,158,11,.55);
-      animation: wcDotPulse 1.9s ease-out infinite;
+      animation: wcDotPulse 2s ease-out infinite;
     }
     @keyframes wcDotPulse {
-      0% { box-shadow: 0 0 0 0 rgba(245,158,11,.5); }
-      70% { box-shadow: 0 0 0 7px rgba(245,158,11,0); }
-      100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+      0%   { box-shadow: 0 0 0 0   rgba(245,158,11,.55); }
+      70%  { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+      100% { box-shadow: 0 0 0 0   rgba(245,158,11,0); }
     }
-    /* host flags row */
-    .wc-banner-hosts { display: flex; align-items: center; gap: 11px; margin-top: 4px; }
+    /* decorative football */
+    .wc-ball-deco {
+      position: absolute;
+      inset-inline-end: 190px;
+      top: 50%; transform: translateY(-50%);
+      width: 200px; height: 200px;
+      opacity: .07; pointer-events: none; z-index: 0;
+      animation: wcBallSpin 90s linear infinite;
+    }
+    @keyframes wcBallSpin { to { transform: translateY(-50%) rotate(360deg); } }
+    /* host flags */
+    .wc-banner-hosts { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
     .wc-host-flags { display: inline-flex; }
     .wc-host-flags img {
-      width: 27px; height: 19px; object-fit: cover; border-radius: 4px;
-      border: 1.5px solid #fff; margin-inline-start: -7px;
-      box-shadow: 0 2px 7px rgba(40,33,22,.22);
+      width: 26px; height: 18px; object-fit: cover; border-radius: 3px;
+      border: 1.5px solid rgba(255,255,255,.7); margin-inline-start: -6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
     }
     .wc-host-flags img:first-child { margin-inline-start: 0; }
-    .wc-host-label { font-size: 12.5px; font-weight: 800; color: #6E675C; }
-    /* clearer primary CTA with sliding arrow */
+    .wc-host-label { font-size: 12px; font-weight: 800; color: rgba(245,235,200,.65); }
+    /* gold CTA */
     .wc-enter {
       display: inline-flex; align-items: center; gap: 9px;
-      background: linear-gradient(135deg, #2563EB, #4F46E5);
-      border: none; color: #fff;
-      box-shadow: 0 6px 18px rgba(37,99,235,.28);
+      background: linear-gradient(135deg, #D4960A, #F5C842);
+      border: none; color: #1a0e00;
+      box-shadow: 0 6px 20px rgba(212,150,10,.35);
+      font-weight: 900;
     }
-    .wc-enter:hover { border: none; box-shadow: 0 8px 22px rgba(37,99,235,.36); }
+    .wc-enter:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(212,150,10,.45); }
     .wc-enter-arrow { display: inline-block; transition: transform .2s ease; }
     .wc-banner:hover .wc-enter-arrow, .wc-enter:hover .wc-enter-arrow { transform: translateX(-5px); }
-    /* live countdown mark */
-    .wc-mark {
-      flex-direction: column; gap: 0; padding: 18px 14px;
-      background: linear-gradient(160deg, #ffffff, #FBF4E8);
-      border-color: rgba(146,96,10,.22);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 16px 40px rgba(40,33,22,.12);
-    }
+    /* countdown mark — stars shimmer */
     .wc-mark b {
-      font: 900 72px/.85 Heebo, Assistant, sans-serif;
-      color: #211F1B; font-variant-numeric: tabular-nums; letter-spacing: -1px;
+      font: 900 74px/.82 Heebo, Assistant, sans-serif;
+      color: #211F1B; font-variant-numeric: tabular-nums; letter-spacing: -2px;
     }
-    .wc-mark span { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #92600A; margin-top: 10px; }
-    .wc-mark small { display: block; font-size: 11px; font-weight: 700; color: rgba(110,103,92,.85); margin-top: 7px; }
-    .wc-mark.wc-mark-live b { color: #15803D; font-size: 40px; line-height: 1; }
-    .wc-mark.wc-mark-live { border-color: rgba(21,128,61,.35); background: linear-gradient(160deg,#ffffff,#eafaf0); }
+    .wc-mark.wc-mark-live { border-color: rgba(21,128,61,.40); background: linear-gradient(160deg,#f0fef5,#ffffff); }
+    .wc-mark.wc-mark-live b { color: #15803D; font-size: 38px; line-height: 1.1; }
+    .wc-mark.wc-mark-live .wc-mark-stars { color: #15803D; }
+    @keyframes wcMarkShimmer {
+      0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 1px rgba(200,140,10,.12), 0 22px 54px rgba(20,12,0,.28), 0 0 44px rgba(245,168,35,.14); }
+      50%       { box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 1px rgba(200,140,10,.22), 0 22px 54px rgba(20,12,0,.28), 0 0 60px rgba(245,168,35,.26); }
+    }
+    .wc-mark { animation: wcMarkShimmer 3.5s ease-in-out infinite; }
     @media (max-width: 760px) {
-      .wc-mark b { font-size: 56px; }
-      .wc-banner-hosts { margin-top: 2px; }
+      .wc-mark b { font-size: 58px; }
+      .wc-banner-hosts { margin-top: 0; }
+      .wc-ball-deco { display: none; }
     }
 
   </style>
@@ -2655,10 +2698,22 @@
 
     <section class="panel wc-strip" id="worldCupSection">
       <div class="wc-banner" id="wcToggle" role="button" tabindex="0" aria-expanded="false" aria-label="פתיחת לוח המונדיאל">
+        <!-- decorative rotating football -->
+        <div class="wc-ball-deco" aria-hidden="true">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="60" cy="60" r="57" stroke="white" stroke-width="1.5"/>
+            <path d="M60 3 L76 17 L70 36 L50 36 L44 17 Z" stroke="white" stroke-width="1.2" fill="white"/>
+            <path d="M107 40 L117 58 L105 72 L88 65 L87 45 Z" stroke="white" stroke-width="1.2" fill="white"/>
+            <path d="M90 97 L76 112 L57 108 L56 89 L74 80 Z" stroke="white" stroke-width="1.2" fill="white"/>
+            <path d="M30 97 L44 112 L63 108 L64 89 L46 80 Z" stroke="white" stroke-width="1.2" fill="white"/>
+            <path d="M13 40 L3 58 L15 72 L32 65 L33 45 Z" stroke="white" stroke-width="1.2" fill="white"/>
+          </svg>
+        </div>
         <div class="wc-banner-copy">
-          <span class="wc-kicker"><span class="wc-kicker-dot"></span>World Cup 2026 · אזור פרימיום</span>
-          <h3>מונדיאל 2026: לוח טורניר ברור, נקי ומאומת</h3>
-          <p>פתח תצוגת טורניר עם דגלי נבחרות, שלבי בתים, תאריך, שעה, סטטוס ויחסי Winner אמיתיים כשהם זמינים. אין יחסים מומצאים ואין תחזיות לפני מקור נתונים אמיתי.</p>
+          <span class="wc-kicker"><span class="wc-kicker-dot"></span>FIFA World Cup 2026 · אזור פרימיום</span>
+          <h3>מונדיאל 2026</h3>
+          <p class="wc-tagline">לוח טורניר ברור, נקי ומאומת</p>
+          <p>דגלי נבחרות, שלבי בתים, תאריך, שעה וסטטוס — עם יחסי Winner אמיתיים כשהם זמינים.</p>
           <div class="wc-banner-hosts">
             <span class="wc-host-flags">
               <img src="https://flagcdn.com/w40/mx.png" alt="מקסיקו" loading="lazy">
@@ -2668,11 +2723,12 @@
             <span class="wc-host-label">מקסיקו · קנדה · ארה"ב · 48 נבחרות</span>
           </div>
           <div class="wc-premium-row">
-            <button class="wc-enter" type="button">כניסה למשחקים<span class="wc-enter-arrow" aria-hidden="true">←</span></button>
+            <button class="wc-enter" type="button">כניסה למשחקים <span class="wc-enter-arrow" aria-hidden="true">←</span></button>
             <span class="pill">דגלים · שלבים · Winner</span>
           </div>
         </div>
         <div class="wc-mark" id="wcBannerMark">
+          <span class="wc-mark-stars" aria-hidden="true">★ ★ ★</span>
           <b id="wcBannerNum">–</b>
           <span id="wcBannerLabel">ימים לפתיחה</span>
           <small id="wcBannerSub">11 ביוני · אצטקה</small>
