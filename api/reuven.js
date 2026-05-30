@@ -614,11 +614,7 @@ Continue the conversation naturally, like ChatGPT would.
 If the user asks "מה לשים", "על מה להמר" or similar — respond: "אני לא נותן הוראות להמר. לפי הנתונים הספורטיביים..." and then give your analysis.`;
 
 
-async function callGroq(userMessage, conversationHistory) {
-  if (!GROQ_API_KEY) {
-    return "הפוגע AI לא מופעל — מפתח AI_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
-  }
-
+function buildGroqMessages(userMessage, conversationHistory) {
   // Build history, skipping empty messages and collapsing consecutive same-role messages
   const historyMsgs = conversationHistory.slice(-6)
     .map(h => ({ role: h.role === "user" ? "user" : "assistant", content: h.text || "" }))
@@ -634,15 +630,21 @@ async function callGroq(userMessage, conversationHistory) {
     return acc;
   }, []);
 
-  const messages = [
+  return [
     { role: "system", content: SYSTEM_PROMPT },
     ...dedupedHistory,
     { role: "user", content: userMessage },
   ];
+}
+
+async function callGroq(userMessage, conversationHistory) {
+  if (!GROQ_API_KEY) {
+    return "הפוגע AI לא מופעל — מפתח AI_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.";
+  }
 
   const body = {
     model: GROQ_MODEL,
-    messages,
+    messages: buildGroqMessages(userMessage, conversationHistory),
     max_tokens: 2500,
     temperature: 0.65,
   };
@@ -676,6 +678,78 @@ async function callGroq(userMessage, conversationHistory) {
   }
 }
 
+// Stream the model's tokens straight to the HTTP response as plain UTF-8 text,
+// so the chat reveals the answer live (ChatGPT-style) instead of waiting for the
+// whole completion. Falls back to a single non-streamed write on any failure.
+async function streamGroq(res, userMessage, conversationHistory) {
+  if (!GROQ_API_KEY) {
+    res.write("הפוגע AI לא מופעל — מפתח AI_KEY חסר. יש להגדיר אותו ב-Vercel environment variables.");
+    res.end();
+    return;
+  }
+
+  const body = {
+    model: GROQ_MODEL,
+    messages: buildGroqMessages(userMessage, conversationHistory),
+    max_tokens: 2500,
+    temperature: 0.65,
+    stream: true,
+  };
+
+  let upstream;
+  try {
+    upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+  } catch (err) {
+    const fallback = await callGroq(userMessage, conversationHistory).catch(e => `שגיאה טכנית: ${e.message}`);
+    res.write(fallback);
+    res.end();
+    return;
+  }
+
+  if (!upstream.ok || !upstream.body || !upstream.body.getReader) {
+    const fallback = await callGroq(userMessage, conversationHistory).catch(e => `שגיאה טכנית: ${e.message}`);
+    res.write(fallback);
+    res.end();
+    return;
+  }
+
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let wrote = false;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("data:")) continue;
+        const payload = trimmed.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          const json = JSON.parse(payload);
+          const token = json.choices?.[0]?.delta?.content;
+          if (token) { res.write(token); wrote = true; }
+        } catch { /* ignore keep-alive / partial frames */ }
+      }
+    }
+  } catch (err) {
+    if (!wrote) res.write(`שגיאה טכנית: ${err.message}. אנא נסה שוב.`);
+  }
+  res.end();
+}
+
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 module.exports = async (req, res) => {
@@ -688,6 +762,7 @@ module.exports = async (req, res) => {
 
   const rawQuery = (req.body || {}).query;
   const rawHistory = Array.isArray((req.body || {}).history) ? (req.body || {}).history : [];
+  const wantStream = (req.body || {}).stream === true;
   const query = sanitizeInput(rawQuery, 1000);
   if (!query) {
     res.status(400).json({ error: "Missing query" });
@@ -779,24 +854,37 @@ module.exports = async (req, res) => {
       : "אין נתוני אודס בזמן אמת — בצע ניתוח מעמיק לפי ידע כללי. חמישה סעיפים, תחזית ברורה עם מנצח ותוצאה מוצעת.";
     const userMessage = `שאלת המשתמש: ${safeQuery}\n\n--- נתוני Winner / APIs בזמן אמת ---\n${winnerSection || "(לא נמצאו נתוני אודס בזמן אמת)"}\n-----------------------------\n\nענה בעברית. ${dataInstruction} אל תיתן הוראות הימור.`;
 
+    if (wantStream) {
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.status(200);
+      await streamGroq(res, userMessage, history);
+      return;
+    }
+
     const answer = await callGroq(userMessage, history);
 
     res.status(200).json({ ok: true, answer, matchInfo });
   } catch (err) {
     console.error("Reuven API error:", err);
+    // If we've already started streaming bytes, we can only finish the stream.
+    if (res.headersSent) { try { res.end(); } catch {} return; }
+
     const isQuota = /429|quota|rate.?limit/i.test(err.message);
-    if (isQuota) {
+    const quotaText = (() => {
       const hasWinnerData = winnerSection && !winnerSection.startsWith("⚠️") && winnerSection.length > 20;
-      const answer = hasWinnerData
+      return hasWinnerData
         ? `ה-AI לא זמין כרגע (מכסה יומית מוצתה). הנה נתוני Winner ישירות:\n\n${winnerSection}`
         : `ה-AI לא זמין כרגע (מכסה יומית מוצתה). ${winnerSection || "נסה שוב מאוחר יותר."}`;
-      res.status(200).json({ ok: false, answer, matchInfo });
+    })();
+    const errText = isQuota ? quotaText : `שגיאה טכנית: ${err.message}. אנא נסה שוב.`;
+
+    if (wantStream) {
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.status(200).end(errText);
       return;
     }
-    res.status(200).json({
-      ok: false,
-      answer: `שגיאה טכנית: ${err.message}. אנא נסה שוב.`,
-      matchInfo: null,
-    });
+    res.status(200).json({ ok: false, answer: errText, matchInfo: isQuota ? matchInfo : null });
   }
 };

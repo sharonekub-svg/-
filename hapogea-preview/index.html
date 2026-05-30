@@ -6325,41 +6325,61 @@ function AiApp() {
       {role:"user",text},
       {role:"ai",phase:"thinking",thinkStep:0,streamLen:0,intro:"",analysis:[],revealed:0,open:{},showFinal:false},
     ]);
-    for(let i=0;i<AI_THINKING_STEPS.length;i++){
-      await aiSleep(560);if(run!==runRef.current)return;
-      patchAi({thinkStep:i});
-    }
-    await aiSleep(420);if(run!==runRef.current)return;
+    // Short, honest "connecting" beat — no scripted theater. As soon as the
+    // first real token lands we switch to live streaming.
+    await aiSleep(280);if(run!==runRef.current)return;
 
-    // Call real API
-    let introText="";
+    const ac=new AbortController();
+    const tid=setTimeout(()=>ac.abort(),60000);
     try{
-      const ac=new AbortController();
-      const tid=setTimeout(()=>ac.abort(),35000);
       const resp=await fetch("/api/reuven",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({query:text,history:historySnap,user:user?{name:user.name,plan:user.plan}:null}),
+        body:JSON.stringify({query:text,history:historySnap,user:user?{name:user.name,plan:user.plan}:null,stream:true}),
         signal:ac.signal,
       });
+
+      // Preferred path: stream tokens from the Llama model as they arrive.
+      if(resp.ok && resp.body && resp.body.getReader){
+        const reader=resp.body.getReader();
+        const decoder=new TextDecoder();
+        let acc="";let started=false;
+        while(true){
+          const {done,value}=await reader.read();
+          if(done)break;
+          if(run!==runRef.current){try{await reader.cancel();}catch{}clearTimeout(tid);return;}
+          acc+=decoder.decode(value,{stream:true});
+          if(!started){started=true;patchAi({phase:"streaming",analysis:[]});}
+          patchAi({intro:acc,streamLen:acc.length});
+        }
+        clearTimeout(tid);
+        if(run!==runRef.current)return;
+        if(!acc.trim()){const fb="לא הצלחתי לקבל תשובה כרגע. תנסה שוב.";patchAi({phase:"streaming",intro:fb,streamLen:fb.length});}
+        patchAi({phase:"done"});
+        setBusy(false);
+        return;
+      }
+
+      // Fallback: non-streaming JSON (older runtime / no stream body).
       clearTimeout(tid);
       const data=await resp.json().catch(()=>({}));
-      if(data.answer)introText=data.answer;
-      else introText="לא הצלחתי לקבל ניתוח. תנסה שוב.";
+      const introText=data.answer||"לא הצלחתי לקבל ניתוח. תנסה שוב.";
+      if(run!==runRef.current)return;
+      patchAi({phase:"streaming",intro:introText,streamLen:0,analysis:[]});
+      for(let n=0;n<=introText.length;n+=4){
+        await aiSleep(12);if(run!==runRef.current)return;
+        patchAi({streamLen:n});
+      }
+      patchAi({streamLen:introText.length,phase:"done"});
+      setBusy(false);
     }catch(err){
-      introText="שגיאה טכנית — ה-API לא זמין כרגע. תנסה שוב.";
+      clearTimeout(tid);
+      if(run!==runRef.current)return;
+      const msg="שגיאה טכנית — ה-AI לא זמין כרגע. תנסה שוב.";
+      patchAi({phase:"streaming",intro:msg,streamLen:msg.length});
+      patchAi({phase:"done"});
+      setBusy(false);
     }
-
-    if(run!==runRef.current)return;
-    patchAi({phase:"streaming",intro:introText,streamLen:0,analysis:[]});
-    for(let n=0;n<=introText.length;n+=4){
-      await aiSleep(16);if(run!==runRef.current)return;
-      patchAi({streamLen:n});
-    }
-    patchAi({streamLen:introText.length});
-    await aiSleep(200);if(run!==runRef.current)return;
-    patchAi({phase:"done"});
-    setBusy(false);
   };
 
   const empty=messages.length===0;
