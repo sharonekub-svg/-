@@ -2606,7 +2606,8 @@
         התחבר עם Google
       </button>
       <p id="gateError" style="color:#f87171;font-size:12.5px;margin:14px 0 0;min-height:16px"></p>
-      <p style="margin:18px 0 0;font-size:11px;color:rgba(255,255,255,.32)">ההתחברות מאובטחת דרך Supabase · Winner odds</p>
+      <button onclick="HapAuth.skipGate()" style="margin-top:14px;background:none;border:none;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px">כניסה ללא התחברות</button>
+      <p style="margin:10px 0 0;font-size:11px;color:rgba(255,255,255,.32)">ההתחברות מאובטחת דרך Supabase · Winner odds</p>
     </div>
   </div>
 
@@ -5863,7 +5864,8 @@
         broadcast();
       }
 
-      return { current, openModal, closeModal, openOrMenu, switchTab, submit, signOut, init, signInWithGoogle };
+      function skipGate() { showGate(false); }
+      return { current, openModal, closeModal, openOrMenu, switchTab, submit, signOut, init, signInWithGoogle, skipGate };
     })();
     window.HapAuth = HapAuth;
 
