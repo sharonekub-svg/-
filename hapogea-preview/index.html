@@ -5666,12 +5666,11 @@
       let authTab = "signin";
 
       // ── Supabase Google auth (gate before entering the site) ──
-      const SUPABASE_URL = "https://jgcmtrlviuivbtimtqjq.supabase.co";
-      // Public anon / publishable key — safe to embed in the browser.
-      const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+      const SUPABASE_URL = "https://kyhyfksuaabwfeeozomeg.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5aGhma3N1YWFid2ZlZW96bWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MjI3MTUsImV4cCI6MjA5NTA5ODcxNX0.XzHaVUYOP7QFEuO4OdHgQYUDa8m7ikUSPbvH7bLJDwI";
       let sb = null, sbUser = null;
       try {
-        if (window.supabase && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith("PASTE_")) {
+        if (window.supabase && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 20) {
           sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
       } catch (e) { sb = null; }
