@@ -2355,18 +2355,9 @@
     .footer { color:#A39B8C; }
 
       /* ============ WORLD CUP 2026 HUB ============ */
-    .wc-details {
-      margin-top: 14px;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity .45s ease, transform .45s ease;
-    }
-    .wc-details.wc-details-in { opacity: 1; transform: none; }
-    .wc-hub {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+    #wc2026.wc-body-in { animation: wcBodyIn .45s ease; }
+    @keyframes wcBodyIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .wc-hub { display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
     .wc-hub-hero {
       position: relative;
       overflow: hidden;
@@ -2418,11 +2409,7 @@
     .wc-count-sep { font: 900 22px/1 JetBrains Mono, monospace; opacity: .5; align-self: flex-start; margin-top: 12px; }
     .wc-count.wc-count-live .wc-count-cell { background: rgba(21,128,61,.4); border-color: rgba(255,255,255,.4); }
     .wc-count-cap { font-size: 12.5px; opacity: .9; margin-top: 4px; }
-    .wc-facts {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
+    .wc-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .wc-fact {
       text-align: center;
       padding: 14px 8px;
@@ -2446,7 +2433,7 @@
     .wc-hosts-title { font-weight: 800; color: var(--muted); font-size: 13px; }
     .wc-hosts { display: flex; gap: 16px; flex-wrap: wrap; }
     .wc-host { display: flex; align-items: center; gap: 8px; font-weight: 700; }
-    .wc-host .wc-flag img, .wc-team .wc-flag img { width: 26px; height: 18px; object-fit: cover; border-radius: 3px; display: block; }
+    .wc-host .wc-flag img { width: 26px; height: 18px; object-fit: cover; border-radius: 3px; display: block; }
     .wc-timeline {
       list-style: none;
       margin: 0;
@@ -2470,11 +2457,7 @@
     .wc-tl-dot { display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin: 0 auto 8px; }
     .wc-tl-date { display: block; font: 800 14px/1 JetBrains Mono, monospace; color: var(--text); }
     .wc-tl-label { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
-    .wc-stages {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    .wc-stages { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 4px; }
     .wc-stage-chip {
       border: 1px solid var(--line-strong);
       background: var(--panel);
@@ -2492,69 +2475,13 @@
       color: #fff;
       box-shadow: 0 6px 18px rgba(37,99,235,.28);
     }
-    .wc-stage-panel { display: none; animation: wcFade .35s ease; }
-    .wc-stage-panel.active { display: block; }
-    @keyframes wcFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-    .wc-groups-head, .wc-group-head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .wc-groups-head h3, .wc-group-head h3 { margin: 0; font-size: 18px; }
-    .wc-groups-head span, .wc-group-head span { font-size: 12px; color: var(--muted); }
-    .wc-groups-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-      gap: 12px;
-    }
-    .wc-groupbox {
-      border-radius: 14px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-    .wc-groupbox-head {
-      padding: 9px 14px;
-      font-weight: 800;
-      font-size: 13px;
-      color: #fff;
-      background: linear-gradient(135deg, #1d49a6, #2563EB);
-      letter-spacing: .5px;
-    }
-    .wc-groupbox-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-    .wc-pending {
-      font-size: 12.5px;
-      color: var(--muted);
-      text-align: center;
-      padding: 10px 8px;
-      border: 1px dashed var(--line-strong);
-      border-radius: 10px;
-      background: var(--panel-soft);
-    }
-    .wc-pending-lg { padding: 22px 16px; font-size: 13.5px; }
-    .wc-ko {
-      border-radius: 16px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      padding: 18px 18px 16px;
-      box-shadow: var(--shadow);
-    }
-    .wc-ko-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-    .wc-ko-head h3 { margin: 0; font-size: 19px; }
-    .wc-ko-head span { font: 700 13px/1 JetBrains Mono, monospace; color: var(--accent); }
-    .wc-ko-desc { margin: 8px 0 14px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
-    .wc-live-fixtures { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
-    .wc-live-fixtures .wc-group { margin-top: 14px; }
+    .wc-head-open { margin-top: 18px; }
     @media (max-width: 640px) {
       .wc-hub-title { font-size: 24px; }
       .wc-facts { grid-template-columns: repeat(2, 1fr); }
       .wc-count-cell { min-width: 0; flex: 1; }
       .wc-count { gap: 4px; }
       .wc-count-sep { display: none; }
-      .wc-groups-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
   </style>
@@ -3425,80 +3352,48 @@
       `;
     }
 
-    /* ============ WORLD CUP 2026 HUB (factual scaffolding, no fabricated odds) ============ */
+    /* ============ WORLD CUP 2026 HUB (factual scaffolding + real fixtures) ============ */
     const WC_2026 = {
-      title: 'מונדיאל 2026',
+      title: "מונדיאל 2026",
       subtitle: 'הטורניר הראשון עם 48 נבחרות · קנדה · מקסיקו · ארה"ב',
-      kickoffISO: '2026-06-11T19:00:00Z',
-      kickoffLabel: 'המשחק הפותח · 11 ביוני 2026 · אצטדיון אצטקה, מקסיקו סיטי',
-      finalLabel: 'הגמר · 19 ביולי 2026 · אצטדיון MetLife, ניו ג׳רזי',
+      kickoffISO: "2026-06-11T19:00:00Z",
+      kickoffLabel: "המשחק הפותח · 11 ביוני 2026 · אצטדיון אצטקה, מקסיקו סיטי",
       facts: [
-        { value: '48', label: 'נבחרות' },
-        { value: '12', label: 'בתים' },
-        { value: '104', label: 'משחקים' },
-        { value: '16', label: 'ערים מארחות' },
+        { value: "48", label: "נבחרות" },
+        { value: "12", label: "בתים" },
+        { value: "104", label: "משחקים" },
+        { value: "16", label: "ערים מארחות" },
       ],
       hosts: [
-        { code: 'mx', name: 'מקסיקו' },
-        { code: 'ca', name: 'קנדה' },
-        { code: 'us', name: 'ארה"ב' },
-      ],
-      stages: [
-        { key: 'groups', label: 'שלב הבתים', date: '11–27 ביוני', desc: '12 בתים, ארבע נבחרות בכל בית. שתי הראשונות וח-8 השלישיות הטובות עולות.' },
-        { key: 'r32', label: 'שמינית מוקדמת · 32', date: '28 ביוני – 3 ביולי', desc: 'שלב חדש בפורמט 48 הנבחרות: 32 נבחרות פותחות את הנוק-אאוט.' },
-        { key: 'r16', label: 'שמינית גמר', date: '4–7 ביולי', desc: '16 הנבחרות הטובות ממשיכות הלאה.' },
-        { key: 'qf', label: 'רבע גמר', date: '9–11 ביולי', desc: 'שמונה הנבחרות הנותרות נלחמות על הזירה.' },
-        { key: 'sf', label: 'חצי גמר', date: '14–15 ביולי', desc: 'ארבע נבחרות, שני משחקים, צעד מהגמר.' },
-        { key: 'final', label: 'הגמר', date: '19 ביולי', desc: 'הגמר באצטדיון MetLife, ניו ג׳רזי.' },
+        { code: "mx", name: "מקסיקו" },
+        { code: "ca", name: "קנדה" },
+        { code: "us", name: 'ארה"ב' },
       ],
       timeline: [
-        { date: '11.6', label: 'פתיחה' },
-        { date: '27.6', label: 'סיום הבתים' },
-        { date: '3.7', label: 'שמינית מוקדמת' },
-        { date: '7.7', label: 'שמינית גמר' },
-        { date: '11.7', label: 'רבע גמר' },
-        { date: '15.7', label: 'חצי גמר' },
-        { date: '19.7', label: 'גמר' },
+        { date: "11.6", label: "פתיחה" },
+        { date: "27.6", label: "סיום הבתים" },
+        { date: "3.7", label: "שמינית מוקדמת" },
+        { date: "7.7", label: "שמינית גמר" },
+        { date: "11.7", label: "רבע גמר" },
+        { date: "15.7", label: "חצי גמר" },
+        { date: "19.7", label: "גמר" },
       ],
-      groups: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
     };
     let wcCountdownTimer = null;
 
     function wcFlagImg(code) {
-      const cc = String(code || '').trim().toLowerCase();
+      const cc = String(code || "").trim().toLowerCase();
       return `<span class="wc-flag"><img src="https://flagcdn.com/w80/${cc}.png" alt="" loading="lazy"></span>`;
     }
 
     function worldCupHubMarkup() {
       const f = WC_2026;
       const facts = f.facts.map((x) =>
-        `<div class="wc-fact"><b>${escapeHtml(x.value)}</b><span>${escapeHtml(x.label)}</span></div>`).join('');
+        `<div class="wc-fact"><b>${escapeHtml(x.value)}</b><span>${escapeHtml(x.label)}</span></div>`).join("");
       const hosts = f.hosts.map((h) =>
-        `<div class="wc-host">${wcFlagImg(h.code)}<span>${escapeHtml(h.name)}</span></div>`).join('');
-      const chips = f.stages.map((s, i) =>
-        `<button class="wc-stage-chip${i === 0 ? ' active' : ''}" type="button" data-wc-stage="${escapeHtml(s.key)}">${escapeHtml(s.label)}</button>`).join('');
+        `<div class="wc-host">${wcFlagImg(h.code)}<span>${escapeHtml(h.name)}</span></div>`).join("");
       const timeline = f.timeline.map((s) =>
-        `<li class="wc-tl-item"><span class="wc-tl-dot"></span><span class="wc-tl-date">${escapeHtml(s.date)}</span><span class="wc-tl-label">${escapeHtml(s.label)}</span></li>`).join('');
-      const groupBoxes = f.groups.map((g) =>
-        `<div class="wc-groupbox" data-wc-group="${g}">
-           <div class="wc-groupbox-head">בית ${g}</div>
-           <div class="wc-groupbox-body" data-wc-group-body="${g}">
-             <div class="wc-pending">ממתין לשיבוץ ולנתוני Winner</div>
-           </div>
-         </div>`).join('');
-      const groupsPanel =
-        `<div class="wc-stage-panel active" data-wc-panel="groups">
-           <div class="wc-groups-head"><h3>בתים A–L</h3><span>48 נבחרות · 12 בתים</span></div>
-           <div class="wc-groups-grid">${groupBoxes}</div>
-         </div>`;
-      const koPanels = f.stages.filter((s) => s.key !== 'groups').map((s) =>
-        `<div class="wc-stage-panel" data-wc-panel="${escapeHtml(s.key)}">
-           <div class="wc-ko">
-             <div class="wc-ko-head"><h3>${escapeHtml(s.label)}</h3><span>${escapeHtml(s.date)}</span></div>
-             <p class="wc-ko-desc">${escapeHtml(s.desc)}</p>
-             <div class="wc-pending wc-pending-lg">השיבוץ נפתח עם נתוני Winner. אין יחס מומצא ואין תחזית לפני שיש שוק אמיתי.</div>
-           </div>
-         </div>`).join('');
+        `<li class="wc-tl-item"><span class="wc-tl-dot"></span><span class="wc-tl-date">${escapeHtml(s.date)}</span><span class="wc-tl-label">${escapeHtml(s.label)}</span></li>`).join("");
       return `
         <div class="wc-hub">
           <div class="wc-hub-hero">
@@ -3519,23 +3414,21 @@
           <div class="wc-facts">${facts}</div>
           <div class="wc-hosts-wrap"><span class="wc-hosts-title">מארחות</span><div class="wc-hosts">${hosts}</div></div>
           <ol class="wc-timeline">${timeline}</ol>
-          <div class="wc-stages" id="wcStages">${chips}</div>
-          <div class="wc-stage-panels">${groupsPanel}${koPanels}</div>
         </div>`;
     }
 
     function wcUpdateCountdown() {
-      const el = document.getElementById('wcCountdown');
+      const el = document.getElementById("wcCountdown");
       if (!el) return false;
-      const target = new Date(el.getAttribute('data-target')).getTime();
+      const target = new Date(el.getAttribute("data-target")).getTime();
       let diff = Math.max(0, target - Date.now());
       const d = Math.floor(diff / 86400000); diff -= d * 86400000;
       const h = Math.floor(diff / 3600000); diff -= h * 3600000;
       const m = Math.floor(diff / 60000); diff -= m * 60000;
       const s = Math.floor(diff / 1000);
-      const set = (k, v) => { const n = el.querySelector('[data-c="' + k + '"]'); if (n) n.textContent = String(v).padStart(2, '0'); };
-      set('d', d); set('h', h); set('m', m); set('s', s);
-      if (target - Date.now() <= 0) el.classList.add('wc-count-live');
+      const set = (k, v) => { const n = el.querySelector('[data-c="' + k + '"]'); if (n) n.textContent = String(v).padStart(2, "0"); };
+      set("d", d); set("h", h); set("m", m); set("s", s);
+      if (target - Date.now() <= 0) el.classList.add("wc-count-live");
       return true;
     }
 
@@ -3547,60 +3440,88 @@
       }, 1000);
     }
 
-    function wcSeedGroupsFromMatches() {
-      const list = Array.isArray(worldCupMatches) ? worldCupMatches : [];
-      list.forEach((m) => {
-        const g = String(m.group || '').replace(/[^A-La-l]/g, '').toUpperCase().slice(0, 1);
-        if (!g) return;
-        const body = document.querySelector('[data-wc-group-body="' + g + '"]');
-        if (!body) return;
-        if (body.dataset.seeded !== '1') { body.innerHTML = ''; body.dataset.seeded = '1'; }
-        body.insertAdjacentHTML('beforeend', worldCupCardMarkup(m));
-      });
+    function wcStopCountdown() {
+      if (wcCountdownTimer) { clearInterval(wcCountdownTimer); wcCountdownTimer = null; }
     }
 
     function renderWorldCup() {
-      const section = document.getElementById('worldCupSection');
-      if (!section) return;
-      const banner = section.querySelector('.wc-banner');
-      if (!worldCupExpanded) {
-        const old = document.getElementById('wcDetails');
-        if (old) old.remove();
-        if (wcCountdownTimer) { clearInterval(wcCountdownTimer); wcCountdownTimer = null; }
-        if (banner) banner.setAttribute('aria-expanded', 'false');
+      const target = document.getElementById("wc2026");
+      if (!target) return;
+      const banner = document.getElementById("wcToggle");
+      if (banner) banner.setAttribute("aria-expanded", String(state.wcOpen));
+
+      if (!state.wcOpen) {
+        wcStopCountdown();
+        target.innerHTML = `
+          <div class="wc-head">
+            <div>
+              <h3>תצוגת טורניר מהירה</h3>
+              <p>לחיצה על הבאנר פותחת מרכז מונדיאל מלא: ספירה לאחור, דגלים, שלבים, תאריך, שעה, סטטוס ונתוני Winner כשהם זמינים.</p>
+            </div>
+            <span class="pill">${WC2026_FIXTURES.length} משחקים · World Cup</span>
+          </div>
+          <div class="wc-grid">
+            ${WC2026_FIXTURES.slice(0, 4).map(item => `
+              <article class="wc-card compact" data-wc-open="true">
+                <div class="wc-card-top">
+                  <span class="wc-stage">${escapeHtml(item.stage)}</span>
+                  <span class="wc-status ${wcStatus(item).cls}">${wcStatus(item).label}</span>
+                </div>
+                <div class="wc-teams">
+                  <div class="wc-team">${flagImg(item.hc, item.home)}<b>${escapeHtml(item.home)}</b></div>
+                  <div class="wc-prediction"><span>VS</span><b>${escapeHtml(wcDateLabel(item.date).short)}</b><span>${escapeHtml(wcTimeLabel(item))}</span></div>
+                  <div class="wc-team">${flagImg(item.ac, item.away)}<b>${escapeHtml(item.away)}</b></div>
+                </div>
+                <div class="wc-meta">${escapeHtml(item.venue)}. ${item.odds && item.pick ? `יחס Winner ${formatOdds(item.odds[item.pick])}` : "אין יחס Winner פתוח כרגע; לא מוצג יחס מומצא"}.</div>
+              </article>
+            `).join("")}
+          </div>
+        `;
         return;
       }
-      if (banner) banner.setAttribute('aria-expanded', 'true');
-      let host = document.getElementById('wcDetails');
-      if (!host) {
-        host = document.createElement('div');
-        host.id = 'wcDetails';
-        host.className = 'wc-details';
-        section.appendChild(host);
-      }
-      let html = worldCupHubMarkup();
-      const groups = groupWorldCupMatches();
-      if (groups.length) {
-        const blocks = groups.map((group) => {
-          const matchesHtml = group.matches.map(worldCupCardMarkup).join('');
-          return `<div class="wc-group"><div class="wc-group-head"><h3>${escapeHtml(group.title)}</h3><span>${escapeHtml(group.subtitle || '')}</span></div><div class="wc-grid">${matchesHtml}</div></div>`;
-        }).join('');
-        html += `<div class="wc-live-fixtures"><div class="wc-groups-head"><h3>משחקים חיים מ-Winner</h3><span>יחסים אמיתיים בלבד</span></div>${blocks}</div>`;
-      }
-      host.innerHTML = html;
-      wcSeedGroupsFromMatches();
+
+      const groups = wcStageGroups();
+      const chips = `<button class="wc-stage-chip active" type="button" data-wc-stage="all">הכול</button>` +
+        groups.map(g => `<button class="wc-stage-chip" type="button" data-wc-stage="${escapeHtml(g.stage)}">${escapeHtml(g.stage)}</button>`).join("");
+      const sections = groups.map(group => `
+        <section class="sport-section wc-stage-block" data-wc-block="${escapeHtml(group.stage)}">
+          <div class="sport-section-title">
+            <div class="sport-heading"><span class="sport-icon">WC</span>${escapeHtml(group.stage)}</div>
+            <span>${group.rows.length} משחקים</span>
+          </div>
+          <div class="wc-match-grid">
+            ${group.rows.map(wcFixtureCard).join("")}
+          </div>
+        </section>`).join("");
+
+      target.innerHTML = `
+        ${worldCupHubMarkup()}
+        <div class="wc-head wc-head-open">
+          <div>
+            <span class="wc-kicker">World Cup 2026 · Premium Tournament View</span>
+            <h3>לוח המשחקים</h3>
+            <p>תצוגת טורניר נקייה עם דגלים, שלב, תאריך, שעה, סטטוס ויחסי Winner בלבד כשהם זמינים. אין המצאת יחסים או תוצאות.</p>
+          </div>
+          <button class="wc-enter" type="button" data-wc-close="true">חזרה לתצוגה קצרה</button>
+        </div>
+        ${wcImportance()}
+        <div class="wc-stages" id="wcStages">${chips}</div>
+        <div class="wc-match-grid">${sections}</div>
+      `;
       wcStartCountdown();
-      requestAnimationFrame(() => { host.classList.add('wc-details-in'); });
+      requestAnimationFrame(() => { target.classList.add("wc-body-in"); });
     }
 
-    document.addEventListener('click', (e) => {
-      const chip = e.target.closest && e.target.closest('.wc-stage-chip[data-wc-stage]');
+    document.addEventListener("click", (e) => {
+      const chip = e.target.closest && e.target.closest(".wc-stage-chip[data-wc-stage]");
       if (!chip) return;
-      const key = chip.getAttribute('data-wc-stage');
-      const root = chip.closest('.wc-hub');
+      const root = chip.closest("#wc2026");
       if (!root) return;
-      root.querySelectorAll('.wc-stage-chip').forEach((c) => c.classList.toggle('active', c === chip));
-      root.querySelectorAll('.wc-stage-panel').forEach((p) => p.classList.toggle('active', p.getAttribute('data-wc-panel') === key));
+      const key = chip.getAttribute("data-wc-stage");
+      root.querySelectorAll(".wc-stage-chip").forEach((c) => c.classList.toggle("active", c === chip));
+      root.querySelectorAll(".wc-stage-block").forEach((b) => {
+        b.style.display = (key === "all" || b.getAttribute("data-wc-block") === key) ? "" : "none";
+      });
     });
 
     function renderDaily() {
