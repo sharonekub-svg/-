@@ -2484,6 +2484,63 @@
       .wc-count-sep { display: none; }
     }
 
+    /* ============ WORLD CUP BANNER — UX polish ============ */
+    .wc-banner { transition: transform .25s ease, box-shadow .25s ease; }
+    .wc-banner:hover { transform: translateY(-2px); }
+    .wc-banner:hover::before { border-color: rgba(146,96,10,.34); }
+    .wc-banner:focus-visible { outline: 2px solid var(--accent, #2563EB); outline-offset: 3px; }
+    /* animated dot in the kicker */
+    .wc-kicker { display: inline-flex; align-items: center; gap: 7px; }
+    .wc-kicker-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #f59e0b; box-shadow: 0 0 0 0 rgba(245,158,11,.55);
+      animation: wcDotPulse 1.9s ease-out infinite;
+    }
+    @keyframes wcDotPulse {
+      0% { box-shadow: 0 0 0 0 rgba(245,158,11,.5); }
+      70% { box-shadow: 0 0 0 7px rgba(245,158,11,0); }
+      100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+    }
+    /* host flags row */
+    .wc-banner-hosts { display: flex; align-items: center; gap: 11px; margin-top: 4px; }
+    .wc-host-flags { display: inline-flex; }
+    .wc-host-flags img {
+      width: 27px; height: 19px; object-fit: cover; border-radius: 4px;
+      border: 1.5px solid #fff; margin-inline-start: -7px;
+      box-shadow: 0 2px 7px rgba(40,33,22,.22);
+    }
+    .wc-host-flags img:first-child { margin-inline-start: 0; }
+    .wc-host-label { font-size: 12.5px; font-weight: 800; color: #6E675C; }
+    /* clearer primary CTA with sliding arrow */
+    .wc-enter {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: linear-gradient(135deg, #2563EB, #4F46E5);
+      border: none; color: #fff;
+      box-shadow: 0 6px 18px rgba(37,99,235,.28);
+    }
+    .wc-enter:hover { border: none; box-shadow: 0 8px 22px rgba(37,99,235,.36); }
+    .wc-enter-arrow { display: inline-block; transition: transform .2s ease; }
+    .wc-banner:hover .wc-enter-arrow, .wc-enter:hover .wc-enter-arrow { transform: translateX(-5px); }
+    /* live countdown mark */
+    .wc-mark {
+      flex-direction: column; gap: 0; padding: 18px 14px;
+      background: linear-gradient(160deg, #ffffff, #FBF4E8);
+      border-color: rgba(146,96,10,.22);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 16px 40px rgba(40,33,22,.12);
+    }
+    .wc-mark b {
+      font: 900 72px/.85 Heebo, Assistant, sans-serif;
+      color: #211F1B; font-variant-numeric: tabular-nums; letter-spacing: -1px;
+    }
+    .wc-mark span { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #92600A; margin-top: 10px; }
+    .wc-mark small { display: block; font-size: 11px; font-weight: 700; color: rgba(110,103,92,.85); margin-top: 7px; }
+    .wc-mark.wc-mark-live b { color: #15803D; font-size: 40px; line-height: 1; }
+    .wc-mark.wc-mark-live { border-color: rgba(21,128,61,.35); background: linear-gradient(160deg,#ffffff,#eafaf0); }
+    @media (max-width: 760px) {
+      .wc-mark b { font-size: 56px; }
+      .wc-banner-hosts { margin-top: 2px; }
+    }
+
   </style>
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
@@ -2597,17 +2654,29 @@
     </section>
 
     <section class="panel wc-strip" id="worldCupSection">
-      <div class="wc-banner" id="wcToggle" role="button" tabindex="0" aria-expanded="false">
+      <div class="wc-banner" id="wcToggle" role="button" tabindex="0" aria-expanded="false" aria-label="פתיחת לוח המונדיאל">
         <div class="wc-banner-copy">
-          <span class="wc-kicker">World Cup 2026 · אזור פרימיום</span>
+          <span class="wc-kicker"><span class="wc-kicker-dot"></span>World Cup 2026 · אזור פרימיום</span>
           <h3>מונדיאל 2026: לוח טורניר ברור, נקי ומאומת</h3>
           <p>פתח תצוגת טורניר עם דגלי נבחרות, שלבי בתים, תאריך, שעה, סטטוס ויחסי Winner אמיתיים כשהם זמינים. אין יחסים מומצאים ואין תחזיות לפני מקור נתונים אמיתי.</p>
+          <div class="wc-banner-hosts">
+            <span class="wc-host-flags">
+              <img src="https://flagcdn.com/w40/mx.png" alt="מקסיקו" loading="lazy">
+              <img src="https://flagcdn.com/w40/ca.png" alt="קנדה" loading="lazy">
+              <img src="https://flagcdn.com/w40/us.png" alt="ארה״ב" loading="lazy">
+            </span>
+            <span class="wc-host-label">מקסיקו · קנדה · ארה"ב · 48 נבחרות</span>
+          </div>
           <div class="wc-premium-row">
-            <button class="wc-enter" type="button">כניסה למשחקים</button>
+            <button class="wc-enter" type="button">כניסה למשחקים<span class="wc-enter-arrow" aria-hidden="true">←</span></button>
             <span class="pill">דגלים · שלבים · Winner</span>
           </div>
         </div>
-        <div class="wc-mark">26<span>FIFA</span></div>
+        <div class="wc-mark" id="wcBannerMark">
+          <b id="wcBannerNum">–</b>
+          <span id="wcBannerLabel">ימים לפתיחה</span>
+          <small id="wcBannerSub">11 ביוני · אצטקה</small>
+        </div>
       </div>
       <div class="wc-body" id="wc2026"></div>
     </section>
@@ -3447,6 +3516,49 @@
 
     function wcStopCountdown() {
       if (wcCountdownTimer) { clearInterval(wcCountdownTimer); wcCountdownTimer = null; }
+    }
+
+    // Live countdown shown inside the collapsed banner "mark" (replaces the
+    // old static "26 / FIFA"). Uses the real kickoff date — no fabricated data.
+    function wcUpdateBannerCountdown() {
+      const mark = document.getElementById("wcBannerMark");
+      if (!mark) return;
+      const num = document.getElementById("wcBannerNum");
+      const label = document.getElementById("wcBannerLabel");
+      const sub = document.getElementById("wcBannerSub");
+      const target = new Date(WC_2026.kickoffISO).getTime();
+      const diff = target - Date.now();
+      mark.classList.remove("wc-mark-live");
+      if (diff <= 0) {
+        // Tournament under way (or kicked off)
+        mark.classList.add("wc-mark-live");
+        if (num) num.textContent = "LIVE";
+        if (label) label.textContent = "המונדיאל בעיצומו";
+        if (sub) sub.textContent = "11 ביוני – 19 ביולי";
+        return;
+      }
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      if (days >= 1) {
+        if (num) num.textContent = String(days);
+        if (label) label.textContent = days === 1 ? "יום לפתיחה" : "ימים לפתיחה";
+        if (sub) sub.textContent = "11 ביוני · אצטקה";
+      } else if (hours >= 1) {
+        if (num) num.textContent = String(hours);
+        if (label) label.textContent = hours === 1 ? "שעה לפתיחה" : "שעות לפתיחה";
+        if (sub) sub.textContent = "היום · אצטקה, מקסיקו סיטי";
+      } else {
+        if (num) num.textContent = String(mins);
+        if (label) label.textContent = mins === 1 ? "דקה לפתיחה" : "דקות לפתיחה";
+        if (sub) sub.textContent = "מתחילים · אצטקה, מקסיקו סיטי";
+      }
+    }
+
+    function wcStartBannerCountdown() {
+      wcUpdateBannerCountdown();
+      if (window._wcBannerTimer) return;
+      window._wcBannerTimer = setInterval(wcUpdateBannerCountdown, 60 * 1000);
     }
 
     function renderWorldCup() {
@@ -5810,6 +5922,7 @@
     loadFeed();
     scheduleMidnightShift();
     HapAuth.init();
+    wcStartBannerCountdown();
   </script>
 
   <!-- Premium Modal -->
